@@ -1,0 +1,31 @@
+name: Game logic checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            python: '3.14'
+          - os: ubuntu-latest
+            python: '3.10'
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-python@v7.1.0
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Check stage data without SDL
+        run: python main.py --check
+      - name: Test rules and authored walkthroughs
+        run: python -m unittest discover -v
+      - name: Check Python syntax
+        run: python -m compileall -q main.py game tests
