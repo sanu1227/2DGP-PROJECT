@@ -180,6 +180,13 @@ class View:
                     labels.append((pos, "출구"))
                 self.art.draw(tile, sx, sy, scale)
 
+                if pos in level.chutes:
+                    objects.append((depth, 1, "chute_inlet", sx, sy))
+                    labels.append((pos, f"{level.device_labels[pos]} 투입"))
+                elif pos in level.chutes.values():
+                    objects.append((depth, 0.5, "chute_outlet", sx, sy))
+                    if pos not in level.plates:
+                        labels.append((pos, f"{level.device_labels[pos]} 배출"))
                 if pos in level.plates:
                     pressed = game.plate_pressed(pos)
                     objects.append((depth, 1, "plate_down" if pressed else "plate_up", sx, sy))
@@ -207,7 +214,7 @@ class View:
         player = self.player_position(state.player, now)
         px, py = screen(player)
         # 같은 칸의 작업대나 배치한 병사와 구별되도록 약간 앞쪽에 선다.
-        if state.player in level.benches | level.levers | state.soldiers | level.plates | level.gates.keys():
+        if state.player in level.benches | level.levers | state.soldiers | level.plates | level.gates.keys() | level.chutes.keys():
             px -= 9
             py -= 7
         objects.append((sum(player), 3, "player", px, py))

@@ -28,6 +28,7 @@ class Level:
     plates: frozenset[Pos] = frozenset()
     gates: dict[Pos, Pos] = field(default_factory=dict)
     device_labels: dict[Pos, str] = field(default_factory=dict)
+    chutes: dict[Pos, Pos] = field(default_factory=dict)
 
 
 def read_links(raw, field_name, first_name, second_name, first_tiles, second_tiles, prefix, used_ids):
@@ -72,11 +73,11 @@ def load_levels(path: Path | str | None = None) -> list[Level]:
 
     levels = []
     identifiers = set()
-    glyphs = "#.@EPBTLASFG"
+    glyphs = "#.@EPBTLASFGCO"
     for index, raw in enumerate(stages, start=1):
         prefix = f"스테이지 {index}: "
         required = {"id", "title", "hint", "map"}
-        if not isinstance(raw, dict) or not required <= set(raw) or set(raw) - required - {"plate_links"}:
+        if not isinstance(raw, dict) or not required <= set(raw) or set(raw) - required - {"plate_links", "chute_links"}:
             raise ValueError(prefix + "id, title, hint, map 필드가 필요합니다.")
         if any(not isinstance(raw[key], str) or not raw[key].strip() for key in ("id", "title", "hint")):
             raise ValueError(prefix + "id, title, hint는 비어 있지 않은 문자열이어야 합니다.")
@@ -107,9 +108,16 @@ def load_levels(path: Path | str | None = None) -> list[Level]:
             raise ValueError(prefix + "함정이 있는 방에는 레버가 필요합니다.")
         if positions["S"] and not positions["A"]:
             raise ValueError(prefix + "초소가 있는 방에는 작업대가 필요합니다.")
-        plate_links, labels = read_links(raw, "plate_links", "plate", "gate", positions["F"], positions["G"], prefix, set())
+        used_ids = set()
+        plate_links, labels = read_links(raw, "plate_links", "plate", "gate", positions["F"], positions["G"], prefix, used_ids)
         if set(plate_links) != positions["F"] or set(plate_links.values()) != positions["G"]:
             raise ValueError(prefix + "모든 발판과 문을 한 번씩 연결해야 합니다.")
+        chutes, chute_labels = read_links(raw, "chute_links", "inlet", "outlet", positions["C"],
+                                         positions["O"] | positions["."] | positions["F"], prefix, used_ids)
+        if set(chutes) != positions["C"] or not positions["O"] <= set(chutes.values()):
+            raise ValueError(prefix + "모든 투입구와 표시된 배출구를 연결해야 합니다.")
+        for pos, identifier in chute_labels.items():
+            labels[pos] = labels[pos] + "/" + identifier if pos in labels else identifier
         items = {pos: "part" for pos in positions["P"]}
         items.update({pos: "bone" for pos in positions["B"]})
         levels.append(Level(
@@ -118,5 +126,6 @@ def load_levels(path: Path | str | None = None) -> list[Level]:
             walls=positions["#"], traps=positions["T"], levers=positions["L"],
             benches=positions["A"], posts=positions["S"], initial_items=items,
             plates=positions["F"], gates={gate: plate for plate, gate in plate_links.items()}, device_labels=labels,
+            chutes=chutes,
         ))
     return levels
