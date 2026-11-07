@@ -54,7 +54,7 @@ def draw_tinted(art, sprite, sx, sy, scale, tint):
         p.SDL_SetTextureColorMod(texture, *(channel.value for channel in previous))
 
 
-def draw_scars(pos, sx, sy, scale, near_trap=False):
+def draw_scars(pos, sx, sy, scale, near_trap=False, projection=None):
     """일반 바닥 윗면 안에 균열·그을음을 그린다. 칸당 최대 10개 선이다."""
     import pico2d.pico2d as p
 
@@ -65,6 +65,12 @@ def draw_scars(pos, sx, sy, scale, near_trap=False):
     flip_y = -1 if pattern & 2 else 1
 
     def stroke(first, second, color):
+        if projection is not None:
+            first = projection.ground_offset(first[0] * flip_x, first[1] * flip_y)
+            second = projection.ground_offset(second[0] * flip_x, second[1] * flip_y)
+            p.draw_line(round(sx + first[0]), round(sy + first[1]),
+                        round(sx + second[0]), round(sy + second[1]), *color)
+            return
         p.draw_line(
             round(sx + first[0] * flip_x * scale),
             round(sy + first[1] * flip_y * scale),
