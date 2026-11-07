@@ -8,6 +8,7 @@ import pico2d.pico2d as p
 
 from game.model import Game
 from game.art import Art
+from game.scenery import draw_scars, draw_tinted, floor_style, wall_style
 
 WIDTH, HEIGHT = 1280, 900
 BOARD_WIDTH = 1152
@@ -129,17 +130,24 @@ class View:
         self.art.draw(ITEM_SPRITES[kind], x, y, scale)
 
     def gate(self, sx, sy, scale, status):
-        """문틀과 세로 창살. 열린 문은 통행 공간을 비워 둔다."""
+        """녹슨 문틀과 창살. 열린 문은 통행 공간을 비워 둔다."""
         color = TEAL if status == "open" else GOLD if status == "held" else RED
         left, right, height = sx - 80 * scale, sx + 80 * scale, 110 * scale
-        line(left, sy + 8 * scale, left, sy + height, color)
-        line(right, sy - 8 * scale, right, sy + height - 16 * scale, color)
-        line(left, sy + height, right, sy + height - 16 * scale, color)
+        rust, edge = (104, 80, 53), (158, 132, 89)
+        for x, base in ((left, sy + 8 * scale), (right, sy - 8 * scale)):
+            box(x - 4, base - 2, x + 4, base + height - 8 * scale, (49, 44, 37))
+            box(x - 2, base, x + 2, base + height - 10 * scale, rust)
+            line(x - 2, base, x - 2, base + height - 10 * scale, edge)
+            box(x - 2, base + height - 15 * scale, x + 2, base + height - 8 * scale, color)
+        for offset in range(-2, 3):
+            line(left, sy + height + offset, right, sy + height - 16 * scale + offset, rust)
+        line(left, sy + height + 3, right, sy + height - 16 * scale + 3, edge)
         if status != "open":
             for fraction in (0.2, 0.4, 0.6, 0.8):
                 x = left + (right - left) * fraction
                 y = sy + (8 - 16 * fraction) * scale
-                line(x, y, x, y + height - 8 * scale, color)
+                line(x, y, x, y + height - 8 * scale, rust)
+                line(x + 1, y, x + 1, y + height - 8 * scale, edge)
 
     def board(self, game):
         level, state = game.level, game.state
@@ -156,7 +164,10 @@ class View:
 
         exit_ready = (state.installed == level.traps and (not level.traps or state.active)
                       and state.soldiers == level.posts and state.carrying is None)
-        objects, labels = [], []
+        objects, labels, wall_tints = [], [], {}
+        device_floor = (level.traps | level.posts | level.plates | level.gates.keys()
+                        | level.chutes.keys() | set(level.chutes.values()) | level.belts.keys()
+                        | level.benches | level.levers | {level.exit})
         for depth in range(level.width + level.height - 1):
             for y in range(level.height):
                 x = depth - y
@@ -164,21 +175,35 @@ class View:
                     continue
                 pos = (x, y)
                 sx, sy = screen(pos)
-                tile = ("floor_plain", "floor_cracked", "floor_plain", "floor_moss")[(x + y * 3) % 4]
+                near_trap = any(abs(x - tx) + abs(y - ty) <= 1 for tx, ty in level.traps)
+                tile, tint = floor_style(pos, near_trap)
                 if pos in level.walls:
-                    objects.append((depth, 0, "wall_low", sx, sy))
+                    wall_sprite, wall_tint = wall_style(pos)
+                    if wall_sprite == "rubble":
+                        tile, tint = wall_sprite, wall_tint
+                    else:
+                        objects.append((depth, 0, wall_sprite, sx, sy))
+                        wall_tints[(sx, sy)] = wall_tint
                 elif pos in level.traps:
                     tile = "trap_installed" if pos in state.installed else "trap_broken"
+                    tint = None
                     if state.active:
                         objects.append((depth, 0, "trap_active", sx, sy))
                     labels.append((pos, "가동" if state.active else "설치" if pos in state.installed else "파손"))
                 elif pos in level.posts:
                     tile = "post_empty"
+                    tint = None
                     labels.append((pos, "배치" if pos in state.soldiers else "초소"))
                 elif pos == level.exit:
                     tile = "exit_ready" if exit_ready else "exit_closed"
+                    tint = None
                     labels.append((pos, "출구"))
-                self.art.draw(tile, sx, sy, scale)
+                if tint:
+                    draw_tinted(self.art, tile, sx, sy, scale, tint)
+                else:
+                    self.art.draw(tile, sx, sy, scale)
+                if pos not in level.walls and pos not in device_floor:
+                    draw_scars(pos, sx, sy, scale, near_trap)
 
                 if pos in level.belts:
                     direction = level.belts[pos]
@@ -232,7 +257,10 @@ class View:
                 self.gate(sx, sy, scale, sprite.removeprefix("gate_"))
                 continue
             if sprite != "player":
-                self.art.draw(sprite, sx, sy, scale)
+                if sprite == "wall_low":
+                    draw_tinted(self.art, sprite, sx, sy, scale, wall_tints[(sx, sy)])
+                else:
+                    self.art.draw(sprite, sx, sy, scale)
                 continue
             pose = "idle"
             if self.motion:
@@ -286,7 +314,7 @@ class View:
         else:
             self.text(918, 104, "모든 복구 후 빈손으로 출구 복귀", 16, MUTED)
 
-        self.text(34, 51, "이동  W/위: 오른쪽 위    A/왼쪽: 왼쪽 위    S/아래: 왼쪽 아래    D/오른쪽: 오른쪽 아래", 13, MUTED)
+        self.text(34, 51, "이동  W/위: 오른쪽 위    A/왼쪽: 왼쪽 위    S/아래: 왼쪽 아래    D/오른쪽: 오른쪽 아래       무너진 벽·잔해는 통행 불가", 13, MUTED)
         self.text(34, 25, "E / Space  상호작용    Q  내려놓기    B  대기    Z / Backspace  되돌리기    R  재시작    Enter  다음 방(완료 후)    Esc  종료", 16, MUTED)
 
 

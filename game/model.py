@@ -181,7 +181,7 @@ class Game:
             if destination in self.level.gates and not self.walkable(destination, state):
                 return False, "닫힌 문입니다. 연결 발판을 눌러 주세요."
             if not (0 <= destination[0] < self.level.width and 0 <= destination[1] < self.level.height) or destination in self.level.walls:
-                return False, "벽으로 막힌 칸입니다."
+                return False, "벽이나 잔해로 막힌 칸입니다."
             if state.active and destination in self.level.traps:
                 return False, "가동된 함정은 지나갈 수 없습니다."
             if destination in state.soldiers:
