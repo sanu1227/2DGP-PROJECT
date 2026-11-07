@@ -1,8 +1,9 @@
 """스테이지 파일을 읽고 실행 전에 구조와 재료 수를 검사한다."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import json
 from pathlib import Path
+import re
 
 
 Pos = tuple[int, int]
@@ -24,6 +25,38 @@ class Level:
     benches: frozenset[Pos]
     posts: frozenset[Pos]
     initial_items: dict[Pos, str]
+    plates: frozenset[Pos] = frozenset()
+    gates: dict[Pos, Pos] = field(default_factory=dict)
+    device_labels: dict[Pos, str] = field(default_factory=dict)
+
+
+def read_links(raw, field_name, first_name, second_name, first_tiles, second_tiles, prefix, used_ids):
+    """지도에 표시한 장치를 명시적 ID와 두 좌표로 연결한다."""
+    links = raw.get(field_name, [])
+    if not isinstance(links, list):
+        raise ValueError(prefix + f"{field_name}는 목록이어야 합니다.")
+    pairs, labels = {}, {}
+    destinations = set()
+    for link in links:
+        if not isinstance(link, dict) or set(link) != {"id", first_name, second_name}:
+            raise ValueError(prefix + f"{field_name} 연결 필드가 잘못되었습니다.")
+        identifier = link["id"]
+        if not isinstance(identifier, str) or not re.fullmatch(r"[A-Za-z][A-Za-z0-9_-]{0,7}", identifier) or identifier in used_ids:
+            raise ValueError(prefix + "장치 ID는 중복 없는 영문 시작 1~8자여야 합니다.")
+        points = []
+        for key, allowed in ((first_name, first_tiles), (second_name, second_tiles)):
+            point = link[key]
+            if not isinstance(point, list) or len(point) != 2 or any(type(n) is not int for n in point) or tuple(point) not in allowed:
+                raise ValueError(prefix + f"{identifier}의 {key} 좌표와 지도 기호가 맞지 않습니다.")
+            points.append(tuple(point))
+        first, second = points
+        if first in pairs or second in destinations or first == second:
+            raise ValueError(prefix + "같은 장치를 중복 연결할 수 없습니다.")
+        pairs[first] = second
+        destinations.add(second)
+        labels.update({first: identifier, second: identifier})
+        used_ids.add(identifier)
+    return pairs, labels
 
 
 def load_levels(path: Path | str | None = None) -> list[Level]:
@@ -39,10 +72,11 @@ def load_levels(path: Path | str | None = None) -> list[Level]:
 
     levels = []
     identifiers = set()
-    glyphs = "#.@EPBTLAS"
+    glyphs = "#.@EPBTLASFG"
     for index, raw in enumerate(stages, start=1):
         prefix = f"스테이지 {index}: "
-        if not isinstance(raw, dict) or set(raw) != {"id", "title", "hint", "map"}:
+        required = {"id", "title", "hint", "map"}
+        if not isinstance(raw, dict) or not required <= set(raw) or set(raw) - required - {"plate_links"}:
             raise ValueError(prefix + "id, title, hint, map 필드가 필요합니다.")
         if any(not isinstance(raw[key], str) or not raw[key].strip() for key in ("id", "title", "hint")):
             raise ValueError(prefix + "id, title, hint는 비어 있지 않은 문자열이어야 합니다.")
@@ -73,6 +107,9 @@ def load_levels(path: Path | str | None = None) -> list[Level]:
             raise ValueError(prefix + "함정이 있는 방에는 레버가 필요합니다.")
         if positions["S"] and not positions["A"]:
             raise ValueError(prefix + "초소가 있는 방에는 작업대가 필요합니다.")
+        plate_links, labels = read_links(raw, "plate_links", "plate", "gate", positions["F"], positions["G"], prefix, set())
+        if set(plate_links) != positions["F"] or set(plate_links.values()) != positions["G"]:
+            raise ValueError(prefix + "모든 발판과 문을 한 번씩 연결해야 합니다.")
         items = {pos: "part" for pos in positions["P"]}
         items.update({pos: "bone" for pos in positions["B"]})
         levels.append(Level(
@@ -80,5 +117,6 @@ def load_levels(path: Path | str | None = None) -> list[Level]:
             width=width, height=height, start=next(iter(positions["@"])), exit=next(iter(positions["E"])),
             walls=positions["#"], traps=positions["T"], levers=positions["L"],
             benches=positions["A"], posts=positions["S"], initial_items=items,
+            plates=positions["F"], gates={gate: plate for plate, gate in plate_links.items()}, device_labels=labels,
         ))
     return levels

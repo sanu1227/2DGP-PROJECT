@@ -128,6 +128,19 @@ class View:
     def item(self, kind, x, y, scale):
         self.art.draw(ITEM_SPRITES[kind], x, y, scale)
 
+    def gate(self, sx, sy, scale, status):
+        """문틀과 세로 창살. 열린 문은 통행 공간을 비워 둔다."""
+        color = TEAL if status == "open" else GOLD if status == "held" else RED
+        left, right, height = sx - 80 * scale, sx + 80 * scale, 110 * scale
+        line(left, sy + 8 * scale, left, sy + height, color)
+        line(right, sy - 8 * scale, right, sy + height - 16 * scale, color)
+        line(left, sy + height, right, sy + height - 16 * scale, color)
+        if status != "open":
+            for fraction in (0.2, 0.4, 0.6, 0.8):
+                x = left + (right - left) * fraction
+                y = sy + (8 - 16 * fraction) * scale
+                line(x, y, x, y + height - 8 * scale, color)
+
     def board(self, game):
         level, state = game.level, game.state
         # 큰 방도 타일을 축소하지 않도록 옆 패널 대신 화면 폭을 사용한다.
@@ -167,7 +180,15 @@ class View:
                     labels.append((pos, "출구"))
                 self.art.draw(tile, sx, sy, scale)
 
-                if pos in level.levers:
+                if pos in level.plates:
+                    pressed = game.plate_pressed(pos)
+                    objects.append((depth, 1, "plate_down" if pressed else "plate_up", sx, sy))
+                    labels.append((pos, f"{level.device_labels[pos]} 발판"))
+                elif pos in level.gates:
+                    status = game.gate_status(pos)
+                    objects.append((depth, 1, f"gate_{status}", sx, sy))
+                    labels.append((pos, f"{level.device_labels[pos]} " + {"open": "열림", "held": "대기", "closed": "닫힘"}[status]))
+                elif pos in level.levers:
                     objects.append((depth, 1, "lever_on" if state.active else "lever_off", sx, sy))
                     labels.append((pos, "레버"))
                 elif pos in level.benches:
@@ -186,11 +207,14 @@ class View:
         player = self.player_position(state.player, now)
         px, py = screen(player)
         # 같은 칸의 작업대나 배치한 병사와 구별되도록 약간 앞쪽에 선다.
-        if state.player in level.benches | level.levers | state.soldiers:
+        if state.player in level.benches | level.levers | state.soldiers | level.plates | level.gates.keys():
             px -= 9
             py -= 7
         objects.append((sum(player), 3, "player", px, py))
         for _, _, sprite, sx, sy in sorted(objects, key=lambda obj: obj[:2]):
+            if sprite.startswith("gate_"):
+                self.gate(sx, sy, scale, sprite.removeprefix("gate_"))
+                continue
             if sprite != "player":
                 self.art.draw(sprite, sx, sy, scale)
                 continue
@@ -219,8 +243,8 @@ class View:
         box(0, 0, WIDTH, HEIGHT, (19, 27, 32))
         self.text(32, 857, "용사가 지나간 자리", 32)
         self.text(450, 857, level.title, 22)
-        self.text(1090, 857, f"입문 {index + 1:02d} / {total:02d}", 22, GOLD)
-        self.text(34, 820, f"{level.width}×{level.height}  전체 지도 · 프로토타입 0.3", 16, MUTED)
+        self.text(1090, 857, f"단계 {index + 1:02d} / {total:02d}", 22, GOLD)
+        self.text(34, 820, f"{level.width}×{level.height}  전체 지도 · 프로토타입 0.4", 16, MUTED)
         self.wrapped(450, 825, level.hint, width=790, size=16)
 
         self.board(game)

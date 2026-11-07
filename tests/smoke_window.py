@@ -1,4 +1,4 @@
-"""선택 검사: 실제 SDL 창에 키 이벤트를 넣어 세 방의 UI 흐름을 재생한다.
+"""선택 검사: 실제 SDL 창에 키 이벤트를 넣어 모든 방의 UI 흐름을 재생한다.
 
 실행: python -m tests.smoke_window
 실물 키보드나 자동화 도구의 운영체제 입력 전달까지 검증하지는 않는다.
@@ -44,7 +44,7 @@ def main():
         (p.SDLK_r, lambda: expect(0)),
     ])
     keys = {"up": p.SDLK_w, "down": p.SDLK_s, "left": p.SDLK_a,
-            "right": p.SDLK_RIGHT, "interact": p.SDLK_SPACE}
+            "right": p.SDLK_RIGHT, "interact": p.SDLK_SPACE, "drop": p.SDLK_q}
     for index, level in enumerate(levels):
         actions = SOLUTIONS[level.id]
         for action in actions:
@@ -75,8 +75,8 @@ def main():
     with patch.object(view, "Game", ObservedGame), patch.object(p, "get_events", scripted_events):
         view.run(levels)
     assert not steps
-    assert len(games) == 4
-    print("Native SDL smoke OK: 3 clears, carry/drop, undo, restart, next/replay, Escape.")
+    assert len(games) == len(levels) + 1
+    print(f"Native SDL smoke OK: {len(levels)} clears, carry/drop, undo, restart, next/replay, Escape.")
 
 
 if __name__ == "__main__":
