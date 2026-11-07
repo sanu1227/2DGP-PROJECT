@@ -53,7 +53,7 @@ for (const theme of themes) {
   }
   const manifest = {
     version: 1, created: spec.date, theme, title: spec.title, generator: spec.generator,
-    status: 'map-decoration-pack; not yet placed in gameplay maps',
+    status: 'map-decoration-pack; stage placement lives in data/scenery.json',
     coordinates: { image: 'top-left origin; anchor and source_rect use x right, y down',
       pico2d: 'clip_rect_pico2d uses bottom-left origin', tile_footprint: { width: 224, height: 112 } },
     source: { file: 'source/atlas.png', width: meta.width, height: meta.height, sha256: hash(original), grid: [4, 4] },

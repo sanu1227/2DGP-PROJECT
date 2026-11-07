@@ -4,7 +4,7 @@
   "theme": "forge",
   "title": "던전 제련소",
   "generator": "built-in image_gen",
-  "status": "map-decoration-pack; not yet placed in gameplay maps",
+  "status": "map-decoration-pack; stage placement lives in data/scenery.json",
   "coordinates": {
     "image": "top-left origin; anchor and source_rect use x right, y down",
     "pico2d": "clip_rect_pico2d uses bottom-left origin",
