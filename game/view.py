@@ -10,6 +10,8 @@ from game.model import Game
 from game.art import Art
 
 WIDTH, HEIGHT = 1280, 900
+BOARD_WIDTH = 1152
+BOARD_CENTER = (WIDTH / 2, 440)
 INK = (226, 230, 219)
 MUTED = (158, 169, 166)
 GOLD = (227, 187, 104)
@@ -128,14 +130,16 @@ class View:
 
     def board(self, game):
         level, state = game.level, game.state
-        half_width = int(760 / (level.width + level.height))
+        # 큰 방도 타일을 축소하지 않도록 옆 패널 대신 화면 폭을 사용한다.
+        half_width = min(48, int(BOARD_WIDTH / (level.width + level.height)))
         half_height = half_width / 2
         scale = half_width * 2 / self.art.manifest["coordinates"]["tile_footprint"]["width"]
-        origin_x = 445 - (level.width - level.height) * half_width / 2
+        origin_x = BOARD_CENTER[0] - (level.width - level.height) * half_width / 2
+        origin_y = BOARD_CENTER[1] + (level.width + level.height - 2) * half_height / 2
 
         def screen(position):
             x, y = position
-            return origin_x + (x - y) * half_width, 708 - (x + y) * half_height
+            return origin_x + (x - y) * half_width, origin_y - (x + y) * half_height
 
         exit_ready = (state.installed == level.traps and (not level.traps or state.active)
                       and state.soldiers == level.posts and state.carrying is None)
@@ -213,43 +217,37 @@ class View:
     def draw(self, game, index, total):
         level, state = game.level, game.state
         box(0, 0, WIDTH, HEIGHT, (19, 27, 32))
-        box(32, 790, 1248, 792, (65, 76, 77))
-        self.text(42, 851, "용사가 지나간 자리", 32)
-        self.text(44, 812, "던전 복구 작업실", 16, MUTED)
-        self.text(927, 850, f"입문 {index + 1:02d} / {total:02d}", 22, GOLD)
-        self.text(927, 815, "프로토타입  0.2", 16, MUTED)
+        self.text(32, 857, "용사가 지나간 자리", 32)
+        self.text(450, 857, level.title, 22)
+        self.text(1090, 857, f"입문 {index + 1:02d} / {total:02d}", 22, GOLD)
+        self.text(34, 820, f"{level.width}×{level.height}  전체 지도 · 프로토타입 0.3", 16, MUTED)
+        self.wrapped(450, 825, level.hint, width=790, size=16)
 
         self.board(game)
 
-        # 정보 패널은 보드 영역과 분리해 가림을 방지한다.
-        box(894, 149, 1248, 768, (28, 39, 44))
-        self.text(918, 737, level.title, 22)
-        self.wrapped(918, 699, level.hint)
-        self.text(918, 603, "복구 현황", 18, GOLD)
-        self.text(918, 567, f"함정 설치  {len(state.installed)} / {len(level.traps)}")
+        # 정보는 위·아래 띠에 모아 넓어진 지도 전체를 한 화면에 유지한다.
+        box(32, 750, 1248, 788, (28, 39, 44))
+        self.text(48, 769, f"함정 설치 {len(state.installed)}/{len(level.traps)}", 18)
         active_label = "완료" if state.active else "대기" if level.traps else "해당 없음"
-        self.text(918, 533, f"함정 가동  {active_label}", 18, TEAL if state.active else INK)
-        self.text(918, 499, f"병사 배치  {len(state.soldiers)} / {len(level.posts)}")
-        self.text(918, 453, f"운반 중    {ITEM_NAMES[state.carrying]}", 18, GOLD)
+        self.text(230, 769, f"가동 {active_label}", 18, TEAL if state.active else INK)
+        self.text(420, 769, f"병사 배치 {len(state.soldiers)}/{len(level.posts)}", 18)
+        self.text(620, 769, f"운반: {ITEM_NAMES[state.carrying]}", 18, GOLD)
         if state.carrying:
-            self.item(state.carrying, 1214, 449, 0.28)
-        self.text(918, 418, f"행동 {state.moves}회    되돌리기 {len(game.history)}회", 16, MUTED)
-        self.text(918, 375, "목표", 18, GOLD)
-        self.wrapped(918, 343, "복구를 마친 뒤 빈손으로 출구에 돌아오세요.")
-        self.text(918, 273, "현재 칸", 16, MUTED)
-        self.wrapped(918, 242, game.context_action(), size=18, color=TEAL)
-        if state.cleared:
-            box(908, 159, 1233, 205, (46, 96, 81))
-            label = "Enter  다음 방" if index + 1 < total else "Enter  처음부터 다시"
-            self.text(924, 183, label, 18)
+            self.item(state.carrying, 820, 757, 0.19)
+        self.text(936, 769, f"행동 {state.moves} · 되돌리기 {len(game.history)}", 16, MUTED)
 
-        self.text(44, 266, "이동 방향", 16, GOLD)
-        self.text(44, 236, "W / 위: 오른쪽 위     D / 오른쪽: 오른쪽 아래", 16, MUTED)
-        self.text(44, 210, "A / 왼쪽: 왼쪽 위     S / 아래: 왼쪽 아래", 16, MUTED)
-        self.text(44, 174, "물건·장치와 같은 칸에서 E를 누르세요.", 18)
-        box(32, 77, 1248, 133, (41, 55, 58))
-        self.text(51, 106, "복구 완료!" if state.cleared else game.message, 18, TEAL if state.cleared else INK)
-        self.text(42, 42, "WASD / 방향키  이동     E / Space  상호작용     Q  내려놓기     Z / Backspace  되돌리기     R  재시작     Esc  종료", 16, MUTED)
+        box(32, 73, 1248, 132, (41, 55, 58))
+        self.text(48, 113, game.context_action(), 18, TEAL)
+        self.text(48, 88, game.message, 16, INK)
+        if state.cleared:
+            box(932, 82, 1236, 123, (46, 96, 81))
+            label = "Enter  다음 방" if index + 1 < total else "Enter  처음부터 다시"
+            self.text(949, 103, label, 18)
+        else:
+            self.text(918, 104, "모든 복구 후 빈손으로 출구 복귀", 16, MUTED)
+
+        self.text(34, 51, "이동  W/위: 오른쪽 위    A/왼쪽: 왼쪽 위    S/아래: 왼쪽 아래    D/오른쪽: 오른쪽 아래", 13, MUTED)
+        self.text(34, 25, "현재 칸에서 E / Space  상호작용     Q  내려놓기     Z / Backspace  되돌리기     R  재시작     Enter  다음 방(완료 후)     Esc  종료", 16, MUTED)
 
 
 def run(levels, index=0, smoke_frames=None):
