@@ -10,6 +10,7 @@ from game.model import Game
 from game.art import Art
 from game.scenery import draw_scars, draw_tinted, floor_style, wall_style
 from game.navigation import ClickNavigator, IsoBoard, find_path
+from game.themes import boundary_wall, scene_for, themed_floor
 
 WIDTH, HEIGHT = 1280, 900
 INK = (226, 230, 219)
@@ -191,6 +192,10 @@ class View:
 
     def board(self, game):
         level, state = game.level, game.state
+        scene = scene_for(level)
+        if scene:
+            for pack in scene["packs"]:
+                self.art.load_theme(pack)
         # 큰 방도 타일을 축소하지 않도록 옆 패널 대신 화면 폭을 사용한다.
         projection = IsoBoard(level.width, level.height)
         half_width, half_height = projection.half_width, projection.half_height
@@ -202,6 +207,7 @@ class View:
         exit_ready = (state.installed == level.traps and (not level.traps or state.active)
                       and state.soldiers == level.posts and state.carrying is None)
         objects, labels, wall_tints = [], [], {}
+        decor_draws = {}
         device_floor = (level.traps | level.posts | level.plates | level.gates.keys()
                         | level.chutes.keys() | set(level.chutes.values()) | level.belts.keys()
                         | level.benches | level.levers | {level.exit})
@@ -213,9 +219,12 @@ class View:
                 pos = (x, y)
                 sx, sy = screen(pos)
                 near_trap = any(abs(x - tx) + abs(y - ty) <= 1 for tx, ty in level.traps)
-                tile, tint = floor_style(pos, near_trap)
+                tile, tint = themed_floor(scene, pos, near_trap) if scene else floor_style(pos, near_trap)
                 if pos in level.walls:
                     wall_sprite, wall_tint = wall_style(pos)
+                    if scene:
+                        wall_tint = tuple(scene["wall_tint"])
+                        wall_sprite = boundary_wall(scene, pos, level) or wall_sprite
                     if wall_sprite == "rubble":
                         tile, tint = wall_sprite, wall_tint
                     else:
@@ -239,7 +248,7 @@ class View:
                     draw_tinted(self.art, tile, sx, sy, scale, tint)
                 else:
                     self.art.draw(tile, sx, sy, scale)
-                if pos not in level.walls and pos not in device_floor:
+                if pos not in level.walls and pos not in device_floor and (not scene or near_trap):
                     draw_scars(pos, sx, sy, scale, near_trap)
 
                 if pos in level.belts:
@@ -273,6 +282,15 @@ class View:
                 if pos in state.soldiers:
                     objects.append((depth, 2, "soldier_deployed", sx + 10, sy))
 
+        if scene:
+            for decoration in scene["decorations"]:
+                pos = tuple(decoration["cell"])
+                sx, sy = screen(pos)
+                sy += 8 * scale  # 낮은 벽/잔해 위에 올려 통행 불가 영역임을 유지한다.
+                sprite = decoration["sprite"]
+                objects.append((sum(pos), 1.5, sprite, sx, sy))
+                decor_draws[(sprite, sx, sy)] = scale * decoration["scale"]
+
         # 바닥 전체를 먼저 그려 앞 칸의 바닥이 캐릭터 다리를 덮지 않게 한다.
         target_x, target_y = screen(state.player)
         diamond(target_x, target_y, half_width - 3, int(half_height) - 2, None, TEAL)
@@ -286,6 +304,11 @@ class View:
         objects.append((sum(player), 3, "player", px, py))
         for _, _, sprite, sx, sy in sorted(objects, key=lambda obj: obj[:2]):
             pos = state.player if sprite == "player" else projection.pick(sx, sy)
+            decor_scale = decor_draws.get((sprite, sx, sy))
+            if decor_scale is not None:
+                self.art.draw(sprite, sx, sy, decor_scale)
+                # 장식의 위쪽 그림이 뒤의 이동 칸/장치 클릭을 가로채지 않는다.
+                continue
             if sprite.startswith("belt_"):
                 direction = sprite.removeprefix("belt_")
                 name = "conveyor_ne" if direction in ("up", "left") else "conveyor_se"
@@ -299,7 +322,7 @@ class View:
                                               sx + 84 * scale, sy + 114 * scale)))
                 continue
             if sprite != "player":
-                if sprite == "wall_low":
+                if (sx, sy) in wall_tints and (sprite == "wall_low" or "_wall_" in sprite):
                     draw_tinted(self.art, sprite, sx, sy, scale, wall_tints[(sx, sy)])
                 else:
                     self.art.draw(sprite, sx, sy, scale)
@@ -330,11 +353,15 @@ class View:
 
     def draw(self, game, index, total):
         level, state = game.level, game.state
-        box(0, 0, WIDTH, HEIGHT, (19, 27, 32))
+        scene = scene_for(level)
+        background = tuple(scene["background"]) if scene else (19, 27, 32)
+        accent = tuple(scene["accent"]) if scene else MUTED
+        box(0, 0, WIDTH, HEIGHT, background)
         self.text(32, 857, "용사가 지나간 자리", 32)
         self.text(450, 857, level.title, 22)
         self.text(1090, 857, f"단계 {index + 1:02d} / {total:02d}", 22, GOLD)
-        self.text(34, 820, f"{level.width}×{level.height}  클릭 이동 · 프로토타입 0.6", 16, MUTED)
+        atmosphere = scene["name"] if scene else "던전 복구 작업실"
+        self.text(34, 820, f"{level.width}×{level.height}  {atmosphere}", 16, accent)
         self.wrapped(450, 825, level.hint, width=790, size=16)
 
         self.board(game)

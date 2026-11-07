@@ -1,0 +1,82 @@
+{
+  "stage_01": {
+    "name": "무너진 정비실", "packs": ["forge"],
+    "background": [30, 25, 23], "accent": [230, 177, 105],
+    "floor_tint": [246, 233, 216], "wall_tint": [183, 165, 144],
+    "floors": ["forge_floor_plain", "forge_floor_soot", "forge_floor_riveted", "forge_floor_channel"],
+    "decorations": [
+      {"sprite": "forge_gear_rack", "cell": [6, 1], "scale": 0.9},
+      {"sprite": "forge_coal_forge", "cell": [9, 1], "scale": 1.0},
+      {"sprite": "forge_anvil", "cell": [5, 5], "scale": 0.9},
+      {"sprite": "forge_tool_rack", "cell": [7, 5], "scale": 0.85},
+      {"sprite": "forge_metal_crate", "cell": [6, 7], "scale": 0.8}
+    ]
+  },
+  "stage_02": {
+    "name": "왕실 납골당", "packs": ["crypt"],
+    "background": [27, 22, 33], "accent": [204, 177, 227],
+    "floor_tint": [250, 237, 255], "wall_tint": [189, 166, 196],
+    "floors": ["crypt_floor_plain", "crypt_floor_mosaic", "crypt_floor_damaged", "crypt_floor_runner"],
+    "decorations": [
+      {"sprite": "crypt_broken_statue", "cell": [4, 0], "scale": 0.85},
+      {"sprite": "crypt_sarcophagus", "cell": [8, 0], "scale": 1.0},
+      {"sprite": "crypt_candles", "cell": [0, 4], "scale": 0.9},
+      {"sprite": "crypt_banner", "cell": [0, 8], "scale": 0.8},
+      {"sprite": "crypt_memorial_urn", "cell": [11, 3], "scale": 0.8}
+    ]
+  },
+  "stage_03": {
+    "name": "찢긴 마력 서고", "packs": ["archive"],
+    "background": [22, 27, 38], "accent": [151, 192, 226],
+    "floor_tint": [245, 242, 235], "wall_tint": [181, 188, 203],
+    "floors": ["archive_floor_plain", "archive_floor_inlay", "archive_floor_papers", "archive_floor_runes"],
+    "decorations": [
+      {"sprite": "archive_scroll_rack", "cell": [4, 1], "scale": 0.8},
+      {"sprite": "archive_crystal_lectern", "cell": [6, 0], "scale": 0.85},
+      {"sprite": "archive_fallen_shelf", "cell": [5, 5], "scale": 0.85},
+      {"sprite": "archive_bookshelf", "cell": [8, 6], "scale": 0.9},
+      {"sprite": "archive_writing_desk", "cell": [10, 6], "scale": 0.85},
+      {"sprite": "archive_book_pile", "cell": [5, 9], "scale": 0.8}
+    ]
+  },
+  "stage_04": {
+    "name": "봉인된 왕실 보관실", "packs": ["crypt", "archive"],
+    "background": [27, 28, 33], "accent": [186, 197, 221],
+    "floor_tint": [211, 227, 248], "wall_tint": [158, 178, 206],
+    "floors": ["archive_floor_plain", "archive_floor_inlay", "crypt_floor_mosaic", "archive_floor_runes"],
+    "decorations": [
+      {"sprite": "archive_bookshelf", "cell": [3, 0], "scale": 0.8},
+      {"sprite": "crypt_broken_statue", "cell": [7, 0], "scale": 0.9},
+      {"sprite": "crypt_coffin", "cell": [8, 5], "scale": 0.85},
+      {"sprite": "archive_book_pile", "cell": [8, 7], "scale": 0.75},
+      {"sprite": "archive_crystal_lectern", "cell": [0, 7], "scale": 0.8}
+    ]
+  },
+  "stage_05": {
+    "name": "이끼 배수로", "packs": ["sewer"],
+    "background": [17, 30, 28], "accent": [135, 205, 169],
+    "floor_tint": [217, 249, 222], "wall_tint": [151, 185, 155],
+    "floors": ["sewer_floor_plain", "sewer_floor_moss", "sewer_floor_puddle", "sewer_floor_grate"],
+    "decorations": [
+      {"sprite": "sewer_hand_pump", "cell": [8, 0], "scale": 0.9},
+      {"sprite": "sewer_pipe_elbow", "cell": [2, 7], "scale": 1.0},
+      {"sprite": "sewer_drain_outlet", "cell": [4, 8], "scale": 0.9},
+      {"sprite": "sewer_water_barrel", "cell": [3, 10], "scale": 0.9},
+      {"sprite": "sewer_reed_planter", "cell": [1, 9], "scale": 0.85}
+    ]
+  },
+  "stage_06": {
+    "name": "침수된 운반 공장", "packs": ["forge", "sewer"],
+    "background": [18, 26, 31], "accent": [135, 193, 201],
+    "floor_tint": [198, 227, 239], "wall_tint": [146, 177, 186],
+    "floors": ["forge_floor_plain", "forge_floor_riveted", "sewer_floor_puddle", "sewer_floor_grate"],
+    "decorations": [
+      {"sprite": "forge_boiler", "cell": [8, 2], "scale": 0.95},
+      {"sprite": "forge_coal_forge", "cell": [10, 1], "scale": 0.9},
+      {"sprite": "forge_gear_rack", "cell": [10, 4], "scale": 0.85},
+      {"sprite": "forge_metal_crate", "cell": [4, 6], "scale": 0.75},
+      {"sprite": "sewer_pipe_elbow", "cell": [0, 7], "scale": 0.8},
+      {"sprite": "sewer_water_barrel", "cell": [11, 8], "scale": 0.7}
+    ]
+  }
+}
