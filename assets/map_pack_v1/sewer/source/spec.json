@@ -1,0 +1,99 @@
+{
+  "key": "sewer",
+  "title": "이끼 수로",
+  "subtitle": "MOSS CISTERN",
+  "date": "2026-11-08",
+  "generator": "built-in image_gen",
+  "transparent_background": true,
+  "prompt": "Use case: stylized-concept.\nAsset: production-ready 2.5D isometric dungeon environment expansion atlas, true transparent PNG. This is a precisely sliceable GAME SPRITE SHEET, not a scene, poster or concept board.\nExactly 2048x2048 square, 4 columns by 4 rows of equal invisible 512px cells. Exactly ONE distinct isolated asset per cell, sixteen assets. No drawn grid, labels, text, captions, checkerboard, background or watermark. All parts fully inside their own cells, 30px safe padding, no cross-cell overlaps.\nShared art: charming, weathered dungeon after a hero's destructive visit, ready for a small teal-hooded repair worker. Sophisticated hand-painted stylized game art, crisp chunky shapes, beveled edges, warm/cool material contrast, restrained surface detail legible at 94px tile size. Same orthographic 2:1 isometric camera for everything, looking down about 30 degrees. Light comes upper left. NOT pixel art, not flat icons, not glossy toys, not realistic photography.\nRows 1 AND 2 are tile assets. They MUST all share an IDENTICAL full diamond stone floor footprint, points local left=(46,305), top=(256,200), right=(466,305), bottom=(256,410), and 20px-thick beveled front stone lip below it. Straight diamond sides with no protrusions. Keep floor size identical even under walls. Tile top is a walkable flat surface unless a wall occupies it. Every cell in these rows contains one full floor diamond. Wall top must remain inside y=55 and fit the tile footprint. Walls are low enough to preserve path readability, not entire buildings.\nRows 3 AND 4 are standalone props with NO floor tile. Center each object at x=256, ground contact baseline y=425. Objects fit x=50..462 and y=50..430. Render full object. No extraneous shadow clouds, platforms, floors or companion objects.\nColor and shape distinguish theme. Wear tells a story, without clutter obscuring paths. NO characters, no skeleton people, no trap spikes, no levers, no exit hatch (those existing gameplay objects must remain visually distinct).\nTransparent background is actual alpha, not painted black or checkers.\nTHEME: 이끼 수로 / MOSS CISTERN. Palette: desaturated moss green, wet blue-grey stone, oxidized copper, restrained murky turquoise water. Damp lower edges, mineral stains, tiny fern details; maintain warm upper-left light.\nSTRICT ROW-MAJOR CONTENT:\nRow 1, tiles 1-4:\n1. large damp blue-grey floor stones with restrained reflected highlights\n2. matching stones with moss in seams, no tall grass\n3. matching floor with a shallow clear greenish puddle reflecting a little light, still walkable\n4. matching floor framing a flat iron drainage grate, grid bars flush with surface\nRow 2, tiles 5-8:\n5. low damp masonry wall along BACK-LEFT edge (left vertex to top vertex), moss along cap\n6. matching wall along BACK-RIGHT edge (top vertex to right vertex), water stains\n7. matching L-shaped low wall along BOTH back edges, joined arms, tiny fern in corner\n8. collapsed back-left masonry wall with eroded edge and small mossy chunks on its own tile\nRow 3, props 9-12:\n9. a squat large oxidized copper elbow pipe on two tiny supports, leaking a single drop. One single standalone object, NO floor diamond.\n10. a compact old cast-iron water hand pump with curved handle and small spout. One single standalone object, NO floor diamond.\n11. a banded wooden barrel open at top showing still dark turquoise water. One single standalone object, NO floor diamond.\n12. one short low wooden plank footbridge with stout crossbeams, no railing, no water or floor underneath. One single standalone object, NO floor diamond.\nRow 4, props 13-16:\n13. a compact closed rusty vertical sluice gate in a low stone frame, manual wheel on top. One single standalone object, NO floor diamond.\n14. one low broken stone basin containing a small clump of reeds and water. One single standalone object, NO floor diamond.\n15. a squat mossy arched drain outlet with rusty bars and a thin trickle contained below the opening. One single standalone object, NO floor diamond.\n16. one compact joined stack of two damp shipping crates lashed with rope, mossy corners. One single standalone object, NO floor diamond.\nAll exactly sixteen assets, equal cells. Maintain the same isometric orientation and floor footprint across every tile. The eight props in rows 3 and 4 have no floor tile. All silhouettes comfortably inside their own cells, actual alpha transparency.",
+  "entries": [
+    {
+      "id": "sewer_floor_plain",
+      "kind": "floor",
+      "description": "large damp blue-grey floor stones with restrained reflected highlights"
+    },
+    {
+      "id": "sewer_floor_moss",
+      "kind": "floor",
+      "description": "matching stones with moss in seams, no tall grass"
+    },
+    {
+      "id": "sewer_floor_puddle",
+      "kind": "floor",
+      "description": "matching floor with a shallow clear greenish puddle reflecting a little light, still walkable"
+    },
+    {
+      "id": "sewer_floor_grate",
+      "kind": "floor",
+      "description": "matching floor framing a flat iron drainage grate, grid bars flush with surface"
+    },
+    {
+      "id": "sewer_wall_nw",
+      "kind": "wall",
+      "description": "low damp masonry wall along BACK-LEFT edge (left vertex to top vertex), moss along cap"
+    },
+    {
+      "id": "sewer_wall_ne",
+      "kind": "wall",
+      "description": "matching wall along BACK-RIGHT edge (top vertex to right vertex), water stains"
+    },
+    {
+      "id": "sewer_wall_corner",
+      "kind": "wall",
+      "description": "matching L-shaped low wall along BOTH back edges, joined arms, tiny fern in corner"
+    },
+    {
+      "id": "sewer_wall_broken",
+      "kind": "wall",
+      "description": "collapsed back-left masonry wall with eroded edge and small mossy chunks on its own tile"
+    },
+    {
+      "id": "sewer_pipe_elbow",
+      "kind": "prop",
+      "description": "a squat large oxidized copper elbow pipe on two tiny supports, leaking a single drop",
+      "width": 148
+    },
+    {
+      "id": "sewer_hand_pump",
+      "kind": "prop",
+      "description": "a compact old cast-iron water hand pump with curved handle and small spout",
+      "width": 108
+    },
+    {
+      "id": "sewer_water_barrel",
+      "kind": "prop",
+      "description": "a banded wooden barrel open at top showing still dark turquoise water",
+      "width": 108
+    },
+    {
+      "id": "sewer_plank_bridge",
+      "kind": "prop",
+      "description": "one short low wooden plank footbridge with stout crossbeams, no railing, no water or floor underneath",
+      "width": 194
+    },
+    {
+      "id": "sewer_sluice_gate",
+      "kind": "prop",
+      "description": "a compact closed rusty vertical sluice gate in a low stone frame, manual wheel on top",
+      "width": 154
+    },
+    {
+      "id": "sewer_reed_planter",
+      "kind": "prop",
+      "description": "one low broken stone basin containing a small clump of reeds and water",
+      "width": 126
+    },
+    {
+      "id": "sewer_drain_outlet",
+      "kind": "prop",
+      "description": "a squat mossy arched drain outlet with rusty bars and a thin trickle contained below the opening",
+      "width": 142
+    },
+    {
+      "id": "sewer_supply_crates",
+      "kind": "prop",
+      "description": "one compact joined stack of two damp shipping crates lashed with rope, mossy corners",
+      "width": 132
+    }
+  ]
+}

@@ -1,0 +1,88 @@
+{
+  "count": 16,
+  "alpha": true,
+  "source_cells_unclipped": true,
+  "output_padding": true,
+  "sprites": [
+    {
+      "id": "sewer_floor_plain",
+      "visible_pixels": 15613,
+      "edge_pixels": 0
+    },
+    {
+      "id": "sewer_floor_moss",
+      "visible_pixels": 15581,
+      "edge_pixels": 0
+    },
+    {
+      "id": "sewer_floor_puddle",
+      "visible_pixels": 15628,
+      "edge_pixels": 0
+    },
+    {
+      "id": "sewer_floor_grate",
+      "visible_pixels": 15521,
+      "edge_pixels": 0
+    },
+    {
+      "id": "sewer_wall_nw",
+      "visible_pixels": 19419,
+      "edge_pixels": 0
+    },
+    {
+      "id": "sewer_wall_ne",
+      "visible_pixels": 19354,
+      "edge_pixels": 0
+    },
+    {
+      "id": "sewer_wall_corner",
+      "visible_pixels": 22124,
+      "edge_pixels": 0
+    },
+    {
+      "id": "sewer_wall_broken",
+      "visible_pixels": 18280,
+      "edge_pixels": 0
+    },
+    {
+      "id": "sewer_pipe_elbow",
+      "visible_pixels": 12243,
+      "edge_pixels": 0
+    },
+    {
+      "id": "sewer_hand_pump",
+      "visible_pixels": 6770,
+      "edge_pixels": 0
+    },
+    {
+      "id": "sewer_water_barrel",
+      "visible_pixels": 11739,
+      "edge_pixels": 0
+    },
+    {
+      "id": "sewer_plank_bridge",
+      "visible_pixels": 15015,
+      "edge_pixels": 0
+    },
+    {
+      "id": "sewer_sluice_gate",
+      "visible_pixels": 17754,
+      "edge_pixels": 0
+    },
+    {
+      "id": "sewer_reed_planter",
+      "visible_pixels": 9997,
+      "edge_pixels": 0
+    },
+    {
+      "id": "sewer_drain_outlet",
+      "visible_pixels": 13118,
+      "edge_pixels": 0
+    },
+    {
+      "id": "sewer_supply_crates",
+      "visible_pixels": 14081,
+      "edge_pixels": 0
+    }
+  ]
+}

@@ -1,0 +1,618 @@
+{
+  "version": 1,
+  "created": "2026-11-08",
+  "theme": "sewer",
+  "title": "이끼 수로",
+  "generator": "built-in image_gen",
+  "status": "map-decoration-pack; not yet placed in gameplay maps",
+  "coordinates": {
+    "image": "top-left origin; anchor and source_rect use x right, y down",
+    "pico2d": "clip_rect_pico2d uses bottom-left origin",
+    "tile_footprint": {
+      "width": 224,
+      "height": 112
+    }
+  },
+  "source": {
+    "file": "source/atlas.png",
+    "width": 1254,
+    "height": 1254,
+    "sha256": "12ce6d75a522a820752f1236e8c90c0b77d2feec9044122698dba1df833b4065",
+    "grid": [
+      4,
+      4
+    ]
+  },
+  "atlases": {
+    "sewer": {
+      "file": "atlas.png",
+      "width": 1024,
+      "height": 1024,
+      "cell_size": 256,
+      "grid": [
+        4,
+        4
+      ],
+      "sha256": "6e02e3b2b71ba5b68ba2d0b33a65c367015b99f7610e73d8b59d681e7be65663"
+    }
+  },
+  "sprites": {
+    "sewer_floor_plain": {
+      "file": "tiles/sewer_floor_plain.png",
+      "kind": "floor",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 160
+      },
+      "atlas": "sewer",
+      "clip_rect_pico2d": [
+        0,
+        768,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 0,
+        "top": 0,
+        "width": 314,
+        "height": 314
+      },
+      "source_content_rect": {
+        "left": 21,
+        "top": 66,
+        "width": 273,
+        "height": 187
+      },
+      "content_rect": {
+        "left": 16,
+        "top": 104,
+        "width": 224,
+        "height": 124
+      },
+      "sha256": "c7802a5df02c8f40a37a2dd7c1c9dfed4b2a397b1eb7534b3302c487a8627655"
+    },
+    "sewer_floor_moss": {
+      "file": "tiles/sewer_floor_moss.png",
+      "kind": "floor",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 160
+      },
+      "atlas": "sewer",
+      "clip_rect_pico2d": [
+        256,
+        768,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 314,
+        "top": 0,
+        "width": 313,
+        "height": 314
+      },
+      "source_content_rect": {
+        "left": 20,
+        "top": 66,
+        "width": 274,
+        "height": 186
+      },
+      "content_rect": {
+        "left": 16,
+        "top": 105,
+        "width": 224,
+        "height": 123
+      },
+      "sha256": "6d7d700998859e04f51e365ccb728995db76838254559b590dc018b288b94478"
+    },
+    "sewer_floor_puddle": {
+      "file": "tiles/sewer_floor_puddle.png",
+      "kind": "floor",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 160
+      },
+      "atlas": "sewer",
+      "clip_rect_pico2d": [
+        512,
+        768,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 627,
+        "top": 0,
+        "width": 314,
+        "height": 314
+      },
+      "source_content_rect": {
+        "left": 21,
+        "top": 66,
+        "width": 273,
+        "height": 187
+      },
+      "content_rect": {
+        "left": 16,
+        "top": 104,
+        "width": 224,
+        "height": 124
+      },
+      "sha256": "0fcd9f4e2a714ad0f96fc3cc066bfa76eaede61347a0d493f48b0aec6c695cc0"
+    },
+    "sewer_floor_grate": {
+      "file": "tiles/sewer_floor_grate.png",
+      "kind": "floor",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 160
+      },
+      "atlas": "sewer",
+      "clip_rect_pico2d": [
+        768,
+        768,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 941,
+        "top": 0,
+        "width": 313,
+        "height": 314
+      },
+      "source_content_rect": {
+        "left": 20,
+        "top": 66,
+        "width": 274,
+        "height": 186
+      },
+      "content_rect": {
+        "left": 16,
+        "top": 105,
+        "width": 224,
+        "height": 123
+      },
+      "sha256": "c47e5d792f7458af348b7e7bc080664b5baf14f509efc030f03a6499cb1ed87b"
+    },
+    "sewer_wall_nw": {
+      "file": "tiles/sewer_wall_nw.png",
+      "kind": "wall",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 160
+      },
+      "atlas": "sewer",
+      "clip_rect_pico2d": [
+        0,
+        512,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 0,
+        "top": 314,
+        "width": 314,
+        "height": 313
+      },
+      "source_content_rect": {
+        "left": 19,
+        "top": 38,
+        "width": 275,
+        "height": 231
+      },
+      "content_rect": {
+        "left": 16,
+        "top": 75,
+        "width": 224,
+        "height": 153
+      },
+      "sha256": "30cb467258bf03984ca444b5b40d025d262b0ebdffc1baee3084dea04bfcbe83"
+    },
+    "sewer_wall_ne": {
+      "file": "tiles/sewer_wall_ne.png",
+      "kind": "wall",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 160
+      },
+      "atlas": "sewer",
+      "clip_rect_pico2d": [
+        256,
+        512,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 314,
+        "top": 314,
+        "width": 313,
+        "height": 313
+      },
+      "source_content_rect": {
+        "left": 20,
+        "top": 38,
+        "width": 274,
+        "height": 229
+      },
+      "content_rect": {
+        "left": 16,
+        "top": 76,
+        "width": 224,
+        "height": 152
+      },
+      "sha256": "0ea71ddb194b9aa93617d543f2b84fc37c6cdfa12b4da47fef96dff83e9766b9"
+    },
+    "sewer_wall_corner": {
+      "file": "tiles/sewer_wall_corner.png",
+      "kind": "wall",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 160
+      },
+      "atlas": "sewer",
+      "clip_rect_pico2d": [
+        512,
+        512,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 627,
+        "top": 314,
+        "width": 314,
+        "height": 313
+      },
+      "source_content_rect": {
+        "left": 20,
+        "top": 38,
+        "width": 275,
+        "height": 229
+      },
+      "content_rect": {
+        "left": 16,
+        "top": 76,
+        "width": 224,
+        "height": 152
+      },
+      "sha256": "8a0dc7901c16ec4074c336510e9dae90b3cfd6ef2fbc474da838c332a994d5ce"
+    },
+    "sewer_wall_broken": {
+      "file": "tiles/sewer_wall_broken.png",
+      "kind": "wall",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 160
+      },
+      "atlas": "sewer",
+      "clip_rect_pico2d": [
+        768,
+        512,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 941,
+        "top": 314,
+        "width": 313,
+        "height": 313
+      },
+      "source_content_rect": {
+        "left": 20,
+        "top": 44,
+        "width": 273,
+        "height": 223
+      },
+      "content_rect": {
+        "left": 16,
+        "top": 80,
+        "width": 224,
+        "height": 148
+      },
+      "sha256": "ce0d7a2a64a11b08b7b9a5379f07136590cf14ee8735efb911738de26cd8683a"
+    },
+    "sewer_pipe_elbow": {
+      "file": "props/sewer_pipe_elbow.png",
+      "kind": "prop",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 220
+      },
+      "atlas": "sewer",
+      "clip_rect_pico2d": [
+        0,
+        256,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 0,
+        "top": 627,
+        "width": 314,
+        "height": 314
+      },
+      "source_content_rect": {
+        "left": 42,
+        "top": 64,
+        "width": 231,
+        "height": 213
+      },
+      "content_rect": {
+        "left": 54,
+        "top": 84,
+        "width": 148,
+        "height": 136
+      },
+      "sha256": "e8a3a655d2ed6a8d2b313a334ec7ac4b701a9632fa33debc9385e032316f57a8"
+    },
+    "sewer_hand_pump": {
+      "file": "props/sewer_hand_pump.png",
+      "kind": "prop",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 220
+      },
+      "atlas": "sewer",
+      "clip_rect_pico2d": [
+        256,
+        256,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 314,
+        "top": 627,
+        "width": 313,
+        "height": 314
+      },
+      "source_content_rect": {
+        "left": 58,
+        "top": 37,
+        "width": 198,
+        "height": 257
+      },
+      "content_rect": {
+        "left": 74,
+        "top": 80,
+        "width": 108,
+        "height": 140
+      },
+      "sha256": "93a3a9635a59ae8b5998ace160160205c51439b5741fcc84215f0fbb55dcf44e"
+    },
+    "sewer_water_barrel": {
+      "file": "props/sewer_water_barrel.png",
+      "kind": "prop",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 220
+      },
+      "atlas": "sewer",
+      "clip_rect_pico2d": [
+        512,
+        256,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 627,
+        "top": 627,
+        "width": 314,
+        "height": 314
+      },
+      "source_content_rect": {
+        "left": 58,
+        "top": 55,
+        "width": 195,
+        "height": 233
+      },
+      "content_rect": {
+        "left": 74,
+        "top": 91,
+        "width": 108,
+        "height": 129
+      },
+      "sha256": "0175598ff206a7086be1bd89c0d353406f0a4f794eb3497112bfe4c24f6dcd51"
+    },
+    "sewer_plank_bridge": {
+      "file": "props/sewer_plank_bridge.png",
+      "kind": "prop",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 220
+      },
+      "atlas": "sewer",
+      "clip_rect_pico2d": [
+        768,
+        256,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 941,
+        "top": 627,
+        "width": 313,
+        "height": 314
+      },
+      "source_content_rect": {
+        "left": 22,
+        "top": 73,
+        "width": 270,
+        "height": 207
+      },
+      "content_rect": {
+        "left": 31,
+        "top": 71,
+        "width": 194,
+        "height": 149
+      },
+      "sha256": "b113c03504304bdcbd873d2188b1452edcafc2df5efbd31c279a9ceb8ceb6bec"
+    },
+    "sewer_sluice_gate": {
+      "file": "props/sewer_sluice_gate.png",
+      "kind": "prop",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 220
+      },
+      "atlas": "sewer",
+      "clip_rect_pico2d": [
+        0,
+        0,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 0,
+        "top": 941,
+        "width": 314,
+        "height": 313
+      },
+      "source_content_rect": {
+        "left": 34,
+        "top": 27,
+        "width": 243,
+        "height": 258
+      },
+      "content_rect": {
+        "left": 51,
+        "top": 56,
+        "width": 154,
+        "height": 164
+      },
+      "sha256": "6c3aebb1896517b4647cecc8ed08ad07002c0cf2d3b49f08233a09cd8d662cb8"
+    },
+    "sewer_reed_planter": {
+      "file": "props/sewer_reed_planter.png",
+      "kind": "prop",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 220
+      },
+      "atlas": "sewer",
+      "clip_rect_pico2d": [
+        256,
+        0,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 314,
+        "top": 941,
+        "width": 313,
+        "height": 313
+      },
+      "source_content_rect": {
+        "left": 26,
+        "top": 43,
+        "width": 253,
+        "height": 240
+      },
+      "content_rect": {
+        "left": 65,
+        "top": 100,
+        "width": 126,
+        "height": 120
+      },
+      "sha256": "cb53fe9447a7cf63bfd9b3fce9660ee1ddb0a1860cf4345cab115a7c86098dd8"
+    },
+    "sewer_drain_outlet": {
+      "file": "props/sewer_drain_outlet.png",
+      "kind": "prop",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 220
+      },
+      "atlas": "sewer",
+      "clip_rect_pico2d": [
+        512,
+        0,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 627,
+        "top": 941,
+        "width": 314,
+        "height": 313
+      },
+      "source_content_rect": {
+        "left": 26,
+        "top": 53,
+        "width": 260,
+        "height": 225
+      },
+      "content_rect": {
+        "left": 57,
+        "top": 97,
+        "width": 142,
+        "height": 123
+      },
+      "sha256": "0402de01841a6edd982d0f2d611ad0885b8227a4bb2f9cb34cd9e17647539ab6"
+    },
+    "sewer_supply_crates": {
+      "file": "props/sewer_supply_crates.png",
+      "kind": "prop",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 220
+      },
+      "atlas": "sewer",
+      "clip_rect_pico2d": [
+        768,
+        0,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 941,
+        "top": 941,
+        "width": 313,
+        "height": 313
+      },
+      "source_content_rect": {
+        "left": 39,
+        "top": 31,
+        "width": 237,
+        "height": 257
+      },
+      "content_rect": {
+        "left": 62,
+        "top": 77,
+        "width": 132,
+        "height": 143
+      },
+      "sha256": "aca8800895d515ebb1b57c4b4f71c1aeb586a316d7299a58f5f7f98448355acb"
+    }
+  },
+  "placement": "Wall variants are rear-edge boundary decorations. Neither walls nor props create collision rules automatically."
+}
