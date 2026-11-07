@@ -1,0 +1,88 @@
+{
+  "count": 16,
+  "alpha": true,
+  "source_cells_unclipped": true,
+  "output_padding": true,
+  "sprites": [
+    {
+      "id": "archive_floor_plain",
+      "visible_pixels": 15292,
+      "edge_pixels": 0
+    },
+    {
+      "id": "archive_floor_inlay",
+      "visible_pixels": 15314,
+      "edge_pixels": 0
+    },
+    {
+      "id": "archive_floor_runes",
+      "visible_pixels": 15260,
+      "edge_pixels": 0
+    },
+    {
+      "id": "archive_floor_papers",
+      "visible_pixels": 15303,
+      "edge_pixels": 0
+    },
+    {
+      "id": "archive_wall_nw",
+      "visible_pixels": 19074,
+      "edge_pixels": 0
+    },
+    {
+      "id": "archive_wall_ne",
+      "visible_pixels": 18944,
+      "edge_pixels": 0
+    },
+    {
+      "id": "archive_wall_corner",
+      "visible_pixels": 21731,
+      "edge_pixels": 0
+    },
+    {
+      "id": "archive_wall_broken",
+      "visible_pixels": 18271,
+      "edge_pixels": 0
+    },
+    {
+      "id": "archive_bookshelf",
+      "visible_pixels": 23145,
+      "edge_pixels": 0
+    },
+    {
+      "id": "archive_writing_desk",
+      "visible_pixels": 18757,
+      "edge_pixels": 0
+    },
+    {
+      "id": "archive_book_pile",
+      "visible_pixels": 5970,
+      "edge_pixels": 0
+    },
+    {
+      "id": "archive_crystal_lectern",
+      "visible_pixels": 13094,
+      "edge_pixels": 0
+    },
+    {
+      "id": "archive_fallen_shelf",
+      "visible_pixels": 15380,
+      "edge_pixels": 0
+    },
+    {
+      "id": "archive_scroll_rack",
+      "visible_pixels": 15632,
+      "edge_pixels": 0
+    },
+    {
+      "id": "archive_orrery",
+      "visible_pixels": 7147,
+      "edge_pixels": 0
+    },
+    {
+      "id": "archive_broken_obelisk",
+      "visible_pixels": 9369,
+      "edge_pixels": 0
+    }
+  ]
+}

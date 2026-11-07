@@ -1,0 +1,618 @@
+{
+  "version": 1,
+  "created": "2026-11-08",
+  "theme": "archive",
+  "title": "마력 서고",
+  "generator": "built-in image_gen",
+  "status": "map-decoration-pack; not yet placed in gameplay maps",
+  "coordinates": {
+    "image": "top-left origin; anchor and source_rect use x right, y down",
+    "pico2d": "clip_rect_pico2d uses bottom-left origin",
+    "tile_footprint": {
+      "width": 224,
+      "height": 112
+    }
+  },
+  "source": {
+    "file": "source/atlas.png",
+    "width": 1254,
+    "height": 1254,
+    "sha256": "16571c1374ac2422d4dcba8a7293d20ed2af3ff51256a3ecb9947a45fe69654a",
+    "grid": [
+      4,
+      4
+    ]
+  },
+  "atlases": {
+    "archive": {
+      "file": "atlas.png",
+      "width": 1024,
+      "height": 1024,
+      "cell_size": 256,
+      "grid": [
+        4,
+        4
+      ],
+      "sha256": "53dab282b52cc3ebff4708253d03a3b7ffa7169ff982d0c9398592407399b81e"
+    }
+  },
+  "sprites": {
+    "archive_floor_plain": {
+      "file": "tiles/archive_floor_plain.png",
+      "kind": "floor",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 160
+      },
+      "atlas": "archive",
+      "clip_rect_pico2d": [
+        0,
+        768,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 0,
+        "top": 0,
+        "width": 314,
+        "height": 314
+      },
+      "source_content_rect": {
+        "left": 14,
+        "top": 78,
+        "width": 286,
+        "height": 203
+      },
+      "content_rect": {
+        "left": 16,
+        "top": 104,
+        "width": 224,
+        "height": 124
+      },
+      "sha256": "39c990a4c557065867561ee7b36590809cde7ceb4f7713ec2ae30dc6484449a4"
+    },
+    "archive_floor_inlay": {
+      "file": "tiles/archive_floor_inlay.png",
+      "kind": "floor",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 160
+      },
+      "atlas": "archive",
+      "clip_rect_pico2d": [
+        256,
+        768,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 314,
+        "top": 0,
+        "width": 313,
+        "height": 314
+      },
+      "source_content_rect": {
+        "left": 14,
+        "top": 78,
+        "width": 286,
+        "height": 203
+      },
+      "content_rect": {
+        "left": 16,
+        "top": 104,
+        "width": 224,
+        "height": 124
+      },
+      "sha256": "d0062dea3265db5cd17646066c7183f13293165899afb59a8f2f16f195fe7169"
+    },
+    "archive_floor_runes": {
+      "file": "tiles/archive_floor_runes.png",
+      "kind": "floor",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 160
+      },
+      "atlas": "archive",
+      "clip_rect_pico2d": [
+        512,
+        768,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 627,
+        "top": 0,
+        "width": 314,
+        "height": 314
+      },
+      "source_content_rect": {
+        "left": 15,
+        "top": 79,
+        "width": 285,
+        "height": 202
+      },
+      "content_rect": {
+        "left": 16,
+        "top": 105,
+        "width": 224,
+        "height": 123
+      },
+      "sha256": "6df82941c6f504ebd70401ca549fd610f4cf784d6a0c8e10325f4b4a0aeb80a2"
+    },
+    "archive_floor_papers": {
+      "file": "tiles/archive_floor_papers.png",
+      "kind": "floor",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 160
+      },
+      "atlas": "archive",
+      "clip_rect_pico2d": [
+        768,
+        768,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 941,
+        "top": 0,
+        "width": 313,
+        "height": 314
+      },
+      "source_content_rect": {
+        "left": 14,
+        "top": 78,
+        "width": 286,
+        "height": 203
+      },
+      "content_rect": {
+        "left": 16,
+        "top": 104,
+        "width": 224,
+        "height": 124
+      },
+      "sha256": "a7feb80575dbbb7c76794628f9ab54433e1ae1f9ac1b2ab0ce6d0be422a05f33"
+    },
+    "archive_wall_nw": {
+      "file": "tiles/archive_wall_nw.png",
+      "kind": "wall",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 160
+      },
+      "atlas": "archive",
+      "clip_rect_pico2d": [
+        0,
+        512,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 0,
+        "top": 314,
+        "width": 314,
+        "height": 313
+      },
+      "source_content_rect": {
+        "left": 14,
+        "top": 52,
+        "width": 286,
+        "height": 253
+      },
+      "content_rect": {
+        "left": 16,
+        "top": 73,
+        "width": 224,
+        "height": 155
+      },
+      "sha256": "ac70a4e5b14b851a6e82ec1701c13d516f4ead676446cdf344d631a2f82721da"
+    },
+    "archive_wall_ne": {
+      "file": "tiles/archive_wall_ne.png",
+      "kind": "wall",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 160
+      },
+      "atlas": "archive",
+      "clip_rect_pico2d": [
+        256,
+        512,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 314,
+        "top": 314,
+        "width": 313,
+        "height": 313
+      },
+      "source_content_rect": {
+        "left": 14,
+        "top": 52,
+        "width": 286,
+        "height": 253
+      },
+      "content_rect": {
+        "left": 16,
+        "top": 73,
+        "width": 224,
+        "height": 155
+      },
+      "sha256": "67d3fe5ca96a2825a49e87579e23b2cea89390a7c17014f8e84c883ddb1d32e1"
+    },
+    "archive_wall_corner": {
+      "file": "tiles/archive_wall_corner.png",
+      "kind": "wall",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 160
+      },
+      "atlas": "archive",
+      "clip_rect_pico2d": [
+        512,
+        512,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 627,
+        "top": 314,
+        "width": 314,
+        "height": 313
+      },
+      "source_content_rect": {
+        "left": 15,
+        "top": 52,
+        "width": 285,
+        "height": 253
+      },
+      "content_rect": {
+        "left": 16,
+        "top": 73,
+        "width": 224,
+        "height": 155
+      },
+      "sha256": "1c10392132bc4026531ef56d478b6b795cc58ac94a1aab6f187b2b8795280bc5"
+    },
+    "archive_wall_broken": {
+      "file": "tiles/archive_wall_broken.png",
+      "kind": "wall",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 160
+      },
+      "atlas": "archive",
+      "clip_rect_pico2d": [
+        768,
+        512,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 941,
+        "top": 314,
+        "width": 313,
+        "height": 313
+      },
+      "source_content_rect": {
+        "left": 14,
+        "top": 54,
+        "width": 286,
+        "height": 251
+      },
+      "content_rect": {
+        "left": 16,
+        "top": 75,
+        "width": 224,
+        "height": 153
+      },
+      "sha256": "c428745245a1fa943f830653b6a1bfa6891a788d5098f733a712165714fd655f"
+    },
+    "archive_bookshelf": {
+      "file": "props/archive_bookshelf.png",
+      "kind": "prop",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 220
+      },
+      "atlas": "archive",
+      "clip_rect_pico2d": [
+        0,
+        256,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 0,
+        "top": 627,
+        "width": 314,
+        "height": 314
+      },
+      "source_content_rect": {
+        "left": 49,
+        "top": 28,
+        "width": 221,
+        "height": 284
+      },
+      "content_rect": {
+        "left": 52,
+        "top": 24,
+        "width": 153,
+        "height": 196
+      },
+      "sha256": "ee8a8e379cfcbda802f739733a69efeb387af04e87a4c17e56bd193ef6fb7126"
+    },
+    "archive_writing_desk": {
+      "file": "props/archive_writing_desk.png",
+      "kind": "prop",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 220
+      },
+      "atlas": "archive",
+      "clip_rect_pico2d": [
+        256,
+        256,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 314,
+        "top": 627,
+        "width": 313,
+        "height": 314
+      },
+      "source_content_rect": {
+        "left": 28,
+        "top": 59,
+        "width": 256,
+        "height": 247
+      },
+      "content_rect": {
+        "left": 38,
+        "top": 46,
+        "width": 180,
+        "height": 174
+      },
+      "sha256": "087c5ba2a7316604ec30cae35dc2e9410d7ed1e7b456138126a71411d38ac3af"
+    },
+    "archive_book_pile": {
+      "file": "props/archive_book_pile.png",
+      "kind": "prop",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 220
+      },
+      "atlas": "archive",
+      "clip_rect_pico2d": [
+        512,
+        256,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 627,
+        "top": 627,
+        "width": 314,
+        "height": 314
+      },
+      "source_content_rect": {
+        "left": 21,
+        "top": 56,
+        "width": 269,
+        "height": 251
+      },
+      "content_rect": {
+        "left": 78,
+        "top": 127,
+        "width": 100,
+        "height": 93
+      },
+      "sha256": "3f208ac825cc77b6ec8cdc6bfdea1f5bff76b6a1b7cb45cc10bc2f3f00348395"
+    },
+    "archive_crystal_lectern": {
+      "file": "props/archive_crystal_lectern.png",
+      "kind": "prop",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 220
+      },
+      "atlas": "archive",
+      "clip_rect_pico2d": [
+        768,
+        256,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 941,
+        "top": 627,
+        "width": 313,
+        "height": 314
+      },
+      "source_content_rect": {
+        "left": 66,
+        "top": 18,
+        "width": 182,
+        "height": 289
+      },
+      "content_rect": {
+        "left": 69,
+        "top": 33,
+        "width": 118,
+        "height": 187
+      },
+      "sha256": "4e120ee3bb2d13c7ebdff904948b1d25c7133196958fe6236a7ceec39afce59d"
+    },
+    "archive_fallen_shelf": {
+      "file": "props/archive_fallen_shelf.png",
+      "kind": "prop",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 220
+      },
+      "atlas": "archive",
+      "clip_rect_pico2d": [
+        0,
+        0,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 0,
+        "top": 941,
+        "width": 314,
+        "height": 313
+      },
+      "source_content_rect": {
+        "left": 14,
+        "top": 78,
+        "width": 278,
+        "height": 190
+      },
+      "content_rect": {
+        "left": 34,
+        "top": 92,
+        "width": 188,
+        "height": 128
+      },
+      "sha256": "fd3e78504090a3218528fd43f0063ba1d8688edaa68b41ccec7371703efe65d4"
+    },
+    "archive_scroll_rack": {
+      "file": "props/archive_scroll_rack.png",
+      "kind": "prop",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 220
+      },
+      "atlas": "archive",
+      "clip_rect_pico2d": [
+        256,
+        0,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 314,
+        "top": 941,
+        "width": 313,
+        "height": 313
+      },
+      "source_content_rect": {
+        "left": 41,
+        "top": 38,
+        "width": 230,
+        "height": 245
+      },
+      "content_rect": {
+        "left": 58,
+        "top": 71,
+        "width": 140,
+        "height": 149
+      },
+      "sha256": "3498d6cb32230b3b141eda26c600c77bfaf54b250f4b9bd127c40dba87cf2afb"
+    },
+    "archive_orrery": {
+      "file": "props/archive_orrery.png",
+      "kind": "prop",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 220
+      },
+      "atlas": "archive",
+      "clip_rect_pico2d": [
+        512,
+        0,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 627,
+        "top": 941,
+        "width": 314,
+        "height": 313
+      },
+      "source_content_rect": {
+        "left": 46,
+        "top": 34,
+        "width": 217,
+        "height": 259
+      },
+      "content_rect": {
+        "left": 69,
+        "top": 79,
+        "width": 118,
+        "height": 141
+      },
+      "sha256": "32b2a9114f029711f0992169822d71ea16232c05a78f239417d3dd736a57adfe"
+    },
+    "archive_broken_obelisk": {
+      "file": "props/archive_broken_obelisk.png",
+      "kind": "prop",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 220
+      },
+      "atlas": "archive",
+      "clip_rect_pico2d": [
+        768,
+        0,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 941,
+        "top": 941,
+        "width": 313,
+        "height": 313
+      },
+      "source_content_rect": {
+        "left": 60,
+        "top": 26,
+        "width": 188,
+        "height": 256
+      },
+      "content_rect": {
+        "left": 74,
+        "top": 73,
+        "width": 108,
+        "height": 147
+      },
+      "sha256": "d38ec59b92d203d879bb5bdb5ffc9de9a72735a48427fb7cbda97813620278f5"
+    }
+  },
+  "placement": "Wall variants are rear-edge boundary decorations. Neither walls nor props create collision rules automatically."
+}

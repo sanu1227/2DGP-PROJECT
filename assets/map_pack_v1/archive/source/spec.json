@@ -1,0 +1,99 @@
+{
+  "key": "archive",
+  "title": "마력 서고",
+  "subtitle": "ARCANE ARCHIVE",
+  "date": "2026-11-08",
+  "generator": "built-in image_gen",
+  "transparent_background": true,
+  "prompt": "Use case: stylized-concept.\nAsset: production-ready 2.5D isometric dungeon environment expansion atlas, true transparent PNG. This is a precisely sliceable GAME SPRITE SHEET, not a scene, poster or concept board.\nExactly 2048x2048 square, 4 columns by 4 rows of equal invisible 512px cells. Exactly ONE distinct isolated asset per cell, sixteen assets. No drawn grid, labels, text, captions, checkerboard, background or watermark. All parts fully inside their own cells, 30px safe padding, no cross-cell overlaps.\nShared art: charming, weathered dungeon after a hero's destructive visit, ready for a small teal-hooded repair worker. Sophisticated hand-painted stylized game art, crisp chunky shapes, beveled edges, warm/cool material contrast, restrained surface detail legible at 94px tile size. Same orthographic 2:1 isometric camera for everything, looking down about 30 degrees. Light comes upper left. NOT pixel art, not flat icons, not glossy toys, not realistic photography.\nRows 1 AND 2 are tile assets. They MUST all share an IDENTICAL full diamond stone floor footprint, points local left=(46,305), top=(256,200), right=(466,305), bottom=(256,410), and 20px-thick beveled front stone lip below it. Straight diamond sides with no protrusions. Keep floor size identical even under walls. Tile top is a walkable flat surface unless a wall occupies it. Every cell in these rows contains one full floor diamond. Wall top must remain inside y=55 and fit the tile footprint. Walls are low enough to preserve path readability, not entire buildings.\nRows 3 AND 4 are standalone props with NO floor tile. Center each object at x=256, ground contact baseline y=425. Objects fit x=50..462 and y=50..430. Render full object. No extraneous shadow clouds, platforms, floors or companion objects.\nColor and shape distinguish theme. Wear tells a story, without clutter obscuring paths. NO characters, no skeleton people, no trap spikes, no levers, no exit hatch (those existing gameplay objects must remain visually distinct).\nTransparent background is actual alpha, not painted black or checkers.\nTHEME: 마력 서고 / ARCANE ARCHIVE. Palette: dusty warm limestone, deep midnight-blue wood, desaturated violet cloth, aged brass, restrained cyan crystals. Warm parchment and soft teal pinpoints of light, no large glowing VFX.\nSTRICT ROW-MAJOR CONTENT:\nRow 1, tiles 1-4:\n1. large warm pale-grey limestone squares with gentle worn edges\n2. matching stone floor with a flat dark-blue and brass geometric diamond inlay\n3. matching flat floor with a faded chalk circular geometric sigil, no readable letters and no bright portal\n4. matching floor with three thin worn parchment scraps flat on surface, no readable text, walkable\nRow 2, tiles 5-8:\n5. low limestone wall along BACK-LEFT edge (left vertex to top vertex), dark-blue narrow decorative trim\n6. matching wall along BACK-RIGHT edge (top vertex to right vertex), small worn geometric carvings\n7. matching L-shaped low wall along BOTH back edges, joined arms with brass corner fitting\n8. collapsed back-left limestone wall with a cracked decorative crest and a few chips contained on floor tile\nRow 3, props 9-12:\n9. one low stout dark-blue wooden bookshelf with three shelves of colored books, standalone complete furniture. One single standalone object, NO floor diamond.\n10. one compact worn writing desk with quill, small ink bottle and closed book. One single standalone object, NO floor diamond.\n11. one uneven pile of five large old leather-bound books with one loose page. One single standalone object, NO floor diamond.\n12. one short carved lectern supporting a closed book and a small cyan crystal lamp, compact readable silhouette. One single standalone object, NO floor diamond.\nRow 4, props 13-16:\n13. one toppled broken low bookshelf with a few books still inside, damage contained in one compact asset. One single standalone object, NO floor diamond.\n14. a squat pigeonhole rack holding bundled rolled parchments. One single standalone object, NO floor diamond.\n15. a small brass tabletop orrery on an integral short pedestal, three metal orbital rings. One single standalone object, NO floor diamond.\n16. a short fractured dark-blue rune obelisk, small cyan seam, geometric markings without text. One single standalone object, NO floor diamond.\nAll exactly sixteen assets, equal cells. Maintain the same isometric orientation and floor footprint across every tile. The eight props in rows 3 and 4 have no floor tile. All silhouettes comfortably inside their own cells, actual alpha transparency.",
+  "entries": [
+    {
+      "id": "archive_floor_plain",
+      "kind": "floor",
+      "description": "large warm pale-grey limestone squares with gentle worn edges"
+    },
+    {
+      "id": "archive_floor_inlay",
+      "kind": "floor",
+      "description": "matching stone floor with a flat dark-blue and brass geometric diamond inlay"
+    },
+    {
+      "id": "archive_floor_runes",
+      "kind": "floor",
+      "description": "matching flat floor with a faded chalk circular geometric sigil, no readable letters and no bright portal"
+    },
+    {
+      "id": "archive_floor_papers",
+      "kind": "floor",
+      "description": "matching floor with three thin worn parchment scraps flat on surface, no readable text, walkable"
+    },
+    {
+      "id": "archive_wall_nw",
+      "kind": "wall",
+      "description": "low limestone wall along BACK-LEFT edge (left vertex to top vertex), dark-blue narrow decorative trim"
+    },
+    {
+      "id": "archive_wall_ne",
+      "kind": "wall",
+      "description": "matching wall along BACK-RIGHT edge (top vertex to right vertex), small worn geometric carvings"
+    },
+    {
+      "id": "archive_wall_corner",
+      "kind": "wall",
+      "description": "matching L-shaped low wall along BOTH back edges, joined arms with brass corner fitting"
+    },
+    {
+      "id": "archive_wall_broken",
+      "kind": "wall",
+      "description": "collapsed back-left limestone wall with a cracked decorative crest and a few chips contained on floor tile"
+    },
+    {
+      "id": "archive_bookshelf",
+      "kind": "prop",
+      "description": "one low stout dark-blue wooden bookshelf with three shelves of colored books, standalone complete furniture",
+      "width": 174
+    },
+    {
+      "id": "archive_writing_desk",
+      "kind": "prop",
+      "description": "one compact worn writing desk with quill, small ink bottle and closed book",
+      "width": 180
+    },
+    {
+      "id": "archive_book_pile",
+      "kind": "prop",
+      "description": "one uneven pile of five large old leather-bound books with one loose page",
+      "width": 100
+    },
+    {
+      "id": "archive_crystal_lectern",
+      "kind": "prop",
+      "description": "one short carved lectern supporting a closed book and a small cyan crystal lamp, compact readable silhouette",
+      "width": 118
+    },
+    {
+      "id": "archive_fallen_shelf",
+      "kind": "prop",
+      "description": "one toppled broken low bookshelf with a few books still inside, damage contained in one compact asset",
+      "width": 188
+    },
+    {
+      "id": "archive_scroll_rack",
+      "kind": "prop",
+      "description": "a squat pigeonhole rack holding bundled rolled parchments",
+      "width": 140
+    },
+    {
+      "id": "archive_orrery",
+      "kind": "prop",
+      "description": "a small brass tabletop orrery on an integral short pedestal, three metal orbital rings",
+      "width": 118
+    },
+    {
+      "id": "archive_broken_obelisk",
+      "kind": "prop",
+      "description": "a short fractured dark-blue rune obelisk, small cyan seam, geometric markings without text",
+      "width": 108
+    }
+  ]
+}
