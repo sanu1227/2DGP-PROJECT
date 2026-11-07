@@ -8,11 +8,11 @@ import pico2d.pico2d as p
 
 from game.model import Game
 from game.art import Art
+from game.projection import BoardProjection
+from game.masonry import draw_wall
 from game.scenery import draw_scars, draw_tinted, floor_style, wall_style
 
 WIDTH, HEIGHT = 1280, 900
-BOARD_WIDTH = 1152
-BOARD_CENTER = (WIDTH / 2, 440)
 INK = (226, 230, 219)
 MUTED = (158, 169, 166)
 GOLD = (227, 187, 104)
@@ -151,39 +151,27 @@ class View:
 
     def board(self, game):
         level, state = game.level, game.state
-        # 큰 방도 타일을 축소하지 않도록 옆 패널 대신 화면 폭을 사용한다.
-        half_width = min(48, int(BOARD_WIDTH / (level.width + level.height)))
-        half_height = half_width / 2
-        scale = half_width * 2 / self.art.manifest["coordinates"]["tile_footprint"]["width"]
-        origin_x = BOARD_CENTER[0] - (level.width - level.height) * half_width / 2
-        origin_y = BOARD_CENTER[1] + (level.width + level.height - 2) * half_height / 2
-
-        def screen(position):
-            x, y = position
-            return origin_x + (x - y) * half_width, origin_y - (x + y) * half_height
+        projection = BoardProjection(level.width, level.height)
+        scale = projection.cell_width / self.art.manifest["coordinates"]["tile_footprint"]["width"]
+        screen = projection.screen
 
         exit_ready = (state.installed == level.traps and (not level.traps or state.active)
                       and state.soldiers == level.posts and state.carrying is None)
-        objects, labels, wall_tints = [], [], {}
+        objects, labels, walls = [], [], {}
         device_floor = (level.traps | level.posts | level.plates | level.gates.keys()
                         | level.chutes.keys() | set(level.chutes.values()) | level.belts.keys()
                         | level.benches | level.levers | {level.exit})
-        for depth in range(level.width + level.height - 1):
-            for y in range(level.height):
-                x = depth - y
-                if not 0 <= x < level.width:
-                    continue
+        for y in range(level.height):
+            for x in range(level.width):
+                depth = y
                 pos = (x, y)
                 sx, sy = screen(pos)
                 near_trap = any(abs(x - tx) + abs(y - ty) <= 1 for tx, ty in level.traps)
                 tile, tint = floor_style(pos, near_trap)
                 if pos in level.walls:
                     wall_sprite, wall_tint = wall_style(pos)
-                    if wall_sprite == "rubble":
-                        tile, tint = wall_sprite, wall_tint
-                    else:
-                        objects.append((depth, 0, wall_sprite, sx, sy))
-                        wall_tints[(sx, sy)] = wall_tint
+                    objects.append((depth, 0, wall_sprite, sx, sy))
+                    walls[(sx, sy)] = (pos, wall_tint)
                 elif pos in level.traps:
                     tile = "trap_installed" if pos in state.installed else "trap_broken"
                     tint = None
@@ -198,17 +186,14 @@ class View:
                     tile = "exit_ready" if exit_ready else "exit_closed"
                     tint = None
                     labels.append((pos, "출구"))
-                if tint:
-                    draw_tinted(self.art, tile, sx, sy, scale, tint)
-                else:
-                    self.art.draw(tile, sx, sy, scale)
+                self.art.ground(tile, sx, sy, projection.cell_width, projection.cell_height, tint or (255, 255, 255))
                 if pos not in level.walls and pos not in device_floor:
-                    draw_scars(pos, sx, sy, scale, near_trap)
+                    draw_scars(pos, sx, sy, scale, near_trap, projection=projection)
 
                 if pos in level.belts:
                     direction = level.belts[pos]
                     objects.append((depth, 0.5, f"belt_{direction}", sx, sy))
-                    labels.append((pos, "벨트 " + {"up": "↗", "right": "↘", "down": "↙", "left": "↖"}[direction]))
+                    labels.append((pos, "벨트 " + {"up": "↑", "right": "→", "down": "↓", "left": "←"}[direction]))
                 if pos in level.chutes:
                     objects.append((depth, 1, "chute_inlet", sx, sy))
                     labels.append((pos, f"{level.device_labels[pos]} 투입"))
@@ -238,7 +223,7 @@ class View:
 
         # 바닥 전체를 먼저 그려 앞 칸의 바닥이 캐릭터 다리를 덮지 않게 한다.
         target_x, target_y = screen(state.player)
-        diamond(target_x, target_y, half_width - 3, int(half_height) - 2, None, TEAL)
+        box(*projection.bounds(state.player, inset=3), TEAL, filled=False)
         now = perf_counter()
         player = self.player_position(state.player, now)
         px, py = screen(player)
@@ -246,7 +231,7 @@ class View:
         if state.player in level.benches | level.levers | state.soldiers | level.plates | level.gates.keys() | level.chutes.keys():
             px -= 9
             py -= 7
-        objects.append((sum(player), 3, "player", px, py))
+        objects.append((player[1], 3, "player", px, py))
         for _, _, sprite, sx, sy in sorted(objects, key=lambda obj: obj[:2]):
             if sprite.startswith("belt_"):
                 direction = sprite.removeprefix("belt_")
@@ -258,7 +243,10 @@ class View:
                 continue
             if sprite != "player":
                 if sprite == "wall_low":
-                    draw_tinted(self.art, sprite, sx, sy, scale, wall_tints[(sx, sy)])
+                    pos, tint = walls[(sx, sy)]
+                    draw_wall(self.art, pos, sx, sy, projection.cell_width, projection.cell_height, tint)
+                elif sprite == "rubble":
+                    draw_tinted(self.art, sprite, sx, sy, scale, walls[(sx, sy)][1])
                 else:
                     self.art.draw(sprite, sx, sy, scale)
                 continue
@@ -288,7 +276,7 @@ class View:
         self.text(32, 857, "용사가 지나간 자리", 32)
         self.text(450, 857, level.title, 22)
         self.text(1090, 857, f"단계 {index + 1:02d} / {total:02d}", 22, GOLD)
-        self.text(34, 820, f"{level.width}×{level.height}  전체 지도 · 프로토타입 0.4", 16, MUTED)
+        self.text(34, 820, f"{level.width}×{level.height}  정면 3/4 시점 · 프로토타입 0.5", 16, MUTED)
         self.wrapped(450, 825, level.hint, width=790, size=16)
 
         self.board(game)
@@ -314,7 +302,7 @@ class View:
         else:
             self.text(918, 104, "모든 복구 후 빈손으로 출구 복귀", 16, MUTED)
 
-        self.text(34, 51, "이동  W/위: 오른쪽 위    A/왼쪽: 왼쪽 위    S/아래: 왼쪽 아래    D/오른쪽: 오른쪽 아래       무너진 벽·잔해는 통행 불가", 13, MUTED)
+        self.text(34, 51, "화면 기준 이동  W / ↑  위    A / ←  왼쪽    S / ↓  아래    D / →  오른쪽       무너진 벽·잔해는 통행 불가", 13, MUTED)
         self.text(34, 25, "E / Space  상호작용    Q  내려놓기    B  대기    Z / Backspace  되돌리기    R  재시작    Enter  다음 방(완료 후)    Esc  종료", 16, MUTED)
 
 
