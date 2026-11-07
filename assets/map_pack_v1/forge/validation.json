@@ -1,0 +1,88 @@
+{
+  "count": 16,
+  "alpha": true,
+  "source_cells_unclipped": true,
+  "output_padding": true,
+  "sprites": [
+    {
+      "id": "forge_floor_plain",
+      "visible_pixels": 15880,
+      "edge_pixels": 0
+    },
+    {
+      "id": "forge_floor_riveted",
+      "visible_pixels": 15595,
+      "edge_pixels": 0
+    },
+    {
+      "id": "forge_floor_soot",
+      "visible_pixels": 15826,
+      "edge_pixels": 0
+    },
+    {
+      "id": "forge_floor_channel",
+      "visible_pixels": 15762,
+      "edge_pixels": 0
+    },
+    {
+      "id": "forge_wall_nw",
+      "visible_pixels": 20582,
+      "edge_pixels": 0
+    },
+    {
+      "id": "forge_wall_ne",
+      "visible_pixels": 20412,
+      "edge_pixels": 0
+    },
+    {
+      "id": "forge_wall_corner",
+      "visible_pixels": 23853,
+      "edge_pixels": 0
+    },
+    {
+      "id": "forge_wall_broken",
+      "visible_pixels": 19673,
+      "edge_pixels": 0
+    },
+    {
+      "id": "forge_anvil",
+      "visible_pixels": 12962,
+      "edge_pixels": 0
+    },
+    {
+      "id": "forge_coal_forge",
+      "visible_pixels": 20208,
+      "edge_pixels": 0
+    },
+    {
+      "id": "forge_gear_rack",
+      "visible_pixels": 13627,
+      "edge_pixels": 0
+    },
+    {
+      "id": "forge_quench_trough",
+      "visible_pixels": 16224,
+      "edge_pixels": 0
+    },
+    {
+      "id": "forge_scrap_cart",
+      "visible_pixels": 16150,
+      "edge_pixels": 0
+    },
+    {
+      "id": "forge_tool_rack",
+      "visible_pixels": 11053,
+      "edge_pixels": 0
+    },
+    {
+      "id": "forge_metal_crate",
+      "visible_pixels": 10790,
+      "edge_pixels": 0
+    },
+    {
+      "id": "forge_boiler",
+      "visible_pixels": 13230,
+      "edge_pixels": 0
+    }
+  ]
+}
