@@ -9,10 +9,9 @@ import pico2d.pico2d as p
 from game.model import Game
 from game.art import Art
 from game.scenery import draw_scars, draw_tinted, floor_style, wall_style
+from game.navigation import ClickNavigator, IsoBoard, find_path
 
 WIDTH, HEIGHT = 1280, 900
-BOARD_WIDTH = 1152
-BOARD_CENTER = (WIDTH / 2, 440)
 INK = (226, 230, 219)
 MUTED = (158, 169, 166)
 GOLD = (227, 187, 104)
@@ -66,6 +65,10 @@ class View:
     def __init__(self):
         self.fonts = {}
         self.art = None
+        self.navigation = ClickNavigator()
+        self.mouse_position = None
+        self.hit_regions = []
+        self.hit_masks = {}
         self.reset_player()
         try:
             path = font_path()
@@ -129,6 +132,43 @@ class View:
     def item(self, kind, x, y, scale):
         self.art.draw(ITEM_SPRITES[kind], x, y, scale)
 
+    def pick_cell(self, game, x, y):
+        """UI는 제외하고 앞에 그려진 물체부터 검사한 뒤 바닥 칸을 고른다."""
+        if not 132 < y < 750:
+            return None
+        for pos, (left, bottom, right, top) in reversed(self.hit_regions):
+            if left <= x < right and bottom <= y < top:
+                mask = self.hit_masks.get((pos, (left, bottom, right, top)))
+                if mask:
+                    sprite, sx, sy, scale, flip = mask
+                    if not self.art.hit_test(sprite, sx, sy, scale, (x, y), flip):
+                        continue
+                return pos
+        return IsoBoard(game.level.width, game.level.height).pick(x, y)
+
+    def sprite_hit_region(self, pos, sprite, sx, sy, scale, flip=False):
+        region = (pos, self.art.bounds(sprite, sx, sy, scale, flip))
+        self.hit_regions.append(region)
+        self.hit_masks[region] = (sprite, sx, sy, scale, flip)
+
+    def navigation_overlay(self, game, projection):
+        target, path = self.navigation.target, self.navigation.path
+        color = GOLD
+        if not self.navigation.active:
+            target = self.pick_cell(game, *self.mouse_position) if self.mouse_position else None
+            path = find_path(game, target) if target is not None else None
+            color = TEAL if path is not None else RED
+        if target is None:
+            return
+        previous = projection.screen(game.state.player)
+        for pos in path or []:
+            point = projection.screen(pos)
+            line(*previous, *point, color)
+            diamond(*point, 3, 2, color)
+            previous = point
+        diamond(*projection.screen(target), projection.half_width - 5,
+                int(projection.half_height) - 3, None, color)
+
     def gate(self, sx, sy, scale, status):
         """녹슨 문틀과 창살. 열린 문은 통행 공간을 비워 둔다."""
         color = TEAL if status == "open" else GOLD if status == "held" else RED
@@ -152,15 +192,12 @@ class View:
     def board(self, game):
         level, state = game.level, game.state
         # 큰 방도 타일을 축소하지 않도록 옆 패널 대신 화면 폭을 사용한다.
-        half_width = min(48, int(BOARD_WIDTH / (level.width + level.height)))
-        half_height = half_width / 2
+        projection = IsoBoard(level.width, level.height)
+        half_width, half_height = projection.half_width, projection.half_height
         scale = half_width * 2 / self.art.manifest["coordinates"]["tile_footprint"]["width"]
-        origin_x = BOARD_CENTER[0] - (level.width - level.height) * half_width / 2
-        origin_y = BOARD_CENTER[1] + (level.width + level.height - 2) * half_height / 2
-
-        def screen(position):
-            x, y = position
-            return origin_x + (x - y) * half_width, origin_y - (x + y) * half_height
+        screen = projection.screen
+        self.hit_regions.clear()
+        self.hit_masks.clear()
 
         exit_ready = (state.installed == level.traps and (not level.traps or state.active)
                       and state.soldiers == level.posts and state.carrying is None)
@@ -248,19 +285,25 @@ class View:
             py -= 7
         objects.append((sum(player), 3, "player", px, py))
         for _, _, sprite, sx, sy in sorted(objects, key=lambda obj: obj[:2]):
+            pos = state.player if sprite == "player" else projection.pick(sx, sy)
             if sprite.startswith("belt_"):
                 direction = sprite.removeprefix("belt_")
-                self.art.draw("conveyor_ne" if direction in ("up", "left") else "conveyor_se",
-                              sx, sy, scale, flip=direction in ("left", "down"))
+                name = "conveyor_ne" if direction in ("up", "left") else "conveyor_se"
+                flip = direction in ("left", "down")
+                self.art.draw(name, sx, sy, scale, flip=flip)
+                self.sprite_hit_region(pos, name, sx, sy, scale, flip)
                 continue
             if sprite.startswith("gate_"):
                 self.gate(sx, sy, scale, sprite.removeprefix("gate_"))
+                self.hit_regions.append((pos, (sx - 84 * scale, sy - 10 * scale,
+                                              sx + 84 * scale, sy + 114 * scale)))
                 continue
             if sprite != "player":
                 if sprite == "wall_low":
                     draw_tinted(self.art, sprite, sx, sy, scale, wall_tints[(sx, sy)])
                 else:
                     self.art.draw(sprite, sx, sy, scale)
+                self.sprite_hit_region(pos, sprite, sx, sy, scale)
                 continue
             pose = "idle"
             if self.motion:
@@ -272,6 +315,7 @@ class View:
             if state.carrying and self.facing in ("ne", "nw"):
                 self.item(state.carrying, sx + offset_x, sy + 32, scale * 0.65)
             self.art.draw(f"worker_{self.facing}_{pose}", sx, sy, scale)
+            self.sprite_hit_region(pos, f"worker_{self.facing}_{pose}", sx, sy, scale)
             if state.carrying and self.facing in ("se", "sw"):
                 self.item(state.carrying, sx + offset_x, sy + 24, scale * 0.65)
 
@@ -281,6 +325,8 @@ class View:
             width = len(label) * 13 + 8
             box(sx - width / 2, sy - 24, sx + width / 2, sy - 7, (24, 35, 40))
             self.text(sx - width / 2 + 4, sy - 16, label, 13, TEAL if pos == level.exit and exit_ready else INK)
+            self.hit_regions.append((pos, (sx - width / 2, sy - 24, sx + width / 2, sy - 7)))
+        self.navigation_overlay(game, projection)
 
     def draw(self, game, index, total):
         level, state = game.level, game.state
@@ -288,7 +334,7 @@ class View:
         self.text(32, 857, "용사가 지나간 자리", 32)
         self.text(450, 857, level.title, 22)
         self.text(1090, 857, f"단계 {index + 1:02d} / {total:02d}", 22, GOLD)
-        self.text(34, 820, f"{level.width}×{level.height}  전체 지도 · 프로토타입 0.4", 16, MUTED)
+        self.text(34, 820, f"{level.width}×{level.height}  클릭 이동 · 프로토타입 0.6", 16, MUTED)
         self.wrapped(450, 825, level.hint, width=790, size=16)
 
         self.board(game)
@@ -312,9 +358,10 @@ class View:
             label = "Enter  다음 방" if index + 1 < total else "Enter  처음부터 다시"
             self.text(949, 103, label, 18)
         else:
-            self.text(918, 104, "모든 복구 후 빈손으로 출구 복귀", 16, MUTED)
+            status = f"자동 이동 · {len(self.navigation.path)}칸 남음" if self.navigation.active else "모든 복구 후 빈손으로 출구 복귀"
+            self.text(918, 104, status, 16, MUTED)
 
-        self.text(34, 51, "이동  W/위: 오른쪽 위    A/왼쪽: 왼쪽 위    S/아래: 왼쪽 아래    D/오른쪽: 오른쪽 아래       무너진 벽·잔해는 통행 불가", 13, MUTED)
+        self.text(34, 51, "좌클릭  칸으로 이동    우클릭  이동 취소    WASD / 방향키  기존 타일 방향 이동       무너진 벽·잔해는 통행 불가", 13, MUTED)
         self.text(34, 25, "E / Space  상호작용    Q  내려놓기    B  대기    Z / Backspace  되돌리기    R  재시작    Enter  다음 방(완료 후)    Esc  종료", 16, MUTED)
 
 
@@ -339,7 +386,22 @@ def run(levels, index=0, smoke_frames=None):
             for event in p.get_events():
                 if event.type == p.SDL_QUIT:
                     running = False
+                elif event.type == p.SDL_MOUSEMOTION:
+                    view.mouse_position = (event.x, HEIGHT - 1 - event.y)
+                elif event.type == p.SDL_MOUSEBUTTONDOWN:
+                    view.mouse_position = (event.x, HEIGHT - 1 - event.y)
+                    if event.button == p.SDL_BUTTON_RIGHT:
+                        if view.navigation.active:
+                            game.message = "자동 이동을 취소했습니다."
+                        view.navigation.cancel()
+                    elif event.button == p.SDL_BUTTON_LEFT:
+                        target = view.pick_cell(game, *view.mouse_position)
+                        if target is not None:
+                            now = perf_counter()
+                            ready_at = view.motion[2] + 0.18 if view.motion else now
+                            view.navigation.start(game, target, now, ready_at=ready_at)
                 elif event.type == p.SDL_KEYDOWN:
+                    view.navigation.cancel()
                     if event.key == p.SDLK_ESCAPE:
                         running = False
                     elif event.key in (p.SDLK_z, p.SDLK_BACKSPACE):
@@ -361,6 +423,13 @@ def run(levels, index=0, smoke_frames=None):
                         elif changed:
                             # 도착 직후 상호작용하면 그 칸에 바로 정렬한다.
                             view.motion = None
+            # 이미 보간 중인 한 칸이 끝난 뒤에만 다음 자동 이동을 실행한다.
+            now = perf_counter()
+            if running and (view.motion is None or now >= view.motion[2] + 0.18):
+                previous = game.state.player
+                action = view.navigation.tick(game, now)
+                if action is not None:
+                    view.move_player(previous, game.state.player, action)
             view.draw(game, index, len(levels))
             p.update_canvas()
             p.SDL_SetWindowTitle(p.window, "용사가 지나간 자리 — 기초 프로토타입".encode("utf-8"))
