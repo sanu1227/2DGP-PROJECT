@@ -9,6 +9,7 @@ import unittest
 
 from game.levels import load_levels
 from game.model import Game
+from tests.solutions import EXTRA_SOLUTIONS
 
 
 DIRECTIONS = {
@@ -42,6 +43,9 @@ SOLUTIONS = {
         "down down right right interact left down left interact down left"
     ).split(),
 }
+
+
+SOLUTIONS.update(EXTRA_SOLUTIONS)
 
 
 def make_level(rows=None):

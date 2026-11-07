@@ -74,6 +74,26 @@ class Game:
             return "복구 완료! 다음 방으로 진행"
         return self._interaction(self.state)[1]
 
+    def plate_pressed(self, pos: Pos, state: State | None = None) -> bool:
+        state = self.state if state is None else state
+        return pos == state.player or pos in state.items
+
+    def gate_status(self, pos: Pos, state: State | None = None) -> str:
+        state = self.state if state is None else state
+        if self.plate_pressed(self.level.gates[pos], state):
+            return "open"
+        if state.player == pos or pos in state.items:
+            return "held"
+        return "closed"
+
+    def walkable(self, pos: Pos, state: State | None = None) -> bool:
+        """진입 가능성만 판정한다. 닫힘 대기 문에서 이탈은 허용한다."""
+        state = self.state if state is None else state
+        return (0 <= pos[0] < self.level.width and 0 <= pos[1] < self.level.height
+                and pos not in self.level.walls and pos not in state.soldiers
+                and not (state.active and pos in self.level.traps)
+                and (pos not in self.level.gates or self.gate_status(pos, state) == "open"))
+
     def _interaction(self, state: State) -> tuple[str | None, str]:
         """현재 칸에서 가능한 행동과 안내를 함께 결정한다."""
         pos = state.player
@@ -110,6 +130,10 @@ class Game:
             return "activate", "E: 모든 함정 가동"
         if pos == self.level.exit:
             return None, "복구를 마친 뒤 빈손으로 돌아오세요."
+        if pos in self.level.plates:
+            return None, f"{self.level.device_labels[pos]} 발판: Q로 물건을 놓아 문을 유지하세요."
+        if pos in self.level.gates:
+            return None, "문이 닫혀도 현재 칸에서 나갈 수 있습니다."
         return None, "물건이나 장치 위에서 E를 누르세요."
 
     def _apply(self, state: State, action: str) -> tuple[bool, str]:
@@ -117,6 +141,8 @@ class Game:
             dx, dy = DIRECTIONS[action]
             x, y = state.player
             destination = x + dx, y + dy
+            if destination in self.level.gates and not self.walkable(destination, state):
+                return False, "닫힌 문입니다. 연결 발판을 눌러 주세요."
             if not (0 <= destination[0] < self.level.width and 0 <= destination[1] < self.level.height) or destination in self.level.walls:
                 return False, "벽으로 막힌 칸입니다."
             if state.active and destination in self.level.traps:
