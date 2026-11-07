@@ -43,7 +43,7 @@
 
 ![화면 방향과 WASD를 맞춘 정면 3/4 시점](./docs/screenshots/stage-06-front.png)
 
-[6번 방 복구 완료](./docs/screenshots/stage-06-ruined-cleared.png) · [뼈 투입구와 원격 발판](./docs/screenshots/stage-05-ruined.png)
+[6번 방 복구 완료](./docs/screenshots/stage-06-front-cleared.png) · [뼈 투입구와 원격 발판](./docs/screenshots/stage-05-front.png)
 
 벽 일부를 무너진 잔해로 바꾸고, 바닥 균열과 함정 주변의 그을음을 추가했습니다. 잔해는 벽과 같은 막힌 칸입니다. 장치와 캐릭터의 밝기는 유지해 복구 대상을 구별합니다.
 
@@ -63,6 +63,7 @@ python main.py --check             # 화면 없이 스테이지 데이터 검사
 python -m unittest discover -v     # SDL 없이 게임 규칙 검사
 python main.py --smoke-frames 3    # 실제 창을 3프레임 표시하고 종료
 python -m tests.smoke_window      # SDL 키 이벤트로 모든 방 UI 흐름 재생
+python -m tests.smoke_controls    # 실제 렌더링의 WASD 방향과 빠른 코너 이동 검사
 ```
 
 | 키 | 동작 |
@@ -76,7 +77,7 @@ python -m tests.smoke_window      # SDL 키 이벤트로 모든 방 UI 흐름 �
 | Enter | 완료 후 다음 방. 마지막 방 완료 후 첫 방으로 복귀 |
 | Esc / 창 닫기 | 종료 |
 
-정면에 가까운 3/4 시점에서 `W/위`는 화면 위, `S/아래`는 아래, `A/왼쪽`은 왼쪽, `D/오른쪽`은 오른쪽으로 정확히 한 칸 이동합니다. 기존 논리 격자와 퍼즐 규칙은 유지합니다.
+정면에 가까운 3/4 시점에서 `W/위`는 화면 위, `S/아래`는 아래, `A/왼쪽`은 왼쪽, `D/오른쪽`은 오른쪽으로 정확히 한 칸 이동합니다. 기존 논리 격자와 퍼즐 규칙은 유지합니다. 빠르게 방향을 바꿔도 캐릭터는 실제 이동한 칸의 모서리를 따라 움직입니다.
 
 ### 현재 적용한 규칙
 
@@ -146,6 +147,8 @@ python main.py
 │   ├── levels.py         # 스테이지 데이터와 검증
 │   ├── model.py          # 화면과 독립적인 게임 규칙
 │   ├── art.py            # 아틀라스 로딩과 기준점 변환
+│   ├── motion.py        # 이동 순서와 코너를 보존하는 표시 보간
+│   ├── devices_view.py  # 화면 축에 맞춘 벨트·발판 표면
 │   ├── projection.py    # 화면 상하좌우와 격자 방향 정렬
 │   ├── masonry.py       # 정면 시점의 낮은 석벽
 │   ├── scenery.py        # 좌표에 고정된 파손 흔적과 배경 색상

@@ -11,6 +11,7 @@ from game.art import Art
 from game.projection import BoardProjection
 from game.masonry import draw_wall
 from game.devices_view import draw_belt, draw_plate
+from game.motion import GridMotion
 from game.scenery import draw_scars, draw_tinted, floor_style, wall_style
 
 WIDTH, HEIGHT = 1280, 900
@@ -87,24 +88,15 @@ class View:
 
     def reset_player(self):
         self.facing = "se"
-        self.motion = None
+        self.motion = GridMotion()
 
     def player_position(self, fallback, now):
-        if self.motion is None:
-            return fallback
-        start, target, began = self.motion
-        progress = min(1.0, (now - began) / 0.18)
-        if progress >= 1:
-            self.motion = None
-            return fallback
-        return tuple(a + (b - a) * progress for a, b in zip(start, target))
+        return self.motion.position(fallback, now)
 
     def move_player(self, previous, destination, action):
-        """논리 이동은 즉시 완료하고 표시 위치만 짧게 보간한다."""
-        now = perf_counter()
-        start = self.player_position(previous, now)
+        """논리 이동을 즉시 처리하되 표시 경로는 실제 통과한 칸 순서를 지킨다."""
+        self.motion.start(previous, destination, perf_counter())
         self.facing = FACING[action]
-        self.motion = (start, destination, now)
 
     def text(self, x, y, value, size=18, color=INK):
         self.fonts[size].draw(x, y, str(value), color)
@@ -227,11 +219,9 @@ class View:
         box(*projection.bounds(state.player, inset=3), TEAL, filled=False)
         now = perf_counter()
         player = self.player_position(state.player, now)
+        facing = FACING[self.motion.direction] if self.motion.moving else self.facing
         px, py = screen(player)
-        # 같은 칸의 작업대나 배치한 병사와 구별되도록 약간 앞쪽에 선다.
-        if state.player in level.benches | level.levers | state.soldiers | level.plates | level.gates.keys() | level.chutes.keys():
-            px -= 9
-            py -= 7
+        # 발 위치는 항상 격자 중심에 둔다. 도착 장치에 따라 옆으로 튀지 않는다.
         objects.append((player[1], 3, "player", px, py))
         for _, _, sprite, sx, sy in sorted(objects, key=lambda obj: obj[:2]):
             if sprite.startswith("belt_"):
@@ -254,16 +244,16 @@ class View:
                     self.art.draw(sprite, sx, sy, scale)
                 continue
             pose = "idle"
-            if self.motion:
-                pose = "walk_a" if now - self.motion[2] < 0.09 else "walk_b"
+            if self.motion.moving:
+                pose = "walk_a" if self.motion.phase < 0.5 else "walk_b"
             if state.carrying:
                 pose = "carry"
             # 뒤를 볼 때 운반물은 몸 뒤에, 앞을 볼 때는 손 위에 합성한다.
-            offset_x = 12 if self.facing in ("ne", "se") else -12
-            if state.carrying and self.facing in ("ne", "nw"):
+            offset_x = 12 if facing in ("ne", "se") else -12
+            if state.carrying and facing in ("ne", "nw"):
                 self.item(state.carrying, sx + offset_x, sy + 32, scale * 0.65)
-            self.art.draw(f"worker_{self.facing}_{pose}", sx, sy, scale)
-            if state.carrying and self.facing in ("se", "sw"):
+            self.art.draw(f"worker_{facing}_{pose}", sx, sy, scale)
+            if state.carrying and facing in ("se", "sw"):
                 self.item(state.carrying, sx + offset_x, sy + 24, scale * 0.65)
 
         # 상태 문구를 바닥 아트와 함께 유지해 색이나 작은 그림에만 의존하지 않는다.
@@ -351,7 +341,7 @@ def run(levels, index=0, smoke_frames=None):
                             view.move_player(previous, game.state.player, action)
                         elif changed:
                             # 도착 직후 상호작용하면 그 칸에 바로 정렬한다.
-                            view.motion = None
+                            view.motion.reset()
             view.draw(game, index, len(levels))
             p.update_canvas()
             p.SDL_SetWindowTitle(p.window, "용사가 지나간 자리 — 기초 프로토타입".encode("utf-8"))
