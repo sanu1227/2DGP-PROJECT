@@ -1,5 +1,6 @@
 """Stage schema errors fail before starting a game window."""
 
+from collections import deque
 from copy import deepcopy
 import json
 import os
@@ -37,9 +38,27 @@ class LevelTests(unittest.TestCase):
         self.assertEqual(len(levels), 3)
         self.assertEqual(len({level.id for level in levels}), 3)
         for level in levels:
-            self.assertEqual((level.width, level.height), (8, 8))
+            self.assertEqual((level.width, level.height), (12, 12))
             self.assertTrue(level.title)
             self.assertTrue(level.hint)
+
+    def test_shipped_rooms_have_connected_floor_and_expected_repair_targets(self):
+        targets = ((1, 0), (0, 1), (2, 2))
+        for level, (traps, posts) in zip(load_levels(), targets):
+            with self.subTest(stage=level.id):
+                self.assertEqual(len(level.traps), traps)
+                self.assertEqual(len(level.posts), posts)
+                self.assertEqual(len(level.benches), int(posts > 0))
+                floor = {(x, y) for y in range(level.height) for x in range(level.width)} - level.walls
+                seen = {level.start}
+                queue = deque(seen)
+                while queue:
+                    x, y = queue.popleft()
+                    for neighbor in ((x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)):
+                        if neighbor in floor and neighbor not in seen:
+                            seen.add(neighbor)
+                            queue.append(neighbor)
+                self.assertEqual(seen, floor)
 
     def test_rejects_invalid_document_and_stage_metadata(self):
         documents = [[], {}, {"stages": []}, {"stages": "room"},
