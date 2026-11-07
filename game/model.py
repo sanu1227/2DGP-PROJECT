@@ -101,6 +101,13 @@ class Game:
             if state.carrying is not None:
                 return None, "손이 찼습니다. 먼저 내려놓으세요."
             return "pickup", f"E: {ITEM_NAMES[state.items[pos]]} 줍기"
+        if pos in self.level.chutes:
+            outlet = self.level.chutes[pos]
+            if state.carrying != "bone":
+                return None, f"{self.level.device_labels[pos]} 투입구: 뼈 묶음만 보낼 수 있습니다."
+            if outlet == state.player or outlet in state.items or outlet in state.soldiers:
+                return None, "배출구가 막혔습니다. 물건이나 병사를 치우세요."
+            return "send_bone", f"E: {self.level.device_labels[pos]} 배출구로 뼈 보내기"
         if pos in self.level.traps:
             if pos in state.installed:
                 return None, "이미 설치했습니다. 레버로 가동하세요."
@@ -155,7 +162,7 @@ class Game:
         if action == "drop":
             if state.carrying is None:
                 return False, "들고 있는 물건이 없습니다."
-            devices = self.level.traps | self.level.posts | self.level.benches | self.level.levers | {self.level.exit}
+            devices = self.level.traps | self.level.posts | self.level.benches | self.level.levers | self.level.chutes.keys() | {self.level.exit}
             if state.player in devices or state.player in state.items:
                 return False, "빈 일반 바닥에만 내려놓을 수 있습니다."
             state.items[state.player] = state.carrying
@@ -166,6 +173,10 @@ class Game:
         if operation is None:
             return False, message
         pos = state.player
+        if operation == "send_bone":
+            state.items[self.level.chutes[pos]] = "bone"
+            state.carrying = None
+            return True, "뼈 묶음을 연결된 배출구로 보냈습니다."
         if operation == "pickup":
             state.carrying = state.items.pop(pos)
             return True, f"운반 중: {ITEM_NAMES[state.carrying]}"
