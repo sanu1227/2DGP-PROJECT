@@ -19,18 +19,27 @@ DIRECTIONS = {
 # Authored walkthroughs double as regression checks for the actual room data.
 SOLUTIONS = {
     "stage_01": (
-        "right down interact right right interact left left down down down "
-        "interact left down"
+        "down right interact down right right right right right right down down "
+        "interact down down down down left left left left left interact left left"
     ).split(),
     "stage_02": (
-        "right right interact down down left interact left down down interact "
-        "up up right interact right right right down down interact down left left left left"
+        "down down down down down right right right right right right right right "
+        "right up up up up left interact down down right down down left left left "
+        "left left left left interact right right right right down down down right "
+        "right interact up up up left left left left left left interact right right "
+        "right interact left down down down down left left left left"
     ).split(),
     "stage_03": (
-        "right interact down down right interact right up up interact down down "
-        "left left left down interact up right right right right right down down "
-        "interact up up left left left left left down interact up right interact "
-        "left down down interact down"
+        "down down right right right right right up right right right interact down "
+        "left left left left interact right right right interact left left left left "
+        "left down down down left interact up up up right right right right down "
+        "right right right right interact up left left left left left left left down "
+        "down down left interact up up up right right interact left down down down "
+        "down down right right right down right right right interact up left left "
+        "left left interact right right right interact left left left left left up "
+        "up left interact down down right right right right up right right right "
+        "right interact down left left left left left left left up up left interact "
+        "down down right right interact left down left interact down left"
     ).split(),
 }
 
@@ -107,6 +116,25 @@ class GameTests(unittest.TestCase):
         self.assertEqual(self.game.state, previous)
         self.assertEqual(self.game.history, history)
         self.assertTrue(self.game.message)
+
+    def reachable(self):
+        """Check room topology after a route-closing repair without solving it."""
+        game = self.game
+        blocked = game.level.walls | game.state.soldiers
+        if game.state.active:
+            blocked |= game.level.traps
+        reachable = {game.state.player}
+        queue = deque(reachable)
+        while queue:
+            x, y = queue.popleft()
+            for dx, dy in DIRECTIONS.values():
+                neighbor = x + dx, y + dy
+                if (0 <= neighbor[0] < game.level.width
+                        and 0 <= neighbor[1] < game.level.height
+                        and neighbor not in blocked and neighbor not in reachable):
+                    reachable.add(neighbor)
+                    queue.append(neighbor)
+        return reachable
 
     def test_full_repair_conserves_resources_and_every_action_can_be_undone(self):
         initial = deepcopy(self.game.state)
@@ -241,19 +269,42 @@ class GameTests(unittest.TestCase):
 
     def test_third_room_early_activation_blocks_supplies_and_undo_recovers(self):
         self.game = Game(load_levels()[2])
-        early = "right interact down down right interact left left down down interact"
-        for action in early.split():
-            self.act(action)
+        for part, trap in (((9, 2), (5, 3)), ((9, 9), (5, 8))):
+            self.go(part)
+            self.act("interact")
+            self.go(trap)
+            self.act("interact")
+        self.go((2, 9))
+        before = deepcopy(self.game.state)
+        self.act("interact")
         self.assertTrue(self.game.state.active)
-        for action in ("up", "up", "right"):
-            self.act(action)
-        self.assert_rejected("right")
-        for _ in range(4):
+        self.assertTrue(self.game.state.items.keys().isdisjoint(self.reachable()))
+        for post in ((4, 3), (4, 8)):
+            self.go(post)
+            self.assert_rejected("right")
+        while self.game.state.active:
             self.assertTrue(self.game.undo())
-        self.assertFalse(self.game.state.active)
-        self.go((4, 1))
+        self.assertEqual(self.game.state, before)
+        self.go((8, 3))
         self.act("interact")
         self.assertEqual(self.game.state.carrying, "bone")
+
+    def test_third_room_first_guard_requires_leaving_toward_remaining_work(self):
+        self.game = Game(load_levels()[2])
+        # Finish the upper storeroom before closing its only entrance.
+        for target in ((9, 2), (5, 3), (8, 3), (2, 6), (10, 4), (2, 6), (4, 3)):
+            self.go(target)
+            self.act("interact")
+        self.assertEqual(self.game.state.soldiers, {(4, 3)})
+        self.act("right")
+        self.assert_rejected("left")
+        self.assertNotIn(self.game.level.exit, self.reachable())
+        self.assertTrue(self.game.undo())
+        self.act("left")
+        reachable = self.reachable()
+        self.assertTrue(self.game.state.items.keys() <= reachable)
+        self.assertTrue((self.game.level.posts - self.game.state.soldiers) <= reachable)
+        self.assertTrue(self.game.level.benches | self.game.level.levers | {self.game.level.exit} <= reachable)
 
 
 if __name__ == "__main__":
