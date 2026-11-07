@@ -2,10 +2,12 @@
 
 import os
 from pathlib import Path
+from time import perf_counter
 
 import pico2d.pico2d as p
 
 from game.model import Game
+from game.art import Art
 
 WIDTH, HEIGHT = 1280, 900
 INK = (226, 230, 219)
@@ -14,6 +16,8 @@ GOLD = (227, 187, 104)
 TEAL = (104, 206, 184)
 RED = (232, 119, 105)
 ITEM_NAMES = {None: "빈손", "part": "함정 부품", "bone": "뼈 묶음", "soldier": "해골 병사"}
+ITEM_SPRITES = {"part": "part", "bone": "bone_bundle", "soldier": "soldier_carried"}
+FACING = {"up": "ne", "right": "se", "down": "sw", "left": "nw"}
 
 
 def font_path() -> str:
@@ -43,7 +47,7 @@ def line(x1, y1, x2, y2, color):
 
 
 def diamond(x, y, half_width, half_height, color, outline=None):
-    # pico2d의 기본 도형만 사용한다. 12x12 이하 한 화면 보드용이다.
+    # 에셋 위의 선택 칸 윤곽에도 사용하는 2:1 마름모.
     if color is not None:
         for offset in range(-half_height, half_height + 1):
             span = half_width * (1 - abs(offset) / half_height)
@@ -57,13 +61,46 @@ def diamond(x, y, half_width, half_height, color, outline=None):
 
 class View:
     def __init__(self):
-        path = font_path()
-        self.fonts = {size: p.load_font(path, size) for size in (13, 16, 18, 22, 32)}
+        self.fonts = {}
+        self.art = None
+        self.reset_player()
+        try:
+            path = font_path()
+            for size in (13, 16, 18, 22, 32):
+                self.fonts[size] = p.load_font(path, size)
+            self.art = Art()
+        except Exception:
+            self.close()
+            raise
 
     def close(self):
+        if self.art:
+            self.art.close()
+            self.art = None
         for font in self.fonts.values():
             p.TTF_CloseFont(font.font)
         self.fonts.clear()
+
+    def reset_player(self):
+        self.facing = "se"
+        self.motion = None
+
+    def player_position(self, fallback, now):
+        if self.motion is None:
+            return fallback
+        start, target, began = self.motion
+        progress = min(1.0, (now - began) / 0.18)
+        if progress >= 1:
+            self.motion = None
+            return fallback
+        return tuple(a + (b - a) * progress for a, b in zip(start, target))
+
+    def move_player(self, previous, destination, action):
+        """논리 이동은 즉시 완료하고 표시 위치만 짧게 보간한다."""
+        now = perf_counter()
+        start = self.player_position(previous, now)
+        self.facing = FACING[action]
+        self.motion = (start, destination, now)
 
     def text(self, x, y, value, size=18, color=INK):
         self.fonts[size].draw(x, y, str(value), color)
@@ -86,20 +123,92 @@ class View:
             self.text(x, y, current, size, color)
         return y
 
-    def item(self, kind, x, y):
-        if kind == "part":
-            box(x - 10, y - 6, x + 10, y + 10, GOLD)
-            box(x - 4, y - 1, x + 4, y + 5, (75, 63, 44))
-        elif kind == "bone":
-            box(x - 12, y, x + 12, y + 4, INK)
-            for end in (-12, 8):
-                box(x + end, y - 3, x + end + 4, y + 7, INK)
-        elif kind == "soldier":
-            box(x - 9, y + 6, x + 9, y + 22, INK)
-            box(x - 6, y - 10, x + 6, y + 5, (164, 172, 162))
-            for eye in (-5, 3):
-                box(x + eye, y + 13, x + eye + 2, y + 16, (33, 40, 43))
-            line(x - 14, y - 8, x - 14, y + 18, GOLD)
+    def item(self, kind, x, y, scale):
+        self.art.draw(ITEM_SPRITES[kind], x, y, scale)
+
+    def board(self, game):
+        level, state = game.level, game.state
+        half_width = int(760 / (level.width + level.height))
+        half_height = half_width / 2
+        scale = half_width * 2 / self.art.manifest["coordinates"]["tile_footprint"]["width"]
+        origin_x = 445 - (level.width - level.height) * half_width / 2
+
+        def screen(position):
+            x, y = position
+            return origin_x + (x - y) * half_width, 708 - (x + y) * half_height
+
+        exit_ready = (state.installed == level.traps and (not level.traps or state.active)
+                      and state.soldiers == level.posts and state.carrying is None)
+        objects, labels = [], []
+        for depth in range(level.width + level.height - 1):
+            for y in range(level.height):
+                x = depth - y
+                if not 0 <= x < level.width:
+                    continue
+                pos = (x, y)
+                sx, sy = screen(pos)
+                tile = ("floor_plain", "floor_cracked", "floor_plain", "floor_moss")[(x + y * 3) % 4]
+                if pos in level.walls:
+                    objects.append((depth, 0, "wall_low", sx, sy))
+                elif pos in level.traps:
+                    tile = "trap_installed" if pos in state.installed else "trap_broken"
+                    if state.active:
+                        objects.append((depth, 0, "trap_active", sx, sy))
+                    labels.append((pos, "가동" if state.active else "설치" if pos in state.installed else "파손"))
+                elif pos in level.posts:
+                    tile = "post_empty"
+                    labels.append((pos, "배치" if pos in state.soldiers else "초소"))
+                elif pos == level.exit:
+                    tile = "exit_ready" if exit_ready else "exit_closed"
+                    labels.append((pos, "출구"))
+                self.art.draw(tile, sx, sy, scale)
+
+                if pos in level.levers:
+                    objects.append((depth, 1, "lever_on" if state.active else "lever_off", sx, sy))
+                    labels.append((pos, "레버"))
+                elif pos in level.benches:
+                    stored = state.bench_bones.get(pos, 0)
+                    objects.append((depth, 1, "bench_one_bone" if stored else "bench_empty", sx, sy))
+                    labels.append((pos, f"조립 {stored}/2"))
+                if pos in state.items:
+                    objects.append((depth, 2, ITEM_SPRITES[state.items[pos]], sx, sy))
+                if pos in state.soldiers:
+                    objects.append((depth, 2, "soldier_deployed", sx + 10, sy))
+
+        # 바닥 전체를 먼저 그려 앞 칸의 바닥이 캐릭터 다리를 덮지 않게 한다.
+        target_x, target_y = screen(state.player)
+        diamond(target_x, target_y, half_width - 3, int(half_height) - 2, None, TEAL)
+        now = perf_counter()
+        player = self.player_position(state.player, now)
+        px, py = screen(player)
+        # 같은 칸의 작업대나 배치한 병사와 구별되도록 약간 앞쪽에 선다.
+        if state.player in level.benches | level.levers | state.soldiers:
+            px -= 9
+            py -= 7
+        objects.append((sum(player), 3, "player", px, py))
+        for _, _, sprite, sx, sy in sorted(objects, key=lambda obj: obj[:2]):
+            if sprite != "player":
+                self.art.draw(sprite, sx, sy, scale)
+                continue
+            pose = "idle"
+            if self.motion:
+                pose = "walk_a" if now - self.motion[2] < 0.09 else "walk_b"
+            if state.carrying:
+                pose = "carry"
+            # 뒤를 볼 때 운반물은 몸 뒤에, 앞을 볼 때는 손 위에 합성한다.
+            offset_x = 12 if self.facing in ("ne", "se") else -12
+            if state.carrying and self.facing in ("ne", "nw"):
+                self.item(state.carrying, sx + offset_x, sy + 32, scale * 0.65)
+            self.art.draw(f"worker_{self.facing}_{pose}", sx, sy, scale)
+            if state.carrying and self.facing in ("se", "sw"):
+                self.item(state.carrying, sx + offset_x, sy + 24, scale * 0.65)
+
+        # 상태 문구를 바닥 아트와 함께 유지해 색이나 작은 그림에만 의존하지 않는다.
+        for pos, label in labels:
+            sx, sy = screen(pos)
+            width = len(label) * 13 + 8
+            box(sx - width / 2, sy - 24, sx + width / 2, sy - 7, (24, 35, 40))
+            self.text(sx - width / 2 + 4, sy - 16, label, 13, TEAL if pos == level.exit and exit_ready else INK)
 
     def draw(self, game, index, total):
         level, state = game.level, game.state
@@ -108,61 +217,9 @@ class View:
         self.text(42, 851, "용사가 지나간 자리", 32)
         self.text(44, 812, "던전 복구 작업실", 16, MUTED)
         self.text(927, 850, f"입문 {index + 1:02d} / {total:02d}", 22, GOLD)
-        self.text(927, 815, "기초 프로토타입  0.1", 16, MUTED)
+        self.text(927, 815, "프로토타입  0.2", 16, MUTED)
 
-        half_width = int(760 / (level.width + level.height))
-        half_height = half_width // 2
-        origin_x = 445 - (level.width - level.height) * half_width / 2
-        origin_y = 708
-        for depth in range(level.width + level.height - 1):
-            for y in range(level.height):
-                x = depth - y
-                if not 0 <= x < level.width:
-                    continue
-                position = (x, y)
-                sx, sy = origin_x + (x - y) * half_width, origin_y - depth * half_height
-                if position in level.walls:
-                    diamond(sx, sy - 7, half_width - 1, half_height, (36, 46, 53))
-                    diamond(sx, sy + 7, half_width - 1, half_height, (61, 74, 81), (80, 93, 97))
-                    continue
-                color = (59, 75, 76) if (x + y) % 2 else (64, 80, 80)
-                if position in level.traps:
-                    color = (123, 60, 54) if state.active else (105, 88, 57)
-                elif position == level.exit:
-                    color = (48, 99, 88)
-                elif position in level.posts:
-                    color = (76, 74, 101)
-                diamond(sx, sy, half_width - 1, half_height - 1, color, (35, 47, 51))
-
-                if position in level.traps:
-                    for offset in (-12, 0, 12):
-                        line(sx + offset - 4, sy - 4, sx + offset, sy + 5, RED if state.active else GOLD)
-                        line(sx + offset, sy + 5, sx + offset + 4, sy - 4, RED if state.active else GOLD)
-                    label = "가동" if state.active else "설치" if position in state.installed else "파손"
-                    self.text(sx - 13, sy - 11, label, 13, INK)
-                elif position in level.levers:
-                    box(sx - 12, sy - 5, sx + 12, sy + 1, (125, 126, 104))
-                    line(sx, sy, sx + (10 if state.active else -10), sy + 19, GOLD)
-                    self.text(sx - 13, sy - 12, "레버", 13)
-                elif position in level.benches:
-                    box(sx - 20, sy - 3, sx + 20, sy + 8, (135, 99, 65))
-                    self.text(sx - 20, sy - 11, f"조립 {state.bench_bones.get(position, 0)}/2", 13)
-                elif position in level.posts:
-                    self.text(sx - 13, sy - 9, "초소", 13)
-                elif position == level.exit:
-                    self.text(sx - 13, sy, "출구", 13, TEAL)
-
-                if position in state.items:
-                    self.item(state.items[position], sx, sy + 7)
-                if position in state.soldiers:
-                    self.item("soldier", sx + 10, sy + 8)
-                if position == state.player:
-                    diamond(sx, sy - 1, half_width - 4, half_height - 3, None, TEAL)
-                    box(sx - 10, sy + 10, sx + 10, sy + 31, (50, 139, 132))
-                    box(sx - 7, sy + 27, sx + 7, sy + 40, TEAL)
-                    box(sx - 4, sy + 29, sx + 4, sy + 33, (30, 52, 54))
-                    if state.carrying:
-                        self.item(state.carrying, sx + 19, sy + 37)
+        self.board(game)
 
         # 정보 패널은 보드 영역과 분리해 가림을 방지한다.
         box(894, 149, 1248, 768, (28, 39, 44))
@@ -174,6 +231,8 @@ class View:
         self.text(918, 533, f"함정 가동  {active_label}", 18, TEAL if state.active else INK)
         self.text(918, 499, f"병사 배치  {len(state.soldiers)} / {len(level.posts)}")
         self.text(918, 453, f"운반 중    {ITEM_NAMES[state.carrying]}", 18, GOLD)
+        if state.carrying:
+            self.item(state.carrying, 1214, 449, 0.28)
         self.text(918, 418, f"행동 {state.moves}회    되돌리기 {len(game.history)}회", 16, MUTED)
         self.text(918, 375, "목표", 18, GOLD)
         self.wrapped(918, 343, "복구를 마친 뒤 빈손으로 출구에 돌아오세요.")
@@ -218,13 +277,23 @@ def run(levels, index=0, smoke_frames=None):
                         running = False
                     elif event.key in (p.SDLK_z, p.SDLK_BACKSPACE):
                         game.undo()
+                        view.reset_player()
                     elif event.key == p.SDLK_r:
                         game.restart()
+                        view.reset_player()
                     elif event.key == p.SDLK_RETURN and game.state.cleared:
                         index = (index + 1) % len(levels)
                         game = Game(levels[index])
+                        view.reset_player()
                     elif event.key in actions:
-                        game.act(actions[event.key])
+                        action = actions[event.key]
+                        previous = game.state.player
+                        changed = game.act(action)
+                        if action in FACING and changed:
+                            view.move_player(previous, game.state.player, action)
+                        elif changed:
+                            # 도착 직후 상호작용하면 그 칸에 바로 정렬한다.
+                            view.motion = None
             view.draw(game, index, len(levels))
             p.update_canvas()
             p.SDL_SetWindowTitle(p.window, "용사가 지나간 자리 — 기초 프로토타입".encode("utf-8"))
