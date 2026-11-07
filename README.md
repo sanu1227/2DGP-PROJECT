@@ -9,7 +9,7 @@
 ![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)
 ![pico2d](https://img.shields.io/badge/Framework-pico2d-556B2F?style=flat-square)
 ![Genre](https://img.shields.io/badge/Genre-Puzzle-7755AA?style=flat-square)
-![Status](https://img.shields.io/badge/Status-Prototype%200.2-D99B32?style=flat-square)
+![Status](https://img.shields.io/badge/Status-Prototype%200.3-D99B32?style=flat-square)
 
 [게임 기획서](./게임기획서.md) · [상세 개발 계획](./docs/상세개발계획.md) · [개발 기록](./docs/개발기록.md) · [1차 발표 PPT](./용사가%20지나간자리.pptx)
 
@@ -38,9 +38,11 @@
 
 ## 바로 실행
 
-**입문방 3개를 플레이할 수 있는 프로토타입**입니다. 최종 8개 스테이지 중 입문 규칙을 검증하는 작은 방 3개이며, 난이도와 플레이 시간은 아직 조정하지 않았습니다. 제작한 2.5D 타일·장치·병사·수리공 에셋을 적용했습니다. 수리공은 이동 방향에 맞춰 걷고, 운반물을 손과 상태 패널에 표시합니다.
+**12×12 입문방 3개를 플레이할 수 있는 프로토타입 0.3**입니다. 각 방을 기존 8×8에서 12×12로 확장해 보드 면적을 2.25배로 늘렸습니다. 1280×900 창에서 방 전체를 볼 수 있도록 목표·운반물·행동 수를 상단 HUD에 모으고 보드 표시 영역을 넓혔습니다. 제작한 2.5D 에셋과 수리공의 방향·걷기·운반 표현을 유지합니다. 최종 8개 스테이지 중 입문 규칙을 검증하는 3개 방이며, 최종 난이도와 플레이 시간은 아직 조정하지 않았습니다.
 
-![입문 3번 방 실제 게임 화면](./docs/screenshots/stage-03.png)
+![확장한 입문 3번 방 실제 게임 화면](./docs/screenshots/stage-03-expanded.png)
+
+[확장한 3번 방 복구 완료 화면](./docs/screenshots/stage-03-expanded-cleared.png)
 
 Windows와 Python 3.10 이상을 기준으로 작성했습니다. 실제 검증 환경과 결과는 [개발 기록](./docs/개발기록.md)에 남깁니다.
 
@@ -95,6 +97,8 @@ python main.py
 
 ## 플레이 규모
 
+현재 프로토타입은 세 방 모두 12×12칸입니다. 1번 방은 함정 복구, 2번 방은 병사 조립·배치, 3번 방은 두 함정과 두 병사의 복구 순서를 다룹니다. 아래 표는 원본 PPT의 본편 기획 목표입니다.
+
 | 항목 | 기획 목표 |
 | --- | --- |
 | 본편 | 튜토리얼 3개 포함, 총 8개 스테이지 |
@@ -136,7 +140,7 @@ python main.py
 │   ├── art.py            # 아틀라스 로딩과 기준점 변환
 │   └── view.py           # pico2d 표시와 키 입력
 ├── assets/art_v1/        # 이미지·아틀라스·좌표·제작 원본
-├── data/stages.json      # 8×8 입문방 3개
+├── data/stages.json      # 12×12 입문방 3개
 ├── tests/                # 표준 unittest 회귀 검사
 └── 용사가 지나간자리.pptx
 ```
@@ -144,8 +148,8 @@ python main.py
 ## 개발 환경과 현재 상태
 
 - **개발 환경:** Python · [pico2d 1.5.1](https://pypi.org/project/pico2d/1.5.1/)
-- **현재 상태:** 1차 그래픽을 적용한 프로토타입 0.2
-- **구현 범위:** 이동·운반·복구·되돌리기·3개 입문방·2.5D 에셋 화면·수리공 방향 및 걷기
+- **현재 상태:** 12×12 맵과 상단 HUD를 적용한 프로토타입 0.3
+- **구현 범위:** 이동·운반·복구·되돌리기·12×12 입문방 3개·2.5D 에셋 화면·수리공 방향 및 걷기
 - **후속 범위:** 발판·투입구·벨트·4–8단계·최종 아트·사운드·진행 저장·배포 패키지
 
 기획서에서는 PPT에 명시된 내용과 보완 제안을 구분합니다. 세부 규칙은 개발과 플레이테스트를 통해 확정합니다.
