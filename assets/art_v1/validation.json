@@ -1,0 +1,674 @@
+{
+  "sprite_count": 44,
+  "atlas_count": 3,
+  "checks": {
+    "source_has_alpha": true,
+    "source_cell_edges_clear": true,
+    "output_clipping": false,
+    "sprites_have_transparent_pixels": true,
+    "sprites_have_visible_content": true,
+    "runtime_dependencies_changed": false
+  },
+  "sprites": [
+    {
+      "id": "floor_plain",
+      "size": [
+        256,
+        256
+      ],
+      "transparent_fraction": 0.7461,
+      "content_bounds": {
+        "left": 16,
+        "top": 104,
+        "width": 224,
+        "height": 124
+      },
+      "edge_pixels": 0
+    },
+    {
+      "id": "floor_cracked",
+      "size": [
+        256,
+        256
+      ],
+      "transparent_fraction": 0.7434,
+      "content_bounds": {
+        "left": 16,
+        "top": 103,
+        "width": 224,
+        "height": 125
+      },
+      "edge_pixels": 0
+    },
+    {
+      "id": "floor_moss",
+      "size": [
+        256,
+        256
+      ],
+      "transparent_fraction": 0.7452,
+      "content_bounds": {
+        "left": 16,
+        "top": 104,
+        "width": 224,
+        "height": 124
+      },
+      "edge_pixels": 0
+    },
+    {
+      "id": "floor_scuffed",
+      "size": [
+        256,
+        256
+      ],
+      "transparent_fraction": 0.7448,
+      "content_bounds": {
+        "left": 16,
+        "top": 104,
+        "width": 224,
+        "height": 124
+      },
+      "edge_pixels": 0
+    },
+    {
+      "id": "wall_low",
+      "size": [
+        256,
+        256
+      ],
+      "transparent_fraction": 0.6908,
+      "content_bounds": {
+        "left": 16,
+        "top": 81,
+        "width": 224,
+        "height": 147
+      },
+      "edge_pixels": 0
+    },
+    {
+      "id": "rubble",
+      "size": [
+        256,
+        256
+      ],
+      "transparent_fraction": 0.7432,
+      "content_bounds": {
+        "left": 16,
+        "top": 103,
+        "width": 224,
+        "height": 125
+      },
+      "edge_pixels": 0
+    },
+    {
+      "id": "trap_broken",
+      "size": [
+        256,
+        256
+      ],
+      "transparent_fraction": 0.7429,
+      "content_bounds": {
+        "left": 16,
+        "top": 103,
+        "width": 224,
+        "height": 125
+      },
+      "edge_pixels": 0
+    },
+    {
+      "id": "trap_installed",
+      "size": [
+        256,
+        256
+      ],
+      "transparent_fraction": 0.7452,
+      "content_bounds": {
+        "left": 16,
+        "top": 103,
+        "width": 224,
+        "height": 125
+      },
+      "edge_pixels": 0
+    },
+    {
+      "id": "trap_active",
+      "size": [
+        256,
+        256
+      ],
+      "transparent_fraction": 0.7334,
+      "content_bounds": {
+        "left": 16,
+        "top": 82,
+        "width": 224,
+        "height": 146
+      },
+      "edge_pixels": 0
+    },
+    {
+      "id": "post_empty",
+      "size": [
+        256,
+        256
+      ],
+      "transparent_fraction": 0.7479,
+      "content_bounds": {
+        "left": 16,
+        "top": 104,
+        "width": 224,
+        "height": 124
+      },
+      "edge_pixels": 0
+    },
+    {
+      "id": "exit_closed",
+      "size": [
+        256,
+        256
+      ],
+      "transparent_fraction": 0.7496,
+      "content_bounds": {
+        "left": 16,
+        "top": 104,
+        "width": 224,
+        "height": 124
+      },
+      "edge_pixels": 0
+    },
+    {
+      "id": "exit_ready",
+      "size": [
+        256,
+        256
+      ],
+      "transparent_fraction": 0.7215,
+      "content_bounds": {
+        "left": 16,
+        "top": 90,
+        "width": 224,
+        "height": 138
+      },
+      "edge_pixels": 0
+    },
+    {
+      "id": "part",
+      "size": [
+        256,
+        256
+      ],
+      "transparent_fraction": 0.9024,
+      "content_bounds": {
+        "left": 80,
+        "top": 128,
+        "width": 96,
+        "height": 92
+      },
+      "edge_pixels": 0
+    },
+    {
+      "id": "bone_bundle",
+      "size": [
+        256,
+        256
+      ],
+      "transparent_fraction": 0.9278,
+      "content_bounds": {
+        "left": 79,
+        "top": 136,
+        "width": 98,
+        "height": 84
+      },
+      "edge_pixels": 0
+    },
+    {
+      "id": "soldier_carried",
+      "size": [
+        256,
+        256
+      ],
+      "transparent_fraction": 0.8301,
+      "content_bounds": {
+        "left": 64,
+        "top": 88,
+        "width": 127,
+        "height": 132
+      },
+      "edge_pixels": 0
+    },
+    {
+      "id": "soldier_deployed",
+      "size": [
+        256,
+        256
+      ],
+      "transparent_fraction": 0.8056,
+      "content_bounds": {
+        "left": 67,
+        "top": 46,
+        "width": 122,
+        "height": 174
+      },
+      "edge_pixels": 0
+    },
+    {
+      "id": "bench_empty",
+      "size": [
+        256,
+        256
+      ],
+      "transparent_fraction": 0.7198,
+      "content_bounds": {
+        "left": 38,
+        "top": 56,
+        "width": 180,
+        "height": 164
+      },
+      "edge_pixels": 0
+    },
+    {
+      "id": "bench_one_bone",
+      "size": [
+        256,
+        256
+      ],
+      "transparent_fraction": 0.7126,
+      "content_bounds": {
+        "left": 38,
+        "top": 53,
+        "width": 180,
+        "height": 167
+      },
+      "edge_pixels": 0
+    },
+    {
+      "id": "bench_assembled",
+      "size": [
+        256,
+        256
+      ],
+      "transparent_fraction": 0.7201,
+      "content_bounds": {
+        "left": 38,
+        "top": 56,
+        "width": 180,
+        "height": 164
+      },
+      "edge_pixels": 0
+    },
+    {
+      "id": "lever_off",
+      "size": [
+        256,
+        256
+      ],
+      "transparent_fraction": 0.8913,
+      "content_bounds": {
+        "left": 72,
+        "top": 100,
+        "width": 112,
+        "height": 120
+      },
+      "edge_pixels": 0
+    },
+    {
+      "id": "lever_on",
+      "size": [
+        256,
+        256
+      ],
+      "transparent_fraction": 0.8858,
+      "content_bounds": {
+        "left": 72,
+        "top": 91,
+        "width": 112,
+        "height": 129
+      },
+      "edge_pixels": 0
+    },
+    {
+      "id": "plate_up",
+      "size": [
+        256,
+        256
+      ],
+      "transparent_fraction": 0.6935,
+      "content_bounds": {
+        "left": 32,
+        "top": 63,
+        "width": 192,
+        "height": 157
+      },
+      "edge_pixels": 0
+    },
+    {
+      "id": "plate_down",
+      "size": [
+        256,
+        256
+      ],
+      "transparent_fraction": 0.7592,
+      "content_bounds": {
+        "left": 32,
+        "top": 88,
+        "width": 192,
+        "height": 132
+      },
+      "edge_pixels": 0
+    },
+    {
+      "id": "chute_inlet",
+      "size": [
+        256,
+        256
+      ],
+      "transparent_fraction": 0.7999,
+      "content_bounds": {
+        "left": 63,
+        "top": 88,
+        "width": 130,
+        "height": 132
+      },
+      "edge_pixels": 0
+    },
+    {
+      "id": "chute_outlet",
+      "size": [
+        256,
+        256
+      ],
+      "transparent_fraction": 0.8114,
+      "content_bounds": {
+        "left": 63,
+        "top": 92,
+        "width": 130,
+        "height": 128
+      },
+      "edge_pixels": 0
+    },
+    {
+      "id": "conveyor_ne",
+      "size": [
+        256,
+        256
+      ],
+      "transparent_fraction": 0.7197,
+      "content_bounds": {
+        "left": 33,
+        "top": 65,
+        "width": 190,
+        "height": 155
+      },
+      "edge_pixels": 0
+    },
+    {
+      "id": "conveyor_se",
+      "size": [
+        256,
+        256
+      ],
+      "transparent_fraction": 0.7243,
+      "content_bounds": {
+        "left": 33,
+        "top": 66,
+        "width": 190,
+        "height": 154
+      },
+      "edge_pixels": 0
+    },
+    {
+      "id": "brazier",
+      "size": [
+        256,
+        256
+      ],
+      "transparent_fraction": 0.8706,
+      "content_bounds": {
+        "left": 78,
+        "top": 92,
+        "width": 100,
+        "height": 128
+      },
+      "edge_pixels": 0
+    },
+    {
+      "id": "worker_ne_idle",
+      "size": [
+        256,
+        256
+      ],
+      "transparent_fraction": 0.7979,
+      "content_bounds": {
+        "left": 76,
+        "top": 47,
+        "width": 105,
+        "height": 173
+      },
+      "edge_pixels": 0
+    },
+    {
+      "id": "worker_ne_walk_a",
+      "size": [
+        256,
+        256
+      ],
+      "transparent_fraction": 0.7953,
+      "content_bounds": {
+        "left": 67,
+        "top": 47,
+        "width": 120,
+        "height": 173
+      },
+      "edge_pixels": 0
+    },
+    {
+      "id": "worker_ne_walk_b",
+      "size": [
+        256,
+        256
+      ],
+      "transparent_fraction": 0.7932,
+      "content_bounds": {
+        "left": 68,
+        "top": 47,
+        "width": 122,
+        "height": 175
+      },
+      "edge_pixels": 0
+    },
+    {
+      "id": "worker_ne_carry",
+      "size": [
+        256,
+        256
+      ],
+      "transparent_fraction": 0.7967,
+      "content_bounds": {
+        "left": 76,
+        "top": 47,
+        "width": 118,
+        "height": 173
+      },
+      "edge_pixels": 0
+    },
+    {
+      "id": "worker_se_idle",
+      "size": [
+        256,
+        256
+      ],
+      "transparent_fraction": 0.7951,
+      "content_bounds": {
+        "left": 77,
+        "top": 44,
+        "width": 103,
+        "height": 176
+      },
+      "edge_pixels": 0
+    },
+    {
+      "id": "worker_se_walk_a",
+      "size": [
+        256,
+        256
+      ],
+      "transparent_fraction": 0.7914,
+      "content_bounds": {
+        "left": 71,
+        "top": 43,
+        "width": 114,
+        "height": 176
+      },
+      "edge_pixels": 0
+    },
+    {
+      "id": "worker_se_walk_b",
+      "size": [
+        256,
+        256
+      ],
+      "transparent_fraction": 0.7943,
+      "content_bounds": {
+        "left": 78,
+        "top": 44,
+        "width": 114,
+        "height": 175
+      },
+      "edge_pixels": 0
+    },
+    {
+      "id": "worker_se_carry",
+      "size": [
+        256,
+        256
+      ],
+      "transparent_fraction": 0.7946,
+      "content_bounds": {
+        "left": 78,
+        "top": 44,
+        "width": 120,
+        "height": 176
+      },
+      "edge_pixels": 0
+    },
+    {
+      "id": "worker_sw_idle",
+      "size": [
+        256,
+        256
+      ],
+      "transparent_fraction": 0.7958,
+      "content_bounds": {
+        "left": 77,
+        "top": 45,
+        "width": 103,
+        "height": 175
+      },
+      "edge_pixels": 0
+    },
+    {
+      "id": "worker_sw_walk_a",
+      "size": [
+        256,
+        256
+      ],
+      "transparent_fraction": 0.7951,
+      "content_bounds": {
+        "left": 66,
+        "top": 45,
+        "width": 115,
+        "height": 174
+      },
+      "edge_pixels": 0
+    },
+    {
+      "id": "worker_sw_walk_b",
+      "size": [
+        256,
+        256
+      ],
+      "transparent_fraction": 0.7977,
+      "content_bounds": {
+        "left": 68,
+        "top": 45,
+        "width": 113,
+        "height": 173
+      },
+      "edge_pixels": 0
+    },
+    {
+      "id": "worker_sw_carry",
+      "size": [
+        256,
+        256
+      ],
+      "transparent_fraction": 0.7978,
+      "content_bounds": {
+        "left": 64,
+        "top": 45,
+        "width": 117,
+        "height": 175
+      },
+      "edge_pixels": 0
+    },
+    {
+      "id": "worker_nw_idle",
+      "size": [
+        256,
+        256
+      ],
+      "transparent_fraction": 0.7961,
+      "content_bounds": {
+        "left": 76,
+        "top": 48,
+        "width": 105,
+        "height": 172
+      },
+      "edge_pixels": 0
+    },
+    {
+      "id": "worker_nw_walk_a",
+      "size": [
+        256,
+        256
+      ],
+      "transparent_fraction": 0.7913,
+      "content_bounds": {
+        "left": 64,
+        "top": 48,
+        "width": 122,
+        "height": 173
+      },
+      "edge_pixels": 0
+    },
+    {
+      "id": "worker_nw_walk_b",
+      "size": [
+        256,
+        256
+      ],
+      "transparent_fraction": 0.7864,
+      "content_bounds": {
+        "left": 67,
+        "top": 48,
+        "width": 124,
+        "height": 172
+      },
+      "edge_pixels": 0
+    },
+    {
+      "id": "worker_nw_carry",
+      "size": [
+        256,
+        256
+      ],
+      "transparent_fraction": 0.7944,
+      "content_bounds": {
+        "left": 62,
+        "top": 48,
+        "width": 119,
+        "height": 171
+      },
+      "edge_pixels": 0
+    }
+  ]
+}

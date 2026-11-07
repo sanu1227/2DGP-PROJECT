@@ -1,0 +1,13 @@
+{
+  "name": "dungeon-art-pipeline",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Generated atlas slicing, alignment and preview tools; not a game runtime dependency.",
+  "scripts": {
+    "build": "node build.mjs"
+  },
+  "dependencies": {
+    "sharp": "0.34.5"
+  }
+}
