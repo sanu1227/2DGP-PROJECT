@@ -1,0 +1,99 @@
+{
+  "key": "crypt",
+  "title": "왕실 납골당",
+  "subtitle": "ROYAL OSSUARY",
+  "date": "2026-11-08",
+  "generator": "built-in image_gen",
+  "transparent_background": true,
+  "prompt": "Use case: stylized-concept.\nAsset: production-ready 2.5D isometric dungeon environment expansion atlas, true transparent PNG. This is a precisely sliceable GAME SPRITE SHEET, not a scene, poster or concept board.\nExactly 2048x2048 square, 4 columns by 4 rows of equal invisible 512px cells. Exactly ONE distinct isolated asset per cell, sixteen assets. No drawn grid, labels, text, captions, checkerboard, background or watermark. All parts fully inside their own cells, 30px safe padding, no cross-cell overlaps.\nShared art: charming, weathered dungeon after a hero's destructive visit, ready for a small teal-hooded repair worker. Sophisticated hand-painted stylized game art, crisp chunky shapes, beveled edges, warm/cool material contrast, restrained surface detail legible at 94px tile size. Same orthographic 2:1 isometric camera for everything, looking down about 30 degrees. Light comes upper left. NOT pixel art, not flat icons, not glossy toys, not realistic photography.\nRows 1 AND 2 are tile assets. They MUST all share an IDENTICAL full diamond stone floor footprint, points local left=(46,305), top=(256,200), right=(466,305), bottom=(256,410), and 20px-thick beveled front stone lip below it. Straight diamond sides with no protrusions. Keep floor size identical even under walls. Tile top is a walkable flat surface unless a wall occupies it. Every cell in these rows contains one full floor diamond. Wall top must remain inside y=55 and fit the tile footprint. Walls are low enough to preserve path readability, not entire buildings.\nRows 3 AND 4 are standalone props with NO floor tile. Center each object at x=256, ground contact baseline y=425. Objects fit x=50..462 and y=50..430. Render full object. No extraneous shadow clouds, platforms, floors or companion objects.\nColor and shape distinguish theme. Wear tells a story, without clutter obscuring paths. NO characters, no skeleton people, no trap spikes, no levers, no exit hatch (those existing gameplay objects must remain visually distinct).\nTransparent background is actual alpha, not painted black or checkers.\nTHEME: 왕실 납골당 / ROYAL OSSUARY. Palette: cool plum-grey limestone, dusty ivory carvings, worn antique gold and faded royal purple. Carved shields and laurel details suggest a forgotten royal guard, no readable writing.\nSTRICT ROW-MAJOR CONTENT:\nRow 1, tiles 1-4:\n1. broad clean plum-grey limestone blocks\n2. flat ivory-and-violet geometric shield mosaic, framed by ordinary stone\n3. matching floor with hairline cracks and one chipped royal crest, still flat and walkable\n4. a short faded royal-purple fabric runner laid flat across the stone tile; torn corner, thin gold edge\nRow 2, tiles 5-8:\n5. low ornate masonry wall along the BACK-LEFT edge of floor diamond (left vertex to top vertex), shield-relief cap\n6. matching low wall along BACK-RIGHT edge (top vertex to right vertex), different visible front side\n7. matching L-shaped low wall along BOTH back-left and back-right edges, two joined arms\n8. a collapsed version of the back-left wall, irregular broken top and a few small chunks contained on its own tile\nRow 3, props 9-12:\n9. one squat closed stone sarcophagus with worn embossed shield lid. One single standalone object, NO floor diamond.\n10. a large ivory funerary urn with a cracked golden band. One single standalone object, NO floor diamond.\n11. a broken headless knight STATUE bust on a small integral pedestal, clearly stone, no living figure. One single standalone object, NO floor diamond.\n12. one clustered candelabrum with five warm wax candles and drips. One single standalone object, NO floor diamond.\nRow 4, props 13-16:\n13. a weathered closed dark wooden coffin with bronze corner fittings. One single standalone object, NO floor diamond.\n14. an empty small display stand holding a battered bronze helmet and shield, no person. One single standalone object, NO floor diamond.\n15. a freestanding low royal-purple swallowtail banner on a small bronze pole, torn cloth, unreadable geometric crest. One single standalone object, NO floor diamond.\n16. a shallow carved stone offering bowl with a few dull coins and wilted petals. One single standalone object, NO floor diamond.\nAll exactly sixteen assets, equal cells. Maintain the same isometric orientation and floor footprint across every tile. The eight props in rows 3 and 4 have no floor tile. All silhouettes comfortably inside their own cells, actual alpha transparency.",
+  "entries": [
+    {
+      "id": "crypt_floor_plain",
+      "kind": "floor",
+      "description": "broad clean plum-grey limestone blocks"
+    },
+    {
+      "id": "crypt_floor_mosaic",
+      "kind": "floor",
+      "description": "flat ivory-and-violet geometric shield mosaic, framed by ordinary stone"
+    },
+    {
+      "id": "crypt_floor_damaged",
+      "kind": "floor",
+      "description": "matching floor with hairline cracks and one chipped royal crest, still flat and walkable"
+    },
+    {
+      "id": "crypt_floor_runner",
+      "kind": "floor",
+      "description": "a short faded royal-purple fabric runner laid flat across the stone tile; torn corner, thin gold edge"
+    },
+    {
+      "id": "crypt_wall_nw",
+      "kind": "wall",
+      "description": "low ornate masonry wall along the BACK-LEFT edge of floor diamond (left vertex to top vertex), shield-relief cap"
+    },
+    {
+      "id": "crypt_wall_ne",
+      "kind": "wall",
+      "description": "matching low wall along BACK-RIGHT edge (top vertex to right vertex), different visible front side"
+    },
+    {
+      "id": "crypt_wall_corner",
+      "kind": "wall",
+      "description": "matching L-shaped low wall along BOTH back-left and back-right edges, two joined arms"
+    },
+    {
+      "id": "crypt_wall_broken",
+      "kind": "wall",
+      "description": "a collapsed version of the back-left wall, irregular broken top and a few small chunks contained on its own tile"
+    },
+    {
+      "id": "crypt_sarcophagus",
+      "kind": "prop",
+      "description": "one squat closed stone sarcophagus with worn embossed shield lid",
+      "width": 190
+    },
+    {
+      "id": "crypt_memorial_urn",
+      "kind": "prop",
+      "description": "a large ivory funerary urn with a cracked golden band",
+      "width": 92
+    },
+    {
+      "id": "crypt_broken_statue",
+      "kind": "prop",
+      "description": "a broken headless knight STATUE bust on a small integral pedestal, clearly stone, no living figure",
+      "width": 112
+    },
+    {
+      "id": "crypt_candles",
+      "kind": "prop",
+      "description": "one clustered candelabrum with five warm wax candles and drips",
+      "width": 84
+    },
+    {
+      "id": "crypt_coffin",
+      "kind": "prop",
+      "description": "a weathered closed dark wooden coffin with bronze corner fittings",
+      "width": 158
+    },
+    {
+      "id": "crypt_armor_rack",
+      "kind": "prop",
+      "description": "an empty small display stand holding a battered bronze helmet and shield, no person",
+      "width": 116
+    },
+    {
+      "id": "crypt_banner",
+      "kind": "prop",
+      "description": "a freestanding low royal-purple swallowtail banner on a small bronze pole, torn cloth, unreadable geometric crest",
+      "width": 110
+    },
+    {
+      "id": "crypt_offering_bowl",
+      "kind": "prop",
+      "description": "a shallow carved stone offering bowl with a few dull coins and wilted petals",
+      "width": 100
+    }
+  ]
+}
