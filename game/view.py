@@ -10,6 +10,7 @@ from game.model import Game
 from game.art import Art
 from game.projection import BoardProjection
 from game.masonry import draw_wall
+from game.devices_view import draw_belt, draw_plate
 from game.scenery import draw_scars, draw_tinted, floor_style, wall_style
 
 WIDTH, HEIGHT = 1280, 900
@@ -134,18 +135,18 @@ class View:
         color = TEAL if status == "open" else GOLD if status == "held" else RED
         left, right, height = sx - 80 * scale, sx + 80 * scale, 110 * scale
         rust, edge = (104, 80, 53), (158, 132, 89)
-        for x, base in ((left, sy + 8 * scale), (right, sy - 8 * scale)):
+        for x, base in ((left, sy), (right, sy)):
             box(x - 4, base - 2, x + 4, base + height - 8 * scale, (49, 44, 37))
             box(x - 2, base, x + 2, base + height - 10 * scale, rust)
             line(x - 2, base, x - 2, base + height - 10 * scale, edge)
             box(x - 2, base + height - 15 * scale, x + 2, base + height - 8 * scale, color)
         for offset in range(-2, 3):
-            line(left, sy + height + offset, right, sy + height - 16 * scale + offset, rust)
-        line(left, sy + height + 3, right, sy + height - 16 * scale + 3, edge)
+            line(left, sy + height - 8 * scale + offset, right, sy + height - 8 * scale + offset, rust)
+        line(left, sy + height - 8 * scale + 3, right, sy + height - 8 * scale + 3, edge)
         if status != "open":
             for fraction in (0.2, 0.4, 0.6, 0.8):
                 x = left + (right - left) * fraction
-                y = sy + (8 - 16 * fraction) * scale
+                y = sy
                 line(x, y, x, y + height - 8 * scale, rust)
                 line(x + 1, y, x + 1, y + height - 8 * scale, edge)
 
@@ -235,8 +236,10 @@ class View:
         for _, _, sprite, sx, sy in sorted(objects, key=lambda obj: obj[:2]):
             if sprite.startswith("belt_"):
                 direction = sprite.removeprefix("belt_")
-                self.art.draw("conveyor_ne" if direction in ("up", "left") else "conveyor_se",
-                              sx, sy, scale, flip=direction in ("left", "down"))
+                draw_belt(self.art, direction, sx, sy, projection.cell_width, projection.cell_height)
+                continue
+            if sprite in ("plate_up", "plate_down"):
+                draw_plate(self.art, sprite == "plate_down", sx, sy, projection.cell_width, projection.cell_height)
                 continue
             if sprite.startswith("gate_"):
                 self.gate(sx, sy, scale, sprite.removeprefix("gate_"))
