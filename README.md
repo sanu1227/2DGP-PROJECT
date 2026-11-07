@@ -9,7 +9,7 @@
 ![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)
 ![pico2d](https://img.shields.io/badge/Framework-pico2d-556B2F?style=flat-square)
 ![Genre](https://img.shields.io/badge/Genre-Puzzle-7755AA?style=flat-square)
-![Status](https://img.shields.io/badge/Status-Prototype%200.5-D99B32?style=flat-square)
+![Status](https://img.shields.io/badge/Status-Prototype%200.4-D99B32?style=flat-square)
 
 [게임 기획서](./게임기획서.md) · [상세 개발 계획](./docs/상세개발계획.md) · [개발 기록](./docs/개발기록.md) · [1차 발표 PPT](./용사가%20지나간자리.pptx)
 
@@ -39,11 +39,11 @@
 
 ## 바로 실행
 
-**12×12 입문방 3개와 기믹 응용방 3개를 플레이할 수 있는 프로토타입 0.5**입니다. 기존 입문 세 방을 8×8에서 12×12로 확장해 보드 면적을 2.25배로 늘렸습니다. 1280×900 창에서 방 전체를 볼 수 있도록 목표·운반물·행동 수를 상단 HUD에 모으고 보드 표시 영역을 넓혔습니다. 제작한 2.5D 에셋과 수리공의 방향·걷기·운반 표현을 유지합니다. 최종 8개 스테이지 중 입문 3개와 발판·투입구·벨트 응용방 3개이며, 최종 난이도와 플레이 시간은 아직 조정하지 않았습니다.
+**12×12 입문방 3개와 기믹 응용방 3개를 플레이할 수 있는 프로토타입 0.4**입니다. 기존 입문 세 방을 8×8에서 12×12로 확장해 보드 면적을 2.25배로 늘렸습니다. 1280×900 창에서 방 전체를 볼 수 있도록 목표·운반물·행동 수를 상단 HUD에 모으고 보드 표시 영역을 넓혔습니다. 제작한 2.5D 에셋과 수리공의 방향·걷기·운반 표현을 유지합니다. 최종 8개 스테이지 중 입문 3개와 발판·투입구·벨트 응용방 3개이며, 최종 난이도와 플레이 시간은 아직 조정하지 않았습니다.
 
-![화면 방향과 WASD를 맞춘 정면 3/4 시점](./docs/screenshots/stage-06-front.png)
+![폐허 표현과 운반 벨트를 적용한 6번 방 실제 게임 화면](./docs/screenshots/stage-06-ruined.png)
 
-[6번 방 복구 완료](./docs/screenshots/stage-06-front-cleared.png) · [뼈 투입구와 원격 발판](./docs/screenshots/stage-05-front.png)
+[6번 방 복구 완료](./docs/screenshots/stage-06-ruined-cleared.png) · [뼈 투입구와 원격 발판](./docs/screenshots/stage-05-ruined.png)
 
 벽 일부를 무너진 잔해로 바꾸고, 바닥 균열과 함정 주변의 그을음을 추가했습니다. 잔해는 벽과 같은 막힌 칸입니다. 장치와 캐릭터의 밝기는 유지해 복구 대상을 구별합니다.
 
@@ -63,7 +63,6 @@ python main.py --check             # 화면 없이 스테이지 데이터 검사
 python -m unittest discover -v     # SDL 없이 게임 규칙 검사
 python main.py --smoke-frames 3    # 실제 창을 3프레임 표시하고 종료
 python -m tests.smoke_window      # SDL 키 이벤트로 모든 방 UI 흐름 재생
-python -m tests.smoke_controls    # 실제 렌더링의 WASD 방향과 빠른 코너 이동 검사
 ```
 
 | 키 | 동작 |
@@ -77,7 +76,7 @@ python -m tests.smoke_controls    # 실제 렌더링의 WASD 방향과 빠른 �
 | Enter | 완료 후 다음 방. 마지막 방 완료 후 첫 방으로 복귀 |
 | Esc / 창 닫기 | 종료 |
 
-정면에 가까운 3/4 시점에서 `W/위`는 화면 위, `S/아래`는 아래, `A/왼쪽`은 왼쪽, `D/오른쪽`은 오른쪽으로 정확히 한 칸 이동합니다. 기존 논리 격자와 퍼즐 규칙은 유지합니다. 빠르게 방향을 바꿔도 캐릭터는 실제 이동한 칸의 모서리를 따라 움직입니다.
+사선 화면에서 `W/위`는 오른쪽 위, `D/오른쪽`은 오른쪽 아래, `S/아래`는 왼쪽 아래, `A/왼쪽`은 왼쪽 위입니다. 화면 안에도 방향 안내가 있습니다.
 
 ### 현재 적용한 규칙
 
@@ -148,10 +147,6 @@ python main.py
 │   ├── levels.py         # 스테이지 데이터와 검증
 │   ├── model.py          # 화면과 독립적인 게임 규칙
 │   ├── art.py            # 아틀라스 로딩과 기준점 변환
-│   ├── motion.py        # 이동 순서와 코너를 보존하는 표시 보간
-│   ├── devices_view.py  # 화면 축에 맞춘 벨트·발판 표면
-│   ├── projection.py    # 화면 상하좌우와 격자 방향 정렬
-│   ├── masonry.py       # 정면 시점의 낮은 석벽
 │   ├── scenery.py        # 좌표에 고정된 파손 흔적과 배경 색상
 │   └── view.py           # pico2d 표시와 키 입력
 ├── assets/art_v1/        # 이미지·아틀라스·좌표·제작 원본
@@ -163,7 +158,7 @@ python main.py
 ## 개발 환경과 현재 상태
 
 - **개발 환경:** Python · [pico2d 1.5.1](https://pypi.org/project/pico2d/1.5.1/)
-- **현재 상태:** 12×12 방 6개, 발판·투입구·벨트, 폐허와 정면 3/4 시점을 적용한 프로토타입 0.5
+- **현재 상태:** 12×12 방 6개, 발판·투입구·벨트, 폐허 표현을 적용한 프로토타입 0.4
 - **구현 범위:** 이동·운반·복구·되돌리기·12×12 입문방 3개·발판·투입구·벨트 응용방·2.5D 에셋 화면·수리공 방향 및 걷기
 - **후속 범위:** 7–8단계·최종 아트·사운드·진행 저장·배포 패키지
 
