@@ -1,0 +1,88 @@
+{
+  "count": 16,
+  "alpha": true,
+  "source_cells_unclipped": true,
+  "output_padding": true,
+  "sprites": [
+    {
+      "id": "crypt_floor_plain",
+      "visible_pixels": 15258,
+      "edge_pixels": 0
+    },
+    {
+      "id": "crypt_floor_mosaic",
+      "visible_pixels": 15247,
+      "edge_pixels": 0
+    },
+    {
+      "id": "crypt_floor_damaged",
+      "visible_pixels": 15263,
+      "edge_pixels": 0
+    },
+    {
+      "id": "crypt_floor_runner",
+      "visible_pixels": 15323,
+      "edge_pixels": 0
+    },
+    {
+      "id": "crypt_wall_nw",
+      "visible_pixels": 20834,
+      "edge_pixels": 0
+    },
+    {
+      "id": "crypt_wall_ne",
+      "visible_pixels": 20191,
+      "edge_pixels": 0
+    },
+    {
+      "id": "crypt_wall_corner",
+      "visible_pixels": 24299,
+      "edge_pixels": 0
+    },
+    {
+      "id": "crypt_wall_broken",
+      "visible_pixels": 18903,
+      "edge_pixels": 0
+    },
+    {
+      "id": "crypt_sarcophagus",
+      "visible_pixels": 21192,
+      "edge_pixels": 0
+    },
+    {
+      "id": "crypt_memorial_urn",
+      "visible_pixels": 8330,
+      "edge_pixels": 0
+    },
+    {
+      "id": "crypt_broken_statue",
+      "visible_pixels": 11238,
+      "edge_pixels": 0
+    },
+    {
+      "id": "crypt_candles",
+      "visible_pixels": 4040,
+      "edge_pixels": 0
+    },
+    {
+      "id": "crypt_coffin",
+      "visible_pixels": 13046,
+      "edge_pixels": 0
+    },
+    {
+      "id": "crypt_armor_rack",
+      "visible_pixels": 10867,
+      "edge_pixels": 0
+    },
+    {
+      "id": "crypt_banner",
+      "visible_pixels": 12000,
+      "edge_pixels": 0
+    },
+    {
+      "id": "crypt_offering_bowl",
+      "visible_pixels": 5720,
+      "edge_pixels": 0
+    }
+  ]
+}

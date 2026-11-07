@@ -1,0 +1,618 @@
+{
+  "version": 1,
+  "created": "2026-11-08",
+  "theme": "crypt",
+  "title": "왕실 납골당",
+  "generator": "built-in image_gen",
+  "status": "map-decoration-pack; not yet placed in gameplay maps",
+  "coordinates": {
+    "image": "top-left origin; anchor and source_rect use x right, y down",
+    "pico2d": "clip_rect_pico2d uses bottom-left origin",
+    "tile_footprint": {
+      "width": 224,
+      "height": 112
+    }
+  },
+  "source": {
+    "file": "source/atlas.png",
+    "width": 1254,
+    "height": 1254,
+    "sha256": "b70576ad350100e9863d97908317e5f0775bb735ca36bd7bf0d5340edf3057b9",
+    "grid": [
+      4,
+      4
+    ]
+  },
+  "atlases": {
+    "crypt": {
+      "file": "atlas.png",
+      "width": 1024,
+      "height": 1024,
+      "cell_size": 256,
+      "grid": [
+        4,
+        4
+      ],
+      "sha256": "e9f44ca7a935f7a67ee8b6e18061e27302c0aef078dc587a83d322386159c727"
+    }
+  },
+  "sprites": {
+    "crypt_floor_plain": {
+      "file": "tiles/crypt_floor_plain.png",
+      "kind": "floor",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 160
+      },
+      "atlas": "crypt",
+      "clip_rect_pico2d": [
+        0,
+        768,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 0,
+        "top": 0,
+        "width": 314,
+        "height": 314
+      },
+      "source_content_rect": {
+        "left": 13,
+        "top": 78,
+        "width": 288,
+        "height": 189
+      },
+      "content_rect": {
+        "left": 16,
+        "top": 104,
+        "width": 224,
+        "height": 124
+      },
+      "sha256": "f623c205e4573741b352d80b8b9f66385b4dc7d6c32eb0947f8c779880ae2d78"
+    },
+    "crypt_floor_mosaic": {
+      "file": "tiles/crypt_floor_mosaic.png",
+      "kind": "floor",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 160
+      },
+      "atlas": "crypt",
+      "clip_rect_pico2d": [
+        256,
+        768,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 314,
+        "top": 0,
+        "width": 313,
+        "height": 314
+      },
+      "source_content_rect": {
+        "left": 12,
+        "top": 78,
+        "width": 288,
+        "height": 189
+      },
+      "content_rect": {
+        "left": 16,
+        "top": 104,
+        "width": 224,
+        "height": 124
+      },
+      "sha256": "1336f6b475ee021209e9d0e539791e3b5bde64f443668720dc29d0b6d3646015"
+    },
+    "crypt_floor_damaged": {
+      "file": "tiles/crypt_floor_damaged.png",
+      "kind": "floor",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 160
+      },
+      "atlas": "crypt",
+      "clip_rect_pico2d": [
+        512,
+        768,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 627,
+        "top": 0,
+        "width": 314,
+        "height": 314
+      },
+      "source_content_rect": {
+        "left": 13,
+        "top": 78,
+        "width": 288,
+        "height": 189
+      },
+      "content_rect": {
+        "left": 16,
+        "top": 104,
+        "width": 224,
+        "height": 124
+      },
+      "sha256": "e7da85f45271cbd39ae55a67f01925917381221a912aa30d0679c08baf95175c"
+    },
+    "crypt_floor_runner": {
+      "file": "tiles/crypt_floor_runner.png",
+      "kind": "floor",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 160
+      },
+      "atlas": "crypt",
+      "clip_rect_pico2d": [
+        768,
+        768,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 941,
+        "top": 0,
+        "width": 313,
+        "height": 314
+      },
+      "source_content_rect": {
+        "left": 12,
+        "top": 78,
+        "width": 288,
+        "height": 189
+      },
+      "content_rect": {
+        "left": 16,
+        "top": 104,
+        "width": 224,
+        "height": 124
+      },
+      "sha256": "5c02f894a4ac2fac7667d618b74f41354d8bac45237f26e64c6eb7955e9168de"
+    },
+    "crypt_wall_nw": {
+      "file": "tiles/crypt_wall_nw.png",
+      "kind": "wall",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 160
+      },
+      "atlas": "crypt",
+      "clip_rect_pico2d": [
+        0,
+        512,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 0,
+        "top": 314,
+        "width": 314,
+        "height": 313
+      },
+      "source_content_rect": {
+        "left": 13,
+        "top": 22,
+        "width": 288,
+        "height": 252
+      },
+      "content_rect": {
+        "left": 16,
+        "top": 63,
+        "width": 224,
+        "height": 165
+      },
+      "sha256": "3fb6ceed3792580a31038f8ddf0a0c1bb67b964e739ae8bea7e2288363b3e5f4"
+    },
+    "crypt_wall_ne": {
+      "file": "tiles/crypt_wall_ne.png",
+      "kind": "wall",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 160
+      },
+      "atlas": "crypt",
+      "clip_rect_pico2d": [
+        256,
+        512,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 314,
+        "top": 314,
+        "width": 313,
+        "height": 313
+      },
+      "source_content_rect": {
+        "left": 12,
+        "top": 22,
+        "width": 288,
+        "height": 252
+      },
+      "content_rect": {
+        "left": 16,
+        "top": 63,
+        "width": 224,
+        "height": 165
+      },
+      "sha256": "bb14dd6ec7eb06e2324ca0d95dddc06197d8291c55cfdf13c9f4fa227f109686"
+    },
+    "crypt_wall_corner": {
+      "file": "tiles/crypt_wall_corner.png",
+      "kind": "wall",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 160
+      },
+      "atlas": "crypt",
+      "clip_rect_pico2d": [
+        512,
+        512,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 627,
+        "top": 314,
+        "width": 314,
+        "height": 313
+      },
+      "source_content_rect": {
+        "left": 13,
+        "top": 22,
+        "width": 288,
+        "height": 252
+      },
+      "content_rect": {
+        "left": 16,
+        "top": 63,
+        "width": 224,
+        "height": 165
+      },
+      "sha256": "fb97724a7abf74bf8bb2672e58ce1aa2983ddaffac8e8e9a53843db0312c990d"
+    },
+    "crypt_wall_broken": {
+      "file": "tiles/crypt_wall_broken.png",
+      "kind": "wall",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 160
+      },
+      "atlas": "crypt",
+      "clip_rect_pico2d": [
+        768,
+        512,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 941,
+        "top": 314,
+        "width": 313,
+        "height": 313
+      },
+      "source_content_rect": {
+        "left": 12,
+        "top": 42,
+        "width": 288,
+        "height": 232
+      },
+      "content_rect": {
+        "left": 16,
+        "top": 76,
+        "width": 224,
+        "height": 152
+      },
+      "sha256": "c084d6626b13e03c788ba03c4bbd7d59c8c36b01bec3fb7af9e9749df1daa188"
+    },
+    "crypt_sarcophagus": {
+      "file": "props/crypt_sarcophagus.png",
+      "kind": "prop",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 220
+      },
+      "atlas": "crypt",
+      "clip_rect_pico2d": [
+        0,
+        256,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 0,
+        "top": 627,
+        "width": 314,
+        "height": 314
+      },
+      "source_content_rect": {
+        "left": 20,
+        "top": 60,
+        "width": 279,
+        "height": 238
+      },
+      "content_rect": {
+        "left": 33,
+        "top": 58,
+        "width": 190,
+        "height": 162
+      },
+      "sha256": "0930c276bfaf0c860f9059d0384b4fd8d332388eaa3bff1407596178c15e5978"
+    },
+    "crypt_memorial_urn": {
+      "file": "props/crypt_memorial_urn.png",
+      "kind": "prop",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 220
+      },
+      "atlas": "crypt",
+      "clip_rect_pico2d": [
+        256,
+        256,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 314,
+        "top": 627,
+        "width": 313,
+        "height": 314
+      },
+      "source_content_rect": {
+        "left": 60,
+        "top": 19,
+        "width": 192,
+        "height": 280
+      },
+      "content_rect": {
+        "left": 82,
+        "top": 86,
+        "width": 92,
+        "height": 134
+      },
+      "sha256": "65cedadfd9e9324ed9dfda251f96d3acdb85f489ec6eddc56e9af592132177fa"
+    },
+    "crypt_broken_statue": {
+      "file": "props/crypt_broken_statue.png",
+      "kind": "prop",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 220
+      },
+      "atlas": "crypt",
+      "clip_rect_pico2d": [
+        512,
+        256,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 627,
+        "top": 627,
+        "width": 314,
+        "height": 314
+      },
+      "source_content_rect": {
+        "left": 44,
+        "top": 24,
+        "width": 221,
+        "height": 278
+      },
+      "content_rect": {
+        "left": 72,
+        "top": 79,
+        "width": 112,
+        "height": 141
+      },
+      "sha256": "79e336e39f3d89801aecd65159dbd323e3c605d6e9a1baf4ea9075e9a4465204"
+    },
+    "crypt_candles": {
+      "file": "props/crypt_candles.png",
+      "kind": "prop",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 220
+      },
+      "atlas": "crypt",
+      "clip_rect_pico2d": [
+        768,
+        256,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 941,
+        "top": 627,
+        "width": 313,
+        "height": 314
+      },
+      "source_content_rect": {
+        "left": 38,
+        "top": 18,
+        "width": 236,
+        "height": 279
+      },
+      "content_rect": {
+        "left": 86,
+        "top": 121,
+        "width": 84,
+        "height": 99
+      },
+      "sha256": "28ce71039657b2c3de1f59cfa76c6e1aa8693b7828fdd84aff02368176690d42"
+    },
+    "crypt_coffin": {
+      "file": "props/crypt_coffin.png",
+      "kind": "prop",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 220
+      },
+      "atlas": "crypt",
+      "clip_rect_pico2d": [
+        0,
+        0,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 0,
+        "top": 941,
+        "width": 314,
+        "height": 313
+      },
+      "source_content_rect": {
+        "left": 18,
+        "top": 63,
+        "width": 283,
+        "height": 226
+      },
+      "content_rect": {
+        "left": 49,
+        "top": 94,
+        "width": 158,
+        "height": 126
+      },
+      "sha256": "3ba16cc65ecb205a0d7ef8d01c49f211385167f0e60f123e4621f9462869596b"
+    },
+    "crypt_armor_rack": {
+      "file": "props/crypt_armor_rack.png",
+      "kind": "prop",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 220
+      },
+      "atlas": "crypt",
+      "clip_rect_pico2d": [
+        256,
+        0,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 314,
+        "top": 941,
+        "width": 313,
+        "height": 313
+      },
+      "source_content_rect": {
+        "left": 62,
+        "top": 19,
+        "width": 202,
+        "height": 275
+      },
+      "content_rect": {
+        "left": 70,
+        "top": 62,
+        "width": 116,
+        "height": 158
+      },
+      "sha256": "3683503d16c4fc955732483f04b6a5c1edf3e41472bdb5076947a2c2412f1679"
+    },
+    "crypt_banner": {
+      "file": "props/crypt_banner.png",
+      "kind": "prop",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 220
+      },
+      "atlas": "crypt",
+      "clip_rect_pico2d": [
+        512,
+        0,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 627,
+        "top": 941,
+        "width": 314,
+        "height": 313
+      },
+      "source_content_rect": {
+        "left": 79,
+        "top": 23,
+        "width": 147,
+        "height": 272
+      },
+      "content_rect": {
+        "left": 75,
+        "top": 24,
+        "width": 106,
+        "height": 196
+      },
+      "sha256": "ed10d75207721e6343479568d5bf54c31aaf023989fd8ed1d3e5593a6354a365"
+    },
+    "crypt_offering_bowl": {
+      "file": "props/crypt_offering_bowl.png",
+      "kind": "prop",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 220
+      },
+      "atlas": "crypt",
+      "clip_rect_pico2d": [
+        768,
+        0,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 941,
+        "top": 941,
+        "width": 313,
+        "height": 313
+      },
+      "source_content_rect": {
+        "left": 31,
+        "top": 90,
+        "width": 248,
+        "height": 199
+      },
+      "content_rect": {
+        "left": 78,
+        "top": 140,
+        "width": 100,
+        "height": 80
+      },
+      "sha256": "c31e346acbec6bda064b050395ec489f479ab8d912d6849a8f875b1086d77a1c"
+    }
+  },
+  "placement": "Wall variants are rear-edge boundary decorations. Neither walls nor props create collision rules automatically."
+}
