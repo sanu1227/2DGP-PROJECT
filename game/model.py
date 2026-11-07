@@ -1,6 +1,7 @@
 """화면이나 실시간 프레임에 의존하지 않는 한 칸 단위 퍼즐."""
 
 from copy import deepcopy
+from collections import Counter
 from dataclasses import dataclass, field
 
 from game.levels import Level, Pos
@@ -35,7 +36,7 @@ class Game:
 
     def act(self, action: str) -> bool:
         """성공한 상태 변경만 한 행동으로 기록한다. 실패는 안내만 바꾼다."""
-        if action not in {*DIRECTIONS, "interact", "drop"}:
+        if action not in {*DIRECTIONS, "interact", "drop", "wait"}:
             raise ValueError(f"알 수 없는 행동: {action}")
         if self.state.cleared:
             self.message = "복구 완료! 다음 방으로 진행하세요."
@@ -46,6 +47,9 @@ class Game:
         self.message = message
         if not changed:
             return False
+        transported = self._advance_belts(candidate)
+        if transported:
+            self.message += f" 벨트가 물건 {transported}개를 옮겼습니다."
         # ponytail: 최대 12×12칸에서는 전체 복사가 충분하다. 대형 맵이 필요해지면 행동별 차이를 기록한다.
         self.history.append(deepcopy(self.state))
         candidate.moves += 1
@@ -94,6 +98,28 @@ class Game:
                 and not (state.active and pos in self.level.traps)
                 and (pos not in self.level.gates or self.gate_status(pos, state) == "open"))
 
+    def _advance_belts(self, state: State) -> int:
+        """행동 후의 동일한 배치를 기준으로 한 칸 이동을 동시에 확정한다."""
+        fixed = self.level.traps | self.level.posts | self.level.benches | self.level.levers | self.level.chutes.keys() | {self.level.exit}
+        candidates = {}
+        for source, direction in self.level.belts.items():
+            if state.items.get(source) not in {"part", "soldier"}:
+                continue
+            dx, dy = DIRECTIONS[direction]
+            destination = source[0] + dx, source[1] + dy
+            if (destination == state.player or destination in state.items or destination in fixed
+                    or not self.walkable(destination, state)):
+                continue
+            candidates[source] = destination
+        counts = Counter(candidates.values())
+        moves = [(source, destination, state.items[source]) for source, destination in candidates.items()
+                 if counts[destination] == 1]
+        for source, _, _ in moves:
+            del state.items[source]
+        for _, destination, kind in moves:
+            state.items[destination] = kind
+        return len(moves)
+
     def _interaction(self, state: State) -> tuple[str | None, str]:
         """현재 칸에서 가능한 행동과 안내를 함께 결정한다."""
         pos = state.player
@@ -141,9 +167,13 @@ class Game:
             return None, f"{self.level.device_labels[pos]} 발판: Q로 물건을 놓아 문을 유지하세요."
         if pos in self.level.gates:
             return None, "문이 닫혀도 현재 칸에서 나갈 수 있습니다."
+        if pos in self.level.belts:
+            return None, "벨트: 부품·병사를 Q로 놓으세요. B로 한 차례 기다립니다."
         return None, "물건이나 장치 위에서 E를 누르세요."
 
     def _apply(self, state: State, action: str) -> tuple[bool, str]:
+        if action == "wait":
+            return True, "한 차례 기다렸습니다."
         if action in DIRECTIONS:
             dx, dy = DIRECTIONS[action]
             x, y = state.player
@@ -165,6 +195,8 @@ class Game:
             devices = self.level.traps | self.level.posts | self.level.benches | self.level.levers | self.level.chutes.keys() | {self.level.exit}
             if state.player in devices or state.player in state.items:
                 return False, "빈 일반 바닥에만 내려놓을 수 있습니다."
+            if state.player in self.level.belts and state.carrying == "bone":
+                return False, "벨트에는 부품이나 조립한 병사만 놓을 수 있습니다."
             state.items[state.player] = state.carrying
             state.carrying = None
             return True, "물건을 바닥에 내려놓았습니다."

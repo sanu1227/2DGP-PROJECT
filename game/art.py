@@ -24,11 +24,19 @@ class Art:
         # Image 소멸자가 SDL 텍스처를 해제한다. close_canvas()보다 먼저 호출한다.
         self.atlases.clear()
 
-    def draw(self, name, sx, sy, scale):
+    def draw(self, name, sx, sy, scale, flip=False):
         """PNG 좌상단 기준점을 pico2d의 위쪽 +y 화면 좌표로 변환한다."""
         entry = self.manifest["sprites"][name]
         width, height = entry["width"], entry["height"]
         anchor = entry["anchor"]
+        if flip:
+            self.atlases[entry["atlas"]].clip_composite_draw(
+                *entry["clip_rect_pico2d"], 0, "h",
+                sx - (width / 2 - anchor["x"]) * scale,
+                sy + (anchor["y"] - height / 2) * scale,
+                width * scale, height * scale,
+            )
+            return
         self.atlases[entry["atlas"]].clip_draw(
             *entry["clip_rect_pico2d"],
             sx + (width / 2 - anchor["x"]) * scale,

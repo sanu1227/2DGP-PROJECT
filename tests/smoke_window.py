@@ -44,7 +44,7 @@ def main():
         (p.SDLK_r, lambda: expect(0)),
     ])
     keys = {"up": p.SDLK_w, "down": p.SDLK_s, "left": p.SDLK_a,
-            "right": p.SDLK_RIGHT, "interact": p.SDLK_SPACE, "drop": p.SDLK_q}
+            "right": p.SDLK_RIGHT, "interact": p.SDLK_SPACE, "drop": p.SDLK_q, "wait": p.SDLK_b}
     for index, level in enumerate(levels):
         actions = SOLUTIONS[level.id]
         for action in actions:

@@ -253,7 +253,7 @@ class GameTests(unittest.TestCase):
         self.assertEqual(self.game.state, before)
         self.act("left")
 
-    def test_three_shipped_rooms_clear_and_can_restart_after_completion(self):
+    def test_shipped_rooms_clear_and_can_restart_after_completion(self):
         for level in load_levels():
             with self.subTest(stage=level.id):
                 self.game = Game(level)
