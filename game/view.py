@@ -180,6 +180,10 @@ class View:
                     labels.append((pos, "출구"))
                 self.art.draw(tile, sx, sy, scale)
 
+                if pos in level.belts:
+                    direction = level.belts[pos]
+                    objects.append((depth, 0.5, f"belt_{direction}", sx, sy))
+                    labels.append((pos, "벨트 " + {"up": "↗", "right": "↘", "down": "↙", "left": "↖"}[direction]))
                 if pos in level.chutes:
                     objects.append((depth, 1, "chute_inlet", sx, sy))
                     labels.append((pos, f"{level.device_labels[pos]} 투입"))
@@ -219,6 +223,11 @@ class View:
             py -= 7
         objects.append((sum(player), 3, "player", px, py))
         for _, _, sprite, sx, sy in sorted(objects, key=lambda obj: obj[:2]):
+            if sprite.startswith("belt_"):
+                direction = sprite.removeprefix("belt_")
+                self.art.draw("conveyor_ne" if direction in ("up", "left") else "conveyor_se",
+                              sx, sy, scale, flip=direction in ("left", "down"))
+                continue
             if sprite.startswith("gate_"):
                 self.gate(sx, sy, scale, sprite.removeprefix("gate_"))
                 continue
@@ -278,7 +287,7 @@ class View:
             self.text(918, 104, "모든 복구 후 빈손으로 출구 복귀", 16, MUTED)
 
         self.text(34, 51, "이동  W/위: 오른쪽 위    A/왼쪽: 왼쪽 위    S/아래: 왼쪽 아래    D/오른쪽: 오른쪽 아래", 13, MUTED)
-        self.text(34, 25, "현재 칸에서 E / Space  상호작용     Q  내려놓기     Z / Backspace  되돌리기     R  재시작     Enter  다음 방(완료 후)     Esc  종료", 16, MUTED)
+        self.text(34, 25, "E / Space  상호작용    Q  내려놓기    B  대기    Z / Backspace  되돌리기    R  재시작    Enter  다음 방(완료 후)    Esc  종료", 16, MUTED)
 
 
 def run(levels, index=0, smoke_frames=None):
@@ -295,6 +304,7 @@ def run(levels, index=0, smoke_frames=None):
             p.SDLK_UP: "up", p.SDLK_w: "up", p.SDLK_DOWN: "down", p.SDLK_s: "down",
             p.SDLK_LEFT: "left", p.SDLK_a: "left", p.SDLK_RIGHT: "right", p.SDLK_d: "right",
             p.SDLK_e: "interact", p.SDLK_SPACE: "interact", p.SDLK_q: "drop",
+            p.SDLK_b: "wait",
         }
         running, frames = True, 0
         while running:

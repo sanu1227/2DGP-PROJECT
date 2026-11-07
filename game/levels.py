@@ -29,6 +29,7 @@ class Level:
     gates: dict[Pos, Pos] = field(default_factory=dict)
     device_labels: dict[Pos, str] = field(default_factory=dict)
     chutes: dict[Pos, Pos] = field(default_factory=dict)
+    belts: dict[Pos, str] = field(default_factory=dict)
 
 
 def read_links(raw, field_name, first_name, second_name, first_tiles, second_tiles, prefix, used_ids):
@@ -73,7 +74,7 @@ def load_levels(path: Path | str | None = None) -> list[Level]:
 
     levels = []
     identifiers = set()
-    glyphs = "#.@EPBTLASFGCO"
+    glyphs = "#.@EPBTLASFGCO^v<>"
     for index, raw in enumerate(stages, start=1):
         prefix = f"스테이지 {index}: "
         required = {"id", "title", "hint", "map"}
@@ -127,5 +128,7 @@ def load_levels(path: Path | str | None = None) -> list[Level]:
             benches=positions["A"], posts=positions["S"], initial_items=items,
             plates=positions["F"], gates={gate: plate for plate, gate in plate_links.items()}, device_labels=labels,
             chutes=chutes,
+            belts={pos: direction for glyph, direction in (("^", "up"), ("v", "down"), ("<", "left"), (">", "right"))
+                   for pos in positions[glyph]},
         ))
     return levels
