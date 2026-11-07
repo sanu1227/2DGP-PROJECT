@@ -9,29 +9,48 @@ import pico2d.pico2d as p
 
 
 ART_ROOT = Path(__file__).resolve().parents[1] / "assets" / "art_v1"
+MAP_ROOT = ART_ROOT.parent / "map_pack_v1"
 
 
 class Art:
     def __init__(self):
         self.atlases = {}
+        self.atlas_paths = {}
         self.alpha_masks = {}
         try:
             self.manifest = json.loads((ART_ROOT / "manifest.json").read_text(encoding="utf-8"))
             for name, entry in self.manifest["atlases"].items():
-                self.atlases[name] = p.load_image(str(ART_ROOT / entry["file"]))
+                self.atlas_paths[name] = ART_ROOT / entry["file"]
+                self.atlases[name] = p.load_image(str(self.atlas_paths[name]))
         except Exception:
             self.close()
             raise
 
+    def load_theme(self, name):
+        """방에서 사용하는 테마만 한 번 로드한다. 클릭용 알파도 같은 파일을 읽는다."""
+        if name in self.atlases:
+            return
+        if name not in {"crypt", "sewer", "forge", "archive"}:
+            raise ValueError(f"알 수 없는 맵 테마: {name}")
+        root = MAP_ROOT / name
+        manifest = json.loads((root / "manifest.json").read_text(encoding="utf-8"))
+        path = root / manifest["atlases"][name]["file"]
+        image = p.load_image(str(path))
+        self.atlases[name] = image
+        self.atlas_paths[name] = path
+        self.manifest["atlases"].update(manifest["atlases"])
+        self.manifest["sprites"].update(manifest["sprites"])
+
     def close(self):
         # Image 소멸자가 SDL 텍스처를 해제한다. close_canvas()보다 먼저 호출한다.
         self.atlases.clear()
+        self.atlas_paths.clear()
         self.alpha_masks.clear()
 
     def _alpha(self, atlas_name):
         """필요한 아틀라스의 알파만 읽어 캐시한다. 이미지 파일은 바꾸지 않는다."""
         if atlas_name not in self.alpha_masks:
-            path = ART_ROOT / self.manifest["atlases"][atlas_name]["file"]
+            path = self.atlas_paths[atlas_name]
             source = p.IMG_Load(str(path).encode("utf-8"))
             if not source:
                 raise RuntimeError("클릭 판정용 아틀라스를 읽지 못했습니다.")
