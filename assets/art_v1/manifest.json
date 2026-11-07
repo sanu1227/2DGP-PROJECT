@@ -1735,7 +1735,7 @@
     }
   },
   "limitations": [
-    "Art-only delivery: game/view.py continues to use the original geometric renderer.",
+    "Originally delivered as an art pack; current game integration status is documented in assets/art_v1/README.md.",
     "Walk contains two generated key poses, not a final polished animation cycle. Timing is a starting value.",
     "Pressure plates, chutes and conveyors are art for planned mechanics, not implemented gameplay.",
     "Conveyors have NE and SE art only. Do not assume NW/SW variants exist.",
