@@ -1,0 +1,618 @@
+{
+  "version": 1,
+  "created": "2026-11-08",
+  "theme": "forge",
+  "title": "던전 제련소",
+  "generator": "built-in image_gen",
+  "status": "map-decoration-pack; not yet placed in gameplay maps",
+  "coordinates": {
+    "image": "top-left origin; anchor and source_rect use x right, y down",
+    "pico2d": "clip_rect_pico2d uses bottom-left origin",
+    "tile_footprint": {
+      "width": 224,
+      "height": 112
+    }
+  },
+  "source": {
+    "file": "source/atlas.png",
+    "width": 1254,
+    "height": 1254,
+    "sha256": "0e5af20d9b85fbcdd74918502977bf1964bcb229c7b49c9d5715c475d933e591",
+    "grid": [
+      4,
+      4
+    ]
+  },
+  "atlases": {
+    "forge": {
+      "file": "atlas.png",
+      "width": 1024,
+      "height": 1024,
+      "cell_size": 256,
+      "grid": [
+        4,
+        4
+      ],
+      "sha256": "4aee3fb1ee77234b6ed520240d901ebb0cabc149a049acb5bb8b863839d63b54"
+    }
+  },
+  "sprites": {
+    "forge_floor_plain": {
+      "file": "tiles/forge_floor_plain.png",
+      "kind": "floor",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 160
+      },
+      "atlas": "forge",
+      "clip_rect_pico2d": [
+        0,
+        768,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 0,
+        "top": 0,
+        "width": 314,
+        "height": 314
+      },
+      "source_content_rect": {
+        "left": 16,
+        "top": 84,
+        "width": 283,
+        "height": 183
+      },
+      "content_rect": {
+        "left": 16,
+        "top": 104,
+        "width": 224,
+        "height": 124
+      },
+      "sha256": "ef77352d0fe0c2f270629e8e6be2098660570a927d008109dee5082524c0da73"
+    },
+    "forge_floor_riveted": {
+      "file": "tiles/forge_floor_riveted.png",
+      "kind": "floor",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 160
+      },
+      "atlas": "forge",
+      "clip_rect_pico2d": [
+        256,
+        768,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 314,
+        "top": 0,
+        "width": 313,
+        "height": 314
+      },
+      "source_content_rect": {
+        "left": 15,
+        "top": 84,
+        "width": 283,
+        "height": 183
+      },
+      "content_rect": {
+        "left": 16,
+        "top": 104,
+        "width": 224,
+        "height": 124
+      },
+      "sha256": "db7cf8dfd80222a5ad129dde002f5204ef165d04d499549924a17d5c48732399"
+    },
+    "forge_floor_soot": {
+      "file": "tiles/forge_floor_soot.png",
+      "kind": "floor",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 160
+      },
+      "atlas": "forge",
+      "clip_rect_pico2d": [
+        512,
+        768,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 627,
+        "top": 0,
+        "width": 314,
+        "height": 314
+      },
+      "source_content_rect": {
+        "left": 16,
+        "top": 84,
+        "width": 283,
+        "height": 183
+      },
+      "content_rect": {
+        "left": 16,
+        "top": 104,
+        "width": 224,
+        "height": 124
+      },
+      "sha256": "910bd5511c72fb7f9335d67ed3e907e966a557b894b6e2ac68f489cc23f02388"
+    },
+    "forge_floor_channel": {
+      "file": "tiles/forge_floor_channel.png",
+      "kind": "floor",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 160
+      },
+      "atlas": "forge",
+      "clip_rect_pico2d": [
+        768,
+        768,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 941,
+        "top": 0,
+        "width": 313,
+        "height": 314
+      },
+      "source_content_rect": {
+        "left": 16,
+        "top": 84,
+        "width": 283,
+        "height": 183
+      },
+      "content_rect": {
+        "left": 16,
+        "top": 104,
+        "width": 224,
+        "height": 124
+      },
+      "sha256": "ab557f72e6673370ab2d4ba970d0b0f541eb720e22119547c3c499c2135d6d9a"
+    },
+    "forge_wall_nw": {
+      "file": "tiles/forge_wall_nw.png",
+      "kind": "wall",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 160
+      },
+      "atlas": "forge",
+      "clip_rect_pico2d": [
+        0,
+        512,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 0,
+        "top": 314,
+        "width": 314,
+        "height": 313
+      },
+      "source_content_rect": {
+        "left": 16,
+        "top": 38,
+        "width": 283,
+        "height": 237
+      },
+      "content_rect": {
+        "left": 16,
+        "top": 67,
+        "width": 224,
+        "height": 161
+      },
+      "sha256": "55f8df47579ad28c97fa997ec8135ab82b1bdcf09b2f60c75fbeee0b3a53e526"
+    },
+    "forge_wall_ne": {
+      "file": "tiles/forge_wall_ne.png",
+      "kind": "wall",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 160
+      },
+      "atlas": "forge",
+      "clip_rect_pico2d": [
+        256,
+        512,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 314,
+        "top": 314,
+        "width": 313,
+        "height": 313
+      },
+      "source_content_rect": {
+        "left": 15,
+        "top": 41,
+        "width": 283,
+        "height": 234
+      },
+      "content_rect": {
+        "left": 16,
+        "top": 69,
+        "width": 224,
+        "height": 159
+      },
+      "sha256": "eb3de1ded842e4e8ca5f952936f0aa6f6d9bd3de3522de2ad7e43cd2892366e0"
+    },
+    "forge_wall_corner": {
+      "file": "tiles/forge_wall_corner.png",
+      "kind": "wall",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 160
+      },
+      "atlas": "forge",
+      "clip_rect_pico2d": [
+        512,
+        512,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 627,
+        "top": 314,
+        "width": 314,
+        "height": 313
+      },
+      "source_content_rect": {
+        "left": 15,
+        "top": 36,
+        "width": 285,
+        "height": 239
+      },
+      "content_rect": {
+        "left": 16,
+        "top": 66,
+        "width": 224,
+        "height": 162
+      },
+      "sha256": "4636a408d7724560bdc4339b1ec2a6b22f13a8316d0c39bd32d7b470ad145f3c"
+    },
+    "forge_wall_broken": {
+      "file": "tiles/forge_wall_broken.png",
+      "kind": "wall",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 160
+      },
+      "atlas": "forge",
+      "clip_rect_pico2d": [
+        768,
+        512,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 941,
+        "top": 314,
+        "width": 313,
+        "height": 313
+      },
+      "source_content_rect": {
+        "left": 15,
+        "top": 41,
+        "width": 283,
+        "height": 234
+      },
+      "content_rect": {
+        "left": 16,
+        "top": 69,
+        "width": 224,
+        "height": 159
+      },
+      "sha256": "10c28b27ffaaed1e3939d5ae42b0ddccf7ada21bc64855f2f9e8eb94d431e85e"
+    },
+    "forge_anvil": {
+      "file": "props/forge_anvil.png",
+      "kind": "prop",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 220
+      },
+      "atlas": "forge",
+      "clip_rect_pico2d": [
+        0,
+        256,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 0,
+        "top": 627,
+        "width": 314,
+        "height": 314
+      },
+      "source_content_rect": {
+        "left": 42,
+        "top": 53,
+        "width": 229,
+        "height": 239
+      },
+      "content_rect": {
+        "left": 61,
+        "top": 80,
+        "width": 134,
+        "height": 140
+      },
+      "sha256": "b4c85fec26d05b07a701694da1cf64a83c2afaaf5922cadb3e76259631aa5bd0"
+    },
+    "forge_coal_forge": {
+      "file": "props/forge_coal_forge.png",
+      "kind": "prop",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 220
+      },
+      "atlas": "forge",
+      "clip_rect_pico2d": [
+        256,
+        256,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 314,
+        "top": 627,
+        "width": 313,
+        "height": 314
+      },
+      "source_content_rect": {
+        "left": 31,
+        "top": 25,
+        "width": 253,
+        "height": 267
+      },
+      "content_rect": {
+        "left": 50,
+        "top": 55,
+        "width": 156,
+        "height": 165
+      },
+      "sha256": "d5ebd1ae3161de597831209141fc91f4d1f370981d51195b3d37ed0a2e078f55"
+    },
+    "forge_gear_rack": {
+      "file": "props/forge_gear_rack.png",
+      "kind": "prop",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 220
+      },
+      "atlas": "forge",
+      "clip_rect_pico2d": [
+        512,
+        256,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 627,
+        "top": 627,
+        "width": 314,
+        "height": 314
+      },
+      "source_content_rect": {
+        "left": 16,
+        "top": 45,
+        "width": 278,
+        "height": 246
+      },
+      "content_rect": {
+        "left": 52,
+        "top": 85,
+        "width": 152,
+        "height": 135
+      },
+      "sha256": "ee7a28769e89783e43f54e4ef2bcdfbe41e42797ca43069f5ed04ee367ea1d55"
+    },
+    "forge_quench_trough": {
+      "file": "props/forge_quench_trough.png",
+      "kind": "prop",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 220
+      },
+      "atlas": "forge",
+      "clip_rect_pico2d": [
+        768,
+        256,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 941,
+        "top": 627,
+        "width": 313,
+        "height": 314
+      },
+      "source_content_rect": {
+        "left": 22,
+        "top": 79,
+        "width": 276,
+        "height": 213
+      },
+      "content_rect": {
+        "left": 40,
+        "top": 84,
+        "width": 176,
+        "height": 136
+      },
+      "sha256": "a4aeb1289049d3b693d9a2a14a9a095c104af607a52675f4c9fc4d709de30781"
+    },
+    "forge_scrap_cart": {
+      "file": "props/forge_scrap_cart.png",
+      "kind": "prop",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 220
+      },
+      "atlas": "forge",
+      "clip_rect_pico2d": [
+        0,
+        0,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 0,
+        "top": 941,
+        "width": 314,
+        "height": 313
+      },
+      "source_content_rect": {
+        "left": 29,
+        "top": 55,
+        "width": 256,
+        "height": 237
+      },
+      "content_rect": {
+        "left": 46,
+        "top": 68,
+        "width": 164,
+        "height": 152
+      },
+      "sha256": "f4459fd84463147502ff12253a394cac52505a726d249d2135e371bb9f6315c6"
+    },
+    "forge_tool_rack": {
+      "file": "props/forge_tool_rack.png",
+      "kind": "prop",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 220
+      },
+      "atlas": "forge",
+      "clip_rect_pico2d": [
+        256,
+        0,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 314,
+        "top": 941,
+        "width": 313,
+        "height": 313
+      },
+      "source_content_rect": {
+        "left": 18,
+        "top": 34,
+        "width": 277,
+        "height": 257
+      },
+      "content_rect": {
+        "left": 55,
+        "top": 85,
+        "width": 146,
+        "height": 135
+      },
+      "sha256": "60f38c06c385ceee0254f9090e63cd0458d03283fa282f3eb641a7d6557e4930"
+    },
+    "forge_metal_crate": {
+      "file": "props/forge_metal_crate.png",
+      "kind": "prop",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 220
+      },
+      "atlas": "forge",
+      "clip_rect_pico2d": [
+        512,
+        0,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 627,
+        "top": 941,
+        "width": 314,
+        "height": 313
+      },
+      "source_content_rect": {
+        "left": 34,
+        "top": 62,
+        "width": 244,
+        "height": 229
+      },
+      "content_rect": {
+        "left": 67,
+        "top": 105,
+        "width": 122,
+        "height": 115
+      },
+      "sha256": "9aaecf6cd88c5bd0cad3d91f5113cf564faace8bbed9f79ea9bacd0217124f45"
+    },
+    "forge_boiler": {
+      "file": "props/forge_boiler.png",
+      "kind": "prop",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 220
+      },
+      "atlas": "forge",
+      "clip_rect_pico2d": [
+        768,
+        0,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 941,
+        "top": 941,
+        "width": 313,
+        "height": 313
+      },
+      "source_content_rect": {
+        "left": 42,
+        "top": 14,
+        "width": 228,
+        "height": 283
+      },
+      "content_rect": {
+        "left": 63,
+        "top": 59,
+        "width": 130,
+        "height": 161
+      },
+      "sha256": "4eea4ea2ff8750b3c13d1caa38449704f18c200e5f1b217aac81309e81f196c2"
+    }
+  },
+  "placement": "Wall variants are rear-edge boundary decorations. Neither walls nor props create collision rules automatically."
+}
