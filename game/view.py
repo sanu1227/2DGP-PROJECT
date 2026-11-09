@@ -229,28 +229,20 @@ class View:
         if hovered in targets and hovered != state.player:
             self.interaction_hint = f"상호작용 대상: {targets[hovered]} · 해당 칸에서 E"
 
-    def gate(self, sx, sy, scale, status):
-        """녹슨 문틀과 창살. 열린 문은 통행 공간을 비워 둔다."""
-        color = TEAL if status == "open" else GOLD if status == "held" else RED
-        left, right, height = sx - 80 * scale, sx + 80 * scale, 110 * scale
-        rust, edge = (104, 80, 53), (158, 132, 89)
-        for x, base in ((left, sy + 8 * scale), (right, sy - 8 * scale)):
-            box(x - 4, base - 2, x + 4, base + height - 8 * scale, (49, 44, 37))
-            box(x - 2, base, x + 2, base + height - 10 * scale, rust)
-            line(x - 2, base, x - 2, base + height - 10 * scale, edge)
-            box(x - 2, base + height - 15 * scale, x + 2, base + height - 8 * scale, color)
-        for offset in range(-2, 3):
-            line(left, sy + height + offset, right, sy + height - 16 * scale + offset, rust)
-        line(left, sy + height + 3, right, sy + height - 16 * scale + 3, edge)
-        if status != "open":
-            for fraction in (0.2, 0.4, 0.6, 0.8):
-                x = left + (right - left) * fraction
-                y = sy + (8 - 16 * fraction) * scale
-                line(x, y, x, y + height - 8 * scale, rust)
-                line(x + 1, y, x + 1, y + height - 8 * scale, edge)
+    def gate(self, level, pos, sx, sy, scale, status):
+        """문틀의 사선 축을 양옆 벽에 맞추고 열린 중앙은 클릭을 통과시킨다."""
+        x, y = pos
+        along_x = sum(cell in level.walls for cell in ((x - 1, y), (x + 1, y)))
+        along_y = sum(cell in level.walls for cell in ((x, y - 1), (x, y + 1)))
+        flip = along_x > along_y
+        sprite = "gate_closed" if status == "closed" else "gate_open"
+        self.art.draw(sprite, sx, sy, scale, flip=flip)
+        self.sprite_hit_region(pos, sprite, sx, sy, scale, flip)
 
     def board(self, game):
         level, state = game.level, game.state
+        if level.gates:
+            self.art.load_gates()
         scene = scene_for(level)
         if scene:
             for pack in scene["packs"]:
@@ -339,11 +331,11 @@ class View:
                 if pos in level.plates:
                     pressed = game.plate_pressed(pos)
                     objects.append((depth, 1, "plate_down" if pressed else "plate_up", sx, sy))
-                    labels.append((pos, f"{level.device_labels[pos]} 발판"))
+                    labels.append((pos, f"{level.device_labels[pos]} " + ("눌림" if pressed else "발판")))
                 elif pos in level.gates:
                     status = game.gate_status(pos)
                     objects.append((depth, 1, f"gate_{status}", sx, sy))
-                    labels.append((pos, f"{level.device_labels[pos]} " + {"open": "열림", "held": "대기", "closed": "닫힘"}[status]))
+                    labels.append((pos, f"{level.device_labels[pos]} " + {"open": "열림", "held": "닫힘 대기", "closed": "닫힘"}[status]))
                 elif pos in level.levers:
                     objects.append((depth, 1, "lever_on" if state.active else "lever_off", sx, sy))
                     labels.append((pos, "레버"))
@@ -402,9 +394,7 @@ class View:
                 self.sprite_hit_region(pos, name, sx, sy, scale, flip)
                 continue
             if sprite.startswith("gate_"):
-                self.gate(sx, sy, scale, sprite.removeprefix("gate_"))
-                self.hit_regions.append((pos, (sx - 84 * scale, sy - 10 * scale,
-                                              sx + 84 * scale, sy + 114 * scale)))
+                self.gate(level, pos, sx, sy, scale, sprite.removeprefix("gate_"))
                 continue
             if sprite != "player":
                 if (sx, sy) in wall_tints and (sprite.startswith("wall_low") or "_wall_" in sprite):
@@ -432,7 +422,12 @@ class View:
             sx, sy = screen(pos)
             width = len(label) * 16 + 10
             box(sx - width / 2, sy - 28, sx + width / 2, sy - 6, (24, 35, 40))
-            self.text(sx - width / 2 + 5, sy - 17, label, 16, TEAL if pos == level.exit and exit_ready else INK)
+            color = TEAL if pos == level.exit and exit_ready else INK
+            if pos in level.gates:
+                color = {"open": TEAL, "held": GOLD, "closed": RED}[game.gate_status(pos)]
+            elif pos in level.plates:
+                color = TEAL if game.plate_pressed(pos) else GOLD
+            self.text(sx - width / 2 + 5, sy - 17, label, 16, color)
             self.hit_regions.append((pos, (sx - width / 2, sy - 28, sx + width / 2, sy - 6)))
         self.interaction_markers(game, projection)
         self.navigation_overlay(game, projection)

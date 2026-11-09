@@ -11,6 +11,7 @@ import pico2d.pico2d as p
 ART_ROOT = Path(__file__).resolve().parents[1] / "assets" / "art_v1"
 MAP_ROOT = ART_ROOT.parent / "map_pack_v1"
 WALL_ROOT = ART_ROOT.parent / "wall_pack_v1"
+GATE_ROOT = ART_ROOT.parent / "gate_pack_v1"
 
 
 class Art:
@@ -28,6 +29,17 @@ class Art:
         except Exception:
             self.close()
             raise
+
+    def load_gates(self):
+        """발판 문은 열린 통로의 투명 영역까지 동일한 아틀라스로 처리한다."""
+        if "gates" in self.atlases:
+            return
+        manifest = json.loads((GATE_ROOT / "manifest.json").read_text(encoding="utf-8"))
+        path = GATE_ROOT / manifest["atlases"]["gates"]["file"]
+        self.atlases["gates"] = p.load_image(str(path))
+        self.atlas_paths["gates"] = path
+        self.manifest["atlases"].update(manifest["atlases"])
+        self.manifest["sprites"].update(manifest["sprites"])
 
     def load_theme(self, name):
         """방에서 사용하는 테마만 한 번 로드한다. 클릭용 알파도 같은 파일을 읽는다."""
