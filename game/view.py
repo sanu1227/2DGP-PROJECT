@@ -401,7 +401,7 @@ class View:
             status = f"자동 이동 · {len(self.navigation.path)}칸 남음" if self.navigation.active else "모든 복구 후 빈손으로 출구 복귀"
             self.text(918, 104, status, 16, MUTED)
 
-        self.text(34, 51, "좌클릭  이동    우클릭  취소    WASD / 방향키  이동    F2  좌표 표시 전환    좌표 (x,y): x 오른쪽 아래 / y 왼쪽 아래", 13, MUTED)
+        self.text(34, 51, "좌클릭  이동    우클릭  취소    WASD / 방향키  이동    개발용 1~6 방 이동 · F2 좌표    (x,y): x 오른쪽 아래 / y 왼쪽 아래", 13, MUTED)
         self.text(34, 25, "E / Space  상호작용    Q  내려놓기    B  대기    Z / Backspace  되돌리기    R  재시작    Enter  다음 방(완료 후)    Esc  종료", 16, MUTED)
 
 
@@ -420,6 +420,10 @@ def run(levels, index=0, smoke_frames=None):
             p.SDLK_LEFT: "left", p.SDLK_a: "left", p.SDLK_RIGHT: "right", p.SDLK_d: "right",
             p.SDLK_e: "interact", p.SDLK_SPACE: "interact", p.SDLK_q: "drop",
             p.SDLK_b: "wait",
+        }
+        stage_keys = {
+            p.SDLK_1: 0, p.SDLK_2: 1, p.SDLK_3: 2,
+            p.SDLK_4: 3, p.SDLK_5: 4, p.SDLK_6: 5,
         }
         running, frames = True, 0
         while running:
@@ -446,6 +450,13 @@ def run(levels, index=0, smoke_frames=None):
                         running = False
                     elif event.key == p.SDLK_F2:
                         view.show_coordinates = not view.show_coordinates
+                    elif event.key in stage_keys and stage_keys[event.key] < len(levels):
+                        index = stage_keys[event.key]
+                        game = Game(levels[index])
+                        view.reset_player()
+                        view.hit_regions.clear()
+                        view.hit_masks.clear()
+                        view.mouse_position = None
                     elif event.key in (p.SDLK_z, p.SDLK_BACKSPACE):
                         game.undo()
                         view.reset_player()
