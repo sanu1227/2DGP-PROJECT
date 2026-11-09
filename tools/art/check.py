@@ -23,12 +23,14 @@ def digest(data):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--window", action="store_true")
+    parser.add_argument("--root", type=Path, default=ROOT, help="검사할 에셋 팩 경로")
     args = parser.parse_args()
-    manifest_bytes = (ROOT / "manifest.json").read_bytes()
+    root = args.root
+    manifest_bytes = (root / "manifest.json").read_bytes()
     manifest = json.loads(manifest_bytes)
     for group in ("sources", "atlases", "sprites"):
         for name, entry in manifest[group].items():
-            data = (ROOT / entry["file"]).read_bytes()
+            data = (root / entry["file"]).read_bytes()
             if data[:8] != b"\x89PNG\r\n\x1a\n":
                 raise ValueError(f"Not PNG: {name}")
             width, height, depth, color = struct.unpack(">IIBB", data[16:26])
@@ -52,9 +54,9 @@ def main():
     p.open_canvas(canvas_width, 900, sync=True)
     try:
         for name, entry in manifest["sprites"].items():
-            sprites[name] = p.load_image(str(ROOT / entry["file"]))
+            sprites[name] = p.load_image(str(root / entry["file"]))
         for name, entry in manifest["atlases"].items():
-            atlases[name] = p.load_image(str(ROOT / entry["file"]))
+            atlases[name] = p.load_image(str(root / entry["file"]))
 
         def render(use_atlas):
             p.clear_canvas()
@@ -89,7 +91,7 @@ def main():
             "atlas_render_sha256": digest(atlas),
             "scope": "Actual SDL texture loading, drawing and atlas clip comparison; not game integration or playtesting.",
         }
-        (ROOT / "runtime-validation.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+        (root / "runtime-validation.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
         print(f"PASS: pico2d loaded {len(sprites) + len(atlases)} images; "
               f"drew {len(sprites)} sprites and atlas clips; max channel difference {max_error}.")
     finally:

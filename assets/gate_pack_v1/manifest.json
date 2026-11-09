@@ -1,0 +1,77 @@
+{
+  "sources": {
+    "gate_closed": {
+      "file": "sources/gate_closed.png",
+      "width": 1254,
+      "height": 1254,
+      "sha256": "cc99016c200c01e0a07ba5e7de789c853d5653d517770373cea62cc6605c0ba0"
+    },
+    "gate_open": {
+      "file": "sources/gate_open.png",
+      "width": 1254,
+      "height": 1254,
+      "sha256": "2434c1a2ac71f3a458ef04af2509d525d080172c62eb5bd18008242f597c4576"
+    }
+  },
+  "atlases": {
+    "gates": {
+      "file": "atlas.png",
+      "width": 2048,
+      "height": 512,
+      "cell_size": 512,
+      "grid": [
+        4,
+        1
+      ],
+      "sha256": "d3b56fd4fd7a19d71ee55d8e3be2f354d06ab6341d9d4d4bad38214acbb4b09b"
+    }
+  },
+  "sprites": {
+    "gate_closed": {
+      "file": "sprites/gate_closed.png",
+      "width": 512,
+      "height": 512,
+      "anchor": {
+        "x": 256,
+        "y": 384
+      },
+      "atlas": "gates",
+      "clip_rect_pico2d": [
+        0,
+        0,
+        512,
+        512
+      ],
+      "content_rect": {
+        "left": 143,
+        "top": 116,
+        "width": 227,
+        "height": 331
+      },
+      "sha256": "71bb02a3797c1f4e49f4aa882f6ec9fb9627d107c9bd8ee2afe1449343cbe88c"
+    },
+    "gate_open": {
+      "file": "sprites/gate_open.png",
+      "width": 512,
+      "height": 512,
+      "anchor": {
+        "x": 256,
+        "y": 384
+      },
+      "atlas": "gates",
+      "clip_rect_pico2d": [
+        512,
+        0,
+        512,
+        512
+      ],
+      "content_rect": {
+        "left": 143,
+        "top": 116,
+        "width": 227,
+        "height": 331
+      },
+      "sha256": "4b3cee9cc15bd65227176e546e09a6f7114578153450162b14cd8ecd3240a48d"
+    }
+  }
+}
