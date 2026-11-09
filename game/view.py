@@ -68,6 +68,7 @@ class View:
         self.art = None
         self.navigation = ClickNavigator()
         self.mouse_position = None
+        self.show_coordinates = True
         self.hit_regions = []
         self.hit_masks = {}
         self.reset_player()
@@ -350,6 +351,18 @@ class View:
             self.text(sx - width / 2 + 4, sy - 16, label, 13, TEAL if pos == level.exit and exit_ready else INK)
             self.hit_regions.append((pos, (sx - width / 2, sy - 24, sx + width / 2, sy - 7)))
         self.navigation_overlay(game, projection)
+        if self.show_coordinates:
+            self.coordinate_overlay(level, projection)
+
+    def coordinate_overlay(self, level, projection):
+        """벽과 물체 위에도 데이터의 (열, 행) 좌표를 표시한다."""
+        for y in range(level.height):
+            for x in range(level.width):
+                sx, sy = projection.screen((x, y))
+                label = f"({x},{y})"
+                width = len(label) * 8 + 6
+                box(sx - width / 2, sy, sx + width / 2, sy + 18, (19, 27, 32))
+                self.text(sx - width / 2 + 3, sy + 9, label, 13, GOLD)
 
     def draw(self, game, index, total):
         level, state = game.level, game.state
@@ -388,7 +401,7 @@ class View:
             status = f"자동 이동 · {len(self.navigation.path)}칸 남음" if self.navigation.active else "모든 복구 후 빈손으로 출구 복귀"
             self.text(918, 104, status, 16, MUTED)
 
-        self.text(34, 51, "좌클릭  칸으로 이동    우클릭  이동 취소    WASD / 방향키  기존 타일 방향 이동       무너진 벽·잔해는 통행 불가", 13, MUTED)
+        self.text(34, 51, "좌클릭  이동    우클릭  취소    WASD / 방향키  이동    F2  좌표 표시 전환    좌표 (x,y): x 오른쪽 아래 / y 왼쪽 아래", 13, MUTED)
         self.text(34, 25, "E / Space  상호작용    Q  내려놓기    B  대기    Z / Backspace  되돌리기    R  재시작    Enter  다음 방(완료 후)    Esc  종료", 16, MUTED)
 
 
@@ -431,6 +444,8 @@ def run(levels, index=0, smoke_frames=None):
                     view.navigation.cancel()
                     if event.key == p.SDLK_ESCAPE:
                         running = False
+                    elif event.key == p.SDLK_F2:
+                        view.show_coordinates = not view.show_coordinates
                     elif event.key in (p.SDLK_z, p.SDLK_BACKSPACE):
                         game.undo()
                         view.reset_player()
