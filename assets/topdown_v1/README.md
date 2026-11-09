@@ -1,5 +1,7 @@
 # 3/4 탑다운 전용 에셋 v1
 
+현재 상태: 사용자가 기존 사선 뷰로 복귀하여 이 팩은 보존용입니다. 게임 실행에는 사용하지 않습니다. 원본·프롬프트·출력 이미지는 보존하며, 탑다운 관련 코드와 제작 스크립트는 제거했습니다.
+
 정면에 가까운 3/4 탑다운을 기본 시점으로 선택한 뒤 제작한 전용 에셋입니다. 가로축은 수평이고 바닥 깊이는 가로의 약 65%입니다. 기존 사선 에셋과 생성 원본은 별도로 보존합니다.
 
 | 묶음 | 개수 | 내용 |
@@ -15,11 +17,7 @@
 
 내장 `image_gen.imagegen`을 사용했습니다. 전체 프롬프트와 정확한 셀 순서는 [terrain.json](source/terrain.json), [devices.json](source/devices.json), [worker.json](source/worker.json), [props.json](source/props.json)에 보존합니다. 수리공은 기존 `assets/art_v1/characters/worker/worker_sw_idle.png`를 정체성 참조로 사용했습니다. 원본 네 장은 같은 `source/` 폴더의 PNG입니다.
 
-```powershell
-node tools/art/build-topdown.mjs
-```
-
-이 명령은 보존한 원본을 분리·정렬하여 다시 내보냅니다. 기존 `tools/art`의 sharp를 사용하며 게임 실행 의존성을 추가하지 않습니다. 실제 알파 여백에서 행·열 경계를 찾아 인접 소품이 잘리는 것을 막고, 거의 투명한 외곽 노이즈를 정리합니다. 창의적인 이미지 수정이나 재생성은 수행하지 않습니다.
+제작 당시 사용한 `tools/art/build-topdown.mjs`는 현재 코드에서 제거했습니다. 과거 제작 방식은 Git 커밋 `051b52b`에서 확인할 수 있습니다. 당시 sharp로 실제 알파 여백에서 행·열 경계를 찾아 분리·정렬했고, 인접 소품의 잘림과 거의 투명한 외곽 노이즈를 정리했습니다.
 
 ## 검증
 

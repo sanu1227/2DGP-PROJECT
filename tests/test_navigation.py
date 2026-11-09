@@ -5,28 +5,12 @@ from dataclasses import replace
 import unittest
 
 from game.model import Game
-from game.navigation import ClickNavigator, IsoBoard, TopDownBoard, find_path
+from game.navigation import ClickNavigator, IsoBoard, find_path
 from tests.test_devices import belt_stage, load_stage, plate_stage
 from tests.test_game import make_level
 
 
 class NavigationTests(unittest.TestCase):
-    def test_topdown_pick_roundtrip_edges_and_screen_directions(self):
-        for width, height in ((8, 8), (10, 10), (12, 12), (8, 12), (12, 8)):
-            board = TopDownBoard(width, height)
-            for y in range(height):
-                for x in range(width):
-                    self.assertEqual(board.pick(*board.screen((x, y))), (x, y))
-            for outside in ((-0.51, 0), (width - 0.49, 0),
-                            (0, -0.51), (0, height - 0.49)):
-                self.assertIsNone(board.pick(*board.screen(outside)))
-            sx, sy = board.screen((1, 1))
-            self.assertEqual(board.pick(sx + board.cell_size, sy), (2, 1))
-            self.assertEqual(board.pick(sx, sy + board.cell_height), (1, 0))
-            self.assertLess(board.cell_height, board.cell_size)
-            self.assertEqual(board.pick(sx + board.cell_size * 0.49, sy), (1, 1))
-            self.assertEqual(board.pick(sx + board.cell_size * 0.51, sy), (2, 1))
-
     def test_isometric_pick_roundtrip_and_outer_boundaries_for_supported_sizes(self):
         for width in range(8, 13):
             for height in range(8, 13):

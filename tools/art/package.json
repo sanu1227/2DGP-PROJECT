@@ -7,8 +7,7 @@
   "scripts": {
     "build": "node build.mjs",
     "build:maps": "node build-maps.mjs",
-    "build:walls": "node build-walls.mjs",
-    "build:topdown": "node build-topdown.mjs"
+    "build:walls": "node build-walls.mjs"
   },
   "dependencies": {
     "sharp": "0.34.5"

@@ -11,7 +11,6 @@ import pico2d.pico2d as p
 ART_ROOT = Path(__file__).resolve().parents[1] / "assets" / "art_v1"
 MAP_ROOT = ART_ROOT.parent / "map_pack_v1"
 WALL_ROOT = ART_ROOT.parent / "wall_pack_v1"
-TOPDOWN_ROOT = ART_ROOT.parent / "topdown_v1"
 
 
 class Art:
@@ -35,18 +34,6 @@ class Art:
     def load_walls(self, name):
         """바닥 없는 벽면과 부착 장식은 별도 아틀라스로 관리한다."""
         self._load_pack(WALL_ROOT, name, f"walls_{name}")
-
-    def load_topdown(self):
-        """탑다운 전용 지형·장치·수리공·물건 아틀라스를 한 번 로드한다."""
-        if "topdown_worker" in self.atlases:
-            return
-        manifest = json.loads((TOPDOWN_ROOT / "manifest.json").read_text(encoding="utf-8"))
-        for name, entry in manifest["atlases"].items():
-            path = TOPDOWN_ROOT / entry["file"]
-            self.atlases[name] = p.load_image(str(path))
-            self.atlas_paths[name] = path
-        self.manifest["atlases"].update(manifest["atlases"])
-        self.manifest["sprites"].update(manifest["sprites"])
 
     def _load_pack(self, pack_root, theme, name):
         if name in self.atlases:
@@ -115,27 +102,6 @@ class Art:
             left, right = -right, -left
         top = sy + (anchor["y"] - rect["top"]) * scale
         return sx + left, top - rect["height"] * scale, sx + right, top
-
-    def draw_rect(self, name, sx, sy, width, height, tint=(255, 255, 255), rotate=False):
-        """전용 직사각형 에셋의 표시 영역만 그린다. 마름모 변환을 하지 않는다."""
-        entry = self.manifest["sprites"][name]
-        rect = entry["content_rect"]
-        left, bottom, _, _ = entry["clip_rect_pico2d"]
-        clip = (left + rect["left"], bottom + entry["height"] - rect["top"] - rect["height"],
-                rect["width"], rect["height"])
-        image = self.atlases[entry["atlas"]]
-        previous = (ctypes.c_ubyte(), ctypes.c_ubyte(), ctypes.c_ubyte())
-        if p.SDL_GetTextureColorMod(image.texture, *(ctypes.byref(c) for c in previous)) != 0:
-            raise RuntimeError("탑다운 텍스처 색상을 읽지 못했습니다.")
-        try:
-            if p.SDL_SetTextureColorMod(image.texture, *tint) != 0:
-                raise RuntimeError("탑다운 텍스처 색상을 설정하지 못했습니다.")
-            if rotate:
-                image.clip_composite_draw(*clip, 1.5707963267948966, "", sx, sy, height, width)
-            else:
-                image.clip_draw(*clip, sx, sy, width, height)
-        finally:
-            p.SDL_SetTextureColorMod(image.texture, *(c.value for c in previous))
 
     def draw(self, name, sx, sy, scale, flip=False):
         """PNG 좌상단 기준점을 pico2d의 위쪽 +y 화면 좌표로 변환한다."""

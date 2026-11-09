@@ -13,13 +13,12 @@ import pico2d.pico2d as p
 from game import view
 from game.levels import load_levels
 from game.model import Game
-from game.navigation import IsoBoard, TopDownBoard
+from game.navigation import IsoBoard
 
 
-def main(top_down=False):
+def main():
     level = load_levels()[0]
-    projection = TopDownBoard if top_down else IsoBoard
-    board, reference = projection(level.width, level.height), Game(level)
+    board, reference = IsoBoard(level.width, level.height), Game(level)
     games, views, expected_calls = [], [], []
     # time, real SDL input, expected model action, remaining navigation
     steps = deque([
@@ -66,7 +65,6 @@ def main(top_down=False):
 
     def initialize(display):
         original_init(display)
-        display.top_down = top_down
         views.append(display)
 
     def events():
@@ -145,5 +143,4 @@ def main(top_down=False):
 
 
 if __name__ == "__main__":
-    import sys
-    main(top_down="--top-down" in sys.argv)
+    main()

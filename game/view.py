@@ -9,8 +9,7 @@ import pico2d.pico2d as p
 from game.model import Game
 from game.art import Art
 from game.scenery import draw_scars, draw_tinted, floor_style, wall_style
-from game.navigation import ClickNavigator, IsoBoard, TopDownBoard, find_path
-from game.topdown import draw_board as draw_topdown_board
+from game.navigation import ClickNavigator, IsoBoard, find_path
 from game.themes import boundary_walls, scene_for, themed_floor
 
 WIDTH, HEIGHT = 1280, 900
@@ -70,7 +69,6 @@ class View:
         self.navigation = ClickNavigator()
         self.mouse_position = None
         self.show_coordinates = True
-        self.top_down = True
         self.hit_regions = []
         self.hit_masks = {}
         self.reset_player()
@@ -134,9 +132,7 @@ class View:
         return y
 
     def item(self, kind, x, y, scale):
-        if self.top_down:
-            self.art.load_topdown()
-        self.art.draw(("td_" if self.top_down else "") + ITEM_SPRITES[kind], x, y, scale)
+        self.art.draw(ITEM_SPRITES[kind], x, y, scale)
 
     def pick_cell(self, game, x, y):
         """UI는 제외하고 앞에 그려진 물체부터 검사한 뒤 바닥 칸을 고른다."""
@@ -150,8 +146,7 @@ class View:
                     if not self.art.hit_test(sprite, sx, sy, scale, (x, y), flip):
                         continue
                 return pos
-        projection = TopDownBoard if self.top_down else IsoBoard
-        return projection(game.level.width, game.level.height).pick(x, y)
+        return IsoBoard(game.level.width, game.level.height).pick(x, y)
 
     def sprite_hit_region(self, pos, sprite, sx, sy, scale, flip=False):
         region = (pos, self.art.bounds(sprite, sx, sy, scale, flip))
@@ -173,13 +168,8 @@ class View:
             line(*previous, *point, color)
             diamond(*point, 3, 2, color)
             previous = point
-        sx, sy = projection.screen(target)
-        if self.top_down:
-            hw, hh = projection.half_width - 4, projection.half_height - 3
-            box(sx - hw, sy - hh, sx + hw, sy + hh, color, filled=False)
-        else:
-            diamond(sx, sy, projection.half_width - 5,
-                    int(projection.half_height) - 3, None, color)
+        diamond(*projection.screen(target), projection.half_width - 5,
+                int(projection.half_height) - 3, None, color)
 
     def gate(self, sx, sy, scale, status):
         """녹슨 문틀과 창살. 열린 문은 통행 공간을 비워 둔다."""
@@ -202,9 +192,6 @@ class View:
                 line(x + 1, y, x + 1, y + height - 8 * scale, edge)
 
     def board(self, game):
-        if self.top_down:
-            draw_topdown_board(self, game, perf_counter())
-            return
         level, state = game.level, game.state
         scene = scene_for(level)
         if scene:
@@ -388,8 +375,6 @@ class View:
         for y in range(level.height):
             for x in range(level.width):
                 sx, sy = projection.screen((x, y))
-                if self.top_down:
-                    sy += projection.half_height - 18
                 label = f"({x},{y})"
                 width = len(label) * 8 + 6
                 box(sx - width / 2, sy, sx + width / 2, sy + 18, (19, 27, 32))
@@ -432,8 +417,7 @@ class View:
             status = f"자동 이동 · {len(self.navigation.path)}칸 남음" if self.navigation.active else "모든 복구 후 빈손으로 출구 복귀"
             self.text(918, 104, status, 16, MUTED)
 
-        axes = "x 오른쪽 / y 아래" if self.top_down else "x 오른쪽 아래 / y 왼쪽 아래"
-        self.text(34, 51, f"좌클릭 이동   우클릭 취소   WASD / 방향키 이동   1~6 방 이동 · F2 좌표 · F3 시점 전환   (x,y): {axes}", 13, MUTED)
+        self.text(34, 51, "좌클릭  이동    우클릭  취소    WASD / 방향키  이동    개발용 1~6 방 이동 · F2 좌표    (x,y): x 오른쪽 아래 / y 왼쪽 아래", 13, MUTED)
         self.text(34, 25, "E / Space  상호작용    Q  내려놓기    B  대기    Z / Backspace  되돌리기    R  재시작    Enter  다음 방(완료 후)    Esc  종료", 16, MUTED)
 
 
@@ -482,12 +466,6 @@ def run(levels, index=0, smoke_frames=None):
                         running = False
                     elif event.key == p.SDLK_F2:
                         view.show_coordinates = not view.show_coordinates
-                    elif event.key == p.SDLK_F3:
-                        view.top_down = not view.top_down
-                        view.motion = None
-                        view.mouse_position = None
-                        view.hit_regions.clear()
-                        view.hit_masks.clear()
                     elif event.key in stage_keys and stage_keys[event.key] < len(levels):
                         index = stage_keys[event.key]
                         game = Game(levels[index])

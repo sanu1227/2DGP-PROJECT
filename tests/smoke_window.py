@@ -30,12 +30,6 @@ def main():
         expect(0)
         assert displays[-1].show_coordinates == visible
 
-    def expect_projection(top_down):
-        expect(3, "part")
-        assert displays[-1].top_down == top_down
-        assert games[-1].state.player == (2, 2)
-        assert not displays[-1].navigation.active
-
     def expect_room(stage):
         expect(0, stage=stage)
         display = displays[-1]
@@ -70,8 +64,6 @@ def main():
         (p.SDLK_d, lambda: expect(1)),
         (p.SDLK_DOWN, lambda: expect(2)),
         (p.SDLK_e, lambda: expect(3, "part")),
-        (p.SDLK_F3, lambda: expect_projection(False)),
-        (p.SDLK_F3, lambda: expect_projection(True)),
         (p.SDLK_q, lambda: expect(4)),
         (p.SDLK_BACKSPACE, lambda: expect(3, "part")),
         (p.SDLK_z, lambda: expect(2)),
