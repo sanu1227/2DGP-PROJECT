@@ -24,6 +24,7 @@ def main():
 
     def initialize(display):
         original_initialize(display)
+        assert not display.show_coordinates
         displays.append(display)
 
     def expect_coordinates(visible):
@@ -36,7 +37,7 @@ def main():
         assert display.motion is None and not display.navigation.active
         assert not games[-1].history
         assert games[-1].state.player == levels[stage].start
-        assert display.show_coordinates
+        assert not display.show_coordinates
         # Every tile, including walls, must receive its own data coordinate.
         with patch.object(display, "text") as labels:
             display.coordinate_overlay(levels[stage], view.IsoBoard(levels[stage].width, levels[stage].height))
@@ -59,8 +60,8 @@ def main():
 
     # 두 이동 방식, 상호작용, 내려놓기, 두 undo 키, 재시작을 검사한다.
     steps = deque([
-        (p.SDLK_F2, lambda: expect_coordinates(False)),
         (p.SDLK_F2, lambda: expect_coordinates(True)),
+        (p.SDLK_F2, lambda: expect_coordinates(False)),
         (p.SDLK_d, lambda: expect(1)),
         (p.SDLK_DOWN, lambda: expect(2)),
         (p.SDLK_e, lambda: expect(3, "part")),

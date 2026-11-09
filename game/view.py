@@ -11,8 +11,8 @@ from game.art import Art
 from game.scenery import draw_scars, draw_tinted, floor_style, wall_style
 from game.navigation import ClickNavigator, IsoBoard, find_path
 from game.themes import boundary_walls, scene_for, themed_floor
+from game.layout import WIDTH, HEIGHT, BOARD_BOTTOM, BOARD_TOP
 
-WIDTH, HEIGHT = 1280, 900
 INK = (226, 230, 219)
 MUTED = (158, 169, 166)
 GOLD = (227, 187, 104)
@@ -68,7 +68,7 @@ class View:
         self.art = None
         self.navigation = ClickNavigator()
         self.mouse_position = None
-        self.show_coordinates = True
+        self.show_coordinates = False
         self.hit_regions = []
         self.hit_masks = {}
         self.reset_player()
@@ -136,7 +136,7 @@ class View:
 
     def pick_cell(self, game, x, y):
         """UI는 제외하고 앞에 그려진 물체부터 검사한 뒤 바닥 칸을 고른다."""
-        if not 132 < y < 750:
+        if not BOARD_BOTTOM < y < BOARD_TOP:
             return None
         for pos, (left, bottom, right, top) in reversed(self.hit_regions):
             if left <= x < right and bottom <= y < top:
@@ -362,10 +362,10 @@ class View:
         # 상태 문구를 바닥 아트와 함께 유지해 색이나 작은 그림에만 의존하지 않는다.
         for pos, label in labels:
             sx, sy = screen(pos)
-            width = len(label) * 13 + 8
-            box(sx - width / 2, sy - 24, sx + width / 2, sy - 7, (24, 35, 40))
-            self.text(sx - width / 2 + 4, sy - 16, label, 13, TEAL if pos == level.exit and exit_ready else INK)
-            self.hit_regions.append((pos, (sx - width / 2, sy - 24, sx + width / 2, sy - 7)))
+            width = len(label) * 16 + 10
+            box(sx - width / 2, sy - 28, sx + width / 2, sy - 6, (24, 35, 40))
+            self.text(sx - width / 2 + 5, sy - 17, label, 16, TEAL if pos == level.exit and exit_ready else INK)
+            self.hit_regions.append((pos, (sx - width / 2, sy - 28, sx + width / 2, sy - 6)))
         self.navigation_overlay(game, projection)
         if self.show_coordinates:
             self.coordinate_overlay(level, projection)
@@ -386,39 +386,39 @@ class View:
         background = tuple(scene["background"]) if scene else (19, 27, 32)
         accent = tuple(scene["accent"]) if scene else MUTED
         box(0, 0, WIDTH, HEIGHT, background)
-        self.text(32, 857, "용사가 지나간 자리", 32)
-        self.text(450, 857, level.title, 22)
-        self.text(1090, 857, f"단계 {index + 1:02d} / {total:02d}", 22, GOLD)
+        self.text(32, HEIGHT - 36, "용사가 지나간 자리", 32)
+        self.text(450, HEIGHT - 36, level.title, 22)
+        self.text(WIDTH - 190, HEIGHT - 36, f"단계 {index + 1:02d} / {total:02d}", 22, GOLD)
         atmosphere = scene["name"] if scene else "던전 복구 작업실"
-        self.text(34, 820, f"{level.width}×{level.height}  {atmosphere}", 16, accent)
-        self.wrapped(450, 825, level.hint, width=790, size=16)
+        self.text(34, HEIGHT - 72, f"{level.width}×{level.height}  {atmosphere}", 16, accent)
+        self.wrapped(450, HEIGHT - 69, level.hint, width=WIDTH - 490, size=16)
 
         self.board(game)
 
         # 정보는 위·아래 띠에 모아 넓어진 지도 전체를 한 화면에 유지한다.
-        box(32, 750, 1248, 788, (28, 39, 44))
-        self.text(48, 769, f"함정 설치 {len(state.installed)}/{len(level.traps)}", 18)
+        box(32, BOARD_TOP, WIDTH - 32, BOARD_TOP + 34, (28, 39, 44))
+        self.text(48, BOARD_TOP + 17, f"함정 설치 {len(state.installed)}/{len(level.traps)}", 18)
         active_label = "완료" if state.active else "대기" if level.traps else "해당 없음"
-        self.text(230, 769, f"가동 {active_label}", 18, TEAL if state.active else INK)
-        self.text(420, 769, f"병사 배치 {len(state.soldiers)}/{len(level.posts)}", 18)
-        self.text(620, 769, f"운반: {ITEM_NAMES[state.carrying]}", 18, GOLD)
+        self.text(260, BOARD_TOP + 17, f"가동 {active_label}", 18, TEAL if state.active else INK)
+        self.text(470, BOARD_TOP + 17, f"병사 배치 {len(state.soldiers)}/{len(level.posts)}", 18)
+        self.text(740, BOARD_TOP + 17, f"운반: {ITEM_NAMES[state.carrying]}", 18, GOLD)
         if state.carrying:
-            self.item(state.carrying, 820, 757, 0.19)
-        self.text(936, 769, f"행동 {state.moves} · 되돌리기 {len(game.history)}", 16, MUTED)
+            self.item(state.carrying, 940, BOARD_TOP + 5, 0.19)
+        self.text(WIDTH - 340, BOARD_TOP + 17, f"행동 {state.moves} · 되돌리기 {len(game.history)}", 16, MUTED)
 
-        box(32, 73, 1248, 132, (41, 55, 58))
-        self.text(48, 113, game.context_action(), 18, TEAL)
-        self.text(48, 88, game.message, 16, INK)
+        box(32, 48, WIDTH - 32, BOARD_BOTTOM, (41, 55, 58))
+        self.text(48, 80, game.context_action(), 18, TEAL)
+        self.text(48, 59, game.message, 16, INK)
         if state.cleared:
-            box(932, 82, 1236, 123, (46, 96, 81))
+            box(WIDTH - 340, 53, WIDTH - 44, 89, (46, 96, 81))
             label = "Enter  다음 방" if index + 1 < total else "Enter  처음부터 다시"
-            self.text(949, 103, label, 18)
+            self.text(WIDTH - 323, 71, label, 18)
         else:
             status = f"자동 이동 · {len(self.navigation.path)}칸 남음" if self.navigation.active else "모든 복구 후 빈손으로 출구 복귀"
-            self.text(918, 104, status, 16, MUTED)
+            self.text(WIDTH - 362, 71, status, 16, MUTED)
 
-        self.text(34, 51, "좌클릭  이동    우클릭  취소    WASD / 방향키  이동    개발용 1~6 방 이동 · F2 좌표    (x,y): x 오른쪽 아래 / y 왼쪽 아래", 13, MUTED)
-        self.text(34, 25, "E / Space  상호작용    Q  내려놓기    B  대기    Z / Backspace  되돌리기    R  재시작    Enter  다음 방(완료 후)    Esc  종료", 16, MUTED)
+        self.text(34, 32, "좌클릭  이동    우클릭  취소    WASD / 방향키  이동    개발용 1~6 방 이동 · F2 좌표    (x,y): x 오른쪽 아래 / y 왼쪽 아래", 13, MUTED)
+        self.text(34, 12, "E / Space  상호작용    Q  내려놓기    B  대기    Z / Backspace  되돌리기    R  재시작    Enter  다음 방(완료 후)    Esc  종료", 13, MUTED)
 
 
 def run(levels, index=0, smoke_frames=None):

@@ -24,7 +24,7 @@ def main():
     steps = deque([
         (0, None, None, False),  # Populate actual object hit regions first.
         (0.05, ("motion", (3, 2)), None, False),
-        (0.10, ("pixel", (300, 800)), None, False),
+        (0.10, ("pixel", (300, view.HEIGHT - 40)), None, False),
         (0.15, ("pixel", (10, 450)), None, False),
         (0.20, ("floor", (3, 2)), "down", True),
         (0.25, ("right", (3, 2)), None, False),

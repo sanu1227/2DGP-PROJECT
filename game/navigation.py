@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from math import floor
 
 from game.levels import Pos
+from game.layout import WIDTH, BOARD_BOTTOM, BOARD_TOP
 from game.model import DIRECTIONS, Game
 
 
@@ -24,8 +25,8 @@ class IsoBoard:
     @property
     def half_width(self) -> int:
         # 2:1 시점은 유지하고 높은 뒤쪽 벽까지 상하단 UI 사이에 넣는다.
-        return min(48, int(1152 / (self.width + self.height)),
-                   int(600 / ((self.width + self.height) / 2 + 2.2)))
+        return min(64, int((WIDTH - 80) / (self.width + self.height)),
+                   int((BOARD_TOP - BOARD_BOTTOM) / ((self.width + self.height) / 2 + 2.2)))
 
     @property
     def half_height(self) -> float:
@@ -33,8 +34,8 @@ class IsoBoard:
 
     @property
     def origin(self) -> tuple[float, float]:
-        return (640 - (self.width - self.height) * self.half_width / 2,
-                440 + (self.width + self.height - 2) * self.half_height / 2
+        return (WIDTH / 2 - (self.width - self.height) * self.half_width / 2,
+                (BOARD_BOTTOM + BOARD_TOP) / 2 + (self.width + self.height - 2) * self.half_height / 2
                 - 116 * self.half_width / 112)
 
     def screen(self, pos: tuple[float, float]) -> tuple[float, float]:
