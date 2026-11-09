@@ -230,6 +230,9 @@ class View:
                     if faces:
                         for face in faces:
                             objects.append((depth, 0, face, sx, sy))
+                        # 벽면은 칸 뒤쪽에만 서 있으므로 막힌 칸 전체를 석축으로 채운다.
+                        # 일반 바닥만 남기면 외곽 벽 바로 앞도 걸을 수 있는 것처럼 보인다.
+                        objects.append((depth, 0.1, "wall_low", sx, sy))
                         wall_tints[(sx, sy)] = tuple(round(153 + channel * 0.4) for channel in wall_tint)
                     elif wall_sprite == "rubble":
                         tile, tint = wall_sprite, wall_tint
