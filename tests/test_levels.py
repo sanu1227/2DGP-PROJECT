@@ -38,7 +38,7 @@ class LevelTests(unittest.TestCase):
         self.assertEqual(len(levels), 6)
         self.assertEqual(len({level.id for level in levels}), 6)
         for level in levels:
-            self.assertEqual((level.width, level.height), (12, 12))
+            self.assertEqual((level.width, level.height), (10, 10))
             self.assertTrue(level.title)
             self.assertTrue(level.hint)
 

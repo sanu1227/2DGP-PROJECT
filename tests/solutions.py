@@ -2,24 +2,22 @@
 
 
 EXTRA_SOLUTIONS = {
-    "stage_04": (
-        "down right interact down down down drop right right right right up up up "
-        "right right interact down down left left down left left down down down left "
-        "left interact up up up right right right right down down down right right "
-        "right interact left left up up left up left left down down down left left "
-        "interact down right interact up up up up left interact up up right interact "
-        "down down down down down left down interact down left"
+    'stage_04': (
+        "down right interact down down drop right right right up up right interact down "
+        "left down left left down down left interact up up right right right down down "
+        "right right interact left left up up left left down down left interact down "
+        "right interact up up up left interact up right interact down down down left "
+        "down interact down left"
     ).split(),
-    "stage_05": (
-        "down right interact down right interact down down right right right up up "
-        "right right interact down down left left down down down right right "
-        "interact right interact left interact down interact down right right"
+    'stage_05': (
+        "down right interact down right interact down right right up right interact "
+        "down left down down right interact right interact left interact down interact "
+        "down right right"
     ).split(),
-    "stage_06": (
-        "down right interact down right drop wait wait down down down left interact "
-        "down right interact down interact up interact right right up up right right "
-        "right down right drop wait down down interact down interact up up up up "
-        "left left left up up interact down down down down down down left interact "
-        "left left left interact down left"
+    'stage_06': (
+        "down right interact down right drop wait wait down left interact down right "
+        "interact down interact up interact up right right right right down drop wait "
+        "down interact down interact up up up left left up interact down down down down "
+        "left interact left left interact down left"
     ).split(),
 }

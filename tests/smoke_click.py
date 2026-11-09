@@ -44,9 +44,9 @@ def main():
         (2.00, ("key", p.SDLK_z), "undo", False),
         (2.10, ("key", p.SDLK_r), "restart", False),
     ])
-    route = ["down"] * 8 + ["right"] * 2
+    route = ["down"] * 6 + ["right"] * 2
     for index, action in enumerate(route):
-        steps.append((2.3 + index * 0.2, ("object", (3, 9)) if index == 0 else None,
+        steps.append((2.3 + index * 0.2, ("object", (3, 7)) if index == 0 else None,
                       action, index + 1 < len(route)))
     steps.extend(((4.4, ("motion", (2, 2)), None, False),
                   (4.6, ("key", p.SDLK_ESCAPE), None, False)))
@@ -123,8 +123,9 @@ def main():
         if current is None:
             return
         if now == 0:
-            # The transparent corner of wall (1, 11) must not steal this floor click.
-            assert views[-1].pick_cell(games[-1], *board.screen((1, 10))) == (1, 10)
+            # The transparent corner of the front wall must not steal this floor click.
+            front_floor = (1, level.height - 2)
+            assert views[-1].pick_cell(games[-1], *board.screen(front_floor)) == front_floor
         assert games[-1].state == reference.state, (now, games[-1].state, reference.state)
         assert games[-1].history == reference.history
         assert games[-1].calls == expected_calls, (now, games[-1].calls, expected_calls)
@@ -137,7 +138,7 @@ def main():
         view.run([level])
     assert not steps and len(games) == 1
     assert games[0].state.carrying is None and not games[0].state.active
-    assert games[0].state.player == (3, 9) and "interact" not in games[0].calls
+    assert games[0].state.player == (3, 7) and "interact" not in games[0].calls
     print("Native click smoke OK: alpha-aware floor/object/device picking, preview/UI no-turn, cancel, retarget delay, keyboard/undo/restart, no automatic interact.")
 
 

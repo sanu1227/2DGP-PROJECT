@@ -19,28 +19,25 @@ DIRECTIONS = {
 
 # Authored walkthroughs double as regression checks for the actual room data.
 SOLUTIONS = {
-    "stage_01": (
-        "down right interact down right right right right right right down down "
-        "interact down down down down left left left left left interact left left"
+    'stage_01': (
+        "down right interact right right right right down down interact down down down "
+        "left left left interact left left"
     ).split(),
-    "stage_02": (
-        "down down down down down right right right right right right right right "
-        "right up up up up left interact down down right down down left left left "
-        "left left left left interact right right right right down down down right "
-        "right interact up up up left left left left left left interact right right "
-        "right interact left down down down down left left left left"
+    'stage_02': (
+        "down down down down right right right right right right right up up up left "
+        "interact down right down down left left left left left interact right right "
+        "right down down right interact up up left left left left interact right right "
+        "interact left down down down left left left"
     ).split(),
-    "stage_03": (
-        "down down right right right right right up right right right interact down "
-        "left left left left interact right right right interact left left left left "
-        "left down down down left interact up up up right right right right down "
-        "right right right right interact up left left left left left left left down "
-        "down down left interact up up up right right interact left down down down "
-        "down down right right right down right right right interact up left left "
-        "left left interact right right right interact left left left left left up "
-        "up left interact down down right right right right up right right right "
-        "right interact down left left left left left left left up up left interact "
-        "down down right right interact left down left interact down left"
+    'stage_03': (
+        "down down right right right right up right right interact down left left left "
+        "interact right right interact left left left left down down interact up up "
+        "right right right down right right right interact up left left left left left "
+        "left down down interact up up right interact left down down down right right "
+        "right down right right interact up left left left interact right right "
+        "interact left left left left up interact down right right right down down "
+        "right right right interact up up left left left left left left up interact "
+        "down right interact left down interact down left"
     ).split(),
 }
 
@@ -273,33 +270,33 @@ class GameTests(unittest.TestCase):
 
     def test_third_room_early_activation_blocks_supplies_and_undo_recovers(self):
         self.game = Game(load_levels()[2])
-        for part, trap in (((9, 2), (5, 3)), ((9, 9), (5, 8))):
+        for part, trap in (((7, 2), (4, 3)), ((7, 7), (4, 6))):
             self.go(part)
             self.act("interact")
             self.go(trap)
             self.act("interact")
-        self.go((2, 9))
+        self.go((2, 7))
         before = deepcopy(self.game.state)
         self.act("interact")
         self.assertTrue(self.game.state.active)
         self.assertTrue(self.game.state.items.keys().isdisjoint(self.reachable()))
-        for post in ((4, 3), (4, 8)):
+        for post in ((3, 3), (3, 6)):
             self.go(post)
             self.assert_rejected("right")
         while self.game.state.active:
             self.assertTrue(self.game.undo())
         self.assertEqual(self.game.state, before)
-        self.go((8, 3))
+        self.go((6, 3))
         self.act("interact")
         self.assertEqual(self.game.state.carrying, "bone")
 
     def test_third_room_first_guard_requires_leaving_toward_remaining_work(self):
         self.game = Game(load_levels()[2])
         # Finish the upper storeroom before closing its only entrance.
-        for target in ((9, 2), (5, 3), (8, 3), (2, 6), (10, 4), (2, 6), (4, 3)):
+        for target in ((7, 2), (4, 3), (6, 3), (2, 5), (8, 4), (2, 5), (3, 3)):
             self.go(target)
             self.act("interact")
-        self.assertEqual(self.game.state.soldiers, {(4, 3)})
+        self.assertEqual(self.game.state.soldiers, {(3, 3)})
         self.act("right")
         self.assert_rejected("left")
         self.assertNotIn(self.game.level.exit, self.reachable())
