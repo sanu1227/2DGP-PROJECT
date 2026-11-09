@@ -1,0 +1,28 @@
+{
+  "date": "2026-11-09",
+  "generator": "image_gen.imagegen",
+  "grid": [
+    4,
+    4
+  ],
+  "title": "탑다운 복구 장치",
+  "prompt": "Use case: stylized-concept. Production 2D game sprite atlas for a dungeon repair puzzle. Exactly 4 columns by 4 rows, sixteen equally spaced isolated assets, one asset entirely inside each equal grid cell with ample fully transparent gutters (at least 10 percent cell width). True alpha transparency, no checkerboard painted in, no background, no text, no labels, no grid lines, no watermarks. Cohesive finely painted small-game art: worn stone, iron and bronze, muted teal accents, warm soft upper-left lighting, readable strong silhouettes, subtle texture, crisp edges, not coarse pixel art. CAMERA: front-facing orthographic three-quarter top-down RPG camera, screen X horizontal, ground Y goes vertically upward into distance, ground depth foreshortened to 65 percent of width. NO isometric diamonds, NO diagonal rotation of rectangular bases, NO vanishing point. Horizontal edges perfectly horizontal, vertical standing faces visible, ground footprints axis-aligned rectangles. Consistent scale and camera across all cells. Sixteen gameplay devices. ALL rectangular bases aligned horizontally, not diamond shaped. Match state variants in shape, angle and scale. Rows are strict: ROW 1: broken floor spike trap (bent retracted spikes), repaired floor spike trap with spikes retracted, activated floor spike trap with clearly raised spikes, closed square exit hatch with bronze rim. ROW 2: open exit hatch glowing restrained mint green (same footprint as closed), bronze lever switched left/off, same bronze lever switched right/on with small mint indicator, empty wooden bone assembly workbench seen from front and above. ROW 3: same workbench containing one small bone bundle, raised brass pressure plate, same pressure plate depressed with mint accent, bone chute inlet pipe mouth pointing up and forward. ROW 4: bone chute outlet pipe mouth pointing forward, CLOSED iron barred gate with front-facing square doorway frame and bars, OPEN version of same gate with bars completely raised and obvious opening, a short horizontal conveyor belt segment with left-to-right rollers and dark metal frame. Floor devices have 1.54:1 ground footprint; gates and workbenches remain upright with top surfaces visible. Gates not on a floor diorama. No arrows or text baked into the art.",
+  "entries": [
+    "trap_broken",
+    "trap_installed",
+    "trap_active",
+    "exit_closed",
+    "exit_ready",
+    "lever_off",
+    "lever_on",
+    "bench_empty",
+    "bench_one_bone",
+    "plate_up",
+    "plate_down",
+    "chute_inlet",
+    "chute_outlet",
+    "gate_closed",
+    "gate_open",
+    "conveyor"
+  ]
+}

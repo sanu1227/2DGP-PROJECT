@@ -1,0 +1,28 @@
+{
+  "date": "2026-11-09",
+  "generator": "image_gen.imagegen",
+  "grid": [
+    4,
+    4
+  ],
+  "title": "탑다운 물건·병사·장식",
+  "prompt": "Use case: stylized-concept. Production 2D game sprite atlas for a dungeon repair puzzle. Exactly 4 columns by 4 rows, sixteen equally spaced isolated assets, one asset entirely inside each equal grid cell with ample fully transparent gutters (at least 10 percent cell width). True alpha transparency, no checkerboard painted in, no background, no text, no labels, no grid lines, no watermarks. Cohesive finely painted small-game art: worn stone, iron and bronze, muted teal accents, warm soft upper-left lighting, readable strong silhouettes, subtle texture, crisp edges, not coarse pixel art. CAMERA: front-facing orthographic three-quarter top-down RPG camera, screen X horizontal, ground Y goes vertically upward into distance, ground depth foreshortened to 65 percent of width. NO isometric diamonds, NO diagonal rotation of rectangular bases, NO vanishing point. Horizontal edges perfectly horizontal, vertical standing faces visible, ground footprints axis-aligned rectangles. Consistent scale and camera across all cells. Objects and set dressing. Standing objects upright, top faces visible, floor footprint horizontal rather than diamond. No pedestals except explicitly listed. Exact grid order: ROW 1: portable bronze trap mechanism with a cog, a bundle of two ivory bones tied with brown cord, a small assembled skeleton guard standing neutrally with arms close to body ready to be carried (no base), same skeleton guard on duty with small round shield and short spear planted upright. ROW 2 forge: heavy iron anvil on squat wooden stump, upright wooden hand-tool rack, squat iron coal furnace with restrained orange fire, compact rack of bronze gears and spare iron parts. ROW 3 crypt: closed royal stone sarcophagus, broken gray stone bust/statue on short square plinth, three ivory candles in bronze holder, purple hanging banner on a short freestanding pole. ROW 4: front-facing dark wooden bookcase with books and visible top shelf, untidy pile of old books and rolled scrolls, squat corroded green sewer pipe elbow with open mouth, damp wooden water barrel with metal bands. Readable at 40-60 pixels. No sprawling ground shadows.",
+  "entries": [
+    "part",
+    "bone_bundle",
+    "soldier_carried",
+    "soldier_deployed",
+    "forge_anvil",
+    "forge_tools",
+    "forge_furnace",
+    "forge_gears",
+    "crypt_coffin",
+    "crypt_statue",
+    "crypt_candles",
+    "crypt_banner",
+    "archive_bookshelf",
+    "archive_books",
+    "sewer_pipe",
+    "sewer_barrel"
+  ]
+}

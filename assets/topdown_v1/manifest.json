@@ -1,0 +1,2434 @@
+{
+  "version": 1,
+  "created": "2026-11-09",
+  "generator": "image_gen.imagegen",
+  "projection": "front-facing orthographic 3/4 top-down; horizontal X; ground depth 0.65",
+  "coordinates": {
+    "tile_footprint": {
+      "width": 224,
+      "height": 146
+    }
+  },
+  "atlases": {
+    "topdown_terrain": {
+      "file": "atlases/terrain.png",
+      "width": 1024,
+      "height": 1024,
+      "sha256": "c74eb7de7eb7d376a7646014d1c64365dc0d6dd66e34728c74128af3952e8a19"
+    },
+    "topdown_devices": {
+      "file": "atlases/devices.png",
+      "width": 1024,
+      "height": 1024,
+      "sha256": "ba0d4b63906d9c84857096b250b6d1b9fe51e8930cf056deca845bdcbdb7c115"
+    },
+    "topdown_worker": {
+      "file": "atlases/worker.png",
+      "width": 1024,
+      "height": 1024,
+      "sha256": "70b56913dfc128a1245bfc587f684180e9cb2ab5c25f1b833f753db9dcead6c0"
+    },
+    "topdown_props": {
+      "file": "atlases/props.png",
+      "width": 1024,
+      "height": 1024,
+      "sha256": "7c6a2eb4541227b7429a9c5617d7af7ba291fdf410a4319c7d298263d16b24a8"
+    }
+  },
+  "sprites": {
+    "td_forge_floor": {
+      "file": "sprites/td_forge_floor.png",
+      "width": 256,
+      "height": 256,
+      "kind": "terrain",
+      "anchor": {
+        "x": 128,
+        "y": 160
+      },
+      "atlas": "topdown_terrain",
+      "clip_rect_pico2d": [
+        0,
+        768,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 16,
+        "top": 87,
+        "width": 224,
+        "height": 146
+      },
+      "source_rect": {
+        "left": 0,
+        "top": 0,
+        "width": 384,
+        "height": 256
+      },
+      "source_content_rect": {
+        "left": 26,
+        "top": 69,
+        "width": 332,
+        "height": 184,
+        "edge": 0
+      },
+      "sha256": "8ae191ad996015477acecf405152f16d5f43dcfce437a26755f24c848d1153c5"
+    },
+    "td_forge_cracked": {
+      "file": "sprites/td_forge_cracked.png",
+      "width": 256,
+      "height": 256,
+      "kind": "terrain",
+      "anchor": {
+        "x": 128,
+        "y": 160
+      },
+      "atlas": "topdown_terrain",
+      "clip_rect_pico2d": [
+        256,
+        768,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 16,
+        "top": 87,
+        "width": 224,
+        "height": 146
+      },
+      "source_rect": {
+        "left": 384,
+        "top": 0,
+        "width": 384,
+        "height": 256
+      },
+      "source_content_rect": {
+        "left": 26,
+        "top": 69,
+        "width": 332,
+        "height": 185,
+        "edge": 0
+      },
+      "sha256": "d4f6991b26a7d4dac88ea7c45ef72e0928e1a3347d6137519c6116b1a469a5b2"
+    },
+    "td_forge_cap": {
+      "file": "sprites/td_forge_cap.png",
+      "width": 256,
+      "height": 256,
+      "kind": "terrain",
+      "anchor": {
+        "x": 128,
+        "y": 160
+      },
+      "atlas": "topdown_terrain",
+      "clip_rect_pico2d": [
+        512,
+        768,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 16,
+        "top": 87,
+        "width": 224,
+        "height": 146
+      },
+      "source_rect": {
+        "left": 768,
+        "top": 0,
+        "width": 384,
+        "height": 256
+      },
+      "source_content_rect": {
+        "left": 19,
+        "top": 77,
+        "width": 346,
+        "height": 160,
+        "edge": 0
+      },
+      "sha256": "f6063fdf298f569fa737bfc3576f179c0c8496f3893bef77df0782484ed98743"
+    },
+    "td_forge_face": {
+      "file": "sprites/td_forge_face.png",
+      "width": 256,
+      "height": 256,
+      "kind": "terrain",
+      "anchor": {
+        "x": 128,
+        "y": 160
+      },
+      "atlas": "topdown_terrain",
+      "clip_rect_pico2d": [
+        768,
+        768,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 16,
+        "top": 104,
+        "width": 224,
+        "height": 112
+      },
+      "source_rect": {
+        "left": 1152,
+        "top": 0,
+        "width": 384,
+        "height": 256
+      },
+      "source_content_rect": {
+        "left": 20,
+        "top": 73,
+        "width": 344,
+        "height": 170,
+        "edge": 0
+      },
+      "sha256": "b75290c5c929ea314646787ce7c27ba330e6f29a8603046eb2f91fbeee2785df"
+    },
+    "td_crypt_floor": {
+      "file": "sprites/td_crypt_floor.png",
+      "width": 256,
+      "height": 256,
+      "kind": "terrain",
+      "anchor": {
+        "x": 128,
+        "y": 160
+      },
+      "atlas": "topdown_terrain",
+      "clip_rect_pico2d": [
+        0,
+        512,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 16,
+        "top": 87,
+        "width": 224,
+        "height": 146
+      },
+      "source_rect": {
+        "left": 0,
+        "top": 256,
+        "width": 384,
+        "height": 256
+      },
+      "source_content_rect": {
+        "left": 26,
+        "top": 70,
+        "width": 333,
+        "height": 183,
+        "edge": 0
+      },
+      "sha256": "4dc61c72f10569533e741f45080ad006af85ddce47ff0902dab571a0c9f897f8"
+    },
+    "td_crypt_cracked": {
+      "file": "sprites/td_crypt_cracked.png",
+      "width": 256,
+      "height": 256,
+      "kind": "terrain",
+      "anchor": {
+        "x": 128,
+        "y": 160
+      },
+      "atlas": "topdown_terrain",
+      "clip_rect_pico2d": [
+        256,
+        512,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 16,
+        "top": 87,
+        "width": 224,
+        "height": 146
+      },
+      "source_rect": {
+        "left": 384,
+        "top": 256,
+        "width": 384,
+        "height": 256
+      },
+      "source_content_rect": {
+        "left": 26,
+        "top": 70,
+        "width": 333,
+        "height": 184,
+        "edge": 0
+      },
+      "sha256": "f800ee48e7de845210f9b034a7f1c30b7a0fbb5008cb82c1e25a77aff4bbb7d8"
+    },
+    "td_crypt_cap": {
+      "file": "sprites/td_crypt_cap.png",
+      "width": 256,
+      "height": 256,
+      "kind": "terrain",
+      "anchor": {
+        "x": 128,
+        "y": 160
+      },
+      "atlas": "topdown_terrain",
+      "clip_rect_pico2d": [
+        512,
+        512,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 16,
+        "top": 87,
+        "width": 224,
+        "height": 146
+      },
+      "source_rect": {
+        "left": 768,
+        "top": 256,
+        "width": 384,
+        "height": 256
+      },
+      "source_content_rect": {
+        "left": 19,
+        "top": 77,
+        "width": 346,
+        "height": 158,
+        "edge": 0
+      },
+      "sha256": "5e6b4b85975a839132aa19f3b320810bcfb2fec11e2e747c5c609368c1bc5d02"
+    },
+    "td_crypt_face": {
+      "file": "sprites/td_crypt_face.png",
+      "width": 256,
+      "height": 256,
+      "kind": "terrain",
+      "anchor": {
+        "x": 128,
+        "y": 160
+      },
+      "atlas": "topdown_terrain",
+      "clip_rect_pico2d": [
+        768,
+        512,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 16,
+        "top": 104,
+        "width": 224,
+        "height": 112
+      },
+      "source_rect": {
+        "left": 1152,
+        "top": 256,
+        "width": 384,
+        "height": 256
+      },
+      "source_content_rect": {
+        "left": 20,
+        "top": 73,
+        "width": 344,
+        "height": 169,
+        "edge": 0
+      },
+      "sha256": "dcd58e727c132c696fe51af31ce7e5acd23188128b3d8478dab293890e01d5df"
+    },
+    "td_archive_floor": {
+      "file": "sprites/td_archive_floor.png",
+      "width": 256,
+      "height": 256,
+      "kind": "terrain",
+      "anchor": {
+        "x": 128,
+        "y": 160
+      },
+      "atlas": "topdown_terrain",
+      "clip_rect_pico2d": [
+        0,
+        256,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 16,
+        "top": 87,
+        "width": 224,
+        "height": 146
+      },
+      "source_rect": {
+        "left": 0,
+        "top": 512,
+        "width": 384,
+        "height": 256
+      },
+      "source_content_rect": {
+        "left": 25,
+        "top": 73,
+        "width": 334,
+        "height": 177,
+        "edge": 0
+      },
+      "sha256": "f023804ba2c5e80c94ba6c6af8b5d618a60e882a8cf8fccdaf875bad63689859"
+    },
+    "td_archive_cracked": {
+      "file": "sprites/td_archive_cracked.png",
+      "width": 256,
+      "height": 256,
+      "kind": "terrain",
+      "anchor": {
+        "x": 128,
+        "y": 160
+      },
+      "atlas": "topdown_terrain",
+      "clip_rect_pico2d": [
+        256,
+        256,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 16,
+        "top": 87,
+        "width": 224,
+        "height": 146
+      },
+      "source_rect": {
+        "left": 384,
+        "top": 512,
+        "width": 384,
+        "height": 256
+      },
+      "source_content_rect": {
+        "left": 25,
+        "top": 73,
+        "width": 334,
+        "height": 177,
+        "edge": 0
+      },
+      "sha256": "a800233671a1ebd4311f0c5f0737c9f2920dccedbd0743b600fe98c81f0a2507"
+    },
+    "td_archive_cap": {
+      "file": "sprites/td_archive_cap.png",
+      "width": 256,
+      "height": 256,
+      "kind": "terrain",
+      "anchor": {
+        "x": 128,
+        "y": 160
+      },
+      "atlas": "topdown_terrain",
+      "clip_rect_pico2d": [
+        512,
+        256,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 16,
+        "top": 87,
+        "width": 224,
+        "height": 146
+      },
+      "source_rect": {
+        "left": 768,
+        "top": 512,
+        "width": 384,
+        "height": 256
+      },
+      "source_content_rect": {
+        "left": 18,
+        "top": 77,
+        "width": 347,
+        "height": 156,
+        "edge": 0
+      },
+      "sha256": "e106802d2ee522d852e3fe7086be2166178d3802e1fc741926b4c1812c48812c"
+    },
+    "td_archive_face": {
+      "file": "sprites/td_archive_face.png",
+      "width": 256,
+      "height": 256,
+      "kind": "terrain",
+      "anchor": {
+        "x": 128,
+        "y": 160
+      },
+      "atlas": "topdown_terrain",
+      "clip_rect_pico2d": [
+        768,
+        256,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 16,
+        "top": 104,
+        "width": 224,
+        "height": 112
+      },
+      "source_rect": {
+        "left": 1152,
+        "top": 512,
+        "width": 384,
+        "height": 256
+      },
+      "source_content_rect": {
+        "left": 20,
+        "top": 73,
+        "width": 344,
+        "height": 169,
+        "edge": 0
+      },
+      "sha256": "93c6029b464cb3787f8d79896c612a4b3a29d1514b3977e75e95649743af188d"
+    },
+    "td_sewer_floor": {
+      "file": "sprites/td_sewer_floor.png",
+      "width": 256,
+      "height": 256,
+      "kind": "terrain",
+      "anchor": {
+        "x": 128,
+        "y": 160
+      },
+      "atlas": "topdown_terrain",
+      "clip_rect_pico2d": [
+        0,
+        0,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 16,
+        "top": 87,
+        "width": 224,
+        "height": 146
+      },
+      "source_rect": {
+        "left": 0,
+        "top": 768,
+        "width": 384,
+        "height": 256
+      },
+      "source_content_rect": {
+        "left": 24,
+        "top": 68,
+        "width": 335,
+        "height": 173,
+        "edge": 0
+      },
+      "sha256": "2e227c748e872fa48abfeed9de1441e3ad5bdf369f6e44deabadbf9855e76f32"
+    },
+    "td_sewer_cracked": {
+      "file": "sprites/td_sewer_cracked.png",
+      "width": 256,
+      "height": 256,
+      "kind": "terrain",
+      "anchor": {
+        "x": 128,
+        "y": 160
+      },
+      "atlas": "topdown_terrain",
+      "clip_rect_pico2d": [
+        256,
+        0,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 16,
+        "top": 87,
+        "width": 224,
+        "height": 146
+      },
+      "source_rect": {
+        "left": 384,
+        "top": 768,
+        "width": 384,
+        "height": 256
+      },
+      "source_content_rect": {
+        "left": 25,
+        "top": 68,
+        "width": 335,
+        "height": 173,
+        "edge": 0
+      },
+      "sha256": "d7d81c52371e4fe0b6d3d1832664919821369858e8eb97e30e0c1662949beb68"
+    },
+    "td_sewer_cap": {
+      "file": "sprites/td_sewer_cap.png",
+      "width": 256,
+      "height": 256,
+      "kind": "terrain",
+      "anchor": {
+        "x": 128,
+        "y": 160
+      },
+      "atlas": "topdown_terrain",
+      "clip_rect_pico2d": [
+        512,
+        0,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 16,
+        "top": 87,
+        "width": 224,
+        "height": 146
+      },
+      "source_rect": {
+        "left": 768,
+        "top": 768,
+        "width": 384,
+        "height": 256
+      },
+      "source_content_rect": {
+        "left": 19,
+        "top": 77,
+        "width": 346,
+        "height": 151,
+        "edge": 0
+      },
+      "sha256": "3ae17ddd4b6e47a75aaa068358820fd700d2df28ec21c1dd6b4f59ccf206b2ee"
+    },
+    "td_sewer_face": {
+      "file": "sprites/td_sewer_face.png",
+      "width": 256,
+      "height": 256,
+      "kind": "terrain",
+      "anchor": {
+        "x": 128,
+        "y": 160
+      },
+      "atlas": "topdown_terrain",
+      "clip_rect_pico2d": [
+        768,
+        0,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 16,
+        "top": 104,
+        "width": 224,
+        "height": 112
+      },
+      "source_rect": {
+        "left": 1152,
+        "top": 768,
+        "width": 384,
+        "height": 256
+      },
+      "source_content_rect": {
+        "left": 20,
+        "top": 72,
+        "width": 344,
+        "height": 163,
+        "edge": 0
+      },
+      "sha256": "395b5e731a78436537a254ca561cc8b33e16130f432700767b0d5e72d63ba685"
+    },
+    "td_trap_broken": {
+      "file": "sprites/td_trap_broken.png",
+      "width": 256,
+      "height": 256,
+      "kind": "devices",
+      "anchor": {
+        "x": 128,
+        "y": 232
+      },
+      "atlas": "topdown_devices",
+      "clip_rect_pico2d": [
+        0,
+        768,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 24,
+        "top": 117,
+        "width": 208,
+        "height": 115
+      },
+      "source_rect": {
+        "left": 0,
+        "top": 0,
+        "width": 384,
+        "height": 256
+      },
+      "source_content_rect": {
+        "left": 44,
+        "top": 64,
+        "width": 306,
+        "height": 169,
+        "edge": 0
+      },
+      "sha256": "ab796439b61d306bf7fc7782073a76c7ec81a67eff4fa2af3c5e7cf9b9d99afe"
+    },
+    "td_trap_installed": {
+      "file": "sprites/td_trap_installed.png",
+      "width": 256,
+      "height": 256,
+      "kind": "devices",
+      "anchor": {
+        "x": 128,
+        "y": 232
+      },
+      "atlas": "topdown_devices",
+      "clip_rect_pico2d": [
+        256,
+        768,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 24,
+        "top": 118,
+        "width": 208,
+        "height": 114
+      },
+      "source_rect": {
+        "left": 384,
+        "top": 0,
+        "width": 384,
+        "height": 256
+      },
+      "source_content_rect": {
+        "left": 41,
+        "top": 65,
+        "width": 305,
+        "height": 167,
+        "edge": 0
+      },
+      "sha256": "e1a41109557677a8de984c0ad09226e6e4c373d9bd89e256433e92c9d70d1ea4"
+    },
+    "td_trap_active": {
+      "file": "sprites/td_trap_active.png",
+      "width": 256,
+      "height": 256,
+      "kind": "devices",
+      "anchor": {
+        "x": 128,
+        "y": 232
+      },
+      "atlas": "topdown_devices",
+      "clip_rect_pico2d": [
+        512,
+        768,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 24,
+        "top": 96,
+        "width": 208,
+        "height": 136
+      },
+      "source_rect": {
+        "left": 768,
+        "top": 0,
+        "width": 384,
+        "height": 256
+      },
+      "source_content_rect": {
+        "left": 39,
+        "top": 32,
+        "width": 306,
+        "height": 200,
+        "edge": 0
+      },
+      "sha256": "0f88674f8b6302426f55a43e228ed4463c52dd3f4015fb90f1298b444b2b5c73"
+    },
+    "td_exit_closed": {
+      "file": "sprites/td_exit_closed.png",
+      "width": 256,
+      "height": 256,
+      "kind": "devices",
+      "anchor": {
+        "x": 128,
+        "y": 232
+      },
+      "atlas": "topdown_devices",
+      "clip_rect_pico2d": [
+        768,
+        768,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 24,
+        "top": 117,
+        "width": 208,
+        "height": 115
+      },
+      "source_rect": {
+        "left": 1152,
+        "top": 0,
+        "width": 384,
+        "height": 256
+      },
+      "source_content_rect": {
+        "left": 36,
+        "top": 63,
+        "width": 305,
+        "height": 169,
+        "edge": 0
+      },
+      "sha256": "c68a0c9822c8fc5a4bff1612076fa4e76263735023a4f853bfa8a1fba56afa01"
+    },
+    "td_exit_ready": {
+      "file": "sprites/td_exit_ready.png",
+      "width": 256,
+      "height": 256,
+      "kind": "devices",
+      "anchor": {
+        "x": 128,
+        "y": 232
+      },
+      "atlas": "topdown_devices",
+      "clip_rect_pico2d": [
+        0,
+        512,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 24,
+        "top": 75,
+        "width": 208,
+        "height": 157
+      },
+      "source_rect": {
+        "left": 0,
+        "top": 256,
+        "width": 384,
+        "height": 256
+      },
+      "source_content_rect": {
+        "left": 46,
+        "top": 15,
+        "width": 303,
+        "height": 228,
+        "edge": 0
+      },
+      "sha256": "4216a1150345ad10d4c7fcfcad25031e13eea08ed4cb2e3f3d55f7b9ad5a1f6a"
+    },
+    "td_lever_off": {
+      "file": "sprites/td_lever_off.png",
+      "width": 256,
+      "height": 256,
+      "kind": "devices",
+      "anchor": {
+        "x": 128,
+        "y": 232
+      },
+      "atlas": "topdown_devices",
+      "clip_rect_pico2d": [
+        256,
+        512,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 24,
+        "top": 104,
+        "width": 208,
+        "height": 128
+      },
+      "source_rect": {
+        "left": 384,
+        "top": 256,
+        "width": 384,
+        "height": 256
+      },
+      "source_content_rect": {
+        "left": 54,
+        "top": 71,
+        "width": 277,
+        "height": 171,
+        "edge": 0
+      },
+      "sha256": "a425c9af7444484c42b1c3f48d5415030836584f3d12be63edde2a5cf3441e87"
+    },
+    "td_lever_on": {
+      "file": "sprites/td_lever_on.png",
+      "width": 256,
+      "height": 256,
+      "kind": "devices",
+      "anchor": {
+        "x": 128,
+        "y": 232
+      },
+      "atlas": "topdown_devices",
+      "clip_rect_pico2d": [
+        512,
+        512,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 24,
+        "top": 91,
+        "width": 208,
+        "height": 141
+      },
+      "source_rect": {
+        "left": 768,
+        "top": 256,
+        "width": 384,
+        "height": 256
+      },
+      "source_content_rect": {
+        "left": 53,
+        "top": 54,
+        "width": 278,
+        "height": 188,
+        "edge": 0
+      },
+      "sha256": "b9b643be9a74c5650fb38f1646814c16be56e3fc4d731f725a92874727c60b19"
+    },
+    "td_bench_empty": {
+      "file": "sprites/td_bench_empty.png",
+      "width": 256,
+      "height": 256,
+      "kind": "devices",
+      "anchor": {
+        "x": 128,
+        "y": 232
+      },
+      "atlas": "topdown_devices",
+      "clip_rect_pico2d": [
+        768,
+        512,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 24,
+        "top": 84,
+        "width": 208,
+        "height": 148
+      },
+      "source_rect": {
+        "left": 1152,
+        "top": 256,
+        "width": 384,
+        "height": 256
+      },
+      "source_content_rect": {
+        "left": 35,
+        "top": 33,
+        "width": 304,
+        "height": 216,
+        "edge": 0
+      },
+      "sha256": "811ee82e6f067bd19d72b88753cae24e56a5fd6edba83cbfe055d1e7661dcd65"
+    },
+    "td_bench_one_bone": {
+      "file": "sprites/td_bench_one_bone.png",
+      "width": 256,
+      "height": 256,
+      "kind": "devices",
+      "anchor": {
+        "x": 128,
+        "y": 232
+      },
+      "atlas": "topdown_devices",
+      "clip_rect_pico2d": [
+        0,
+        256,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 24,
+        "top": 86,
+        "width": 208,
+        "height": 146
+      },
+      "source_rect": {
+        "left": 0,
+        "top": 512,
+        "width": 384,
+        "height": 256
+      },
+      "source_content_rect": {
+        "left": 46,
+        "top": 30,
+        "width": 304,
+        "height": 213,
+        "edge": 0
+      },
+      "sha256": "500d8388beb60f5906a57128d08cfe7c2b7042dbcf2a34838a747e92727a33a1"
+    },
+    "td_plate_up": {
+      "file": "sprites/td_plate_up.png",
+      "width": 256,
+      "height": 256,
+      "kind": "devices",
+      "anchor": {
+        "x": 128,
+        "y": 232
+      },
+      "atlas": "topdown_devices",
+      "clip_rect_pico2d": [
+        256,
+        256,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 24,
+        "top": 119,
+        "width": 208,
+        "height": 113
+      },
+      "source_rect": {
+        "left": 384,
+        "top": 512,
+        "width": 384,
+        "height": 256
+      },
+      "source_content_rect": {
+        "left": 47,
+        "top": 84,
+        "width": 292,
+        "height": 159,
+        "edge": 0
+      },
+      "sha256": "2d8818eb5fd2dd6c651a89907794b1de77cdb244f7913af474c8e7ea892ecad4"
+    },
+    "td_plate_down": {
+      "file": "sprites/td_plate_down.png",
+      "width": 256,
+      "height": 256,
+      "kind": "devices",
+      "anchor": {
+        "x": 128,
+        "y": 232
+      },
+      "atlas": "topdown_devices",
+      "clip_rect_pico2d": [
+        512,
+        256,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 24,
+        "top": 131,
+        "width": 208,
+        "height": 101
+      },
+      "source_rect": {
+        "left": 768,
+        "top": 512,
+        "width": 384,
+        "height": 256
+      },
+      "source_content_rect": {
+        "left": 44,
+        "top": 99,
+        "width": 296,
+        "height": 144,
+        "edge": 0
+      },
+      "sha256": "84eae399264ea2e42821b77fa015fcb57cf60f564bd77f2434e9e103cf52febc"
+    },
+    "td_chute_inlet": {
+      "file": "sprites/td_chute_inlet.png",
+      "width": 256,
+      "height": 256,
+      "kind": "devices",
+      "anchor": {
+        "x": 128,
+        "y": 232
+      },
+      "atlas": "topdown_devices",
+      "clip_rect_pico2d": [
+        768,
+        256,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 24,
+        "top": 60,
+        "width": 208,
+        "height": 172
+      },
+      "source_rect": {
+        "left": 1152,
+        "top": 512,
+        "width": 384,
+        "height": 256
+      },
+      "source_content_rect": {
+        "left": 55,
+        "top": 28,
+        "width": 260,
+        "height": 215,
+        "edge": 0
+      },
+      "sha256": "c9fafbe8354f033698e5661dfe39751b5c194efd4ad9c75ab4c6c08284ba43b3"
+    },
+    "td_chute_outlet": {
+      "file": "sprites/td_chute_outlet.png",
+      "width": 256,
+      "height": 256,
+      "kind": "devices",
+      "anchor": {
+        "x": 128,
+        "y": 232
+      },
+      "atlas": "topdown_devices",
+      "clip_rect_pico2d": [
+        0,
+        0,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 24,
+        "top": 69,
+        "width": 208,
+        "height": 163
+      },
+      "source_rect": {
+        "left": 0,
+        "top": 768,
+        "width": 384,
+        "height": 256
+      },
+      "source_content_rect": {
+        "left": 82,
+        "top": 55,
+        "width": 230,
+        "height": 180,
+        "edge": 0
+      },
+      "sha256": "89ef12d220dfd34c676c7e3f7b30d8de2574382443ffea60cd78663d5a48c59c"
+    },
+    "td_gate_closed": {
+      "file": "sprites/td_gate_closed.png",
+      "width": 256,
+      "height": 256,
+      "kind": "devices",
+      "anchor": {
+        "x": 128,
+        "y": 232
+      },
+      "atlas": "topdown_devices",
+      "clip_rect_pico2d": [
+        256,
+        0,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 24,
+        "top": 87,
+        "width": 208,
+        "height": 145
+      },
+      "source_rect": {
+        "left": 384,
+        "top": 768,
+        "width": 384,
+        "height": 256
+      },
+      "source_content_rect": {
+        "left": 45,
+        "top": 28,
+        "width": 295,
+        "height": 206,
+        "edge": 0
+      },
+      "sha256": "add38fe513a649bcee4e75b1ab8280d2094d0a6ec826c3a5815b9f2715071cd2"
+    },
+    "td_gate_open": {
+      "file": "sprites/td_gate_open.png",
+      "width": 256,
+      "height": 256,
+      "kind": "devices",
+      "anchor": {
+        "x": 128,
+        "y": 232
+      },
+      "atlas": "topdown_devices",
+      "clip_rect_pico2d": [
+        512,
+        0,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 24,
+        "top": 87,
+        "width": 208,
+        "height": 145
+      },
+      "source_rect": {
+        "left": 768,
+        "top": 768,
+        "width": 384,
+        "height": 256
+      },
+      "source_content_rect": {
+        "left": 44,
+        "top": 28,
+        "width": 296,
+        "height": 206,
+        "edge": 0
+      },
+      "sha256": "36fd6d8363d78fbcee372d62ea69a77ff21a8bff78f8ed033ac366d95a64e4b6"
+    },
+    "td_conveyor": {
+      "file": "sprites/td_conveyor.png",
+      "width": 256,
+      "height": 256,
+      "kind": "devices",
+      "anchor": {
+        "x": 128,
+        "y": 232
+      },
+      "atlas": "topdown_devices",
+      "clip_rect_pico2d": [
+        768,
+        0,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 24,
+        "top": 159,
+        "width": 208,
+        "height": 73
+      },
+      "source_rect": {
+        "left": 1152,
+        "top": 768,
+        "width": 384,
+        "height": 256
+      },
+      "source_content_rect": {
+        "left": 15,
+        "top": 108,
+        "width": 342,
+        "height": 120,
+        "edge": 0
+      },
+      "sha256": "41734e824cd823410d4e9a3ea80d1166283a849abe7c108337269077545c2f9e"
+    },
+    "td_worker_down_idle": {
+      "file": "sprites/td_worker_down_idle.png",
+      "width": 256,
+      "height": 256,
+      "kind": "worker",
+      "anchor": {
+        "x": 128,
+        "y": 232
+      },
+      "atlas": "topdown_worker",
+      "clip_rect_pico2d": [
+        0,
+        768,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 66,
+        "top": 26,
+        "width": 125,
+        "height": 206
+      },
+      "source_rect": {
+        "left": 0,
+        "top": 0,
+        "width": 317,
+        "height": 311
+      },
+      "source_content_rect": {
+        "left": 109,
+        "top": 21,
+        "width": 158,
+        "height": 259,
+        "edge": 0
+      },
+      "sha256": "3643bd303c82a5c2a553ec3113316e97dd787ec01998934057e4ed3d002f3443"
+    },
+    "td_worker_down_walk_a": {
+      "file": "sprites/td_worker_down_walk_a.png",
+      "width": 256,
+      "height": 256,
+      "kind": "worker",
+      "anchor": {
+        "x": 128,
+        "y": 232
+      },
+      "atlas": "topdown_worker",
+      "clip_rect_pico2d": [
+        256,
+        768,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 67,
+        "top": 25,
+        "width": 122,
+        "height": 207
+      },
+      "source_rect": {
+        "left": 317,
+        "top": 0,
+        "width": 316,
+        "height": 311
+      },
+      "source_content_rect": {
+        "left": 94,
+        "top": 22,
+        "width": 154,
+        "height": 261,
+        "edge": 0
+      },
+      "sha256": "5578c80fa8f116cdce1266ebbeb6501cfb33e6199ae217fb2786f6ad5aca6b2d"
+    },
+    "td_worker_down_walk_b": {
+      "file": "sprites/td_worker_down_walk_b.png",
+      "width": 256,
+      "height": 256,
+      "kind": "worker",
+      "anchor": {
+        "x": 128,
+        "y": 232
+      },
+      "atlas": "topdown_worker",
+      "clip_rect_pico2d": [
+        512,
+        768,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 66,
+        "top": 25,
+        "width": 124,
+        "height": 207
+      },
+      "source_rect": {
+        "left": 633,
+        "top": 0,
+        "width": 317,
+        "height": 311
+      },
+      "source_content_rect": {
+        "left": 72,
+        "top": 22,
+        "width": 156,
+        "height": 261,
+        "edge": 0
+      },
+      "sha256": "e0f930a8d55f2635423f05d88eef4ac49bf51c7c87f6d4b9f33063c74d2a351c"
+    },
+    "td_worker_down_carry": {
+      "file": "sprites/td_worker_down_carry.png",
+      "width": 256,
+      "height": 256,
+      "kind": "worker",
+      "anchor": {
+        "x": 128,
+        "y": 232
+      },
+      "atlas": "topdown_worker",
+      "clip_rect_pico2d": [
+        768,
+        768,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 71,
+        "top": 26,
+        "width": 114,
+        "height": 206
+      },
+      "source_rect": {
+        "left": 950,
+        "top": 0,
+        "width": 316,
+        "height": 311
+      },
+      "source_content_rect": {
+        "left": 62,
+        "top": 21,
+        "width": 144,
+        "height": 259,
+        "edge": 0
+      },
+      "sha256": "3e386ef55b2f5442b21fae3f55c9db4cce6b5d479ff7cc6c9e6dfacaeff92c87"
+    },
+    "td_worker_up_idle": {
+      "file": "sprites/td_worker_up_idle.png",
+      "width": 256,
+      "height": 256,
+      "kind": "worker",
+      "anchor": {
+        "x": 128,
+        "y": 232
+      },
+      "atlas": "topdown_worker",
+      "clip_rect_pico2d": [
+        0,
+        512,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 64,
+        "top": 31,
+        "width": 129,
+        "height": 201
+      },
+      "source_rect": {
+        "left": 0,
+        "top": 311,
+        "width": 317,
+        "height": 310
+      },
+      "source_content_rect": {
+        "left": 107,
+        "top": 24,
+        "width": 162,
+        "height": 253,
+        "edge": 0
+      },
+      "sha256": "c98074d4634540990eaf2a3f38fa83182dacbc3b27e130c908529c89d4101a6c"
+    },
+    "td_worker_up_walk_a": {
+      "file": "sprites/td_worker_up_walk_a.png",
+      "width": 256,
+      "height": 256,
+      "kind": "worker",
+      "anchor": {
+        "x": 128,
+        "y": 232
+      },
+      "atlas": "topdown_worker",
+      "clip_rect_pico2d": [
+        256,
+        512,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 66,
+        "top": 30,
+        "width": 125,
+        "height": 202
+      },
+      "source_rect": {
+        "left": 317,
+        "top": 311,
+        "width": 316,
+        "height": 310
+      },
+      "source_content_rect": {
+        "left": 90,
+        "top": 25,
+        "width": 157,
+        "height": 254,
+        "edge": 0
+      },
+      "sha256": "dced5c58ca25b9ba915b7aacf21f233ef5153f4e8d07ed3f766f1ba093070cc0"
+    },
+    "td_worker_up_walk_b": {
+      "file": "sprites/td_worker_up_walk_b.png",
+      "width": 256,
+      "height": 256,
+      "kind": "worker",
+      "anchor": {
+        "x": 128,
+        "y": 232
+      },
+      "atlas": "topdown_worker",
+      "clip_rect_pico2d": [
+        512,
+        512,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 64,
+        "top": 30,
+        "width": 129,
+        "height": 202
+      },
+      "source_rect": {
+        "left": 633,
+        "top": 311,
+        "width": 317,
+        "height": 310
+      },
+      "source_content_rect": {
+        "left": 64,
+        "top": 24,
+        "width": 163,
+        "height": 254,
+        "edge": 0
+      },
+      "sha256": "6143ad82a80ba5b6c2be3cd247a67b0342765ca77f9f3f3a96b5773857a47161"
+    },
+    "td_worker_up_carry": {
+      "file": "sprites/td_worker_up_carry.png",
+      "width": 256,
+      "height": 256,
+      "kind": "worker",
+      "anchor": {
+        "x": 128,
+        "y": 232
+      },
+      "atlas": "topdown_worker",
+      "clip_rect_pico2d": [
+        768,
+        512,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 67,
+        "top": 32,
+        "width": 122,
+        "height": 200
+      },
+      "source_rect": {
+        "left": 950,
+        "top": 311,
+        "width": 316,
+        "height": 310
+      },
+      "source_content_rect": {
+        "left": 55,
+        "top": 25,
+        "width": 154,
+        "height": 252,
+        "edge": 0
+      },
+      "sha256": "578c038471bc13e63e0903de7459b78295639aface614d44a506522fd6b71cf3"
+    },
+    "td_worker_left_idle": {
+      "file": "sprites/td_worker_left_idle.png",
+      "width": 256,
+      "height": 256,
+      "kind": "worker",
+      "anchor": {
+        "x": 128,
+        "y": 232
+      },
+      "atlas": "topdown_worker",
+      "clip_rect_pico2d": [
+        0,
+        256,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 73,
+        "top": 26,
+        "width": 110,
+        "height": 206
+      },
+      "source_rect": {
+        "left": 0,
+        "top": 621,
+        "width": 317,
+        "height": 311
+      },
+      "source_content_rect": {
+        "left": 121,
+        "top": 14,
+        "width": 139,
+        "height": 259,
+        "edge": 0
+      },
+      "sha256": "9bf12c9f22e3a60ea3fc8728a924ea0811a2c990a5d0ea96fa9a7de942537b71"
+    },
+    "td_worker_left_walk_a": {
+      "file": "sprites/td_worker_left_walk_a.png",
+      "width": 256,
+      "height": 256,
+      "kind": "worker",
+      "anchor": {
+        "x": 128,
+        "y": 232
+      },
+      "atlas": "topdown_worker",
+      "clip_rect_pico2d": [
+        256,
+        256,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 70,
+        "top": 29,
+        "width": 116,
+        "height": 203
+      },
+      "source_rect": {
+        "left": 317,
+        "top": 621,
+        "width": 316,
+        "height": 311
+      },
+      "source_content_rect": {
+        "left": 98,
+        "top": 13,
+        "width": 146,
+        "height": 256,
+        "edge": 0
+      },
+      "sha256": "7dee31f5c549efbe3f0346755856f21a0322c4bacda47fe519dfeba7ab6d5f4a"
+    },
+    "td_worker_left_walk_b": {
+      "file": "sprites/td_worker_left_walk_b.png",
+      "width": 256,
+      "height": 256,
+      "kind": "worker",
+      "anchor": {
+        "x": 128,
+        "y": 232
+      },
+      "atlas": "topdown_worker",
+      "clip_rect_pico2d": [
+        512,
+        256,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 72,
+        "top": 29,
+        "width": 113,
+        "height": 203
+      },
+      "source_rect": {
+        "left": 633,
+        "top": 621,
+        "width": 317,
+        "height": 311
+      },
+      "source_content_rect": {
+        "left": 82,
+        "top": 16,
+        "width": 142,
+        "height": 256,
+        "edge": 0
+      },
+      "sha256": "41e20bacb1680e9e846c53bef3c89dd7cd37dd726cb962776537d5594c4fcdb7"
+    },
+    "td_worker_left_carry": {
+      "file": "sprites/td_worker_left_carry.png",
+      "width": 256,
+      "height": 256,
+      "kind": "worker",
+      "anchor": {
+        "x": 128,
+        "y": 232
+      },
+      "atlas": "topdown_worker",
+      "clip_rect_pico2d": [
+        768,
+        256,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 65,
+        "top": 28,
+        "width": 126,
+        "height": 204
+      },
+      "source_rect": {
+        "left": 950,
+        "top": 621,
+        "width": 316,
+        "height": 311
+      },
+      "source_content_rect": {
+        "left": 49,
+        "top": 15,
+        "width": 159,
+        "height": 257,
+        "edge": 0
+      },
+      "sha256": "6e892f83561e8804d43647c8eaf099b05fa94748ddb33fff4ee42e8600a60a32"
+    },
+    "td_worker_right_idle": {
+      "file": "sprites/td_worker_right_idle.png",
+      "width": 256,
+      "height": 256,
+      "kind": "worker",
+      "anchor": {
+        "x": 128,
+        "y": 232
+      },
+      "atlas": "topdown_worker",
+      "clip_rect_pico2d": [
+        0,
+        0,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 73,
+        "top": 24,
+        "width": 110,
+        "height": 208
+      },
+      "source_rect": {
+        "left": 0,
+        "top": 932,
+        "width": 317,
+        "height": 310
+      },
+      "source_content_rect": {
+        "left": 118,
+        "top": 12,
+        "width": 139,
+        "height": 262,
+        "edge": 0
+      },
+      "sha256": "148240c788cc2618c8c37d32263a8ab46c0326e1f01cb0978406084813a28a74"
+    },
+    "td_worker_right_walk_a": {
+      "file": "sprites/td_worker_right_walk_a.png",
+      "width": 256,
+      "height": 256,
+      "kind": "worker",
+      "anchor": {
+        "x": 128,
+        "y": 232
+      },
+      "atlas": "topdown_worker",
+      "clip_rect_pico2d": [
+        256,
+        0,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 67,
+        "top": 25,
+        "width": 123,
+        "height": 207
+      },
+      "source_rect": {
+        "left": 317,
+        "top": 932,
+        "width": 316,
+        "height": 310
+      },
+      "source_content_rect": {
+        "left": 94,
+        "top": 12,
+        "width": 155,
+        "height": 261,
+        "edge": 0
+      },
+      "sha256": "5415f2677f937b5d3a32b052fad052c1ab351614e42f0b7e862914967e1e1d63"
+    },
+    "td_worker_right_walk_b": {
+      "file": "sprites/td_worker_right_walk_b.png",
+      "width": 256,
+      "height": 256,
+      "kind": "worker",
+      "anchor": {
+        "x": 128,
+        "y": 232
+      },
+      "atlas": "topdown_worker",
+      "clip_rect_pico2d": [
+        512,
+        0,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 69,
+        "top": 26,
+        "width": 118,
+        "height": 206
+      },
+      "source_rect": {
+        "left": 633,
+        "top": 932,
+        "width": 317,
+        "height": 310
+      },
+      "source_content_rect": {
+        "left": 77,
+        "top": 13,
+        "width": 149,
+        "height": 259,
+        "edge": 0
+      },
+      "sha256": "4d03f5646b5a10b76a49adcb386cd250dbe59ab50de960dfbdca8bab4c3f3a78"
+    },
+    "td_worker_right_carry": {
+      "file": "sprites/td_worker_right_carry.png",
+      "width": 256,
+      "height": 256,
+      "kind": "worker",
+      "anchor": {
+        "x": 128,
+        "y": 232
+      },
+      "atlas": "topdown_worker",
+      "clip_rect_pico2d": [
+        768,
+        0,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 64,
+        "top": 25,
+        "width": 129,
+        "height": 207
+      },
+      "source_rect": {
+        "left": 950,
+        "top": 932,
+        "width": 316,
+        "height": 310
+      },
+      "source_content_rect": {
+        "left": 64,
+        "top": 13,
+        "width": 163,
+        "height": 261,
+        "edge": 0
+      },
+      "sha256": "8627dbcd3a8cb5064fd41a14f507f3cac750770851248d051ba790b4e9e99062"
+    },
+    "td_part": {
+      "file": "sprites/td_part.png",
+      "width": 256,
+      "height": 256,
+      "kind": "props",
+      "anchor": {
+        "x": 128,
+        "y": 232
+      },
+      "atlas": "topdown_props",
+      "clip_rect_pico2d": [
+        0,
+        768,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 24,
+        "top": 51,
+        "width": 208,
+        "height": 181
+      },
+      "source_rect": {
+        "left": 0,
+        "top": 0,
+        "width": 315,
+        "height": 312
+      },
+      "source_content_rect": {
+        "left": 31,
+        "top": 46,
+        "width": 269,
+        "height": 234,
+        "edge": 0
+      },
+      "sha256": "0554e4ab99a23bbeda4fe38dcc7c4b0c07a6708e3d579fcc47cf72c6a9889938"
+    },
+    "td_bone_bundle": {
+      "file": "sprites/td_bone_bundle.png",
+      "width": 256,
+      "height": 256,
+      "kind": "props",
+      "anchor": {
+        "x": 128,
+        "y": 232
+      },
+      "atlas": "topdown_props",
+      "clip_rect_pico2d": [
+        256,
+        768,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 24,
+        "top": 119,
+        "width": 208,
+        "height": 113
+      },
+      "source_rect": {
+        "left": 315,
+        "top": 0,
+        "width": 316,
+        "height": 312
+      },
+      "source_content_rect": {
+        "left": 41,
+        "top": 127,
+        "width": 238,
+        "height": 129,
+        "edge": 0
+      },
+      "sha256": "0a219b99303397d3d195898b76a6a83aaa4a0abe75577b90951e2163b84383e2"
+    },
+    "td_soldier_carried": {
+      "file": "sprites/td_soldier_carried.png",
+      "width": 256,
+      "height": 256,
+      "kind": "props",
+      "anchor": {
+        "x": 128,
+        "y": 232
+      },
+      "atlas": "topdown_props",
+      "clip_rect_pico2d": [
+        512,
+        768,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 78,
+        "top": 24,
+        "width": 100,
+        "height": 208
+      },
+      "source_rect": {
+        "left": 631,
+        "top": 0,
+        "width": 315,
+        "height": 312
+      },
+      "source_content_rect": {
+        "left": 86,
+        "top": 19,
+        "width": 136,
+        "height": 283,
+        "edge": 0
+      },
+      "sha256": "391385d74f017af91b95a3fa68c3a0d5c0e1e71e85a3cca20f1499701f596ddd"
+    },
+    "td_soldier_deployed": {
+      "file": "sprites/td_soldier_deployed.png",
+      "width": 256,
+      "height": 256,
+      "kind": "props",
+      "anchor": {
+        "x": 128,
+        "y": 232
+      },
+      "atlas": "topdown_props",
+      "clip_rect_pico2d": [
+        768,
+        768,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 56,
+        "top": 24,
+        "width": 145,
+        "height": 208
+      },
+      "source_rect": {
+        "left": 946,
+        "top": 0,
+        "width": 315,
+        "height": 312
+      },
+      "source_content_rect": {
+        "left": 50,
+        "top": 9,
+        "width": 205,
+        "height": 294,
+        "edge": 0
+      },
+      "sha256": "8f337e884dd2b1e823e5acf12cf82b5cd59341b632e8ea97f1e7a6a3477e10c1"
+    },
+    "td_forge_anvil": {
+      "file": "sprites/td_forge_anvil.png",
+      "width": 256,
+      "height": 256,
+      "kind": "props",
+      "anchor": {
+        "x": 128,
+        "y": 232
+      },
+      "atlas": "topdown_props",
+      "clip_rect_pico2d": [
+        0,
+        512,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 24,
+        "top": 45,
+        "width": 208,
+        "height": 187
+      },
+      "source_rect": {
+        "left": 0,
+        "top": 312,
+        "width": 315,
+        "height": 303
+      },
+      "source_content_rect": {
+        "left": 39,
+        "top": 52,
+        "width": 263,
+        "height": 236,
+        "edge": 0
+      },
+      "sha256": "6fadba262acaf05fb2b02e4a2c06dc7769687dc38f28e943ed327976ec784912"
+    },
+    "td_forge_tools": {
+      "file": "sprites/td_forge_tools.png",
+      "width": 256,
+      "height": 256,
+      "kind": "props",
+      "anchor": {
+        "x": 128,
+        "y": 232
+      },
+      "atlas": "topdown_props",
+      "clip_rect_pico2d": [
+        256,
+        512,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 24,
+        "top": 39,
+        "width": 208,
+        "height": 193
+      },
+      "source_rect": {
+        "left": 315,
+        "top": 312,
+        "width": 316,
+        "height": 303
+      },
+      "source_content_rect": {
+        "left": 21,
+        "top": 31,
+        "width": 270,
+        "height": 250,
+        "edge": 0
+      },
+      "sha256": "046b3f1672291d7145a5af71e7f5276fb413f25a378cf4efd078fdd4d7b57359"
+    },
+    "td_forge_furnace": {
+      "file": "sprites/td_forge_furnace.png",
+      "width": 256,
+      "height": 256,
+      "kind": "props",
+      "anchor": {
+        "x": 128,
+        "y": 232
+      },
+      "atlas": "topdown_props",
+      "clip_rect_pico2d": [
+        512,
+        512,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 34,
+        "top": 24,
+        "width": 189,
+        "height": 208
+      },
+      "source_rect": {
+        "left": 631,
+        "top": 312,
+        "width": 315,
+        "height": 303
+      },
+      "source_content_rect": {
+        "left": 30,
+        "top": 14,
+        "width": 245,
+        "height": 269,
+        "edge": 0
+      },
+      "sha256": "ddacb9d0417ce2bdb49a3351a23ef2e31645eedaef53fdc1474679a92f293748"
+    },
+    "td_forge_gears": {
+      "file": "sprites/td_forge_gears.png",
+      "width": 256,
+      "height": 256,
+      "kind": "props",
+      "anchor": {
+        "x": 128,
+        "y": 232
+      },
+      "atlas": "topdown_props",
+      "clip_rect_pico2d": [
+        768,
+        512,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 24,
+        "top": 44,
+        "width": 208,
+        "height": 188
+      },
+      "source_rect": {
+        "left": 946,
+        "top": 312,
+        "width": 315,
+        "height": 303
+      },
+      "source_content_rect": {
+        "left": 9,
+        "top": 31,
+        "width": 276,
+        "height": 250,
+        "edge": 0
+      },
+      "sha256": "cfe8dae338a7c510fb6abc0862c4837f71bd7a3dd8e570fa2e61ad5b9abfbd01"
+    },
+    "td_crypt_coffin": {
+      "file": "sprites/td_crypt_coffin.png",
+      "width": 256,
+      "height": 256,
+      "kind": "props",
+      "anchor": {
+        "x": 128,
+        "y": 232
+      },
+      "atlas": "topdown_props",
+      "clip_rect_pico2d": [
+        0,
+        256,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 24,
+        "top": 83,
+        "width": 208,
+        "height": 149
+      },
+      "source_rect": {
+        "left": 0,
+        "top": 615,
+        "width": 315,
+        "height": 320
+      },
+      "source_content_rect": {
+        "left": 19,
+        "top": 77,
+        "width": 291,
+        "height": 208,
+        "edge": 0
+      },
+      "sha256": "a44a71dbdcf2a638ff488fa60f72d6975f97a399102b82c84ee628a93561b853"
+    },
+    "td_crypt_statue": {
+      "file": "sprites/td_crypt_statue.png",
+      "width": 256,
+      "height": 256,
+      "kind": "props",
+      "anchor": {
+        "x": 128,
+        "y": 232
+      },
+      "atlas": "topdown_props",
+      "clip_rect_pico2d": [
+        256,
+        256,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 60,
+        "top": 24,
+        "width": 136,
+        "height": 208
+      },
+      "source_rect": {
+        "left": 315,
+        "top": 615,
+        "width": 316,
+        "height": 320
+      },
+      "source_content_rect": {
+        "left": 56,
+        "top": 3,
+        "width": 203,
+        "height": 311,
+        "edge": 0
+      },
+      "sha256": "9a3a01e416eeecc46698ea3fe12b15536dab6246e90392ed7e87e0064027bb11"
+    },
+    "td_crypt_candles": {
+      "file": "sprites/td_crypt_candles.png",
+      "width": 256,
+      "height": 256,
+      "kind": "props",
+      "anchor": {
+        "x": 128,
+        "y": 232
+      },
+      "atlas": "topdown_props",
+      "clip_rect_pico2d": [
+        512,
+        256,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 55,
+        "top": 24,
+        "width": 146,
+        "height": 208
+      },
+      "source_rect": {
+        "left": 631,
+        "top": 615,
+        "width": 315,
+        "height": 320
+      },
+      "source_content_rect": {
+        "left": 55,
+        "top": 22,
+        "width": 200,
+        "height": 284,
+        "edge": 0
+      },
+      "sha256": "f4f367a68523652f8da3e8d61d7367e0c9239c317a6188a60910349466befd47"
+    },
+    "td_crypt_banner": {
+      "file": "sprites/td_crypt_banner.png",
+      "width": 256,
+      "height": 256,
+      "kind": "props",
+      "anchor": {
+        "x": 128,
+        "y": 232
+      },
+      "atlas": "topdown_props",
+      "clip_rect_pico2d": [
+        768,
+        256,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 69,
+        "top": 24,
+        "width": 119,
+        "height": 208
+      },
+      "source_rect": {
+        "left": 946,
+        "top": 615,
+        "width": 315,
+        "height": 320
+      },
+      "source_content_rect": {
+        "left": 62,
+        "top": 1,
+        "width": 172,
+        "height": 300,
+        "edge": 0
+      },
+      "sha256": "3d88d3629b312509bfb9ef7991a93a978461bd883b722b5678dd9c73144b3756"
+    },
+    "td_archive_bookshelf": {
+      "file": "sprites/td_archive_bookshelf.png",
+      "width": 256,
+      "height": 256,
+      "kind": "props",
+      "anchor": {
+        "x": 128,
+        "y": 232
+      },
+      "atlas": "topdown_props",
+      "clip_rect_pico2d": [
+        0,
+        0,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 31,
+        "top": 24,
+        "width": 194,
+        "height": 208
+      },
+      "source_rect": {
+        "left": 0,
+        "top": 935,
+        "width": 315,
+        "height": 312
+      },
+      "source_content_rect": {
+        "left": 37,
+        "top": 13,
+        "width": 254,
+        "height": 272,
+        "edge": 0
+      },
+      "sha256": "aae403acd1135d1fbbaaaec4b34aec7b740726cb79474c7aa0dc23a5e6c82612"
+    },
+    "td_archive_books": {
+      "file": "sprites/td_archive_books.png",
+      "width": 256,
+      "height": 256,
+      "kind": "props",
+      "anchor": {
+        "x": 128,
+        "y": 232
+      },
+      "atlas": "topdown_props",
+      "clip_rect_pico2d": [
+        256,
+        0,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 24,
+        "top": 69,
+        "width": 208,
+        "height": 163
+      },
+      "source_rect": {
+        "left": 315,
+        "top": 935,
+        "width": 316,
+        "height": 312
+      },
+      "source_content_rect": {
+        "left": 7,
+        "top": 53,
+        "width": 282,
+        "height": 221,
+        "edge": 0
+      },
+      "sha256": "9fe9a2671010c90e0011c52b2bbd7c5084ee1c84ef9697f9b4a4a9b9e80fb056"
+    },
+    "td_sewer_pipe": {
+      "file": "sprites/td_sewer_pipe.png",
+      "width": 256,
+      "height": 256,
+      "kind": "props",
+      "anchor": {
+        "x": 128,
+        "y": 232
+      },
+      "atlas": "topdown_props",
+      "clip_rect_pico2d": [
+        512,
+        0,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 24,
+        "top": 68,
+        "width": 208,
+        "height": 164
+      },
+      "source_rect": {
+        "left": 631,
+        "top": 935,
+        "width": 315,
+        "height": 312
+      },
+      "source_content_rect": {
+        "left": 4,
+        "top": 50,
+        "width": 287,
+        "height": 226,
+        "edge": 0
+      },
+      "sha256": "42dfc340ae712219cad471c388f18cc78d256d6b8a43dbb08d1b56d49a840e04"
+    },
+    "td_sewer_barrel": {
+      "file": "sprites/td_sewer_barrel.png",
+      "width": 256,
+      "height": 256,
+      "kind": "props",
+      "anchor": {
+        "x": 128,
+        "y": 232
+      },
+      "atlas": "topdown_props",
+      "clip_rect_pico2d": [
+        768,
+        0,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 36,
+        "top": 24,
+        "width": 184,
+        "height": 208
+      },
+      "source_rect": {
+        "left": 946,
+        "top": 935,
+        "width": 315,
+        "height": 312
+      },
+      "source_content_rect": {
+        "left": 29,
+        "top": 21,
+        "width": 232,
+        "height": 262,
+        "edge": 0
+      },
+      "sha256": "d97e889e201d3fd00413321875b22f766086b56f3b703d96d189f39c781204b7"
+    }
+  },
+  "sources": {
+    "terrain": {
+      "file": "source/terrain.png",
+      "width": 1536,
+      "height": 1024,
+      "sha256": "0958667fada037caca0dc17b597b95d3ee6cf3e9ce0945f533166f4ef62b51c7"
+    },
+    "devices": {
+      "file": "source/devices.png",
+      "width": 1536,
+      "height": 1024,
+      "sha256": "ba0913299b6945694c2551db15e225629ba91506b5ba95a677c22dfb7a1c12c4"
+    },
+    "worker": {
+      "file": "source/worker.png",
+      "width": 1266,
+      "height": 1242,
+      "sha256": "cbf3420f1f1e5808627fe55054b6b7a567c8b6b1b62ca89211ddc8e7d63e5191"
+    },
+    "props": {
+      "file": "source/props.png",
+      "width": 1261,
+      "height": 1247,
+      "sha256": "a5bda23db621f92788026512ce8035ff37614d9d3efaabc43362d87783fdd0b0"
+    }
+  }
+}

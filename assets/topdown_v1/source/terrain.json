@@ -1,0 +1,28 @@
+{
+  "date": "2026-11-09",
+  "generator": "image_gen.imagegen",
+  "grid": [
+    4,
+    4
+  ],
+  "title": "네 테마의 탑다운 지형",
+  "prompt": "Use case: stylized-concept. Production 2D game sprite atlas for a dungeon repair puzzle. Exactly 4 columns by 4 rows, sixteen equally spaced isolated assets, one asset entirely inside each equal grid cell with ample fully transparent gutters (at least 10 percent cell width). True alpha transparency, no checkerboard painted in, no background, no text, no labels, no grid lines, no watermarks. Cohesive finely painted small-game art: worn stone, iron and bronze, muted teal accents, warm soft upper-left lighting, readable strong silhouettes, subtle texture, crisp edges, not coarse pixel art. CAMERA: front-facing orthographic three-quarter top-down RPG camera, screen X horizontal, ground Y goes vertically upward into distance, ground depth foreshortened to 65 percent of width. NO isometric diamonds, NO diagonal rotation of rectangular bases, NO vanishing point. Horizontal edges perfectly horizontal, vertical standing faces visible, ground footprints axis-aligned rectangles. Consistent scale and camera across all cells. Terrain atlas. Every asset is an isolated clean rectangular surface with perfectly straight boundaries, viewed directly aligned to the screen, suitable for seamless adjacent placement. No floating diorama bases, no cast shadows outside the rectangle. In EACH ROW columns are: 1) walkable floor slab rectangular width:height about 1.54:1, bright enough for path readability; 2) same floor with restrained cracks, same footprint; 3) solid wall TOP cap, same 1.54:1 rectangular footprint, noticeably darker and cooler than walkable floor; 4) vertical wall FRONT face, a straight horizontal rectangle about 2.2:1, masonry pattern. No doors or holes. Rows top to bottom: ROW 1 forge: charcoal gray fitted stone floor, reinforced dark stone wall face, restrained brass rivets. ROW 2 royal crypt: muted purple-gray engraved stone floor and dignified masonry, no prominent glowing runes. ROW 3 magic archive: pale warm sandstone floor and dark blue-gray masonry cap, carved archive wall. ROW 4 sewer: blue-gray damp stones, restrained moss on cracked variant and wall face, no water puddles covering whole tile. Each row's cap must be a solid dark mass distinct from the floor.",
+  "entries": [
+    "forge_floor",
+    "forge_cracked",
+    "forge_cap",
+    "forge_face",
+    "crypt_floor",
+    "crypt_cracked",
+    "crypt_cap",
+    "crypt_face",
+    "archive_floor",
+    "archive_cracked",
+    "archive_cap",
+    "archive_face",
+    "sewer_floor",
+    "sewer_cracked",
+    "sewer_cap",
+    "sewer_face"
+  ]
+}

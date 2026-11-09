@@ -1,0 +1,28 @@
+{
+  "date": "2026-11-09",
+  "generator": "image_gen.imagegen",
+  "grid": [
+    4,
+    4
+  ],
+  "title": "탑다운 수리공 4방향",
+  "prompt": "Use case: stylized-concept. Production 2D game sprite atlas for a dungeon repair puzzle. Exactly 4 columns by 4 rows, sixteen equally spaced isolated assets, one asset entirely inside each equal grid cell with ample fully transparent gutters (at least 10 percent cell width). True alpha transparency, no checkerboard painted in, no background, no text, no labels, no grid lines, no watermarks. Cohesive finely painted small-game art: worn stone, iron and bronze, muted teal accents, warm soft upper-left lighting, readable strong silhouettes, subtle texture, crisp edges, not coarse pixel art. CAMERA: front-facing orthographic three-quarter top-down RPG camera, screen X horizontal, ground Y goes vertically upward into distance, ground depth foreshortened to 65 percent of width. NO isometric diamonds, NO diagonal rotation of rectangular bases, NO vanishing point. Horizontal edges perfectly horizontal, vertical standing faces visible, ground footprints axis-aligned rectangles. Consistent scale and camera across all cells. Character sheet based on supplied reference for IDENTITY ONLY. Preserve the small teal hooded dungeon repair worker, brass goggles on hood, brown leather apron/belt, brown gloves and boots, friendly simple face and wrench. Change the camera and facing to the front-facing 3/4 overhead RPG view specified above. Exactly the SAME character and SAME height in all sixteen cells. Ground is invisible. Each pose shows full body including feet, no cropping, no oval platform. FOUR ROWS: row 1 faces DOWN toward camera (symmetrical front, both eyes visible); row 2 faces UP away from camera (back of hood and apron straps, NO face visible); row 3 faces LEFT (left-facing side view with top of hood visible); row 4 faces RIGHT (right-facing side view with top of hood visible). FOUR COLUMNS in EVERY row: idle standing; walk frame A left foot forward/right foot back; walk frame B right foot forward/left foot back, a clearly different leg and arm pose; carrying pose both hands held forward at waist height EMPTY to receive a separate carried object. Do not change facing between columns. Not diagonal facings. Keep all silhouettes and foot baselines uniformly aligned.",
+  "entries": [
+    "worker_down_idle",
+    "worker_down_walk_a",
+    "worker_down_walk_b",
+    "worker_down_carry",
+    "worker_up_idle",
+    "worker_up_walk_a",
+    "worker_up_walk_b",
+    "worker_up_carry",
+    "worker_left_idle",
+    "worker_left_walk_a",
+    "worker_left_walk_b",
+    "worker_left_carry",
+    "worker_right_idle",
+    "worker_right_walk_a",
+    "worker_right_walk_b",
+    "worker_right_carry"
+  ]
+}
