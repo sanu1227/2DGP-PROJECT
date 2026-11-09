@@ -84,7 +84,10 @@ python main.py --smoke-frames 3    # 실제 창을 3프레임 표시하고 종�
 python -m tests.smoke_window      # SDL 키 이벤트로 모든 방 UI 흐름 재생
 python -m tests.smoke_click       # 실제 SDL 마우스 선택·경로·취소 검사
 python -m tests.smoke_placement   # 물건 접점·벨트/발판 높이·운반·클릭 검사
+python -m tests.smoke_interactions # 상호작용 표식·E 안내·표식 클릭·되돌리기 검사
 ```
+
+금색 마름모는 주울 수 있는 물건과 작업할 장치를 표시합니다. 표식이나 물체에 마우스를 올리면 하단에 이름이 나오며, 표식을 클릭해 해당 칸으로 이동할 수 있습니다. 같은 칸에서 행동 조건을 충족하면 표식이 청록색 **E**로 바뀝니다. [표식 적용 화면](./docs/screenshots/interaction-markers-stage-06.png), [줍기 가능한 상태](./docs/screenshots/interaction-markers-ready.png)를 확인할 수 있습니다.
 
 | 입력 | 동작 |
 | --- | --- |

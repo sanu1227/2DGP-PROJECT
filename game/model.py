@@ -78,6 +78,10 @@ class Game:
             return "복구 완료! 다음 방으로 진행"
         return self._interaction(self.state)[1]
 
+    def can_interact(self) -> bool:
+        """현재 칸에서 E 입력으로 실제 행동을 수행할 수 있는지 반환한다."""
+        return not self.state.cleared and self._interaction(self.state)[0] is not None
+
     def plate_pressed(self, pos: Pos, state: State | None = None) -> bool:
         state = self.state if state is None else state
         return pos == state.player or pos in state.items

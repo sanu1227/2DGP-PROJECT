@@ -182,6 +182,53 @@ class View:
         diamond(*projection.screen(target), projection.half_width - 5,
                 int(projection.half_height) - 3, None, color)
 
+    def interaction_markers(self, game, projection):
+        """작업 대상은 금색 표식, 현재 실행 가능한 행동은 E로 표시한다."""
+        level, state = game.level, game.state
+        self.interaction_regions = {}
+        self.interaction_hint = None
+        if state.cleared:
+            return
+        targets = {pos: "함정 설치" for pos in level.traps - state.installed}
+        targets.update({pos: "병사 배치" for pos in level.posts - state.soldiers})
+        targets.update({pos: "병사 조립" for pos in level.benches})
+        targets.update({pos: "뼈 투입구" for pos in level.chutes})
+        if not state.active:
+            targets.update({pos: "레버 가동" for pos in level.levers})
+        targets.update({pos: ITEM_NAMES[kind] for pos, kind in state.items.items()})
+        for pos in sorted(targets, key=lambda cell: (sum(cell), cell)):
+            sx, sy = projection.screen(pos)
+            # 같은 칸 캐릭터까지 포함해 표식이 머리나 물건에 가려지지 않게 한다.
+            top = max((rect[3] for cell, rect in self.hit_masks if cell == pos), default=sy + 8)
+            y = min(top + 15, BOARD_TOP - 15)
+            original_y = y
+            # 사선상 앞뒤 물건의 표식이 겹치면 위아래로 나누고 연결선을 남긴다.
+            for offset in (0, 28, -28, 56, -56, 84, -84, 112, -112):
+                candidate = original_y + offset
+                if not BOARD_BOTTOM + 15 < candidate < BOARD_TOP - 12:
+                    continue
+                if all(sx + 12 <= left or sx - 12 >= right
+                       or candidate + 12 <= bottom or candidate - 12 >= upper
+                       for left, bottom, right, upper in self.interaction_regions.values()):
+                    y = candidate
+                    break
+            if y != original_y:
+                line(sx, original_y, sx, y, GOLD)
+            ready = pos == state.player and game.can_interact()
+            if ready:
+                box(sx - 11, y - 11, sx + 11, y + 11, (24, 35, 40))
+                box(sx - 11, y - 11, sx + 11, y + 11, TEAL, filled=False)
+                self.text(sx - 5, y, "E", 16, TEAL)
+            else:
+                diamond(sx, y, 9, 9, (24, 35, 40), GOLD)
+                diamond(sx, y, 3, 3, GOLD)
+            rect = (sx - 12, y - 12, sx + 12, y + 12)
+            self.interaction_regions[pos] = rect
+            self.hit_regions.append((pos, rect))
+        hovered = self.pick_cell(game, *self.mouse_position) if self.mouse_position else None
+        if hovered in targets and hovered != state.player:
+            self.interaction_hint = f"상호작용 대상: {targets[hovered]} · 해당 칸에서 E"
+
     def gate(self, sx, sy, scale, status):
         """녹슨 문틀과 창살. 열린 문은 통행 공간을 비워 둔다."""
         color = TEAL if status == "open" else GOLD if status == "held" else RED
@@ -387,6 +434,7 @@ class View:
             box(sx - width / 2, sy - 28, sx + width / 2, sy - 6, (24, 35, 40))
             self.text(sx - width / 2 + 5, sy - 17, label, 16, TEAL if pos == level.exit and exit_ready else INK)
             self.hit_regions.append((pos, (sx - width / 2, sy - 28, sx + width / 2, sy - 6)))
+        self.interaction_markers(game, projection)
         self.navigation_overlay(game, projection)
         if self.show_coordinates:
             self.coordinate_overlay(level, projection)
@@ -425,10 +473,12 @@ class View:
         self.text(740, BOARD_TOP + 17, f"운반: {ITEM_NAMES[state.carrying]}", 18, GOLD)
         if state.carrying:
             self.item(state.carrying, 940, BOARD_TOP + 5, 0.19)
+        diamond(982, BOARD_TOP + 17, 6, 6, None, GOLD)
+        self.text(997, BOARD_TOP + 17, "상호작용 대상", 13, GOLD)
         self.text(WIDTH - 340, BOARD_TOP + 17, f"행동 {state.moves} · 되돌리기 {len(game.history)}", 16, MUTED)
 
         box(32, 48, WIDTH - 32, BOARD_BOTTOM, (41, 55, 58))
-        self.text(48, 80, game.context_action(), 18, TEAL)
+        self.text(48, 80, self.interaction_hint or game.context_action(), 18, TEAL)
         self.text(48, 59, game.message, 16, INK)
         if state.cleared:
             box(WIDTH - 340, 53, WIDTH - 44, 89, (46, 96, 81))
