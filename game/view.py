@@ -10,7 +10,7 @@ from game.model import Game
 from game.art import Art
 from game.scenery import draw_scars, draw_tinted, floor_style, wall_style
 from game.navigation import ClickNavigator, IsoBoard, find_path
-from game.themes import boundary_wall, scene_for, themed_floor
+from game.themes import boundary_walls, scene_for, themed_floor
 
 WIDTH, HEIGHT = 1280, 900
 INK = (226, 230, 219)
@@ -197,7 +197,8 @@ class View:
         if scene:
             for pack in scene["packs"]:
                 self.art.load_theme(pack)
-        # 큰 방도 타일을 축소하지 않도록 옆 패널 대신 화면 폭을 사용한다.
+            self.art.load_walls(scene["packs"][0])
+        # 기존 사선 비율로 바닥과 높은 외곽 벽을 함께 화면에 넣는다.
         projection = IsoBoard(level.width, level.height)
         half_width, half_height = projection.half_width, projection.half_height
         scale = half_width * 2 / self.art.manifest["coordinates"]["tile_footprint"]["width"]
@@ -223,10 +224,14 @@ class View:
                 tile, tint = themed_floor(scene, pos, near_trap) if scene else floor_style(pos, near_trap)
                 if pos in level.walls:
                     wall_sprite, wall_tint = wall_style(pos)
+                    faces = boundary_walls(scene, pos, level) if scene else []
                     if scene:
                         wall_tint = tuple(scene["wall_tint"])
-                        wall_sprite = boundary_wall(scene, pos, level) or wall_sprite
-                    if wall_sprite == "rubble":
+                    if faces:
+                        for face in faces:
+                            objects.append((depth, 0, face, sx, sy))
+                        wall_tints[(sx, sy)] = tuple(round(153 + channel * 0.4) for channel in wall_tint)
+                    elif wall_sprite == "rubble":
                         tile, tint = wall_sprite, wall_tint
                     else:
                         objects.append((depth, 0, wall_sprite, sx, sy))
@@ -284,6 +289,14 @@ class View:
                     objects.append((depth, 2, "soldier_deployed", sx + 10, sy))
 
         if scene:
+            for mount in scene.get("wall_mounts", ()):
+                pos = tuple(mount["cell"])
+                sx, sy = screen(pos)
+                sx += (-56 if pos[0] == 0 else 56) * scale
+                sy += mount.get("height", 150) * scale
+                sprite = mount["sprite"]
+                objects.append((sum(pos), 0.25, sprite, sx, sy))
+                decor_draws[(sprite, sx, sy)] = scale
             for decoration in scene["decorations"]:
                 pos = tuple(decoration["cell"])
                 sx, sy = screen(pos)

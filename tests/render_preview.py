@@ -18,6 +18,7 @@ def main():
     parser.add_argument("--steps", type=int, default=0, help="정답의 처음 N개 행동 적용 (-1: 완료)")
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--target", type=int, nargs=2, metavar=("X", "Y"), help="선택한 이동 경로도 표시")
+    parser.add_argument("--hide-coordinates", action="store_true", help="F2 좌표를 숨긴 게임 화면 저장")
     args = parser.parse_args()
     levels = load_levels()
     if not 1 <= args.stage <= len(levels):
@@ -33,6 +34,8 @@ def main():
     view = None
     try:
         view = View()
+        if args.hide_coordinates:
+            view.show_coordinates = False
         if args.target is not None and not view.navigation.start(game, tuple(args.target), perf_counter()):
             parser.error("현재 상태에서 목표 칸까지 이동할 수 없습니다.")
         view.draw(game, args.stage - 1, len(levels))

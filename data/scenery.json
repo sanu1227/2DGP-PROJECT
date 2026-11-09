@@ -4,6 +4,14 @@
     "background": [30, 25, 23], "accent": [230, 177, 105],
     "floor_tint": [246, 233, 216], "wall_tint": [183, 165, 144],
     "floors": ["forge_floor_plain", "forge_floor_soot", "forge_floor_riveted", "forge_floor_channel"],
+    "wall_mounts": [
+      {"sprite": "forge_mount_lamp_nw", "cell": [0, 2]},
+      {"sprite": "forge_mount_vent_nw", "cell": [0, 4]},
+      {"sprite": "forge_mount_tools_nw", "cell": [0, 7]},
+      {"sprite": "forge_mount_tools_ne", "cell": [2, 0]},
+      {"sprite": "forge_mount_lamp_ne", "cell": [4, 0]},
+      {"sprite": "forge_mount_vent_ne", "cell": [7, 0]}
+    ],
     "decorations": [
       {"sprite": "forge_gear_rack", "cell": [5, 1], "scale": 0.9},
       {"sprite": "forge_coal_forge", "cell": [7, 1], "scale": 1.0},
@@ -17,6 +25,14 @@
     "background": [27, 22, 33], "accent": [204, 177, 227],
     "floor_tint": [250, 237, 255], "wall_tint": [189, 166, 196],
     "floors": ["crypt_floor_plain", "crypt_floor_mosaic", "crypt_floor_damaged", "crypt_floor_runner"],
+    "wall_mounts": [
+      {"sprite": "crypt_mount_sconce_nw", "cell": [0, 2]},
+      {"sprite": "crypt_mount_crest_nw", "cell": [0, 4]},
+      {"sprite": "crypt_mount_banner_nw", "cell": [0, 7]},
+      {"sprite": "crypt_mount_banner_ne", "cell": [2, 0]},
+      {"sprite": "crypt_mount_sconce_ne", "cell": [4, 0]},
+      {"sprite": "crypt_mount_crest_ne", "cell": [7, 0]}
+    ],
     "decorations": [
       {"sprite": "crypt_broken_statue", "cell": [4, 0], "scale": 0.85},
       {"sprite": "crypt_sarcophagus", "cell": [7, 0], "scale": 1.0},
@@ -30,6 +46,14 @@
     "background": [22, 27, 38], "accent": [151, 192, 226],
     "floor_tint": [245, 242, 235], "wall_tint": [181, 188, 203],
     "floors": ["archive_floor_plain", "archive_floor_inlay", "archive_floor_papers", "archive_floor_runes"],
+    "wall_mounts": [
+      {"sprite": "archive_mount_sconce_nw", "cell": [0, 2]},
+      {"sprite": "archive_mount_niche_nw", "cell": [0, 4]},
+      {"sprite": "archive_mount_banner_nw", "cell": [0, 7]},
+      {"sprite": "archive_mount_banner_ne", "cell": [2, 0]},
+      {"sprite": "archive_mount_sconce_ne", "cell": [4, 0]},
+      {"sprite": "archive_mount_niche_ne", "cell": [7, 0]}
+    ],
     "decorations": [
       {"sprite": "archive_scroll_rack", "cell": [3, 1], "scale": 0.8},
       {"sprite": "archive_crystal_lectern", "cell": [5, 0], "scale": 0.85},
@@ -44,6 +68,14 @@
     "background": [27, 28, 33], "accent": [186, 197, 221],
     "floor_tint": [211, 227, 248], "wall_tint": [158, 178, 206],
     "floors": ["archive_floor_plain", "archive_floor_inlay", "crypt_floor_mosaic", "archive_floor_runes"],
+    "wall_mounts": [
+      {"sprite": "crypt_mount_crest_nw", "cell": [0, 2]},
+      {"sprite": "crypt_mount_banner_nw", "cell": [0, 4]},
+      {"sprite": "crypt_mount_sconce_nw", "cell": [0, 7]},
+      {"sprite": "crypt_mount_sconce_ne", "cell": [2, 0]},
+      {"sprite": "crypt_mount_banner_ne", "cell": [4, 0]},
+      {"sprite": "crypt_mount_crest_ne", "cell": [7, 0]}
+    ],
     "decorations": [
       {"sprite": "archive_bookshelf", "cell": [3, 0], "scale": 0.8},
       {"sprite": "crypt_broken_statue", "cell": [6, 0], "scale": 0.9},
@@ -57,6 +89,14 @@
     "background": [17, 30, 28], "accent": [135, 205, 169],
     "floor_tint": [217, 249, 222], "wall_tint": [151, 185, 155],
     "floors": ["sewer_floor_plain", "sewer_floor_moss", "sewer_floor_puddle", "sewer_floor_grate"],
+    "wall_mounts": [
+      {"sprite": "sewer_mount_lamp_nw", "cell": [0, 2]},
+      {"sprite": "sewer_mount_drain_nw", "cell": [0, 4], "height": 94},
+      {"sprite": "sewer_mount_pipes_nw", "cell": [0, 7], "height": 126},
+      {"sprite": "sewer_mount_pipes_ne", "cell": [2, 0], "height": 126},
+      {"sprite": "sewer_mount_lamp_ne", "cell": [4, 0]},
+      {"sprite": "sewer_mount_drain_ne", "cell": [7, 0], "height": 94}
+    ],
     "decorations": [
       {"sprite": "sewer_hand_pump", "cell": [6, 0], "scale": 0.9},
       {"sprite": "sewer_pipe_elbow", "cell": [2, 6], "scale": 1.0},
@@ -70,6 +110,14 @@
     "background": [18, 26, 31], "accent": [135, 193, 201],
     "floor_tint": [198, 227, 239], "wall_tint": [146, 177, 186],
     "floors": ["forge_floor_plain", "forge_floor_riveted", "sewer_floor_puddle", "sewer_floor_grate"],
+    "wall_mounts": [
+      {"sprite": "forge_mount_vent_nw", "cell": [0, 2]},
+      {"sprite": "forge_mount_lamp_nw", "cell": [0, 4]},
+      {"sprite": "forge_mount_tools_nw", "cell": [0, 7]},
+      {"sprite": "forge_mount_lamp_ne", "cell": [2, 0]},
+      {"sprite": "forge_mount_tools_ne", "cell": [4, 0]},
+      {"sprite": "forge_mount_vent_ne", "cell": [7, 0]}
+    ],
     "decorations": [
       {"sprite": "forge_boiler", "cell": [7, 2], "scale": 0.95},
       {"sprite": "forge_coal_forge", "cell": [8, 1], "scale": 0.9},

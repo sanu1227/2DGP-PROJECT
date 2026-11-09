@@ -10,6 +10,7 @@ import pico2d.pico2d as p
 
 ART_ROOT = Path(__file__).resolve().parents[1] / "assets" / "art_v1"
 MAP_ROOT = ART_ROOT.parent / "map_pack_v1"
+WALL_ROOT = ART_ROOT.parent / "wall_pack_v1"
 
 
 class Art:
@@ -28,11 +29,18 @@ class Art:
 
     def load_theme(self, name):
         """방에서 사용하는 테마만 한 번 로드한다. 클릭용 알파도 같은 파일을 읽는다."""
+        self._load_pack(MAP_ROOT, name, name)
+
+    def load_walls(self, name):
+        """바닥 없는 벽면과 부착 장식은 별도 아틀라스로 관리한다."""
+        self._load_pack(WALL_ROOT, name, f"walls_{name}")
+
+    def _load_pack(self, pack_root, theme, name):
         if name in self.atlases:
             return
-        if name not in {"crypt", "sewer", "forge", "archive"}:
-            raise ValueError(f"알 수 없는 맵 테마: {name}")
-        root = MAP_ROOT / name
+        if theme not in {"crypt", "sewer", "forge", "archive"}:
+            raise ValueError(f"알 수 없는 맵 테마: {theme}")
+        root = pack_root / theme
         manifest = json.loads((root / "manifest.json").read_text(encoding="utf-8"))
         path = root / manifest["atlases"][name]["file"]
         image = p.load_image(str(path))

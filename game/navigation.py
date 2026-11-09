@@ -23,7 +23,9 @@ class IsoBoard:
 
     @property
     def half_width(self) -> int:
-        return min(48, int(1152 / (self.width + self.height)))
+        # 2:1 시점은 유지하고 높은 뒤쪽 벽까지 상하단 UI 사이에 넣는다.
+        return min(48, int(1152 / (self.width + self.height)),
+                   int(600 / ((self.width + self.height) / 2 + 2.2)))
 
     @property
     def half_height(self) -> float:
@@ -32,7 +34,8 @@ class IsoBoard:
     @property
     def origin(self) -> tuple[float, float]:
         return (640 - (self.width - self.height) * self.half_width / 2,
-                440 + (self.width + self.height - 2) * self.half_height / 2)
+                440 + (self.width + self.height - 2) * self.half_height / 2
+                - 116 * self.half_width / 112)
 
     def screen(self, pos: tuple[float, float]) -> tuple[float, float]:
         x, y = pos
