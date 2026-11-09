@@ -219,6 +219,8 @@ class View:
         self.hit_masks[region] = (sprite, sx, sy, scale, flip)
 
     def navigation_overlay(self, game, projection):
+        if game.failed:
+            return
         target, path = self.navigation.target, self.navigation.path
         color = GOLD
         if not self.navigation.active:
@@ -241,7 +243,7 @@ class View:
         level, state = game.level, game.state
         self.interaction_regions = {}
         self.interaction_hint = None
-        if state.cleared:
+        if state.cleared or game.failed:
             return
         targets = {pos: "함정 설치" for pos in level.traps - state.installed}
         targets.update({pos: "병사 배치" for pos in level.posts - state.soldiers})
@@ -521,6 +523,8 @@ class View:
 
     def draw(self, game, index, total):
         level, state = game.level, game.state
+        if game.failed:
+            self.navigation.cancel()
         scene = scene_for(level)
         background = tuple(scene["background"]) if scene else (19, 27, 32)
         accent = tuple(scene["accent"]) if scene else MUTED
@@ -545,15 +549,23 @@ class View:
             self.item(state.carrying, 940, BOARD_TOP + 5, 0.19)
         diamond(982, BOARD_TOP + 17, 6, 6, None, GOLD)
         self.text(997, BOARD_TOP + 17, "상호작용 대상", 13, GOLD)
-        self.text(WIDTH - 340, BOARD_TOP + 17, f"행동 {state.moves} · 되돌리기 {len(game.history)}", 16, MUTED)
+        remaining = game.remaining_actions
+        budget = "행동 무제한" if remaining is None else f"남은 행동 {remaining} / {level.action_limit}"
+        budget_color = (TEAL if state.cleared else MUTED if remaining is None else RED if remaining <= 5
+                        else GOLD if remaining <= max(5, level.action_limit // 5) else INK)
+        self.text(WIDTH - 340, BOARD_TOP + 24, budget, 16, budget_color)
+        self.text(WIDTH - 340, BOARD_TOP + 8, f"사용 {state.moves} · 되돌리기 {len(game.history)}", 13, MUTED)
 
         box(32, 48, WIDTH - 32, BOARD_BOTTOM, (41, 55, 58))
-        self.text(48, 80, self.interaction_hint or game.context_action(), 18, TEAL)
+        self.text(48, 80, self.interaction_hint or game.context_action(), 18, RED if game.failed else TEAL)
         self.text(48, 59, game.message, 16, INK)
         if state.cleared:
             box(WIDTH - 340, 53, WIDTH - 44, 89, (46, 96, 81))
             label = "Enter  다음 방" if index + 1 < total else "Enter  처음부터 다시"
             self.text(WIDTH - 323, 71, label, 18)
+        elif game.failed:
+            box(WIDTH - 362, 53, WIDTH - 44, 89, (96, 45, 39))
+            self.text(WIDTH - 348, 71, "행동 소진 · 되돌리기 / 재시작", 16, INK)
         else:
             status = f"자동 이동 · {len(self.navigation.path)}칸 남음" if self.navigation.active else "모든 복구 후 빈손으로 출구 복귀"
             self.text(WIDTH - 362, 71, status, 16, MUTED)

@@ -36,6 +36,7 @@
 | 뼈 투입구 | 뼈를 벽 너머 배출구·발판으로 전송 | 5번 방 구현 |
 | 운반 벨트 | 성공 행동·대기마다 부품·병사를 한 칸씩 운반 | 6번 방 구현 |
 | 되돌리기 | 유효 행동 전의 위치·운반·설치·조립·가동·클리어 상태 복원 | 구현 |
+| 행동 제한 | 1번 방 무제한, 2~6번 방 제한 적용. 소진 후 되돌리기·재시작 가능 | 구현 |
 
 ## 바로 실행
 
@@ -88,6 +89,7 @@ python -m tests.smoke_interactions # 상호작용 표식·E 안내·표식 클�
 python -m tests.smoke_gates       # 발판 문 개폐·통과·닫힘 대기·투명 영역 클릭 검사
 python -m tests.smoke_gate_animation # 개폐 시간·중간 프레임·역방향 전환·애니메이션 클릭 검사
 python -m tests.smoke_plate_animation # 발판 승강·탑승물 높이·반전·되돌리기·클릭 검사
+python -m tests.smoke_action_limits # 실제 횟수 소진·입력 정지·되돌리기·재시작 검사
 ```
 
 금색 마름모는 주울 수 있는 물건과 작업할 장치를 표시합니다. 표식이나 물체에 마우스를 올리면 하단에 이름이 나오며, 표식을 클릭해 해당 칸으로 이동할 수 있습니다. 같은 칸에서 행동 조건을 충족하면 표식이 청록색 **E**로 바뀝니다. [표식 적용 화면](./docs/screenshots/interaction-markers-stage-06.png), [줍기 가능한 상태](./docs/screenshots/interaction-markers-ready.png)를 확인할 수 있습니다.
@@ -95,6 +97,8 @@ python -m tests.smoke_plate_animation # 발판 승강·탑승물 높이·반전�
 4~6번 방의 발판 문은 석재 문틀과 위로 올라가는 철제 격자로 표시합니다. 문틀은 고정되고 격자는 0.36초 동안 부드럽게 움직입니다. 도중에 발판 상태가 바뀌면 현재 위치에서 반대로 움직이며 되돌리기에도 적용됩니다. 눌린 발판과 열린 문은 청록색, 닫힌 문은 붉은색, 사람이 나가기를 기다리는 문은 금색 안내로 구분합니다. [개폐 미리보기](./docs/screenshots/gate-animation/preview.gif)를 확인할 수 있습니다.
 
 발판도 0.24초 동안 눌리고 복귀합니다. 석재 받침은 고정되며 상판과 위에 놓인 물건·캐릭터가 함께 움직입니다. 중간에 무게가 바뀌거나 되돌려도 현재 높이에서 이어집니다. [발판 애니메이션](./docs/screenshots/plate-animation/preview.gif)을 확인할 수 있습니다.
+
+행동 제한은 **1번 방 무제한, 2번 75회, 3번 150회, 4번 90회, 5번 45회, 6번 75회**입니다. 성공한 이동·줍기·설치·납품·배치·레버 가동·내려놓기·대기는 각각 1회 차감합니다. 벽에 부딪히거나 조건이 맞지 않는 입력은 차감하지 않습니다. 마지막 행동으로 클리어하면 성공하며, 소진 후에는 일반 행동과 자동 이동이 멈춥니다. **Z / Backspace로 마지막 행동과 횟수를 복구하거나 R로 재시작**할 수 있습니다. 제한값은 [data/stages.json](./data/stages.json)의 `action_limit`에서 조절하며, 현재 값은 검증된 해결 경로에 여유를 둔 초기 설정입니다. [소진 화면](./docs/screenshots/action-limits/failed.png)과 [되돌린 화면](./docs/screenshots/action-limits/recovered.png)을 확인할 수 있습니다.
 
 | 입력 | 동작 |
 | --- | --- |
