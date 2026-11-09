@@ -10,7 +10,7 @@ from game.model import Game
 from game.art import Art
 from game.scenery import draw_scars, draw_tinted, floor_style, wall_style
 from game.navigation import ClickNavigator, IsoBoard, find_path
-from game.themes import boundary_walls, scene_for, themed_floor
+from game.themes import boundary_walls, low_wall_sprite, scene_for, themed_floor
 from game.layout import WIDTH, HEIGHT, BOARD_BOTTOM, BOARD_TOP
 
 INK = (226, 230, 219)
@@ -224,6 +224,9 @@ class View:
                 tile, tint = themed_floor(scene, pos, near_trap) if scene else floor_style(pos, near_trap)
                 if pos in level.walls:
                     wall_sprite, wall_tint = wall_style(pos)
+                    low_wall = low_wall_sprite(scene, pos)
+                    if wall_sprite == "wall_low":
+                        wall_sprite = low_wall
                     faces = boundary_walls(scene, pos, level) if scene else []
                     if scene:
                         wall_tint = tuple(scene["wall_tint"])
@@ -232,7 +235,7 @@ class View:
                             objects.append((depth, 0, face, sx, sy))
                         # 벽면은 칸 뒤쪽에만 서 있으므로 막힌 칸 전체를 석축으로 채운다.
                         # 일반 바닥만 남기면 외곽 벽 바로 앞도 걸을 수 있는 것처럼 보인다.
-                        objects.append((depth, 0.1, "wall_low", sx, sy))
+                        objects.append((depth, 0.1, low_wall, sx, sy))
                         wall_tints[(sx, sy)] = tuple(round(153 + channel * 0.4) for channel in wall_tint)
                     elif wall_sprite == "rubble":
                         tile, tint = wall_sprite, wall_tint
@@ -339,7 +342,7 @@ class View:
                                               sx + 84 * scale, sy + 114 * scale)))
                 continue
             if sprite != "player":
-                if (sx, sy) in wall_tints and (sprite == "wall_low" or "_wall_" in sprite):
+                if (sx, sy) in wall_tints and (sprite.startswith("wall_low") or "_wall_" in sprite):
                     draw_tinted(self.art, sprite, sx, sy, scale, wall_tints[(sx, sy)])
                 else:
                     self.art.draw(sprite, sx, sy, scale)

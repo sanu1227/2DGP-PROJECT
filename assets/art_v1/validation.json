@@ -1,6 +1,6 @@
 {
-  "sprite_count": 44,
-  "atlas_count": 3,
+  "sprite_count": 47,
+  "atlas_count": 4,
   "checks": {
     "source_has_alpha": true,
     "source_cell_edges_clear": true,
@@ -667,6 +667,51 @@
         "top": 48,
         "width": 119,
         "height": 171
+      },
+      "edge_pixels": 0
+    },
+    {
+      "id": "wall_low_chipped",
+      "size": [
+        256,
+        256
+      ],
+      "transparent_fraction": 0.7011,
+      "content_bounds": {
+        "left": 16,
+        "top": 81,
+        "width": 224,
+        "height": 147
+      },
+      "edge_pixels": 0
+    },
+    {
+      "id": "wall_low_patched",
+      "size": [
+        256,
+        256
+      ],
+      "transparent_fraction": 0.6914,
+      "content_bounds": {
+        "left": 16,
+        "top": 81,
+        "width": 224,
+        "height": 147
+      },
+      "edge_pixels": 0
+    },
+    {
+      "id": "wall_low_braced",
+      "size": [
+        256,
+        256
+      ],
+      "transparent_fraction": 0.696,
+      "content_bounds": {
+        "left": 16,
+        "top": 81,
+        "width": 224,
+        "height": 147
       },
       "edge_pixels": 0
     }

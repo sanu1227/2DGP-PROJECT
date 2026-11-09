@@ -53,6 +53,24 @@
         4,
         4
       ]
+    },
+    "wall_low_chipped": {
+      "file": "sources/wall-low-chipped.png",
+      "width": 1254,
+      "height": 1254,
+      "sha256": "610b3ea60cd570cb0522293544c4fd48095c77e908f10e040cded2ad1d01e457"
+    },
+    "wall_low_patched": {
+      "file": "sources/wall-low-patched.png",
+      "width": 1254,
+      "height": 1254,
+      "sha256": "f0f0529d201421e70033469698665fa1e63f0ef681ff10047ac11063c1c6491e"
+    },
+    "wall_low_braced": {
+      "file": "sources/wall-low-braced.png",
+      "width": 1254,
+      "height": 1254,
+      "sha256": "aac8af57d33c8b02855038dda664e0860db353ae02d1d15541bc641a8b772e10"
     }
   },
   "atlases": {
@@ -88,6 +106,17 @@
         4
       ],
       "sha256": "5553be53d9625b35cb2c2d6e9d9d76166e802dd948192acfc84350839024f928"
+    },
+    "low_walls": {
+      "file": "atlases/low_walls.png",
+      "width": 1024,
+      "height": 256,
+      "cell_size": 256,
+      "grid": [
+        4,
+        1
+      ],
+      "sha256": "d7cccebbd113ffe4d930b65d5d7e6dc0b486e9a21946fc73374ceca2324ec2f3"
     }
   },
   "sprites": {
@@ -1674,6 +1703,117 @@
         "height": 171
       },
       "sha256": "b9278fdbe6a4c1d76f15eab8d6e8a5523c2cec98c919bc5782319347f5ba9ec9",
+      "intended_use": "prototype-art"
+    },
+    "wall_low_chipped": {
+      "file": "tiles/wall_low_chipped.png",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 160
+      },
+      "atlas": "low_walls",
+      "clip_rect_pico2d": [
+        0,
+        0,
+        256,
+        256
+      ],
+      "source_file": "sources/wall-low-chipped.png",
+      "source_rect": {
+        "left": 0,
+        "top": 0,
+        "width": 1254,
+        "height": 1254
+      },
+      "source_content_rect": {
+        "left": 77,
+        "top": 391,
+        "width": 1117,
+        "height": 763
+      },
+      "content_rect": {
+        "left": 16,
+        "top": 81,
+        "width": 224,
+        "height": 147
+      },
+      "sha256": "4820a0236991ca5c3bcccc76082c2c925b1a010d31962473c8d64c5331fd0230",
+      "intended_use": "prototype-art"
+    },
+    "wall_low_patched": {
+      "file": "tiles/wall_low_patched.png",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 160
+      },
+      "atlas": "low_walls",
+      "clip_rect_pico2d": [
+        256,
+        0,
+        256,
+        256
+      ],
+      "source_file": "sources/wall-low-patched.png",
+      "source_rect": {
+        "left": 0,
+        "top": 0,
+        "width": 1254,
+        "height": 1254
+      },
+      "source_content_rect": {
+        "left": 75,
+        "top": 385,
+        "width": 1106,
+        "height": 744
+      },
+      "content_rect": {
+        "left": 16,
+        "top": 81,
+        "width": 224,
+        "height": 147
+      },
+      "sha256": "35d0c14d40989d90aefceb5405c074b094fd0e7ac0acd06e9a1a6ecd854a15e4",
+      "intended_use": "prototype-art"
+    },
+    "wall_low_braced": {
+      "file": "tiles/wall_low_braced.png",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 160
+      },
+      "atlas": "low_walls",
+      "clip_rect_pico2d": [
+        512,
+        0,
+        256,
+        256
+      ],
+      "source_file": "sources/wall-low-braced.png",
+      "source_rect": {
+        "left": 0,
+        "top": 0,
+        "width": 1254,
+        "height": 1254
+      },
+      "source_content_rect": {
+        "left": 78,
+        "top": 395,
+        "width": 1117,
+        "height": 757
+      },
+      "content_rect": {
+        "left": 16,
+        "top": 81,
+        "width": 224,
+        "height": 147
+      },
+      "sha256": "da71d36e640304cb7e6c7a0a025de1086fb243c38bcf06000130c6029f38cde2",
       "intended_use": "prototype-art"
     }
   },

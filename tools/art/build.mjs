@@ -177,6 +177,42 @@ for (const [group, ids] of Object.entries(groupIds)) {
   manifest.atlases[group] = { file: `atlases/${group}.png`, width: 4 * size, height: rows * size,
     cell_size: size, grid: [4, rows], sha256: hash(atlas) };
 }
+// Standalone wall variants use the same footprint and ground anchor as wall_low.
+groupIds.low_walls = ['wall_low_chipped', 'wall_low_patched', 'wall_low_braced'];
+const lowWallComposites = [];
+for (const [index, id] of groupIds.low_walls.entries()) {
+  const file = `sources/${id.replaceAll('_', '-')}.png`;
+  const source = await fs.readFile(path.join(root, file));
+  const meta = await sharp(source).metadata();
+  if (!meta.hasAlpha) throw new Error(`${id}: source has no alpha`);
+  const { data, info } = await sharp(source).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  for (let p = 3; p < data.length; p += 4) if (data[p] <= alphaCutoff) data[p] = 0;
+  const box = bounds(data, info.width, info.height);
+  if (box.edge) throw new Error(`${id}: source touches image edge`);
+  const reference = manifest.sprites.wall_low;
+  const rect = reference.content_rect;
+  const crop = await sharp(data, { raw: { width: info.width, height: info.height, channels: 4 } })
+    .extract({ left: box.left, top: box.top, width: box.width, height: box.height })
+    .resize(rect.width, rect.height, { fit: 'fill' }).png().toBuffer();
+  const bytes = await sharp({ create: { width: size, height: size, channels: 4, background: '#00000000' } })
+    .composite([{ input: crop, left: rect.left, top: rect.top }]).png().toBuffer();
+  await fs.writeFile(path.join(root, `tiles/${id}.png`), bytes);
+  manifest.sources[id] = { file, width: info.width, height: info.height, sha256: hash(source) };
+  manifest.sprites[id] = {
+    file: `tiles/${id}.png`, width: size, height: size, anchor: reference.anchor,
+    atlas: 'low_walls', clip_rect_pico2d: [index * size, 0, size, size],
+    source_file: file, source_rect: { left: 0, top: 0, width: info.width, height: info.height },
+    source_content_rect: { left: box.left, top: box.top, width: box.width, height: box.height },
+    content_rect: rect, sha256: hash(bytes), intended_use: 'prototype-art',
+  };
+  lowWallComposites.push({ input: bytes, left: index * size, top: 0 });
+}
+const lowWalls = await sharp({ create: { width: 4 * size, height: size, channels: 4, background: '#00000000' } })
+  .composite(lowWallComposites).png().toBuffer();
+await fs.writeFile(path.join(root, 'atlases/low_walls.png'), lowWalls);
+manifest.atlases.low_walls = { file: 'atlases/low_walls.png', width: 4 * size, height: size,
+  cell_size: size, grid: [4, 1], sha256: hash(lowWalls) };
+
 for (const direction of ['ne', 'se', 'sw', 'nw']) {
   manifest.animations.worker[direction] = {
     idle: [`worker_${direction}_idle`],
@@ -191,7 +227,7 @@ const text = (x, y, value, fontSize = 16, fill = '#d6e0d9') =>
   `<text x="${x}" y="${y}" fill="${fill}" font-size="${fontSize}" font-family="Segoe UI, Malgun Gothic, sans-serif">${escapeXml(value)}</text>`;
 const composites = [];
 let labels = text(40, 48, 'THE PLACE THE HERO LEFT', 30, '#e4c78c')
-  + text(40, 82, 'ART PACK v1  |  44 sprites  |  2:1 isometric  |  alpha PNG', 18, '#9eb2b2');
+  + text(40, 82, `ART PACK v1  |  ${Object.keys(manifest.sprites).length} sprites  |  2:1 isometric  |  alpha PNG`, 18, '#9eb2b2');
 let y = 120;
 for (const [group, ids] of Object.entries(groupIds)) {
   labels += text(40, y + 25, `${group.toUpperCase()}  /  ${ids.length}`, 20, '#7fd4c6');
@@ -248,7 +284,7 @@ for (const [i, [a, b, caption]] of [
   sceneLabels += text(1020, sy + 60, caption, 16);
 }
 sceneLabels += text(57, 800, 'Teal repair worker  /  brass mechanisms  /  ivory bones  /  violet guard posts', 18)
-  + text(57, 834, '44 individual PNGs + 3 aligned atlases. All game rules and existing renderer preserved.', 16, '#9eb2b2')
+  + text(57, 834, '47 individual PNGs + 4 aligned atlases. Game rules preserved.', 16, '#9eb2b2')
   + text(57, 870, 'First art pass. Walk keyframes and small-scale readability still need play review.', 16, '#9eb2b2');
 await sharp({ create: { width: 1440, height: 920, channels: 4, background: '#172329' } })
   .composite([...scene, { input: textSvg(1440, 920, sceneLabels) }]).png().toFile(path.join(root, 'previews/room_composition.png'));
@@ -267,7 +303,7 @@ await sharp({ create: { width: 960, height: 650, channels: 4, background: '#2733
   .composite([...tileScene, { input: textSvg(960, 650, text(35, 45, 'Tile connectivity review: 224 x 112 step, shared ground anchors', 19)) }])
   .png().toFile(path.join(root, 'previews/tile_connection.png'));
 
-const validation = { sprite_count: Object.keys(manifest.sprites).length, atlas_count: 3,
+const validation = { sprite_count: Object.keys(manifest.sprites).length, atlas_count: Object.keys(manifest.atlases).length,
   checks: { source_has_alpha: true, source_cell_edges_clear: true, output_clipping: false,
     sprites_have_transparent_pixels: true, sprites_have_visible_content: true, runtime_dependencies_changed: false },
   sprites: [] };
@@ -280,4 +316,4 @@ for (const [id, sprite] of Object.entries(manifest.sprites)) {
 }
 await writeJson(path.join(root, 'manifest.json'), manifest);
 await writeJson(path.join(root, 'validation.json'), validation);
-console.log(`Exported ${validation.sprite_count} sprites, 3 atlases and 3 previews. Alpha, padding and source-cell checks passed.`);
+console.log(`Exported ${validation.sprite_count} sprites, ${validation.atlas_count} atlases and 3 previews. Alpha, padding and source-cell checks passed.`);

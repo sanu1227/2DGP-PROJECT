@@ -2,9 +2,9 @@
 
 2026-11-08 제작. 기존 `art_v1`의 수리공·퍼즐 장치와 조합하기 위한 맵 장식 팩이다. 테마마다 바닥 4종, 벽 4종, 독립 소품 8종을 제공한다. 프로토타입 0.7의 여섯 플레이 맵에 테마와 소품을 적용했다. [실제 게임 화면 비교](../../docs/screenshots/themes/overview.png)에서 확인할 수 있다.
 
-2026-11-09 제련소에 긴 판석과 불규칙한 돌 바닥 2종을 추가했다. 제련소는 바닥 6종·벽 4종·소품 8종이며, 다른 테마 구성은 그대로다. 1번 방 통로에 `data/scenery.json`의 `floor_overrides`로 직접 배치해 구간별 석재 배열을 달리하고, 황동 철판은 레버 밑에만 남겼다. [현재 1번 방](../../docs/screenshots/stage-01-varied-corridor.png)에서 확인할 수 있다. 이동·충돌·함정 규칙은 바꾸지 않았다.
+2026-11-09 제련소에 긴 판석과 불규칙한 돌 바닥 2종을 추가했다. 제련소는 바닥 6종·벽 4종·소품 8종이며, 다른 테마 구성은 그대로다. 이후 사용자가 수정 대상을 낮은 벽으로 명확히 지정하여, 1번 방 바닥 배치와 선택 코드는 원래대로 복원했다. 추가 바닥 에셋과 [당시 검토 화면](../../docs/screenshots/stage-01-varied-corridor.png)은 보존한다. [현재 1번 방](../../docs/screenshots/stage-01-varied-low-walls.png)은 `art_v1`의 낮은 벽 변형 3종을 적용한 상태다.
 
-추가 에셋은 내장 `image_gen`으로 제작했다. 원본 `forge/source/floor-slabs.png`, `forge/source/floor-patchwork.png`와 [전체 프롬프트](forge/source/floor-variation-prompts.json)를 보존한다. `source/spec.json`의 `extra_floors`를 읽어 기존 제작 명령으로 함께 빌드한다. 새 바닥은 현재 1번 방에서만 사용한다.
+추가 에셋은 내장 `image_gen`으로 제작했다. 원본 `forge/source/floor-slabs.png`, `forge/source/floor-patchwork.png`와 [전체 프롬프트](forge/source/floor-variation-prompts.json)를 보존한다. `source/spec.json`의 `extra_floors`를 읽어 기존 제작 명령으로 함께 빌드한다. 추가 바닥 2종은 현재 플레이 맵에서 사용하지 않는다.
 
 ![네 가지 테마 조립 예시](theme_comparison.png)
 

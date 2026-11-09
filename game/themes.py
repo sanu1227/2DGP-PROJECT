@@ -17,12 +17,6 @@ def _catalog():
 def _checked_scene(identifier, walls):
     scene = _catalog().get(identifier)
     if scene:
-        floor_cells = set()
-        for entry in scene.get("floor_overrides", ()):
-            pos = tuple(entry["cell"])
-            if pos in walls or pos in floor_cells or entry["sprite"] not in scene["floors"]:
-                raise ValueError(f"{identifier}: 바닥 장식은 중복 없는 통로 칸과 등록된 바닥 그림을 사용해야 합니다.")
-            floor_cells.add(pos)
         for decoration in scene["decorations"]:
             if tuple(decoration["cell"]) not in walls:
                 raise ValueError(f"{identifier}: 장식은 막힌 벽칸에만 배치해야 합니다.")
@@ -41,15 +35,18 @@ def scene_for(level):
 
 def themed_floor(scene, pos, near_trap=False):
     """기본 바닥을 넓게 남기고, 고정된 일부 칸에만 장식 문양을 배치한다."""
-    for entry in scene.get("floor_overrides", ()):
-        if tuple(entry["cell"]) == pos:
-            return entry["sprite"], tuple(scene["floor_tint"])
     floors = scene["floors"]
     choice = _pattern(pos) % 100
     index = 0 if choice < 68 or near_trap else 1 if choice < 82 else 2 if choice < 94 else 3
     if scene["name"] == "왕실 납골당" and pos[0] == 2 and not near_trap:
         index = 3
     return floors[index], tuple(scene["floor_tint"])
+
+
+def low_wall_sprite(scene, pos):
+    """선택한 방의 낮은 벽에 고정된 변형을 섞는다. 충돌 칸은 바꾸지 않는다."""
+    variants = scene.get("low_wall_variants") if scene else None
+    return variants[(_pattern(pos) >> 6) % len(variants)] if variants else "wall_low"
 
 
 def boundary_walls(scene, pos, level):

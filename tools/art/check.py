@@ -87,7 +87,8 @@ def main():
             "scope": "Actual SDL texture loading, drawing and atlas clip comparison; not game integration or playtesting.",
         }
         (ROOT / "runtime-validation.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
-        print(f"PASS: pico2d loaded 47 images; drew 44 sprites and 44 atlas clips; max channel difference {max_error}.")
+        print(f"PASS: pico2d loaded {len(sprites) + len(atlases)} images; "
+              f"drew {len(sprites)} sprites and atlas clips; max channel difference {max_error}.")
     finally:
         # Release SDL textures before destroying their renderer.
         sprites.clear()
