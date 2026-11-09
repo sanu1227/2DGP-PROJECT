@@ -1,6 +1,10 @@
-# 던전 맵 확장 에셋 — 4개 테마, 64종
+# 던전 맵 확장 에셋 — 4개 테마, 66종
 
 2026-11-08 제작. 기존 `art_v1`의 수리공·퍼즐 장치와 조합하기 위한 맵 장식 팩이다. 테마마다 바닥 4종, 벽 4종, 독립 소품 8종을 제공한다. 프로토타입 0.7의 여섯 플레이 맵에 테마와 소품을 적용했다. [실제 게임 화면 비교](../../docs/screenshots/themes/overview.png)에서 확인할 수 있다.
+
+2026-11-09 제련소에 긴 판석과 불규칙한 돌 바닥 2종을 추가했다. 제련소는 바닥 6종·벽 4종·소품 8종이며, 다른 테마 구성은 그대로다. 1번 방 통로에 `data/scenery.json`의 `floor_overrides`로 직접 배치해 구간별 석재 배열을 달리하고, 황동 철판은 레버 밑에만 남겼다. [현재 1번 방](../../docs/screenshots/stage-01-varied-corridor.png)에서 확인할 수 있다. 이동·충돌·함정 규칙은 바꾸지 않았다.
+
+추가 에셋은 내장 `image_gen`으로 제작했다. 원본 `forge/source/floor-slabs.png`, `forge/source/floor-patchwork.png`와 [전체 프롬프트](forge/source/floor-variation-prompts.json)를 보존한다. `source/spec.json`의 `extra_floors`를 읽어 기존 제작 명령으로 함께 빌드한다. 새 바닥은 현재 1번 방에서만 사용한다.
 
 ![네 가지 테마 조립 예시](theme_comparison.png)
 
@@ -23,9 +27,9 @@
 
 ```text
 crypt/ 또는 sewer/, forge/, archive/
-├── tiles/              # 바닥 4개 + 벽 4개, 개별 PNG
+├── tiles/              # 바닥 4개(제련소 6개) + 벽 4개, 개별 PNG
 ├── props/              # 독립 소품 8개, 개별 PNG
-├── atlas.png           # 4×4 아틀라스
+├── atlas.png           # 4×4 아틀라스, 제련소는 4×5
 ├── manifest.json       # 파일, 기준점, clip_draw 좌표, 종류, SHA-256
 ├── validation.json     # 투명도·잘림·여백 검사
 ├── previews/
@@ -37,7 +41,7 @@ crypt/ 또는 sewer/, forge/, archive/
 ```
 
 - 개별 PNG: **256×256 RGBA**, 투명 배경.
-- 아틀라스: **1024×1024**, **256×256 셀 4×4**, 테마당 1장.
+- 아틀라스: **1024×1024**, **256×256 셀 4×4**, 테마당 1장. 제련소는 바닥 추가로 **1024×1280**, **4×5**이며 마지막 두 셀은 비어 있다.
 - 타일 윗면 기준 크기: **224×112**, 기존 `art_v1`과 동일한 2:1 간격.
 - 바닥·벽 PNG 기준점: **(128, 160)**, 바닥 윗면 중심.
 - 독립 소품 PNG 기준점: **(128, 220)**, 바닥 접점.

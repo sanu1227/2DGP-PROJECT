@@ -51,6 +51,22 @@ for (const theme of themes) {
     if (box.edge) throw new Error(`${spec.entries[i].id}: source crosses cell edge (${box.edge} pixels)`);
     cells.push({ ...spec.entries[i], data, info, box, rect, col, row });
   }
+  const extraSources = [];
+  for (const entry of spec.extra_floors ?? []) {
+    const bytes = await fs.readFile(path.join(root, entry.file));
+    const metadata = await sharp(bytes).metadata();
+    if (!metadata.hasAlpha) throw new Error(`${entry.id}: missing source alpha`);
+    const { data, info } = await sharp(bytes).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+    for (let p = 3; p < data.length; p += 4) if (data[p] <= 8) data[p] = 0;
+    const box = bounds(data, info.width, info.height);
+    if (box.edge) throw new Error(`${entry.id}: source touches image edge`);
+    const index = cells.length;
+    cells.push({ ...entry, kind: 'floor', standalone: true, data, info, box,
+      rect: { left: 0, top: 0, width: info.width, height: info.height },
+      col: index % 4, row: Math.floor(index / 4) });
+    extraSources.push({ file: entry.file, width: info.width, height: info.height, sha256: hash(bytes) });
+  }
+  const atlasRows = Math.ceil(cells.length / 4);
   const manifest = {
     version: 1, created: spec.date, theme, title: spec.title, generator: spec.generator,
     status: 'map-decoration-pack; stage placement lives in data/scenery.json',
@@ -58,6 +74,7 @@ for (const theme of themes) {
       pico2d: 'clip_rect_pico2d uses bottom-left origin', tile_footprint: { width: 224, height: 112 } },
     source: { file: 'source/atlas.png', width: meta.width, height: meta.height, sha256: hash(original), grid: [4, 4] },
     atlases: {}, sprites: {},
+    ...(extraSources.length ? { extra_sources: extraSources } : {}),
     placement: 'Wall variants are rear-edge boundary decorations. Neither walls nor props create collision rules automatically.',
   };
   const composites = [];
@@ -67,7 +84,7 @@ for (const theme of themes) {
     if (cell.kind !== 'prop') {
       width = 224;
       // Fit tile top and front lip to the same footprint used by art_v1.
-      height = Math.round(box.height * 124 / cells[0].box.height);
+      height = cell.standalone ? 124 : Math.round(box.height * 124 / cells[0].box.height);
       anchor = { x: 128, y: 160 };
       left = 16;
       top = 228 - height;
@@ -91,29 +108,31 @@ for (const theme of themes) {
     await fs.writeFile(path.join(root, file), bytes);
     manifest.sprites[cell.id] = {
       file, kind: cell.kind, width: 256, height: 256, anchor, atlas: theme,
-      clip_rect_pico2d: [cell.col * 256, (3 - cell.row) * 256, 256, 256],
+      clip_rect_pico2d: [cell.col * 256, (atlasRows - 1 - cell.row) * 256, 256, 256],
+      ...(cell.standalone ? { source_file: cell.file } : {}),
       source_rect: cell.rect, source_content_rect: { left: box.left, top: box.top, width: box.width, height: box.height },
       content_rect: { left, top, width, height }, sha256: hash(bytes),
     };
     composites.push({ input: bytes, left: cell.col * 256, top: cell.row * 256 });
   }
-  const atlas = await sharp({ create: { width: 1024, height: 1024, channels: 4, background: '#00000000' } })
+  const atlas = await sharp({ create: { width: 1024, height: atlasRows * 256, channels: 4, background: '#00000000' } })
     .composite(composites).png().toBuffer();
   await fs.writeFile(path.join(root, 'atlas.png'), atlas);
-  manifest.atlases[theme] = { file: 'atlas.png', width: 1024, height: 1024, cell_size: 256, grid: [4, 4], sha256: hash(atlas) };
+  manifest.atlases[theme] = { file: 'atlas.png', width: 1024, height: atlasRows * 256, cell_size: 256, grid: [4, atlasRows], sha256: hash(atlas) };
   await json(path.join(root, 'manifest.json'), manifest);
 
   let labels = text(30, 44, spec.title, 30, '#e7c98d')
-    + text(30, 77, `${spec.subtitle}  /  4 floors + 4 walls + 8 props`, 18, '#9eb6b2');
+    + text(30, 77, `${spec.subtitle}  /  ${4 + extraSources.length} floors + 4 walls + 8 props`, 18, '#9eb6b2');
   const overview = [];
-  for (let i = 0; i < 16; i++) {
-    const entry = manifest.sprites[spec.entries[i].id];
+  for (let i = 0; i < cells.length; i++) {
+    const entry = manifest.sprites[cells[i].id];
     const x = 16 + (i % 4) * 256, y = 100 + Math.floor(i / 4) * 256;
     overview.push({ input: await sharp(path.join(root, entry.file)).resize(240, 240).toBuffer(), left: x, top: y });
-    labels += text(x + 8, y + 249, spec.entries[i].id, 13);
+    labels += text(x + 8, y + 249, cells[i].id, 13);
   }
-  await sharp({ create: { width: 1056, height: 1140, channels: 4, background: '#19252b' } })
-    .composite([...overview, { input: svg(1056, 1140, labels) }]).png().toFile(path.join(root, 'previews/overview.png'));
+  const overviewHeight = 116 + atlasRows * 256;
+  await sharp({ create: { width: 1056, height: overviewHeight, channels: 4, background: '#19252b' } })
+    .composite([...overview, { input: svg(1056, overviewHeight, labels) }]).png().toFile(path.join(root, 'previews/overview.png'));
 
   // Small room demonstrates real sprite composition with the existing worker and puzzle art.
   const scene = [];
@@ -148,11 +167,11 @@ for (const theme of themes) {
   for (const entry of tall) await put(entry.id, ...entry.pos);
   const title = text(40, 48, spec.title, 30, '#e7c98d')
     + text(40, 82, '조립 예시 · 기존 수리공/함정과 조합 · 실제 플레이 맵 아님', 16, '#a9bdb8')
-    + text(40, 594, `${spec.subtitle}   |   16 reusable sprites   |   224 x 112 tile footprint`, 18, '#a9bdb8');
+    + text(40, 594, `${spec.subtitle}   |   ${cells.length} reusable sprites   |   224 x 112 tile footprint`, 18, '#a9bdb8');
   await sharp({ create: { width: 960, height: 640, channels: 4, background: '#19252b' } })
     .composite([...scene, { input: svg(960, 640, title) }]).png().toFile(path.join(root, 'previews/room.png'));
 
-  const validation = { count: 16, alpha: true, source_cells_unclipped: true, output_padding: true, sprites: [] };
+  const validation = { count: cells.length, alpha: true, source_cells_unclipped: true, output_padding: true, sprites: [] };
   for (const [id, entry] of Object.entries(manifest.sprites)) {
     const { data, info } = await sharp(path.join(root, entry.file)).raw().toBuffer({ resolveWithObject: true });
     const box = bounds(data, info.width, info.height);
@@ -160,7 +179,7 @@ for (const theme of themes) {
     validation.sprites.push({ id, visible_pixels: box.visible, edge_pixels: box.edge });
   }
   await json(path.join(root, 'validation.json'), validation);
-  console.log(`${theme}: 16 RGBA sprites + atlas + previews; source borders and output padding passed.`);
+  console.log(`${theme}: ${cells.length} RGBA sprites + atlas + previews; source borders and output padding passed.`);
 }
 
 // Aggregate previews only when all four individual packs have been built.

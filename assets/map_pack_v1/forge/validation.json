@@ -1,5 +1,5 @@
 {
-  "count": 16,
+  "count": 18,
   "alpha": true,
   "source_cells_unclipped": true,
   "output_padding": true,
@@ -82,6 +82,16 @@
     {
       "id": "forge_boiler",
       "visible_pixels": 13230,
+      "edge_pixels": 0
+    },
+    {
+      "id": "forge_floor_slabs",
+      "visible_pixels": 15367,
+      "edge_pixels": 0
+    },
+    {
+      "id": "forge_floor_patchwork",
+      "visible_pixels": 15514,
       "edge_pixels": 0
     }
   ]

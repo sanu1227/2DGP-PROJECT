@@ -27,13 +27,13 @@
     "forge": {
       "file": "atlas.png",
       "width": 1024,
-      "height": 1024,
+      "height": 1280,
       "cell_size": 256,
       "grid": [
         4,
-        4
+        5
       ],
-      "sha256": "4aee3fb1ee77234b6ed520240d901ebb0cabc149a049acb5bb8b863839d63b54"
+      "sha256": "06c666c4c7ff46f09723167d8c9fd608d2788da072fef0af76c9ec589443e091"
     }
   },
   "sprites": {
@@ -49,7 +49,7 @@
       "atlas": "forge",
       "clip_rect_pico2d": [
         0,
-        768,
+        1024,
         256,
         256
       ],
@@ -85,7 +85,7 @@
       "atlas": "forge",
       "clip_rect_pico2d": [
         256,
-        768,
+        1024,
         256,
         256
       ],
@@ -121,7 +121,7 @@
       "atlas": "forge",
       "clip_rect_pico2d": [
         512,
-        768,
+        1024,
         256,
         256
       ],
@@ -157,7 +157,7 @@
       "atlas": "forge",
       "clip_rect_pico2d": [
         768,
-        768,
+        1024,
         256,
         256
       ],
@@ -193,7 +193,7 @@
       "atlas": "forge",
       "clip_rect_pico2d": [
         0,
-        512,
+        768,
         256,
         256
       ],
@@ -229,7 +229,7 @@
       "atlas": "forge",
       "clip_rect_pico2d": [
         256,
-        512,
+        768,
         256,
         256
       ],
@@ -265,7 +265,7 @@
       "atlas": "forge",
       "clip_rect_pico2d": [
         512,
-        512,
+        768,
         256,
         256
       ],
@@ -301,7 +301,7 @@
       "atlas": "forge",
       "clip_rect_pico2d": [
         768,
-        512,
+        768,
         256,
         256
       ],
@@ -337,7 +337,7 @@
       "atlas": "forge",
       "clip_rect_pico2d": [
         0,
-        256,
+        512,
         256,
         256
       ],
@@ -373,7 +373,7 @@
       "atlas": "forge",
       "clip_rect_pico2d": [
         256,
-        256,
+        512,
         256,
         256
       ],
@@ -409,7 +409,7 @@
       "atlas": "forge",
       "clip_rect_pico2d": [
         512,
-        256,
+        512,
         256,
         256
       ],
@@ -445,7 +445,7 @@
       "atlas": "forge",
       "clip_rect_pico2d": [
         768,
-        256,
+        512,
         256,
         256
       ],
@@ -481,7 +481,7 @@
       "atlas": "forge",
       "clip_rect_pico2d": [
         0,
-        0,
+        256,
         256,
         256
       ],
@@ -517,7 +517,7 @@
       "atlas": "forge",
       "clip_rect_pico2d": [
         256,
-        0,
+        256,
         256,
         256
       ],
@@ -553,7 +553,7 @@
       "atlas": "forge",
       "clip_rect_pico2d": [
         512,
-        0,
+        256,
         256,
         256
       ],
@@ -589,7 +589,7 @@
       "atlas": "forge",
       "clip_rect_pico2d": [
         768,
-        0,
+        256,
         256,
         256
       ],
@@ -612,7 +612,95 @@
         "height": 161
       },
       "sha256": "4eea4ea2ff8750b3c13d1caa38449704f18c200e5f1b217aac81309e81f196c2"
+    },
+    "forge_floor_slabs": {
+      "file": "tiles/forge_floor_slabs.png",
+      "kind": "floor",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 160
+      },
+      "atlas": "forge",
+      "clip_rect_pico2d": [
+        0,
+        0,
+        256,
+        256
+      ],
+      "source_file": "source/floor-slabs.png",
+      "source_rect": {
+        "left": 0,
+        "top": 0,
+        "width": 1254,
+        "height": 1254
+      },
+      "source_content_rect": {
+        "left": 80,
+        "top": 427,
+        "width": 1093,
+        "height": 655
+      },
+      "content_rect": {
+        "left": 16,
+        "top": 104,
+        "width": 224,
+        "height": 124
+      },
+      "sha256": "8b84cf19321bda736681fd352705612abbbf4e796292b126a0b9cbc95578409b"
+    },
+    "forge_floor_patchwork": {
+      "file": "tiles/forge_floor_patchwork.png",
+      "kind": "floor",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 160
+      },
+      "atlas": "forge",
+      "clip_rect_pico2d": [
+        256,
+        0,
+        256,
+        256
+      ],
+      "source_file": "source/floor-patchwork.png",
+      "source_rect": {
+        "left": 0,
+        "top": 0,
+        "width": 1254,
+        "height": 1254
+      },
+      "source_content_rect": {
+        "left": 79,
+        "top": 444,
+        "width": 1096,
+        "height": 663
+      },
+      "content_rect": {
+        "left": 16,
+        "top": 104,
+        "width": 224,
+        "height": 124
+      },
+      "sha256": "12c113dc449356d3d0427cf12025e1bf03562abbfa197d75da321cccdb8eb30a"
     }
   },
+  "extra_sources": [
+    {
+      "file": "source/floor-slabs.png",
+      "width": 1254,
+      "height": 1254,
+      "sha256": "25cfa2859ca1590d938ed32f579cce78d81578f03b85fb8b2d003268b5f575b5"
+    },
+    {
+      "file": "source/floor-patchwork.png",
+      "width": 1254,
+      "height": 1254,
+      "sha256": "6c33517837823e1ee36c3b72b3c06ad4fe3a9a6d3678889d6315ffbc90a870ba"
+    }
+  ],
   "placement": "Wall variants are rear-edge boundary decorations. Neither walls nor props create collision rules automatically."
 }
