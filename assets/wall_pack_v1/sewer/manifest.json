@@ -1,0 +1,493 @@
+{
+  "version": 1,
+  "created": "2026-11-09",
+  "theme": "sewer",
+  "title": "이끼 수로",
+  "generator": "image_gen.imagegen",
+  "coordinates": {
+    "image": "top-left; x right and y down",
+    "pico2d": "clip_rect_pico2d uses bottom-left origin",
+    "tile_footprint": {
+      "width": 224,
+      "height": 112
+    },
+    "wall_upright": 232
+  },
+  "source": {
+    "file": "source/atlas.png",
+    "width": 1448,
+    "height": 1086,
+    "sha256": "ce0290a33b270fa06f0c0f4072188ac4a3e0fe25b35b6cc50dd1a156a211de3c",
+    "grid": [
+      4,
+      3
+    ],
+    "row_edges": [
+      0,
+      431,
+      754,
+      1086
+    ]
+  },
+  "placement": "Draw a floor first. Rear walls anchor at tile center; independent mounts anchor at their center. Collision belongs to the level.",
+  "atlases": {
+    "walls_sewer": {
+      "file": "atlas.png",
+      "width": 1024,
+      "height": 1152,
+      "cell_width": 256,
+      "cell_height": 384,
+      "grid": [
+        4,
+        3
+      ],
+      "sha256": "510ac1900d0e5ca7a68cfac1b538a654d082a8c3b0a98262edfe71aa3cc33872"
+    }
+  },
+  "sprites": {
+    "sewer_wall_tall_nw": {
+      "file": "walls/sewer_wall_tall_nw.png",
+      "kind": "wall_face",
+      "direction": "nw",
+      "width": 256,
+      "height": 384,
+      "anchor": {
+        "x": 128,
+        "y": 340
+      },
+      "atlas": "walls_sewer",
+      "clip_rect_pico2d": [
+        0,
+        768,
+        256,
+        384
+      ],
+      "source_rect": {
+        "left": 0,
+        "top": 0,
+        "width": 362,
+        "height": 431
+      },
+      "source_content_rect": {
+        "left": 107,
+        "top": 22,
+        "width": 167,
+        "height": 359
+      },
+      "content_rect": {
+        "left": 8,
+        "top": 52,
+        "width": 128,
+        "height": 288
+      },
+      "sha256": "3498d91025b83a0ba1888882ebda8d39aebbef8a688f580e6bd119b633f2aa2d"
+    },
+    "sewer_wall_tall_ne": {
+      "file": "walls/sewer_wall_tall_ne.png",
+      "kind": "wall_face",
+      "direction": "ne",
+      "width": 256,
+      "height": 384,
+      "anchor": {
+        "x": 128,
+        "y": 340
+      },
+      "atlas": "walls_sewer",
+      "clip_rect_pico2d": [
+        256,
+        768,
+        256,
+        384
+      ],
+      "source_rect": {
+        "left": 362,
+        "top": 0,
+        "width": 362,
+        "height": 431
+      },
+      "source_content_rect": {
+        "left": 89,
+        "top": 22,
+        "width": 166,
+        "height": 359
+      },
+      "content_rect": {
+        "left": 120,
+        "top": 52,
+        "width": 128,
+        "height": 288
+      },
+      "sha256": "069cfda7c249628f2746df273d12ce87f71a2115c3ba8adc1038d6c41e687146"
+    },
+    "sewer_wall_damaged_nw": {
+      "file": "walls/sewer_wall_damaged_nw.png",
+      "kind": "wall_face",
+      "direction": "nw",
+      "width": 256,
+      "height": 384,
+      "anchor": {
+        "x": 128,
+        "y": 340
+      },
+      "atlas": "walls_sewer",
+      "clip_rect_pico2d": [
+        512,
+        768,
+        256,
+        384
+      ],
+      "source_rect": {
+        "left": 724,
+        "top": 0,
+        "width": 362,
+        "height": 431
+      },
+      "source_content_rect": {
+        "left": 107,
+        "top": 21,
+        "width": 167,
+        "height": 360
+      },
+      "content_rect": {
+        "left": 8,
+        "top": 51,
+        "width": 128,
+        "height": 289
+      },
+      "sha256": "3f36724f81f45cf7e72f0bae8e0af5b53abb6e98e54bda7174a699d83c829c02"
+    },
+    "sewer_wall_damaged_ne": {
+      "file": "walls/sewer_wall_damaged_ne.png",
+      "kind": "wall_face",
+      "direction": "ne",
+      "width": 256,
+      "height": 384,
+      "anchor": {
+        "x": 128,
+        "y": 340
+      },
+      "atlas": "walls_sewer",
+      "clip_rect_pico2d": [
+        768,
+        768,
+        256,
+        384
+      ],
+      "source_rect": {
+        "left": 1086,
+        "top": 0,
+        "width": 362,
+        "height": 431
+      },
+      "source_content_rect": {
+        "left": 89,
+        "top": 22,
+        "width": 166,
+        "height": 360
+      },
+      "content_rect": {
+        "left": 120,
+        "top": 51,
+        "width": 128,
+        "height": 289
+      },
+      "sha256": "9f985d1feeee581c55c2390bceead1655b089edc29c3e655284a26b26147246d"
+    },
+    "sewer_wall_short_nw": {
+      "file": "walls/sewer_wall_short_nw.png",
+      "kind": "wall_face",
+      "direction": "nw",
+      "width": 256,
+      "height": 384,
+      "anchor": {
+        "x": 128,
+        "y": 340
+      },
+      "atlas": "walls_sewer",
+      "clip_rect_pico2d": [
+        0,
+        384,
+        256,
+        384
+      ],
+      "source_rect": {
+        "left": 0,
+        "top": 431,
+        "width": 362,
+        "height": 323
+      },
+      "source_content_rect": {
+        "left": 107,
+        "top": 126,
+        "width": 167,
+        "height": 173
+      },
+      "content_rect": {
+        "left": 8,
+        "top": 201,
+        "width": 128,
+        "height": 139
+      },
+      "sha256": "68cd97a6f0c3af0113ededdb88322f5de8dfbc3065093448254819eed06911a6"
+    },
+    "sewer_wall_short_ne": {
+      "file": "walls/sewer_wall_short_ne.png",
+      "kind": "wall_face",
+      "direction": "ne",
+      "width": 256,
+      "height": 384,
+      "anchor": {
+        "x": 128,
+        "y": 340
+      },
+      "atlas": "walls_sewer",
+      "clip_rect_pico2d": [
+        256,
+        384,
+        256,
+        384
+      ],
+      "source_rect": {
+        "left": 362,
+        "top": 431,
+        "width": 362,
+        "height": 323
+      },
+      "source_content_rect": {
+        "left": 89,
+        "top": 126,
+        "width": 166,
+        "height": 173
+      },
+      "content_rect": {
+        "left": 120,
+        "top": 201,
+        "width": 128,
+        "height": 139
+      },
+      "sha256": "c78222a46c3d980240569b94fcba916dcb57aab1561e08b01418c6ef78ac905a"
+    },
+    "sewer_mount_lamp_nw": {
+      "file": "mounts/sewer_mount_lamp_nw.png",
+      "kind": "wall_mount",
+      "direction": "nw",
+      "width": 256,
+      "height": 384,
+      "anchor": {
+        "x": 128,
+        "y": 192
+      },
+      "atlas": "walls_sewer",
+      "clip_rect_pico2d": [
+        512,
+        384,
+        256,
+        384
+      ],
+      "source_rect": {
+        "left": 724,
+        "top": 431,
+        "width": 362,
+        "height": 323
+      },
+      "source_content_rect": {
+        "left": 100,
+        "top": 52,
+        "width": 147,
+        "height": 204
+      },
+      "content_rect": {
+        "left": 81,
+        "top": 127,
+        "width": 94,
+        "height": 130
+      },
+      "sha256": "47e1f3f247e3d4b9c69cb85650feec1b37d940a62d3459477a1ceff24e8b30f8"
+    },
+    "sewer_mount_lamp_ne": {
+      "file": "mounts/sewer_mount_lamp_ne.png",
+      "kind": "wall_mount",
+      "direction": "ne",
+      "width": 256,
+      "height": 384,
+      "anchor": {
+        "x": 128,
+        "y": 192
+      },
+      "atlas": "walls_sewer",
+      "clip_rect_pico2d": [
+        768,
+        384,
+        256,
+        384
+      ],
+      "source_rect": {
+        "left": 1086,
+        "top": 431,
+        "width": 362,
+        "height": 323
+      },
+      "source_content_rect": {
+        "left": 112,
+        "top": 51,
+        "width": 149,
+        "height": 205
+      },
+      "content_rect": {
+        "left": 81,
+        "top": 128,
+        "width": 94,
+        "height": 129
+      },
+      "sha256": "868e6135132457f8f5506150c5c039d3eb51acc1e0bbac448a073d1603869f3a"
+    },
+    "sewer_mount_drain_nw": {
+      "file": "mounts/sewer_mount_drain_nw.png",
+      "kind": "wall_mount",
+      "direction": "nw",
+      "width": 256,
+      "height": 384,
+      "anchor": {
+        "x": 128,
+        "y": 192
+      },
+      "atlas": "walls_sewer",
+      "clip_rect_pico2d": [
+        0,
+        0,
+        256,
+        384
+      ],
+      "source_rect": {
+        "left": 0,
+        "top": 754,
+        "width": 362,
+        "height": 332
+      },
+      "source_content_rect": {
+        "left": 90,
+        "top": 60,
+        "width": 196,
+        "height": 236
+      },
+      "content_rect": {
+        "left": 81,
+        "top": 136,
+        "width": 94,
+        "height": 113
+      },
+      "sha256": "90b12c78641bfe4e5ea053572eedacd1d4d4620e374cfe22206207c3e41fd567"
+    },
+    "sewer_mount_drain_ne": {
+      "file": "mounts/sewer_mount_drain_ne.png",
+      "kind": "wall_mount",
+      "direction": "ne",
+      "width": 256,
+      "height": 384,
+      "anchor": {
+        "x": 128,
+        "y": 192
+      },
+      "atlas": "walls_sewer",
+      "clip_rect_pico2d": [
+        256,
+        0,
+        256,
+        384
+      ],
+      "source_rect": {
+        "left": 362,
+        "top": 754,
+        "width": 362,
+        "height": 332
+      },
+      "source_content_rect": {
+        "left": 75,
+        "top": 60,
+        "width": 195,
+        "height": 236
+      },
+      "content_rect": {
+        "left": 81,
+        "top": 135,
+        "width": 94,
+        "height": 114
+      },
+      "sha256": "5b132e16524cbed46b4f7655dccc30d6f431ef1cbf864bcded89f6434d023c3d"
+    },
+    "sewer_mount_pipes_nw": {
+      "file": "mounts/sewer_mount_pipes_nw.png",
+      "kind": "wall_mount",
+      "direction": "nw",
+      "width": 256,
+      "height": 384,
+      "anchor": {
+        "x": 128,
+        "y": 192
+      },
+      "atlas": "walls_sewer",
+      "clip_rect_pico2d": [
+        512,
+        0,
+        256,
+        384
+      ],
+      "source_rect": {
+        "left": 724,
+        "top": 754,
+        "width": 362,
+        "height": 332
+      },
+      "source_content_rect": {
+        "left": 50,
+        "top": 26,
+        "width": 237,
+        "height": 276
+      },
+      "content_rect": {
+        "left": 81,
+        "top": 138,
+        "width": 94,
+        "height": 109
+      },
+      "sha256": "f269ec532860ddf04cf60370259090a2335c72e1384350560f15cb06e0e7d081"
+    },
+    "sewer_mount_pipes_ne": {
+      "file": "mounts/sewer_mount_pipes_ne.png",
+      "kind": "wall_mount",
+      "direction": "ne",
+      "width": 256,
+      "height": 384,
+      "anchor": {
+        "x": 128,
+        "y": 192
+      },
+      "atlas": "walls_sewer",
+      "clip_rect_pico2d": [
+        768,
+        0,
+        256,
+        384
+      ],
+      "source_rect": {
+        "left": 1086,
+        "top": 754,
+        "width": 362,
+        "height": 332
+      },
+      "source_content_rect": {
+        "left": 76,
+        "top": 25,
+        "width": 235,
+        "height": 277
+      },
+      "content_rect": {
+        "left": 81,
+        "top": 137,
+        "width": 94,
+        "height": 111
+      },
+      "sha256": "650ff94d7b07fd808cb5bf328446249072c8c9c1ffdb8b1a1440b7d96f76f735"
+    }
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "count": 12,
+  "alpha": true,
+  "source_cells_unclipped": true,
+  "output_padding": true,
+  "sprites": [
+    {
+      "id": "crypt_wall_tall_nw",
+      "visible_pixels": 29091,
+      "edge_pixels": 0
+    },
+    {
+      "id": "crypt_wall_tall_ne",
+      "visible_pixels": 29748,
+      "edge_pixels": 0
+    },
+    {
+      "id": "crypt_wall_damaged_nw",
+      "visible_pixels": 26239,
+      "edge_pixels": 0
+    },
+    {
+      "id": "crypt_wall_damaged_ne",
+      "visible_pixels": 25787,
+      "edge_pixels": 0
+    },
+    {
+      "id": "crypt_wall_short_nw",
+      "visible_pixels": 9729,
+      "edge_pixels": 0
+    },
+    {
+      "id": "crypt_wall_short_ne",
+      "visible_pixels": 10004,
+      "edge_pixels": 0
+    },
+    {
+      "id": "crypt_mount_sconce_nw",
+      "visible_pixels": 4984,
+      "edge_pixels": 0
+    },
+    {
+      "id": "crypt_mount_sconce_ne",
+      "visible_pixels": 5178,
+      "edge_pixels": 0
+    },
+    {
+      "id": "crypt_mount_crest_nw",
+      "visible_pixels": 9769,
+      "edge_pixels": 0
+    },
+    {
+      "id": "crypt_mount_crest_ne",
+      "visible_pixels": 9690,
+      "edge_pixels": 0
+    },
+    {
+      "id": "crypt_mount_banner_nw",
+      "visible_pixels": 5633,
+      "edge_pixels": 0
+    },
+    {
+      "id": "crypt_mount_banner_ne",
+      "visible_pixels": 5690,
+      "edge_pixels": 0
+    }
+  ]
+}

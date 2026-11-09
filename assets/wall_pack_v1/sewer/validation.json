@@ -1,0 +1,68 @@
+{
+  "count": 12,
+  "alpha": true,
+  "source_cells_unclipped": true,
+  "output_padding": true,
+  "sprites": [
+    {
+      "id": "sewer_wall_tall_nw",
+      "visible_pixels": 29101,
+      "edge_pixels": 0
+    },
+    {
+      "id": "sewer_wall_tall_ne",
+      "visible_pixels": 29133,
+      "edge_pixels": 0
+    },
+    {
+      "id": "sewer_wall_damaged_nw",
+      "visible_pixels": 27996,
+      "edge_pixels": 0
+    },
+    {
+      "id": "sewer_wall_damaged_ne",
+      "visible_pixels": 27044,
+      "edge_pixels": 0
+    },
+    {
+      "id": "sewer_wall_short_nw",
+      "visible_pixels": 10310,
+      "edge_pixels": 0
+    },
+    {
+      "id": "sewer_wall_short_ne",
+      "visible_pixels": 10332,
+      "edge_pixels": 0
+    },
+    {
+      "id": "sewer_mount_lamp_nw",
+      "visible_pixels": 7540,
+      "edge_pixels": 0
+    },
+    {
+      "id": "sewer_mount_lamp_ne",
+      "visible_pixels": 7260,
+      "edge_pixels": 0
+    },
+    {
+      "id": "sewer_mount_drain_nw",
+      "visible_pixels": 7382,
+      "edge_pixels": 0
+    },
+    {
+      "id": "sewer_mount_drain_ne",
+      "visible_pixels": 7484,
+      "edge_pixels": 0
+    },
+    {
+      "id": "sewer_mount_pipes_nw",
+      "visible_pixels": 3977,
+      "edge_pixels": 0
+    },
+    {
+      "id": "sewer_mount_pipes_ne",
+      "visible_pixels": 4067,
+      "edge_pixels": 0
+    }
+  ]
+}

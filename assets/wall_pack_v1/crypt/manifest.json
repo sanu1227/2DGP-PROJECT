@@ -1,0 +1,493 @@
+{
+  "version": 1,
+  "created": "2026-11-09",
+  "theme": "crypt",
+  "title": "왕실 납골당",
+  "generator": "image_gen.imagegen",
+  "coordinates": {
+    "image": "top-left; x right and y down",
+    "pico2d": "clip_rect_pico2d uses bottom-left origin",
+    "tile_footprint": {
+      "width": 224,
+      "height": 112
+    },
+    "wall_upright": 232
+  },
+  "source": {
+    "file": "source/atlas.png",
+    "width": 1448,
+    "height": 1086,
+    "sha256": "347956964f44b79ed91e6d6ff2d02f8641938e7d37f89cfa67b093524e4212d9",
+    "grid": [
+      4,
+      3
+    ],
+    "row_edges": [
+      0,
+      450,
+      714,
+      1086
+    ]
+  },
+  "placement": "Draw a floor first. Rear walls anchor at tile center; independent mounts anchor at their center. Collision belongs to the level.",
+  "atlases": {
+    "walls_crypt": {
+      "file": "atlas.png",
+      "width": 1024,
+      "height": 1152,
+      "cell_width": 256,
+      "cell_height": 384,
+      "grid": [
+        4,
+        3
+      ],
+      "sha256": "522a248093148d484ee91b54775199260d6770457abe1f352f8d58df4e615a73"
+    }
+  },
+  "sprites": {
+    "crypt_wall_tall_nw": {
+      "file": "walls/crypt_wall_tall_nw.png",
+      "kind": "wall_face",
+      "direction": "nw",
+      "width": 256,
+      "height": 384,
+      "anchor": {
+        "x": 128,
+        "y": 340
+      },
+      "atlas": "walls_crypt",
+      "clip_rect_pico2d": [
+        0,
+        768,
+        256,
+        384
+      ],
+      "source_rect": {
+        "left": 0,
+        "top": 0,
+        "width": 362,
+        "height": 450
+      },
+      "source_content_rect": {
+        "left": 106,
+        "top": 14,
+        "width": 181,
+        "height": 410
+      },
+      "content_rect": {
+        "left": 8,
+        "top": 52,
+        "width": 128,
+        "height": 288
+      },
+      "sha256": "782a5054172aa3754aeddd12254f3c8653e44cecfac5582ad9146554ab13dd1f"
+    },
+    "crypt_wall_tall_ne": {
+      "file": "walls/crypt_wall_tall_ne.png",
+      "kind": "wall_face",
+      "direction": "ne",
+      "width": 256,
+      "height": 384,
+      "anchor": {
+        "x": 128,
+        "y": 340
+      },
+      "atlas": "walls_crypt",
+      "clip_rect_pico2d": [
+        256,
+        768,
+        256,
+        384
+      ],
+      "source_rect": {
+        "left": 362,
+        "top": 0,
+        "width": 362,
+        "height": 450
+      },
+      "source_content_rect": {
+        "left": 80,
+        "top": 15,
+        "width": 175,
+        "height": 408
+      },
+      "content_rect": {
+        "left": 120,
+        "top": 52,
+        "width": 128,
+        "height": 288
+      },
+      "sha256": "8e3ab774e5845d5bca982292c0479de849a4aa7c430bc69427fc8d1b1eea9483"
+    },
+    "crypt_wall_damaged_nw": {
+      "file": "walls/crypt_wall_damaged_nw.png",
+      "kind": "wall_face",
+      "direction": "nw",
+      "width": 256,
+      "height": 384,
+      "anchor": {
+        "x": 128,
+        "y": 340
+      },
+      "atlas": "walls_crypt",
+      "clip_rect_pico2d": [
+        512,
+        768,
+        256,
+        384
+      ],
+      "source_rect": {
+        "left": 724,
+        "top": 0,
+        "width": 362,
+        "height": 450
+      },
+      "source_content_rect": {
+        "left": 105,
+        "top": 56,
+        "width": 180,
+        "height": 367
+      },
+      "content_rect": {
+        "left": 8,
+        "top": 82,
+        "width": 128,
+        "height": 258
+      },
+      "sha256": "7a6c3f0b7abca45daad11239d386141e185a107329172e694a49fc2401e12876"
+    },
+    "crypt_wall_damaged_ne": {
+      "file": "walls/crypt_wall_damaged_ne.png",
+      "kind": "wall_face",
+      "direction": "ne",
+      "width": 256,
+      "height": 384,
+      "anchor": {
+        "x": 128,
+        "y": 340
+      },
+      "atlas": "walls_crypt",
+      "clip_rect_pico2d": [
+        768,
+        768,
+        256,
+        384
+      ],
+      "source_rect": {
+        "left": 1086,
+        "top": 0,
+        "width": 362,
+        "height": 450
+      },
+      "source_content_rect": {
+        "left": 83,
+        "top": 58,
+        "width": 178,
+        "height": 366
+      },
+      "content_rect": {
+        "left": 120,
+        "top": 82,
+        "width": 128,
+        "height": 258
+      },
+      "sha256": "5bcff45a5fad553d271137b8acd009acc71376c6a777916f595215720c479e65"
+    },
+    "crypt_wall_short_nw": {
+      "file": "walls/crypt_wall_short_nw.png",
+      "kind": "wall_face",
+      "direction": "nw",
+      "width": 256,
+      "height": 384,
+      "anchor": {
+        "x": 128,
+        "y": 340
+      },
+      "atlas": "walls_crypt",
+      "clip_rect_pico2d": [
+        0,
+        384,
+        256,
+        384
+      ],
+      "source_rect": {
+        "left": 0,
+        "top": 450,
+        "width": 362,
+        "height": 264
+      },
+      "source_content_rect": {
+        "left": 106,
+        "top": 56,
+        "width": 179,
+        "height": 190
+      },
+      "content_rect": {
+        "left": 8,
+        "top": 207,
+        "width": 128,
+        "height": 133
+      },
+      "sha256": "4ce1c14a4e616c4d248a21f7bb66fdaeb74939a4d09dd8124b86a3e93ec64823"
+    },
+    "crypt_wall_short_ne": {
+      "file": "walls/crypt_wall_short_ne.png",
+      "kind": "wall_face",
+      "direction": "ne",
+      "width": 256,
+      "height": 384,
+      "anchor": {
+        "x": 128,
+        "y": 340
+      },
+      "atlas": "walls_crypt",
+      "clip_rect_pico2d": [
+        256,
+        384,
+        256,
+        384
+      ],
+      "source_rect": {
+        "left": 362,
+        "top": 450,
+        "width": 362,
+        "height": 264
+      },
+      "source_content_rect": {
+        "left": 79,
+        "top": 57,
+        "width": 177,
+        "height": 189
+      },
+      "content_rect": {
+        "left": 120,
+        "top": 207,
+        "width": 128,
+        "height": 133
+      },
+      "sha256": "18df0d3e7e2a14445b1a92055660d6e7c8e01a24fd3362e3b28196e8ca626afe"
+    },
+    "crypt_mount_sconce_nw": {
+      "file": "mounts/crypt_mount_sconce_nw.png",
+      "kind": "wall_mount",
+      "direction": "nw",
+      "width": 256,
+      "height": 384,
+      "anchor": {
+        "x": 128,
+        "y": 192
+      },
+      "atlas": "walls_crypt",
+      "clip_rect_pico2d": [
+        512,
+        384,
+        256,
+        384
+      ],
+      "source_rect": {
+        "left": 724,
+        "top": 450,
+        "width": 362,
+        "height": 264
+      },
+      "source_content_rect": {
+        "left": 94,
+        "top": 29,
+        "width": 193,
+        "height": 206
+      },
+      "content_rect": {
+        "left": 81,
+        "top": 142,
+        "width": 94,
+        "height": 100
+      },
+      "sha256": "4eff2924688eeff307d9a6ac8d1689fec606c3b3d428e05fc3fd03663f98cbd4"
+    },
+    "crypt_mount_sconce_ne": {
+      "file": "mounts/crypt_mount_sconce_ne.png",
+      "kind": "wall_mount",
+      "direction": "ne",
+      "width": 256,
+      "height": 384,
+      "anchor": {
+        "x": 128,
+        "y": 192
+      },
+      "atlas": "walls_crypt",
+      "clip_rect_pico2d": [
+        768,
+        384,
+        256,
+        384
+      ],
+      "source_rect": {
+        "left": 1086,
+        "top": 450,
+        "width": 362,
+        "height": 264
+      },
+      "source_content_rect": {
+        "left": 82,
+        "top": 28,
+        "width": 188,
+        "height": 207
+      },
+      "content_rect": {
+        "left": 81,
+        "top": 140,
+        "width": 94,
+        "height": 104
+      },
+      "sha256": "1e25ecdcb4b70f0b7c47c6f4fd75366cabfc43f9bbd0988edf4718485fa46694"
+    },
+    "crypt_mount_crest_nw": {
+      "file": "mounts/crypt_mount_crest_nw.png",
+      "kind": "wall_mount",
+      "direction": "nw",
+      "width": 256,
+      "height": 384,
+      "anchor": {
+        "x": 128,
+        "y": 192
+      },
+      "atlas": "walls_crypt",
+      "clip_rect_pico2d": [
+        0,
+        0,
+        256,
+        384
+      ],
+      "source_rect": {
+        "left": 0,
+        "top": 714,
+        "width": 362,
+        "height": 372
+      },
+      "source_content_rect": {
+        "left": 95,
+        "top": 51,
+        "width": 193,
+        "height": 280
+      },
+      "content_rect": {
+        "left": 81,
+        "top": 124,
+        "width": 94,
+        "height": 136
+      },
+      "sha256": "5ae164d526269244ddfacb5565aaf8de99dab0e9be5e6602d8135807c19f8d3c"
+    },
+    "crypt_mount_crest_ne": {
+      "file": "mounts/crypt_mount_crest_ne.png",
+      "kind": "wall_mount",
+      "direction": "ne",
+      "width": 256,
+      "height": 384,
+      "anchor": {
+        "x": 128,
+        "y": 192
+      },
+      "atlas": "walls_crypt",
+      "clip_rect_pico2d": [
+        256,
+        0,
+        256,
+        384
+      ],
+      "source_rect": {
+        "left": 362,
+        "top": 714,
+        "width": 362,
+        "height": 372
+      },
+      "source_content_rect": {
+        "left": 74,
+        "top": 51,
+        "width": 194,
+        "height": 280
+      },
+      "content_rect": {
+        "left": 81,
+        "top": 124,
+        "width": 94,
+        "height": 136
+      },
+      "sha256": "9ccd5781185246b6482ef1071f8df8f8f86c0ca3ad337df34d983aaafcfd2f67"
+    },
+    "crypt_mount_banner_nw": {
+      "file": "mounts/crypt_mount_banner_nw.png",
+      "kind": "wall_mount",
+      "direction": "nw",
+      "width": 256,
+      "height": 384,
+      "anchor": {
+        "x": 128,
+        "y": 192
+      },
+      "atlas": "walls_crypt",
+      "clip_rect_pico2d": [
+        512,
+        0,
+        256,
+        384
+      ],
+      "source_rect": {
+        "left": 724,
+        "top": 714,
+        "width": 362,
+        "height": 372
+      },
+      "source_content_rect": {
+        "left": 94,
+        "top": 19,
+        "width": 175,
+        "height": 337
+      },
+      "content_rect": {
+        "left": 92,
+        "top": 122,
+        "width": 73,
+        "height": 140
+      },
+      "sha256": "25285e5b3008d882e93f27b85c5a5589f0659188bfbaff720a80e90de725a5d4"
+    },
+    "crypt_mount_banner_ne": {
+      "file": "mounts/crypt_mount_banner_ne.png",
+      "kind": "wall_mount",
+      "direction": "ne",
+      "width": 256,
+      "height": 384,
+      "anchor": {
+        "x": 128,
+        "y": 192
+      },
+      "atlas": "walls_crypt",
+      "clip_rect_pico2d": [
+        768,
+        0,
+        256,
+        384
+      ],
+      "source_rect": {
+        "left": 1086,
+        "top": 714,
+        "width": 362,
+        "height": 372
+      },
+      "source_content_rect": {
+        "left": 88,
+        "top": 19,
+        "width": 178,
+        "height": 337
+      },
+      "content_rect": {
+        "left": 91,
+        "top": 122,
+        "width": 74,
+        "height": 140
+      },
+      "sha256": "f91cf36fb9a82e03f1c85f1ef4e426cbba0168a2bca7e6743f326acc59d582b2"
+    }
+  }
+}
