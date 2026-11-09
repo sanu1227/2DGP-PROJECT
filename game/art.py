@@ -19,7 +19,9 @@ class Art:
         self.atlas_paths = {}
         self.alpha_masks = {}
         try:
+            self.placement = json.loads((ART_ROOT.parents[1] / "data" / "sprite_placement.json").read_text(encoding="utf-8"))
             self.manifest = json.loads((ART_ROOT / "manifest.json").read_text(encoding="utf-8"))
+            self._ground_anchors(self.manifest)
             for name, entry in self.manifest["atlases"].items():
                 self.atlas_paths[name] = ART_ROOT / entry["file"]
                 self.atlases[name] = p.load_image(str(self.atlas_paths[name]))
@@ -42,12 +44,28 @@ class Art:
             raise ValueError(f"알 수 없는 맵 테마: {theme}")
         root = pack_root / theme
         manifest = json.loads((root / "manifest.json").read_text(encoding="utf-8"))
+        self._ground_anchors(manifest)
         path = root / manifest["atlases"][name]["file"]
         image = p.load_image(str(path))
         self.atlases[name] = image
         self.atlas_paths[name] = path
         self.manifest["atlases"].update(manifest["atlases"])
         self.manifest["sprites"].update(manifest["sprites"])
+
+    def _ground_anchors(self, manifest):
+        """바닥에는 밑면 중심을, 손과 HUD에는 기존 표시 기준점을 사용한다."""
+        for name, entry in manifest["sprites"].items():
+            placement = self.placement.get(name, {})
+            if "anchor" in placement:
+                x, y = placement["anchor"]
+                if not (0 <= x < entry["width"] and 0 <= y < entry["height"]):
+                    raise ValueError(f"{name}: 바닥 기준점이 이미지 밖에 있습니다.")
+                entry["display_anchor"] = entry["anchor"]
+                entry["anchor"] = {"x": x, "y": y}
+
+    def surface_height(self, name):
+        """원본 스프라이트 픽셀 단위의 지지면 높이."""
+        return self.placement.get(name, {}).get("surface_height", 0)
 
     def close(self):
         # Image 소멸자가 SDL 텍스처를 해제한다. close_canvas()보다 먼저 호출한다.
@@ -103,11 +121,11 @@ class Art:
         top = sy + (anchor["y"] - rect["top"]) * scale
         return sx + left, top - rect["height"] * scale, sx + right, top
 
-    def draw(self, name, sx, sy, scale, flip=False):
+    def draw(self, name, sx, sy, scale, flip=False, anchor=None):
         """PNG 좌상단 기준점을 pico2d의 위쪽 +y 화면 좌표로 변환한다."""
         entry = self.manifest["sprites"][name]
         width, height = entry["width"], entry["height"]
-        anchor = entry["anchor"]
+        anchor = entry["anchor"] if anchor is None else anchor
         if flip:
             self.atlases[entry["atlas"]].clip_composite_draw(
                 *entry["clip_rect_pico2d"], 0, "h",

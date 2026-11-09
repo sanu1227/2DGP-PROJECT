@@ -83,6 +83,7 @@ python -m unittest discover -v     # SDL 없이 게임 규칙 검사
 python main.py --smoke-frames 3    # 실제 창을 3프레임 표시하고 종료
 python -m tests.smoke_window      # SDL 키 이벤트로 모든 방 UI 흐름 재생
 python -m tests.smoke_click       # 실제 SDL 마우스 선택·경로·취소 검사
+python -m tests.smoke_placement   # 물건 접점·벨트/발판 높이·운반·클릭 검사
 ```
 
 | 입력 | 동작 |

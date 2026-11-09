@@ -72,7 +72,7 @@ image = p.load_image(str(ART / entry["file"]))
 def draw_at_ground(image, entry, sx, sy, scale):
     """sx, sy: pico2d 화면에서 계산한 논리 칸 바닥 중심."""
     width, height = entry["width"], entry["height"]
-    anchor = entry["anchor"]
+    anchor = entry["anchor"]  # 게임에서는 data/sprite_placement.json의 밑면 중심 보정 적용
     cx = sx + (width / 2 - anchor["x"]) * scale
     cy = sy + (anchor["y"] - height / 2) * scale
     image.draw(cx, cy, width * scale, height * scale)

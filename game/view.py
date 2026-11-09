@@ -132,7 +132,18 @@ class View:
         return y
 
     def item(self, kind, x, y, scale):
-        self.art.draw(ITEM_SPRITES[kind], x, y, scale)
+        sprite = ITEM_SPRITES[kind]
+        entry = self.art.manifest["sprites"][sprite]
+        self.art.draw(sprite, x, y, scale, anchor=entry.get("display_anchor", entry["anchor"]))
+
+    def support_height(self, game, pos):
+        """벨트·발판 위 물건과 캐릭터의 접점을 지지면에 맞춘다."""
+        if pos in game.level.plates:
+            return self.art.surface_height("plate_down" if game.plate_pressed(pos) else "plate_up")
+        if pos in game.level.belts:
+            direction = game.level.belts[pos]
+            return self.art.surface_height("conveyor_ne" if direction in ("up", "left") else "conveyor_se")
+        return 0
 
     def pick_cell(self, game, x, y):
         """UI는 제외하고 앞에 그려진 물체부터 검사한 뒤 바닥 칸을 고른다."""
@@ -210,6 +221,7 @@ class View:
                       and state.soldiers == level.posts and state.carrying is None)
         objects, labels, wall_tints = [], [], {}
         decor_draws = {}
+        decoration_cells = {tuple(entry["cell"]) for entry in scene["decorations"]} if scene else set()
         device_floor = (level.traps | level.posts | level.plates | level.gates.keys()
                         | level.chutes.keys() | set(level.chutes.values()) | level.belts.keys()
                         | level.benches | level.levers | {level.exit})
@@ -227,6 +239,9 @@ class View:
                     low_wall = low_wall_sprite(scene, pos, level)
                     if wall_sprite == "wall_low":
                         wall_sprite = low_wall
+                    if pos in decoration_cells:
+                        # 소품 아래는 속이 빈 코너나 잔해 대신 평평한 받침을 둔다.
+                        wall_sprite = low_wall = "wall_low_pier"
                     faces = boundary_walls(scene, pos, level) if scene else []
                     if scene:
                         wall_tint = tuple(scene["wall_tint"])
@@ -292,7 +307,7 @@ class View:
                 if pos in state.items:
                     objects.append((depth, 2, ITEM_SPRITES[state.items[pos]], sx, sy))
                 if pos in state.soldiers:
-                    objects.append((depth, 2, "soldier_deployed", sx + 10, sy))
+                    objects.append((depth, 2, "soldier_deployed", sx, sy))
 
         if scene:
             for mount in scene.get("wall_mounts", ()):
@@ -306,7 +321,7 @@ class View:
             for decoration in scene["decorations"]:
                 pos = tuple(decoration["cell"])
                 sx, sy = screen(pos)
-                sy += 8 * scale  # 낮은 벽/잔해 위에 올려 통행 불가 영역임을 유지한다.
+                sy += self.art.surface_height("wall_low_pier") * scale
                 sprite = decoration["sprite"]
                 objects.append((sum(pos), 1.5, sprite, sx, sy))
                 decor_draws[(sprite, sx, sy)] = scale * decoration["scale"]
@@ -329,6 +344,9 @@ class View:
                 self.art.draw(sprite, sx, sy, decor_scale)
                 # 장식의 위쪽 그림이 뒤의 이동 칸/장치 클릭을 가로채지 않는다.
                 continue
+            # 논리 칸은 높이를 더하기 전에 결정해야 클릭 대상이 옆 칸으로 밀리지 않는다.
+            if sprite in ITEM_SPRITES.values() or sprite == "player":
+                sy += self.support_height(game, pos) * scale
             if sprite.startswith("belt_"):
                 direction = sprite.removeprefix("belt_")
                 name = "conveyor_ne" if direction in ("up", "left") else "conveyor_se"

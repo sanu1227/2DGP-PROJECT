@@ -99,7 +99,9 @@ def main():
                             for sx in range(ceil(left), ceil(right)):
                                 if (display.art.hit_test(*mask[:4], (sx, sy), mask[4])
                                         and display.pick_cell(games[-1], sx, sy) == value
-                                        and (now != 1.10 or board.pick(sx, sy) != value)):
+                                        # The grounded fragment now fits inside its own tile.
+                                        # Use the tall lever to verify picking above another tile.
+                                        and (now != 2.30 or board.pick(sx, sy) != value)):
                                     candidates.append((sy, sx))
                     assert candidates, (now, value, "No visible opaque sprite pixel")
                     sy, sx = max(candidates)
