@@ -38,6 +38,12 @@
         4
       ]
     },
+    "part_replacement": {
+      "file": "sources/part-fragment.png",
+      "width": 1536,
+      "height": 1024,
+      "sha256": "3980ea80b5065ad5d08fc0d4bf76fa08fb79049abdd19e1c5a5943a8bb07bd88"
+    },
     "worker": {
       "file": "sources/worker.png",
       "width": 1254,
@@ -70,7 +76,7 @@
         4,
         4
       ],
-      "sha256": "39d33ffb1a3a7ce043ff6c5a2bcd83bba576d0b567f181083367828af07ad17d"
+      "sha256": "233a9f619f73c905b8f205ed07297af85ac175d9f36b39c87eb49a0fe820b5f0"
     },
     "worker": {
       "file": "atlases/worker.png",
@@ -535,22 +541,23 @@
       "source_rect": {
         "left": 0,
         "top": 0,
-        "width": 314,
-        "height": 314
+        "width": 1536,
+        "height": 1024
       },
       "source_content_rect": {
-        "left": 46,
-        "top": 74,
-        "width": 239,
-        "height": 230
+        "left": 395,
+        "top": 219,
+        "width": 745,
+        "height": 523
       },
+      "source_file": "sources/part-fragment.png",
       "content_rect": {
         "left": 80,
-        "top": 128,
+        "top": 153,
         "width": 96,
-        "height": 92
+        "height": 67
       },
-      "sha256": "9a1938251abacbd7fc9a4607efe1dd67e4ffff519a37e4aa68ca2895b95b13eb",
+      "sha256": "03787208fd7bc94d0983226f5d6b16578ebb0fca44d2c170bb0111540f1495eb",
       "intended_use": "prototype-art"
     },
     "bone_bundle": {

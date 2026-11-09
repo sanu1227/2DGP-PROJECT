@@ -6,6 +6,7 @@ No Pillow dependency. The --window path requires the project's pico2d installati
 
 import argparse
 import ctypes
+from datetime import date
 import gc
 import hashlib
 import json
@@ -37,7 +38,8 @@ def main():
                 raise ValueError(f"Not RGBA8: {name}")
             if digest(data) != entry["sha256"]:
                 raise ValueError(f"Hash mismatch: {name}")
-    print("PASS: 44 sprites, 3 aligned atlases, 3 sources; PNG headers and SHA-256.")
+    print(f"PASS: {len(manifest['sprites'])} sprites, {len(manifest['atlases'])} aligned atlases, "
+          f"{len(manifest['sources'])} sources; PNG headers and SHA-256.")
     if not args.window:
         return
 
@@ -74,7 +76,7 @@ def main():
         if max_error > 2:
             raise ValueError(f"Atlas clip rendering differs from individual sprites: {max_error}")
         report = {
-            "checked": "2026-11-08",
+            "checked": date.today().isoformat(),
             "manifest_sha256": digest(manifest_bytes),
             "pico2d_loaded_images": len(sprites) + len(atlases),
             "individual_sprites_drawn": len(sprites),

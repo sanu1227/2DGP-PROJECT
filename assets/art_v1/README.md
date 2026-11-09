@@ -14,12 +14,18 @@
 | `objects/` | 16 | 부품, 뼈 묶음, 운반·배치 병사, 작업대 3상태, 레버 2상태, 발판 2상태, 투입구 입·출력, 벨트 2방향, 화로 |
 | `characters/worker/` | 16 | NE·SE·SW·NW 각 방향의 대기·걷기 A·걷기 B·운반 자세 |
 | `atlases/` | 3 | 256px 셀로 재정렬한 환경·물체·캐릭터 아틀라스 |
-| `sources/` | 3 PNG + JSON | 생성 원본과 전체 프롬프트. 원본 PNG는 보존한다. |
+| `sources/` | 4 PNG + JSON | 최초 아틀라스 3장, 교체용 부품 원본 1장과 전체 프롬프트. 원본 PNG는 보존한다. |
 | `previews/` | 3 | 전체 목록, 입문 3번 방 조립 예시, 4×4 타일 연결 검토 |
 
 개별 PNG는 모두 **256×256 RGBA8**이다. 환경 아틀라스는 **1024×768**, 물체·캐릭터 아틀라스는 **1024×1024**다. 자세한 파일·크기·기준점·SHA-256·프레임 좌표는 [manifest.json](manifest.json)에 기록한다.
 
 ![전체 스프라이트 목록](previews/overview.png)
+
+### 2026-11-09 부품 교체
+
+운반 부품을 함정에서 떨어져 나온 황동 철판 조각으로 교체했다. 기존 함정과 같은 테두리, 리벳, 가시 구멍과 부러진 가시를 사용한다. `objects/part.png`와 물체 아틀라스의 해당 셀에 적용하며, 폭 96px과 바닥 기준점 `(128, 220)`은 유지한다. 파손·설치·가동 함정 타일은 기존 그림을 사용한다.
+
+내장 `image_gen`으로 제작했다. [생성 원본](sources/part-fragment.png)과 [제작·투명 배경 정리 프롬프트](sources/part-fragment-prompts.json)를 보존하며, `tools/art/build.mjs`의 교체 원본 설정으로 재빌드할 수 있다. [바닥 배치](../../docs/screenshots/stage-01-trap-fragment.png)와 [운반 화면](../../docs/screenshots/stage-01-trap-fragment-carried.png)을 실제 SDL 화면에서 확인했다.
 
 ## 좌표와 크기
 

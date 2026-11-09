@@ -1,0 +1,10 @@
+{
+  "created": "2026-11-09",
+  "generator": "built-in image_gen",
+  "transparent_background": true,
+  "output": "sources/part-fragment.png",
+  "prompts": [
+    "Use case: style-transfer. Asset type: ONE carryable BROKEN SPIKE-TRAP FRAGMENT sprite for existing 2.5D dungeon game, true alpha transparency. References 1 and 2 are the actual installed and broken spike-trap tiles. Create a fragment visibly snapped off EXACTLY THIS trap: a small irregular quarter-section of its flat bronze cover plate, one attached L-shaped riveted bronze rim, one dark circular spike socket, and one SHORT BENT BROKEN steel spike attached to that socket. TWO edges retain the machined rectangular trim; opposite edges are jagged torn metal with a visible crack. Low squat silhouette lying flat, seen in same orthographic 2:1 isometric angle, upper-left soft light. It looks like a piece of the trap lifted out for repair. This is NOT an entire tile: NO stone floor or stone base, NO complete square platform. No gear wheel, axle, engine, machinery assembly, pile, unrelated scrap, loose floating elements. Match reference weathered muted brown-bronze metal, grey steel spikes, hand-painted chunky bevels and clean broad shape language. A single coherent shard about 1/3 the width of the full trap, readable at 50 screen pixels; keep only one socket and one short bent spike so silhouette stays clear. Center isolated complete sprite with generous transparent padding. No text, no labels, no background, no checkerboard, no glow, no broad shadow. Output one transparent sprite.",
+    "Edit only the background/halo of the latest broken spike-trap FRAGMENT sprite. Preserve exactly the bronze L-rim shard with broken spike, shape, colors, view, painted details, and composition. Remove ALL the soft brown smoky glow/shadow around the object; every pixel outside the hard silhouette must be fully transparent alpha 0, including crevices around the broken edge. No ground shadow, no haze, no illumination bloom. Clean game sprite cutout with natural antialiased hard edges. Do not add a black background or checkerboard. Genuine transparent PNG."
+  ]
+}

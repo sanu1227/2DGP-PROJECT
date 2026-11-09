@@ -196,12 +196,12 @@
         256,
         256
       ],
-      "transparent_fraction": 0.9024,
+      "transparent_fraction": 0.9366,
       "content_bounds": {
         "left": 80,
-        "top": 128,
+        "top": 153,
         "width": 96,
-        "height": 92
+        "height": 67
       },
       "edge_pixels": 0
     },

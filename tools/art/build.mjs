@@ -38,6 +38,8 @@ const dimensions = {
   chute_inlet: { width: 130 }, chute_outlet: { width: 130 },
   conveyor_ne: { width: 190 }, conveyor_se: { width: 190 }, brazier: { width: 100 },
 };
+// Standalone replacements retain the original atlas slot and runtime anchor.
+const replacements = { part: 'sources/part-fragment.png' };
 const manifest = {
   version: 1, created: '2026-11-08', status: 'first-production-art-pass',
   generator: 'built-in image_gen',
@@ -105,6 +107,20 @@ for (const [group, ids] of Object.entries(groupIds)) {
     cells.push({ data, info, rect, box, id: ids[index], row, column });
   }
   const workerScale = group === 'worker' ? 176 / Math.max(...cells.map(cell => cell.box.height)) : null;
+  for (const cell of cells) {
+    const file = replacements[cell.id];
+    if (!file) continue;
+    const bytes = await fs.readFile(path.join(root, file));
+    const { data, info } = await sharp(bytes).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+    for (let p = 3; p < data.length; p += 4) if (data[p] <= alphaCutoff) data[p] = 0;
+    const box = bounds(data, info.width, info.height);
+    if (box.edge) throw new Error(`${cell.id}: replacement touches image edge`);
+    Object.assign(cell, { data, info, box, sourceFile: file,
+      rect: { left: 0, top: 0, width: info.width, height: info.height } });
+    manifest.sources[`${cell.id}_replacement`] = {
+      file, width: info.width, height: info.height, sha256: hash(bytes),
+    };
+  }
   const composites = [];
   for (const cell of cells) {
     const { id, box, info } = cell;
@@ -148,6 +164,7 @@ for (const [group, ids] of Object.entries(groupIds)) {
       file, width: size, height: size, anchor,
       atlas: group, clip_rect_pico2d: [cell.column * size, (rows - cell.row - 1) * size, size, size],
       source_rect: cell.rect, source_content_rect: { left: box.left, top: box.top, width: box.width, height: box.height },
+      ...(cell.sourceFile ? { source_file: cell.sourceFile } : {}),
       content_rect: { left, top, width, height },
       sha256: hash(bytes),
       intended_use: ['plate_up', 'plate_down', 'chute_inlet', 'chute_outlet', 'conveyor_ne', 'conveyor_se'].includes(id)
