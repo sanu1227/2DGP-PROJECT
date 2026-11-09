@@ -24,6 +24,8 @@
   },
   "stage_02": {
     "name": "왕실 납골당", "packs": ["crypt"],
+    "low_wall_variants": ["wall_low", "wall_low", "wall_low_patched", "wall_low_patched", "wall_low_chipped"],
+    "connected_low_walls": true,
     "background": [27, 22, 33], "accent": [204, 177, 227],
     "floor_tint": [250, 237, 255], "wall_tint": [189, 166, 196],
     "floors": ["crypt_floor_plain", "crypt_floor_mosaic", "crypt_floor_damaged", "crypt_floor_runner"],
@@ -45,6 +47,8 @@
   },
   "stage_03": {
     "name": "찢긴 마력 서고", "packs": ["archive"],
+    "low_wall_variants": ["wall_low", "wall_low", "wall_low_patched", "wall_low_patched", "wall_low_chipped"],
+    "connected_low_walls": true,
     "background": [22, 27, 38], "accent": [151, 192, 226],
     "floor_tint": [245, 242, 235], "wall_tint": [181, 188, 203],
     "floors": ["archive_floor_plain", "archive_floor_inlay", "archive_floor_papers", "archive_floor_runes"],
@@ -67,6 +71,8 @@
   },
   "stage_04": {
     "name": "봉인된 왕실 보관실", "packs": ["crypt", "archive"],
+    "low_wall_variants": ["wall_low", "wall_low", "wall_low_patched", "wall_low_patched", "wall_low_chipped"],
+    "connected_low_walls": true,
     "background": [27, 28, 33], "accent": [186, 197, 221],
     "floor_tint": [211, 227, 248], "wall_tint": [158, 178, 206],
     "floors": ["archive_floor_plain", "archive_floor_inlay", "crypt_floor_mosaic", "archive_floor_runes"],
@@ -88,6 +94,8 @@
   },
   "stage_05": {
     "name": "이끼 배수로", "packs": ["sewer"],
+    "low_wall_variants": ["wall_low", "wall_low_chipped", "wall_low_chipped", "wall_low_patched", "wall_low_braced"],
+    "connected_low_walls": true,
     "background": [17, 30, 28], "accent": [135, 205, 169],
     "floor_tint": [217, 249, 222], "wall_tint": [151, 185, 155],
     "floors": ["sewer_floor_plain", "sewer_floor_moss", "sewer_floor_puddle", "sewer_floor_grate"],
@@ -109,6 +117,8 @@
   },
   "stage_06": {
     "name": "침수된 운반 공장", "packs": ["forge", "sewer"],
+    "low_wall_variants": ["wall_low", "wall_low", "wall_low_chipped", "wall_low_patched", "wall_low_braced"],
+    "connected_low_walls": true,
     "background": [18, 26, 31], "accent": [135, 193, 201],
     "floor_tint": [198, 227, 239], "wall_tint": [146, 177, 186],
     "floors": ["forge_floor_plain", "forge_floor_riveted", "sewer_floor_puddle", "sewer_floor_grate"],

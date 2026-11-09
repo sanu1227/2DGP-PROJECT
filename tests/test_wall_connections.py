@@ -65,16 +65,20 @@ class WallConnectionTests(unittest.TestCase):
         levels = load_levels()
         original = deepcopy(levels)
         used = set()
-        for index, level in enumerate(levels):
+        for level in levels:
             scene = scene_for(level)
+            self.assertTrue(scene["connected_low_walls"], level.id)
+            room_sprites = set()
             for pos in level.walls:
                 sprite = low_wall_sprite(scene, pos, level)
                 self.assertIn(sprite, sprites)
                 self.assertEqual(sprite, low_wall_sprite(scene, pos, level))
-                if index:
-                    self.assertEqual(sprite, "wall_low")
-                elif 0 in pos or wall_style(pos)[0] != "rubble":
+                if 0 in pos or wall_style(pos)[0] != "rubble":
                     used.add(sprite)
+                    room_sprites.add(sprite)
+            self.assertIn("wall_low_axis_y", room_sprites, level.id)
+            self.assertTrue(any(name.startswith("wall_low_corner_") for name in room_sprites), level.id)
+            self.assertTrue(set(scene["low_wall_variants"]) & room_sprites, level.id)
         self.assertEqual(levels, original)
         self.assertTrue({"wall_low_axis_y", "wall_low_pier",
                          "wall_low_corner_nw", "wall_low_corner_ne",
