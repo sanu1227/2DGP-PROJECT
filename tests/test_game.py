@@ -20,8 +20,8 @@ DIRECTIONS = {
 # Authored walkthroughs double as regression checks for the actual room data.
 SOLUTIONS = {
     'stage_01': (
-        "down right interact right right right right down down interact down down down "
-        "left left left interact left left"
+        "down right interact right right right right down down interact down down "
+        "left left left down interact left left"
     ).split(),
     'stage_02': (
         "down down down down right right right right right right right up up up left "
@@ -267,6 +267,20 @@ class GameTests(unittest.TestCase):
                 self.game.restart()
                 self.assertEqual(self.game.state, initial)
                 self.assertEqual(self.game.history, [])
+
+    def test_first_room_activation_closes_return_route_but_preserves_exit(self):
+        self.game = Game(load_levels()[0])
+        self.go((2, 2))
+        self.act("interact")
+        self.go((6, 4))
+        self.act("interact")
+        self.go((3, 7))
+        self.assertIn(self.game.level.start, self.reachable())
+        self.act("interact")
+        self.assertNotIn(self.game.level.start, self.reachable())
+        self.assertIn(self.game.level.exit, self.reachable())
+        self.assertTrue(self.game.undo())
+        self.assertIn(self.game.level.start, self.reachable())
 
     def test_third_room_early_activation_blocks_supplies_and_undo_recovers(self):
         self.game = Game(load_levels()[2])

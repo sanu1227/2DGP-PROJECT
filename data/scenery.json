@@ -8,7 +8,7 @@
       {"sprite": "forge_gear_rack", "cell": [5, 1], "scale": 0.9},
       {"sprite": "forge_coal_forge", "cell": [7, 1], "scale": 1.0},
       {"sprite": "forge_anvil", "cell": [4, 4], "scale": 0.9},
-      {"sprite": "forge_tool_rack", "cell": [5, 4], "scale": 0.85},
+      {"sprite": "forge_tool_rack", "cell": [3, 3], "scale": 0.85},
       {"sprite": "forge_metal_crate", "cell": [5, 5], "scale": 0.8}
     ]
   },

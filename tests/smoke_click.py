@@ -30,26 +30,26 @@ def main():
         (0.25, ("right", (3, 2)), None, False),
         (0.40, None, None, False),
         (0.50, ("floor", (3, 2)), "right", True),
-        (0.55, ("floor", (3, 3)), None, True),  # Retarget before interpolation ends.
+        (0.55, ("floor", (4, 2)), None, True),  # Retarget before interpolation ends.
         (0.65, None, None, True),
-        (0.70, None, "down", True),
+        (0.70, None, "right", True),
         (0.90, None, "right", False),
-        (1.10, ("object", (2, 2)), "up", True),
+        (1.10, ("object", (2, 2)), "left", True),
         (1.30, None, "left", False),
         (1.50, ("object", (2, 2)), None, False),
         (1.60, ("floor", (3, 2)), "right", False),
-        (1.65, ("floor", (3, 3)), None, True),
-        (1.70, ("key", p.SDLK_w), "up", False),
+        (1.65, ("floor", (4, 2)), None, True),
+        (1.70, ("key", p.SDLK_a), "left", False),
         (1.90, None, None, False),
         (2.00, ("key", p.SDLK_z), "undo", False),
         (2.10, ("key", p.SDLK_r), "restart", False),
     ])
-    route = ["down"] * 6 + ["right"] * 2
+    route = ["down"] + ["right"] * 5 + ["down"] * 4 + ["left"] * 3 + ["down"]
     for index, action in enumerate(route):
         steps.append((2.3 + index * 0.2, ("object", (3, 7)) if index == 0 else None,
                       action, index + 1 < len(route)))
-    steps.extend(((4.4, ("motion", (2, 2)), None, False),
-                  (4.6, ("key", p.SDLK_ESCAPE), None, False)))
+    steps.extend(((5.3, ("motion", (2, 2)), None, False),
+                  (5.5, ("key", p.SDLK_ESCAPE), None, False)))
     now, current = 0, None
     original_init, original_events, original_update = view.View.__init__, p.get_events, p.update_canvas
 
@@ -124,7 +124,7 @@ def main():
             return
         if now == 0:
             # The transparent corner of the front wall must not steal this floor click.
-            front_floor = (1, level.height - 2)
+            front_floor = level.exit
             assert views[-1].pick_cell(games[-1], *board.screen(front_floor)) == front_floor
         assert games[-1].state == reference.state, (now, games[-1].state, reference.state)
         assert games[-1].history == reference.history
