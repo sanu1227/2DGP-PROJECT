@@ -57,6 +57,8 @@ class IsoBoard:
 def find_path(game: Game, target: Pos | None) -> list[Pos] | None:
     """현재 진입 가능한 최단 경로를 돌려준다. 시작칸은 결과에서 제외한다."""
     start = game.state.player
+    if game.failed:
+        return None
     if target == start:
         return []
     if target is None or game.state.cleared or not game.walkable(target):
@@ -102,7 +104,7 @@ class ClickNavigator:
         self.cancel()
         path = find_path(game, target)
         if path is None:
-            if not game.state.cleared:
+            if not game.state.cleared and not game.failed:
                 game.message = "이 칸까지 이동할 수 없습니다."
             return False
         if not path:
@@ -119,7 +121,7 @@ class ClickNavigator:
         """한 번에 최대 한 칸만 실행하고, 성공한 이동 액션을 반환한다."""
         if not self.active:
             return None
-        if game.state.cleared:
+        if game.state.cleared or game.failed:
             self.cancel()
             return None
         if now < self.next_step_at:
@@ -140,6 +142,6 @@ class ClickNavigator:
             return None
         self.path.pop(0)
         self.next_step_at = now + 0.18
-        if game.state.cleared or not self.path:
+        if game.state.cleared or game.failed or not self.path:
             self.cancel()
         return action

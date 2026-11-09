@@ -30,6 +30,7 @@ class Level:
     device_labels: dict[Pos, str] = field(default_factory=dict)
     chutes: dict[Pos, Pos] = field(default_factory=dict)
     belts: dict[Pos, str] = field(default_factory=dict)
+    action_limit: int | None = None
 
 
 def read_links(raw, field_name, first_name, second_name, first_tiles, second_tiles, prefix, used_ids):
@@ -78,8 +79,11 @@ def load_levels(path: Path | str | None = None) -> list[Level]:
     for index, raw in enumerate(stages, start=1):
         prefix = f"스테이지 {index}: "
         required = {"id", "title", "hint", "map"}
-        if not isinstance(raw, dict) or not required <= set(raw) or set(raw) - required - {"plate_links", "chute_links"}:
+        if not isinstance(raw, dict) or not required <= set(raw) or set(raw) - required - {"plate_links", "chute_links", "action_limit"}:
             raise ValueError(prefix + "id, title, hint, map 필드가 필요합니다.")
+        action_limit = raw.get("action_limit")
+        if action_limit is not None and (type(action_limit) is not int or action_limit <= 0):
+            raise ValueError(prefix + "action_limit는 양의 정수 또는 null이어야 합니다.")
         if any(not isinstance(raw[key], str) or not raw[key].strip() for key in ("id", "title", "hint")):
             raise ValueError(prefix + "id, title, hint는 비어 있지 않은 문자열이어야 합니다.")
         if raw["id"] in identifiers:
@@ -127,7 +131,7 @@ def load_levels(path: Path | str | None = None) -> list[Level]:
             walls=positions["#"], traps=positions["T"], levers=positions["L"],
             benches=positions["A"], posts=positions["S"], initial_items=items,
             plates=positions["F"], gates={gate: plate for plate, gate in plate_links.items()}, device_labels=labels,
-            chutes=chutes,
+            chutes=chutes, action_limit=action_limit,
             belts={pos: direction for glyph, direction in (("^", "up"), ("v", "down"), ("<", "left"), (">", "right"))
                    for pos in positions[glyph]},
         ))

@@ -34,12 +34,25 @@ class Game:
         self.history: list[State] = []
         self.message = "물건이나 장치 위에서 E를 누르세요."
 
+    @property
+    def remaining_actions(self) -> int | None:
+        limit = self.level.action_limit
+        return None if limit is None else max(0, limit - self.state.moves)
+
+    @property
+    def failed(self) -> bool:
+        # 실패 여부를 행동 수에서 계산하므로 undo로 상태와 횟수가 함께 복구된다.
+        return not self.state.cleared and self.remaining_actions == 0
+
     def act(self, action: str) -> bool:
         """성공한 상태 변경만 한 행동으로 기록한다. 실패는 안내만 바꾼다."""
         if action not in {*DIRECTIONS, "interact", "drop", "wait"}:
             raise ValueError(f"알 수 없는 행동: {action}")
         if self.state.cleared:
             self.message = "복구 완료! 다음 방으로 진행하세요."
+            return False
+        if self.failed:
+            self.message = "행동 횟수 소진! Z로 되돌리거나 R로 재시작하세요."
             return False
 
         candidate = deepcopy(self.state)
@@ -63,6 +76,8 @@ class Game:
         self.state = candidate
         if candidate.cleared:
             self.message = "던전 복구 완료! 출구로 돌아왔습니다."
+        elif self.failed:
+            self.message = "행동 횟수 소진! Z로 되돌리거나 R로 재시작하세요."
         return True
 
     def undo(self) -> bool:
@@ -74,13 +89,15 @@ class Game:
         return True
 
     def context_action(self) -> str:
+        if self.failed:
+            return "실패 — Z / Backspace: 되돌리기 · R: 재시작"
         if self.state.cleared:
             return "복구 완료! 다음 방으로 진행"
         return self._interaction(self.state)[1]
 
     def can_interact(self) -> bool:
         """현재 칸에서 E 입력으로 실제 행동을 수행할 수 있는지 반환한다."""
-        return not self.state.cleared and self._interaction(self.state)[0] is not None
+        return not self.state.cleared and not self.failed and self._interaction(self.state)[0] is not None
 
     def plate_pressed(self, pos: Pos, state: State | None = None) -> bool:
         state = self.state if state is None else state
