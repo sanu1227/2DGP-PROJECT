@@ -1,4 +1,4 @@
-"""기존 등각 화면의 클릭 좌표와 한 칸씩 실행하는 자동 이동을 관리한다.
+"""사선·3/4 탑다운 화면의 클릭 좌표와 한 칸씩 실행하는 자동 이동을 관리한다.
 
 좌표는 pico2d처럼 아래쪽 원점, 위쪽 +y이다. SDL 마우스 y는 호출부에서
 변환한다. 자동 이동은 모델의 이동 행동을 그대로 호출하므로 각 칸의
@@ -51,6 +51,44 @@ class IsoBoard:
         if 0 <= x < self.width and 0 <= y < self.height:
             return x, y
         return None
+
+
+@dataclass(frozen=True)
+class TopDownBoard:
+    """가로축을 수평으로 둔 3/4 탑다운 투영. 세로 깊이만 압축한다."""
+    width: int
+    height: int
+
+    @property
+    def cell_size(self) -> int:
+        return min(68, 880 // self.width, int(520 / (self.height * 0.65)))
+
+    @property
+    def cell_height(self) -> int:
+        return round(self.cell_size * 0.65)
+
+    @property
+    def half_width(self) -> float:
+        return self.cell_size / 2
+
+    @property
+    def half_height(self) -> float:
+        return self.cell_height / 2
+
+    @property
+    def origin(self) -> tuple[float, float]:
+        return (640 - (self.width - 1) * self.cell_size / 2,
+                425 + (self.height - 1) * self.cell_height / 2)
+
+    def screen(self, pos: tuple[float, float]) -> tuple[float, float]:
+        ox, oy = self.origin
+        return ox + pos[0] * self.cell_size, oy - pos[1] * self.cell_height
+
+    def pick(self, sx: float, sy: float) -> Pos | None:
+        ox, oy = self.origin
+        x = floor((sx - ox) / self.cell_size + 0.5)
+        y = floor((oy - sy) / self.cell_height + 0.5)
+        return (x, y) if 0 <= x < self.width and 0 <= y < self.height else None
 
 
 def find_path(game: Game, target: Pos | None) -> list[Pos] | None:

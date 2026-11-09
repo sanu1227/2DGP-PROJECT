@@ -103,6 +103,28 @@ class Art:
         top = sy + (anchor["y"] - rect["top"]) * scale
         return sx + left, top - rect["height"] * scale, sx + right, top
 
+    def draw_floor(self, name, sx, sy, half_width, half_height, tint=(255, 255, 255)):
+        """등각 바닥 윗면을 정면에 가까운 직사각형 평면에 매핑한다."""
+        entry = self.manifest["sprites"][name]
+        atlas = self.manifest["atlases"][entry["atlas"]]
+        left, bottom, _, _ = entry["clip_rect_pico2d"]
+        top = atlas["height"] - bottom - entry["height"]
+        ax, ay = entry["anchor"]["x"], entry["anchor"]["y"]
+        # 측면과 투명 테두리는 제외하고 224×112 마름모 윗면만 사용한다.
+        source = ((ax, ay - 54), (ax + 110, ay), (ax, ay + 54), (ax - 110, ay))
+        target = ((sx - half_width, sy + half_height), (sx + half_width, sy + half_height),
+                  (sx + half_width, sy - half_height), (sx - half_width, sy - half_height))
+        vertices = (p.SDL_Vertex * 4)(*[
+            p.SDL_Vertex(p.SDL_FPoint(px, p.get_canvas_height() - 1 - py),
+                         p.SDL_Color(*tint, 255),
+                         p.SDL_FPoint((left + u) / atlas["width"], (top + v) / atlas["height"]))
+            for (px, py), (u, v) in zip(target, source)
+        ])
+        indices = (ctypes.c_int * 6)(0, 1, 2, 0, 2, 3)
+        if p.SDL_RenderGeometry(p.renderer, self.atlases[entry["atlas"]].texture,
+                                vertices, 4, indices, 6) != 0:
+            raise RuntimeError("3/4 탑다운 바닥을 그리지 못했습니다.")
+
     def draw(self, name, sx, sy, scale, flip=False):
         """PNG 좌상단 기준점을 pico2d의 위쪽 +y 화면 좌표로 변환한다."""
         entry = self.manifest["sprites"][name]
