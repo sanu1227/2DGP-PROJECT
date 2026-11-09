@@ -2,6 +2,7 @@
   "stage_01": {
     "name": "무너진 정비실", "packs": ["forge"],
     "low_wall_variants": ["wall_low", "wall_low", "wall_low_chipped", "wall_low_patched", "wall_low_braced"],
+    "connected_low_walls": true,
     "background": [30, 25, 23], "accent": [230, 177, 105],
     "floor_tint": [246, 233, 216], "wall_tint": [183, 165, 144],
     "floors": ["forge_floor_plain", "forge_floor_soot", "forge_floor_riveted", "forge_floor_channel"],

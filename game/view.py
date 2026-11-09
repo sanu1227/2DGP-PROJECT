@@ -224,7 +224,7 @@ class View:
                 tile, tint = themed_floor(scene, pos, near_trap) if scene else floor_style(pos, near_trap)
                 if pos in level.walls:
                     wall_sprite, wall_tint = wall_style(pos)
-                    low_wall = low_wall_sprite(scene, pos)
+                    low_wall = low_wall_sprite(scene, pos, level)
                     if wall_sprite == "wall_low":
                         wall_sprite = low_wall
                     faces = boundary_walls(scene, pos, level) if scene else []
