@@ -1,0 +1,31 @@
+{
+  "key": "forge",
+  "title": "던전 제련소",
+  "palette": "dark charcoal basalt, aged iron reinforcing strips, large brass rivets, restrained amber highlights",
+  "motif": "sturdy stone courses with thin vertical iron reinforcement straps and a restrained brass cap",
+  "mounts": [
+    [
+      "lamp",
+      "a sturdy caged amber wall lantern on a short dark iron bracket"
+    ],
+    [
+      "vent",
+      "a square wall ventilation grille with dark iron slats and brass-riveted border"
+    ],
+    [
+      "tools",
+      "a compact dark wooden wall tool board with a hammer, tongs and wrench hanging on hooks"
+    ]
+  ],
+  "prompt": "Use case: stylized-concept. Produce one production-ready transparent PNG SPRITE ATLAS for a 2.5D isometric dungeon game. A precisely sliceable sprite sheet, not a scene.\nCanvas 2048x1536 with FOUR columns and THREE rows of equal 512x512 invisible cells. Twelve isolated assets exactly, one per cell. No gridlines, labels, captions, text, watermarks, backgrounds or checkerboards. Real alpha transparency with generous gutters. Entire objects inside their cells.\nStyle: polished hand-painted stylized dungeon game art, crisp readable chunky edges and bevels, soft upper-left lighting, orthographic isometric camera, 2 horizontal pixels for 1 vertical ground pixel. Match a small teal-hooded repair worker and worn stone dungeon. Not pixel art, not photorealistic, not flat icons. Theme: 던전 제련소. Palette: dark charcoal basalt, aged iron reinforcing strips, large brass rivets, restrained amber highlights. Wall materials: sturdy stone courses with thin vertical iron reinforcement straps and a restrained brass cap.\nIMPORTANT STRUCTURE: first SIX assets are standalone VERTICAL WALL PANELS. NO floor diamond, NO platform, NO broad floor slab below them. Actual full-height room wall, much taller than a low fence. Thin slab with narrow visible cap, vertical side edge. Straight vertical left and right ends can butt against another same panel; NO projecting pillars, posts or buttresses at ends. Clearly reveal tall vertical wall FACE, not mostly a top surface.\nNW-facing panel: visible broad interior face is a tall parallelogram. Its floor BASE line rises to the RIGHT, slope -1/2 in bitmap coordinates. Make front-face corners approximately cell-local top-left (170,120), top-right (330,40), bottom-right (330,370), bottom-left (170,450). This makes a NARROW TALL wall segment: front face width 160px and upright height 330px. Small 12-20px bevel/cap on outer side. Back/top/sides never cover the main face. Keep 30px padding.\nNE-facing panel is the opposite orientation: broad interior wall face BASE line descends to the RIGHT, slope +1/2. Front-face corners approximately top-left (182,40), top-right (342,120), bottom-right (342,450), bottom-left (182,370). Same slab thickness, material scale, wall height and lighting. Render separately, not fake flat front view. NO L-corner in these panels.\nRows/positions:\nRow 1:\n1. FULL tall wall NW facing, intact plain brick wall.\n2. FULL tall wall NE facing, exact paired design at opposite direction.\n3. DAMAGED tall wall NW facing, missing upper corner, cracked masonry, main lower wall continuous and same ground base. Only upper 25% missing, not collapsed rubble.\n4. DAMAGED tall wall NE facing, paired damage state. Same base, same scale.\nRow 2:\n1. LOW wall NW facing: exactly same base span and bottom baseline as tall version, but only one-third upright height. No floor underneath.\n2. LOW wall NE facing: paired low wall.\n3. Isolated wall-mounted attachment NW facing: a sturdy caged amber wall lantern on a short dark iron bracket. No host wall behind it.\n4. SAME wall-mounted attachment NE facing, paired orientation. No host wall.\nRow 3:\n1. Isolated wall-mounted attachment NW facing: a square wall ventilation grille with dark iron slats and brass-riveted border. No host wall.\n2. SAME attachment NE facing. No host wall.\n3. Isolated wall-mounted attachment NW facing: a compact dark wooden wall tool board with a hammer, tongs and wrench hanging on hooks. No host wall.\n4. SAME attachment NE facing. No host wall.\nThe SIX wall attachments in last six cells are independently placeable overlays: each mounts flush to the corresponding slanted vertical wall plane, follows the same isometric wall-face direction, floats centered in its cell on alpha with NO pedestal/ground/plinth/wall rectangle. NO lettering. Keep all attachments comfortably inside each cell.\nTwelve assets only, clean transparent gutters, no floor tiles. Walls look room-height, narrow tall proportions, consistent geometric base span.",
+  "source": "C:\\Users\\rlato\\.codex\\generated_images\\01a1b687-e26d-7ea3-b454-1f4f934a7b88\\exec-0d397972-bada-4ade-9f94-37f3cdf2a4fd.png",
+  "grid": {
+    "columns": 4,
+    "rows": 3
+  },
+  "generation": {
+    "tool": "image_gen.imagegen",
+    "date": "2026-11-09",
+    "transparent_background": true
+  }
+}

@@ -1,0 +1,493 @@
+{
+  "version": 1,
+  "created": "2026-11-09",
+  "theme": "archive",
+  "title": "마력 서고",
+  "generator": "image_gen.imagegen",
+  "coordinates": {
+    "image": "top-left; x right and y down",
+    "pico2d": "clip_rect_pico2d uses bottom-left origin",
+    "tile_footprint": {
+      "width": 224,
+      "height": 112
+    },
+    "wall_upright": 232
+  },
+  "source": {
+    "file": "source/atlas.png",
+    "width": 1448,
+    "height": 1086,
+    "sha256": "bdd8455e6c3affd91e811bdc15d33a6a1a83c733d35d24e427666349b0f4e91b",
+    "grid": [
+      4,
+      3
+    ],
+    "row_edges": [
+      0,
+      413,
+      706,
+      1086
+    ]
+  },
+  "placement": "Draw a floor first. Rear walls anchor at tile center; independent mounts anchor at their center. Collision belongs to the level.",
+  "atlases": {
+    "walls_archive": {
+      "file": "atlas.png",
+      "width": 1024,
+      "height": 1152,
+      "cell_width": 256,
+      "cell_height": 384,
+      "grid": [
+        4,
+        3
+      ],
+      "sha256": "458565e2d5fcb04fce1e13183e73de80294b6c245f2db14ccdf7f0f3ea011e3f"
+    }
+  },
+  "sprites": {
+    "archive_wall_tall_nw": {
+      "file": "walls/archive_wall_tall_nw.png",
+      "kind": "wall_face",
+      "direction": "nw",
+      "width": 256,
+      "height": 384,
+      "anchor": {
+        "x": 128,
+        "y": 340
+      },
+      "atlas": "walls_archive",
+      "clip_rect_pico2d": [
+        0,
+        768,
+        256,
+        384
+      ],
+      "source_rect": {
+        "left": 0,
+        "top": 0,
+        "width": 362,
+        "height": 413
+      },
+      "source_content_rect": {
+        "left": 117,
+        "top": 25,
+        "width": 158,
+        "height": 347
+      },
+      "content_rect": {
+        "left": 8,
+        "top": 52,
+        "width": 128,
+        "height": 288
+      },
+      "sha256": "060c9cdde97993f67acafe8efcfda0bb30151ab84157fec269f85e5843211c7e"
+    },
+    "archive_wall_tall_ne": {
+      "file": "walls/archive_wall_tall_ne.png",
+      "kind": "wall_face",
+      "direction": "ne",
+      "width": 256,
+      "height": 384,
+      "anchor": {
+        "x": 128,
+        "y": 340
+      },
+      "atlas": "walls_archive",
+      "clip_rect_pico2d": [
+        256,
+        768,
+        256,
+        384
+      ],
+      "source_rect": {
+        "left": 362,
+        "top": 0,
+        "width": 362,
+        "height": 413
+      },
+      "source_content_rect": {
+        "left": 91,
+        "top": 26,
+        "width": 154,
+        "height": 347
+      },
+      "content_rect": {
+        "left": 120,
+        "top": 52,
+        "width": 128,
+        "height": 288
+      },
+      "sha256": "d4f0b7b6eb0d58c18b1e05f3d8c35d34fcccafb9f31310aca666647b1ab56d29"
+    },
+    "archive_wall_damaged_nw": {
+      "file": "walls/archive_wall_damaged_nw.png",
+      "kind": "wall_face",
+      "direction": "nw",
+      "width": 256,
+      "height": 384,
+      "anchor": {
+        "x": 128,
+        "y": 340
+      },
+      "atlas": "walls_archive",
+      "clip_rect_pico2d": [
+        512,
+        768,
+        256,
+        384
+      ],
+      "source_rect": {
+        "left": 724,
+        "top": 0,
+        "width": 362,
+        "height": 413
+      },
+      "source_content_rect": {
+        "left": 118,
+        "top": 54,
+        "width": 153,
+        "height": 318
+      },
+      "content_rect": {
+        "left": 8,
+        "top": 76,
+        "width": 128,
+        "height": 264
+      },
+      "sha256": "4c48ba67cdc7b897a07b52c01a6ddc38e645238cda9da7aca02f8fd90bb4f104"
+    },
+    "archive_wall_damaged_ne": {
+      "file": "walls/archive_wall_damaged_ne.png",
+      "kind": "wall_face",
+      "direction": "ne",
+      "width": 256,
+      "height": 384,
+      "anchor": {
+        "x": 128,
+        "y": 340
+      },
+      "atlas": "walls_archive",
+      "clip_rect_pico2d": [
+        768,
+        768,
+        256,
+        384
+      ],
+      "source_rect": {
+        "left": 1086,
+        "top": 0,
+        "width": 362,
+        "height": 413
+      },
+      "source_content_rect": {
+        "left": 91,
+        "top": 57,
+        "width": 155,
+        "height": 315
+      },
+      "content_rect": {
+        "left": 120,
+        "top": 79,
+        "width": 128,
+        "height": 261
+      },
+      "sha256": "465a657656074fa7d74a61c288aa2e8a1b3030671e78a69ce5c3c3784c952acb"
+    },
+    "archive_wall_short_nw": {
+      "file": "walls/archive_wall_short_nw.png",
+      "kind": "wall_face",
+      "direction": "nw",
+      "width": 256,
+      "height": 384,
+      "anchor": {
+        "x": 128,
+        "y": 340
+      },
+      "atlas": "walls_archive",
+      "clip_rect_pico2d": [
+        0,
+        384,
+        256,
+        384
+      ],
+      "source_rect": {
+        "left": 0,
+        "top": 413,
+        "width": 362,
+        "height": 293
+      },
+      "source_content_rect": {
+        "left": 120,
+        "top": 74,
+        "width": 159,
+        "height": 186
+      },
+      "content_rect": {
+        "left": 8,
+        "top": 186,
+        "width": 128,
+        "height": 154
+      },
+      "sha256": "731d942fe509cdfa3ab4ee05df424e1c57b0527e2ffdf616243bb0c68bac8e93"
+    },
+    "archive_wall_short_ne": {
+      "file": "walls/archive_wall_short_ne.png",
+      "kind": "wall_face",
+      "direction": "ne",
+      "width": 256,
+      "height": 384,
+      "anchor": {
+        "x": 128,
+        "y": 340
+      },
+      "atlas": "walls_archive",
+      "clip_rect_pico2d": [
+        256,
+        384,
+        256,
+        384
+      ],
+      "source_rect": {
+        "left": 362,
+        "top": 413,
+        "width": 362,
+        "height": 293
+      },
+      "source_content_rect": {
+        "left": 84,
+        "top": 75,
+        "width": 161,
+        "height": 185
+      },
+      "content_rect": {
+        "left": 120,
+        "top": 186,
+        "width": 128,
+        "height": 154
+      },
+      "sha256": "6907ee8093cdd27c3e6646614a605949ccbfd3a4a2c9276fd1f1ac35ed1de212"
+    },
+    "archive_mount_sconce_nw": {
+      "file": "mounts/archive_mount_sconce_nw.png",
+      "kind": "wall_mount",
+      "direction": "nw",
+      "width": 256,
+      "height": 384,
+      "anchor": {
+        "x": 128,
+        "y": 192
+      },
+      "atlas": "walls_archive",
+      "clip_rect_pico2d": [
+        512,
+        384,
+        256,
+        384
+      ],
+      "source_rect": {
+        "left": 724,
+        "top": 413,
+        "width": 362,
+        "height": 293
+      },
+      "source_content_rect": {
+        "left": 129,
+        "top": 41,
+        "width": 117,
+        "height": 191
+      },
+      "content_rect": {
+        "left": 85,
+        "top": 122,
+        "width": 86,
+        "height": 140
+      },
+      "sha256": "2913b1f14359219df709386c2cac7f47450f2dcb37b2d920ca177adc29186a28"
+    },
+    "archive_mount_sconce_ne": {
+      "file": "mounts/archive_mount_sconce_ne.png",
+      "kind": "wall_mount",
+      "direction": "ne",
+      "width": 256,
+      "height": 384,
+      "anchor": {
+        "x": 128,
+        "y": 192
+      },
+      "atlas": "walls_archive",
+      "clip_rect_pico2d": [
+        768,
+        384,
+        256,
+        384
+      ],
+      "source_rect": {
+        "left": 1086,
+        "top": 413,
+        "width": 362,
+        "height": 293
+      },
+      "source_content_rect": {
+        "left": 116,
+        "top": 42,
+        "width": 115,
+        "height": 191
+      },
+      "content_rect": {
+        "left": 86,
+        "top": 122,
+        "width": 84,
+        "height": 140
+      },
+      "sha256": "503e8f24d792f41278908172bb315b3c24f6c6fb9c4c0f8a8052b8c7dc7c3d08"
+    },
+    "archive_mount_niche_nw": {
+      "file": "mounts/archive_mount_niche_nw.png",
+      "kind": "wall_mount",
+      "direction": "nw",
+      "width": 256,
+      "height": 384,
+      "anchor": {
+        "x": 128,
+        "y": 192
+      },
+      "atlas": "walls_archive",
+      "clip_rect_pico2d": [
+        0,
+        0,
+        256,
+        384
+      ],
+      "source_rect": {
+        "left": 0,
+        "top": 706,
+        "width": 362,
+        "height": 380
+      },
+      "source_content_rect": {
+        "left": 112,
+        "top": 79,
+        "width": 164,
+        "height": 254
+      },
+      "content_rect": {
+        "left": 83,
+        "top": 122,
+        "width": 90,
+        "height": 140
+      },
+      "sha256": "3a10a020fb2cbb8a7e106b91f316704fd6d323784013a6a26340ad95e8881688"
+    },
+    "archive_mount_niche_ne": {
+      "file": "mounts/archive_mount_niche_ne.png",
+      "kind": "wall_mount",
+      "direction": "ne",
+      "width": 256,
+      "height": 384,
+      "anchor": {
+        "x": 128,
+        "y": 192
+      },
+      "atlas": "walls_archive",
+      "clip_rect_pico2d": [
+        256,
+        0,
+        256,
+        384
+      ],
+      "source_rect": {
+        "left": 362,
+        "top": 706,
+        "width": 362,
+        "height": 380
+      },
+      "source_content_rect": {
+        "left": 88,
+        "top": 80,
+        "width": 163,
+        "height": 253
+      },
+      "content_rect": {
+        "left": 83,
+        "top": 122,
+        "width": 90,
+        "height": 140
+      },
+      "sha256": "effac84a386eab4288ea530dbfd6639debed3692fbc7335c244e218f496fe4c6"
+    },
+    "archive_mount_banner_nw": {
+      "file": "mounts/archive_mount_banner_nw.png",
+      "kind": "wall_mount",
+      "direction": "nw",
+      "width": 256,
+      "height": 384,
+      "anchor": {
+        "x": 128,
+        "y": 192
+      },
+      "atlas": "walls_archive",
+      "clip_rect_pico2d": [
+        512,
+        0,
+        256,
+        384
+      ],
+      "source_rect": {
+        "left": 724,
+        "top": 706,
+        "width": 362,
+        "height": 380
+      },
+      "source_content_rect": {
+        "left": 112,
+        "top": 35,
+        "width": 154,
+        "height": 322
+      },
+      "content_rect": {
+        "left": 95,
+        "top": 122,
+        "width": 67,
+        "height": 140
+      },
+      "sha256": "356dd8beca92470e0ac09687a4a4988c12d607d79b83153ed1e9b92f7f0a3410"
+    },
+    "archive_mount_banner_ne": {
+      "file": "mounts/archive_mount_banner_ne.png",
+      "kind": "wall_mount",
+      "direction": "ne",
+      "width": 256,
+      "height": 384,
+      "anchor": {
+        "x": 128,
+        "y": 192
+      },
+      "atlas": "walls_archive",
+      "clip_rect_pico2d": [
+        768,
+        0,
+        256,
+        384
+      ],
+      "source_rect": {
+        "left": 1086,
+        "top": 706,
+        "width": 362,
+        "height": 380
+      },
+      "source_content_rect": {
+        "left": 93,
+        "top": 36,
+        "width": 153,
+        "height": 323
+      },
+      "content_rect": {
+        "left": 95,
+        "top": 122,
+        "width": 66,
+        "height": 140
+      },
+      "sha256": "3f007ece31d5e4b0ff73e1b9bc936bf1cc821e70eb44d2a0b4a6c8334b4fbcb7"
+    }
+  }
+}

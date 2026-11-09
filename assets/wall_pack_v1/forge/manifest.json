@@ -1,0 +1,493 @@
+{
+  "version": 1,
+  "created": "2026-11-09",
+  "theme": "forge",
+  "title": "던전 제련소",
+  "generator": "image_gen.imagegen",
+  "coordinates": {
+    "image": "top-left; x right and y down",
+    "pico2d": "clip_rect_pico2d uses bottom-left origin",
+    "tile_footprint": {
+      "width": 224,
+      "height": 112
+    },
+    "wall_upright": 232
+  },
+  "source": {
+    "file": "source/atlas.png",
+    "width": 1448,
+    "height": 1086,
+    "sha256": "8a247975e7de1016818be6e3f2f906f0e1423eab2d88ff228b71658fefc7f270",
+    "grid": [
+      4,
+      3
+    ],
+    "row_edges": [
+      0,
+      388,
+      732,
+      1086
+    ]
+  },
+  "placement": "Draw a floor first. Rear walls anchor at tile center; independent mounts anchor at their center. Collision belongs to the level.",
+  "atlases": {
+    "walls_forge": {
+      "file": "atlas.png",
+      "width": 1024,
+      "height": 1152,
+      "cell_width": 256,
+      "cell_height": 384,
+      "grid": [
+        4,
+        3
+      ],
+      "sha256": "5a09bd4a550c3edfd1b1e550a4a9cde5ff89efb807fbaf9ddbaa782b5034527d"
+    }
+  },
+  "sprites": {
+    "forge_wall_tall_nw": {
+      "file": "walls/forge_wall_tall_nw.png",
+      "kind": "wall_face",
+      "direction": "nw",
+      "width": 256,
+      "height": 384,
+      "anchor": {
+        "x": 128,
+        "y": 340
+      },
+      "atlas": "walls_forge",
+      "clip_rect_pico2d": [
+        0,
+        768,
+        256,
+        384
+      ],
+      "source_rect": {
+        "left": 0,
+        "top": 0,
+        "width": 362,
+        "height": 388
+      },
+      "source_content_rect": {
+        "left": 125,
+        "top": 21,
+        "width": 160,
+        "height": 346
+      },
+      "content_rect": {
+        "left": 8,
+        "top": 52,
+        "width": 128,
+        "height": 288
+      },
+      "sha256": "f77f90d87ea828546e6488469e243dcec248f5d96b483aed3bf363f4c91f61ac"
+    },
+    "forge_wall_tall_ne": {
+      "file": "walls/forge_wall_tall_ne.png",
+      "kind": "wall_face",
+      "direction": "ne",
+      "width": 256,
+      "height": 384,
+      "anchor": {
+        "x": 128,
+        "y": 340
+      },
+      "atlas": "walls_forge",
+      "clip_rect_pico2d": [
+        256,
+        768,
+        256,
+        384
+      ],
+      "source_rect": {
+        "left": 362,
+        "top": 0,
+        "width": 362,
+        "height": 388
+      },
+      "source_content_rect": {
+        "left": 86,
+        "top": 24,
+        "width": 161,
+        "height": 343
+      },
+      "content_rect": {
+        "left": 120,
+        "top": 52,
+        "width": 128,
+        "height": 288
+      },
+      "sha256": "978eb86470dd8dc5f32cb615902fd8e117725e43d36d93516a3c273e22ea391b"
+    },
+    "forge_wall_damaged_nw": {
+      "file": "walls/forge_wall_damaged_nw.png",
+      "kind": "wall_face",
+      "direction": "nw",
+      "width": 256,
+      "height": 384,
+      "anchor": {
+        "x": 128,
+        "y": 340
+      },
+      "atlas": "walls_forge",
+      "clip_rect_pico2d": [
+        512,
+        768,
+        256,
+        384
+      ],
+      "source_rect": {
+        "left": 724,
+        "top": 0,
+        "width": 362,
+        "height": 388
+      },
+      "source_content_rect": {
+        "left": 119,
+        "top": 59,
+        "width": 156,
+        "height": 307
+      },
+      "content_rect": {
+        "left": 8,
+        "top": 84,
+        "width": 128,
+        "height": 256
+      },
+      "sha256": "0e9b2e1741c2fbad2d35b5aef2d3859b009ff538681b249d281ed9768835bc92"
+    },
+    "forge_wall_damaged_ne": {
+      "file": "walls/forge_wall_damaged_ne.png",
+      "kind": "wall_face",
+      "direction": "ne",
+      "width": 256,
+      "height": 384,
+      "anchor": {
+        "x": 128,
+        "y": 340
+      },
+      "atlas": "walls_forge",
+      "clip_rect_pico2d": [
+        768,
+        768,
+        256,
+        384
+      ],
+      "source_rect": {
+        "left": 1086,
+        "top": 0,
+        "width": 362,
+        "height": 388
+      },
+      "source_content_rect": {
+        "left": 86,
+        "top": 60,
+        "width": 156,
+        "height": 307
+      },
+      "content_rect": {
+        "left": 120,
+        "top": 82,
+        "width": 128,
+        "height": 258
+      },
+      "sha256": "e79668a1c7ce48ea19eef37cb7aeb266fcce9435e70737b5c17bb075024d5b7f"
+    },
+    "forge_wall_short_nw": {
+      "file": "walls/forge_wall_short_nw.png",
+      "kind": "wall_face",
+      "direction": "nw",
+      "width": 256,
+      "height": 384,
+      "anchor": {
+        "x": 128,
+        "y": 340
+      },
+      "atlas": "walls_forge",
+      "clip_rect_pico2d": [
+        0,
+        384,
+        256,
+        384
+      ],
+      "source_rect": {
+        "left": 0,
+        "top": 388,
+        "width": 362,
+        "height": 344
+      },
+      "source_content_rect": {
+        "left": 124,
+        "top": 127,
+        "width": 165,
+        "height": 187
+      },
+      "content_rect": {
+        "left": 8,
+        "top": 184,
+        "width": 128,
+        "height": 156
+      },
+      "sha256": "93ba80743afadcc4d09d30bcbc6ff33a04f177af06572aee71901e3373cf4710"
+    },
+    "forge_wall_short_ne": {
+      "file": "walls/forge_wall_short_ne.png",
+      "kind": "wall_face",
+      "direction": "ne",
+      "width": 256,
+      "height": 384,
+      "anchor": {
+        "x": 128,
+        "y": 340
+      },
+      "atlas": "walls_forge",
+      "clip_rect_pico2d": [
+        256,
+        384,
+        256,
+        384
+      ],
+      "source_rect": {
+        "left": 362,
+        "top": 388,
+        "width": 362,
+        "height": 344
+      },
+      "source_content_rect": {
+        "left": 81,
+        "top": 127,
+        "width": 166,
+        "height": 186
+      },
+      "content_rect": {
+        "left": 120,
+        "top": 184,
+        "width": 128,
+        "height": 156
+      },
+      "sha256": "53c36c10612bd229c129da6107c00f226078774c834c0eafef23a8e885471467"
+    },
+    "forge_mount_lamp_nw": {
+      "file": "mounts/forge_mount_lamp_nw.png",
+      "kind": "wall_mount",
+      "direction": "nw",
+      "width": 256,
+      "height": 384,
+      "anchor": {
+        "x": 128,
+        "y": 192
+      },
+      "atlas": "walls_forge",
+      "clip_rect_pico2d": [
+        512,
+        384,
+        256,
+        384
+      ],
+      "source_rect": {
+        "left": 724,
+        "top": 388,
+        "width": 362,
+        "height": 344
+      },
+      "source_content_rect": {
+        "left": 79,
+        "top": 22,
+        "width": 196,
+        "height": 280
+      },
+      "content_rect": {
+        "left": 81,
+        "top": 125,
+        "width": 94,
+        "height": 134
+      },
+      "sha256": "71fd04c6ebdab35f027105e96c3ff7c1df61832b4ce392f28bfa112dbe5920da"
+    },
+    "forge_mount_lamp_ne": {
+      "file": "mounts/forge_mount_lamp_ne.png",
+      "kind": "wall_mount",
+      "direction": "ne",
+      "width": 256,
+      "height": 384,
+      "anchor": {
+        "x": 128,
+        "y": 192
+      },
+      "atlas": "walls_forge",
+      "clip_rect_pico2d": [
+        768,
+        384,
+        256,
+        384
+      ],
+      "source_rect": {
+        "left": 1086,
+        "top": 388,
+        "width": 362,
+        "height": 344
+      },
+      "source_content_rect": {
+        "left": 87,
+        "top": 29,
+        "width": 193,
+        "height": 275
+      },
+      "content_rect": {
+        "left": 81,
+        "top": 125,
+        "width": 94,
+        "height": 134
+      },
+      "sha256": "7c49260ea4dcb31955222cb73225cd8cc53868bf1d0f02cdab36ef3887c37bd6"
+    },
+    "forge_mount_vent_nw": {
+      "file": "mounts/forge_mount_vent_nw.png",
+      "kind": "wall_mount",
+      "direction": "nw",
+      "width": 256,
+      "height": 384,
+      "anchor": {
+        "x": 128,
+        "y": 192
+      },
+      "atlas": "walls_forge",
+      "clip_rect_pico2d": [
+        0,
+        0,
+        256,
+        384
+      ],
+      "source_rect": {
+        "left": 0,
+        "top": 732,
+        "width": 362,
+        "height": 354
+      },
+      "source_content_rect": {
+        "left": 111,
+        "top": 42,
+        "width": 161,
+        "height": 256
+      },
+      "content_rect": {
+        "left": 84,
+        "top": 122,
+        "width": 88,
+        "height": 140
+      },
+      "sha256": "e0e6233e107b1bcacb872acc7afc41bfd91dcdf185ca3bc313afc5038dcd79bb"
+    },
+    "forge_mount_vent_ne": {
+      "file": "mounts/forge_mount_vent_ne.png",
+      "kind": "wall_mount",
+      "direction": "ne",
+      "width": 256,
+      "height": 384,
+      "anchor": {
+        "x": 128,
+        "y": 192
+      },
+      "atlas": "walls_forge",
+      "clip_rect_pico2d": [
+        256,
+        0,
+        256,
+        384
+      ],
+      "source_rect": {
+        "left": 362,
+        "top": 732,
+        "width": 362,
+        "height": 354
+      },
+      "source_content_rect": {
+        "left": 90,
+        "top": 41,
+        "width": 163,
+        "height": 258
+      },
+      "content_rect": {
+        "left": 84,
+        "top": 122,
+        "width": 88,
+        "height": 140
+      },
+      "sha256": "31bc2d557c56cf31a233f1c7e9844a739c4299875b3c55f58c617c67bfeaa33a"
+    },
+    "forge_mount_tools_nw": {
+      "file": "mounts/forge_mount_tools_nw.png",
+      "kind": "wall_mount",
+      "direction": "nw",
+      "width": 256,
+      "height": 384,
+      "anchor": {
+        "x": 128,
+        "y": 192
+      },
+      "atlas": "walls_forge",
+      "clip_rect_pico2d": [
+        512,
+        0,
+        256,
+        384
+      ],
+      "source_rect": {
+        "left": 724,
+        "top": 732,
+        "width": 362,
+        "height": 354
+      },
+      "source_content_rect": {
+        "left": 75,
+        "top": 31,
+        "width": 201,
+        "height": 273
+      },
+      "content_rect": {
+        "left": 81,
+        "top": 128,
+        "width": 94,
+        "height": 128
+      },
+      "sha256": "bb7f4c8089f30d0aeb8b533749858c0a68706ccc141c0543db5b0bdec39ec3c9"
+    },
+    "forge_mount_tools_ne": {
+      "file": "mounts/forge_mount_tools_ne.png",
+      "kind": "wall_mount",
+      "direction": "ne",
+      "width": 256,
+      "height": 384,
+      "anchor": {
+        "x": 128,
+        "y": 192
+      },
+      "atlas": "walls_forge",
+      "clip_rect_pico2d": [
+        768,
+        0,
+        256,
+        384
+      ],
+      "source_rect": {
+        "left": 1086,
+        "top": 732,
+        "width": 362,
+        "height": 354
+      },
+      "source_content_rect": {
+        "left": 90,
+        "top": 34,
+        "width": 196,
+        "height": 270
+      },
+      "content_rect": {
+        "left": 81,
+        "top": 128,
+        "width": 94,
+        "height": 129
+      },
+      "sha256": "1e596ea10f47331bbd57ffca2ad194c0460809b21d26f70aa8cc97b6153d7f88"
+    }
+  }
+}

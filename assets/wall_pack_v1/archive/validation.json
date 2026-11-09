@@ -1,0 +1,68 @@
+{
+  "count": 12,
+  "alpha": true,
+  "source_cells_unclipped": true,
+  "output_padding": true,
+  "sprites": [
+    {
+      "id": "archive_wall_tall_nw",
+      "visible_pixels": 29619,
+      "edge_pixels": 0
+    },
+    {
+      "id": "archive_wall_tall_ne",
+      "visible_pixels": 29967,
+      "edge_pixels": 0
+    },
+    {
+      "id": "archive_wall_damaged_nw",
+      "visible_pixels": 27066,
+      "edge_pixels": 0
+    },
+    {
+      "id": "archive_wall_damaged_ne",
+      "visible_pixels": 25939,
+      "edge_pixels": 0
+    },
+    {
+      "id": "archive_wall_short_nw",
+      "visible_pixels": 12718,
+      "edge_pixels": 0
+    },
+    {
+      "id": "archive_wall_short_ne",
+      "visible_pixels": 12531,
+      "edge_pixels": 0
+    },
+    {
+      "id": "archive_mount_sconce_nw",
+      "visible_pixels": 7590,
+      "edge_pixels": 0
+    },
+    {
+      "id": "archive_mount_sconce_ne",
+      "visible_pixels": 7461,
+      "edge_pixels": 0
+    },
+    {
+      "id": "archive_mount_niche_nw",
+      "visible_pixels": 9271,
+      "edge_pixels": 0
+    },
+    {
+      "id": "archive_mount_niche_ne",
+      "visible_pixels": 9274,
+      "edge_pixels": 0
+    },
+    {
+      "id": "archive_mount_banner_nw",
+      "visible_pixels": 4408,
+      "edge_pixels": 0
+    },
+    {
+      "id": "archive_mount_banner_ne",
+      "visible_pixels": 4430,
+      "edge_pixels": 0
+    }
+  ]
+}

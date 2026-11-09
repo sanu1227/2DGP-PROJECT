@@ -1,0 +1,68 @@
+{
+  "count": 12,
+  "alpha": true,
+  "source_cells_unclipped": true,
+  "output_padding": true,
+  "sprites": [
+    {
+      "id": "forge_wall_tall_nw",
+      "visible_pixels": 29114,
+      "edge_pixels": 0
+    },
+    {
+      "id": "forge_wall_tall_ne",
+      "visible_pixels": 29790,
+      "edge_pixels": 0
+    },
+    {
+      "id": "forge_wall_damaged_nw",
+      "visible_pixels": 26229,
+      "edge_pixels": 0
+    },
+    {
+      "id": "forge_wall_damaged_ne",
+      "visible_pixels": 26274,
+      "edge_pixels": 0
+    },
+    {
+      "id": "forge_wall_short_nw",
+      "visible_pixels": 12398,
+      "edge_pixels": 0
+    },
+    {
+      "id": "forge_wall_short_ne",
+      "visible_pixels": 12656,
+      "edge_pixels": 0
+    },
+    {
+      "id": "forge_mount_lamp_nw",
+      "visible_pixels": 6747,
+      "edge_pixels": 0
+    },
+    {
+      "id": "forge_mount_lamp_ne",
+      "visible_pixels": 6835,
+      "edge_pixels": 0
+    },
+    {
+      "id": "forge_mount_vent_nw",
+      "visible_pixels": 9202,
+      "edge_pixels": 0
+    },
+    {
+      "id": "forge_mount_vent_ne",
+      "visible_pixels": 9078,
+      "edge_pixels": 0
+    },
+    {
+      "id": "forge_mount_tools_nw",
+      "visible_pixels": 8421,
+      "edge_pixels": 0
+    },
+    {
+      "id": "forge_mount_tools_ne",
+      "visible_pixels": 8468,
+      "edge_pixels": 0
+    }
+  ]
+}
