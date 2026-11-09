@@ -21,6 +21,7 @@ RED = (232, 119, 105)
 ITEM_NAMES = {None: "빈손", "part": "함정 부품", "bone": "뼈 묶음", "soldier": "해골 병사"}
 ITEM_SPRITES = {"part": "part", "bone": "bone_bundle", "soldier": "soldier_carried"}
 FACING = {"up": "ne", "right": "se", "down": "sw", "left": "nw"}
+GATE_SECONDS = 0.36
 
 
 def font_path() -> str:
@@ -71,6 +72,8 @@ class View:
         self.show_coordinates = False
         self.hit_regions = []
         self.hit_masks = {}
+        self.gate_hit_masks = {}
+        self.reset_gates()
         self.reset_player()
         try:
             path = font_path()
@@ -88,6 +91,22 @@ class View:
         for font in self.fonts.values():
             p.TTF_CloseFont(font.font)
         self.fonts.clear()
+
+    def reset_gates(self):
+        self.gate_game = None
+        self.gate_motions = {}
+
+    def gate_opening(self, pos, target, now):
+        motion = self.gate_motions.get(pos)
+        if motion is None:
+            self.gate_motions[pos] = (target, target, now, 0)
+            return target
+        start, end, began, duration = motion
+        t = min(1, max(0, (now - began) / duration)) if duration else 1
+        value = start + (end - start) * t * t * (3 - 2 * t)
+        if end != target:
+            self.gate_motions[pos] = (value, target, now, GATE_SECONDS * abs(target - value))
+        return value
 
     def reset_player(self):
         self.facing = "se"
@@ -152,6 +171,12 @@ class View:
         for pos, (left, bottom, right, top) in reversed(self.hit_regions):
             if left <= x < right and bottom <= y < top:
                 mask = self.hit_masks.get((pos, (left, bottom, right, top)))
+                gate_mask = self.gate_hit_masks.get((pos, (left, bottom, right, top)))
+                if gate_mask:
+                    sx, sy, scale, opening, flip = gate_mask
+                    if not self.art.gate_hit_test(sx, sy, scale, (x, y), opening, flip):
+                        continue
+                    return pos
                 if mask:
                     sprite, sx, sy, scale, flip = mask
                     if not self.art.hit_test(sprite, sx, sy, scale, (x, y), flip):
@@ -229,18 +254,26 @@ class View:
         if hovered in targets and hovered != state.player:
             self.interaction_hint = f"상호작용 대상: {targets[hovered]} · 해당 칸에서 E"
 
-    def gate(self, level, pos, sx, sy, scale, status):
+    def gate(self, level, pos, sx, sy, scale, status, opening=None):
         """문틀의 사선 축을 양옆 벽에 맞추고 열린 중앙은 클릭을 통과시킨다."""
         x, y = pos
         along_x = sum(cell in level.walls for cell in ((x - 1, y), (x + 1, y)))
         along_y = sum(cell in level.walls for cell in ((x, y - 1), (x, y + 1)))
         flip = along_x > along_y
-        sprite = "gate_closed" if status == "closed" else "gate_open"
-        self.art.draw(sprite, sx, sy, scale, flip=flip)
+        if opening is None:
+            opening = 0 if status == "closed" else 1
+        sprite = self.art.draw_gate(sx, sy, scale, opening, flip=flip)
         self.sprite_hit_region(pos, sprite, sx, sy, scale, flip)
+        self.gate_hit_masks[self.hit_regions[-1]] = (sx, sy, scale, opening, flip)
 
     def board(self, game):
         level, state = game.level, game.state
+        now = perf_counter()
+        if self.gate_game is not game:
+            self.reset_gates()
+            self.gate_game = game
+        gate_openings = {pos: self.gate_opening(pos, 0 if game.gate_status(pos) == "closed" else 1, now)
+                         for pos in level.gates}
         if level.gates:
             self.art.load_gates()
         scene = scene_for(level)
@@ -255,6 +288,7 @@ class View:
         screen = projection.screen
         self.hit_regions.clear()
         self.hit_masks.clear()
+        self.gate_hit_masks.clear()
 
         exit_ready = (state.installed == level.traps and (not level.traps or state.active)
                       and state.soldiers == level.posts and state.carrying is None)
@@ -394,7 +428,7 @@ class View:
                 self.sprite_hit_region(pos, name, sx, sy, scale, flip)
                 continue
             if sprite.startswith("gate_"):
-                self.gate(level, pos, sx, sy, scale, sprite.removeprefix("gate_"))
+                self.gate(level, pos, sx, sy, scale, sprite.removeprefix("gate_"), gate_openings[pos])
                 continue
             if sprite != "player":
                 if (sx, sy) in wall_tints and (sprite.startswith("wall_low") or "_wall_" in sprite):
@@ -545,6 +579,7 @@ def run(levels, index=0, smoke_frames=None):
                     elif event.key == p.SDLK_r:
                         game.restart()
                         view.reset_player()
+                        view.reset_gates()
                     elif event.key == p.SDLK_RETURN and game.state.cleared:
                         index = (index + 1) % len(levels)
                         game = Game(levels[index])

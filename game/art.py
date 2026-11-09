@@ -133,6 +133,52 @@ class Art:
         top = sy + (anchor["y"] - rect["top"]) * scale
         return sx + left, top - rect["height"] * scale, sx + right, top
 
+    @staticmethod
+    def gate_aperture(x):
+        """정규화된 문틀 안쪽의 사선 통로 범위(원본 픽셀)."""
+        top = floor(278 - 0.59 * (x - 197))
+        return top, top + 132
+
+    def draw_gate(self, sx, sy, scale, opening, flip=False):
+        """문틀은 고정하고 격자 텍스처만 사선 개구부 안에서 위로 이동한다."""
+        if opening <= 0:
+            self.draw("gate_closed", sx, sy, scale, flip=flip)
+            return "gate_closed"
+        if opening < 1:
+            lift = round(opening * 144)
+            entry = self.manifest["sprites"]["gate_closed"]
+            atlas = self.atlases[entry["atlas"]]
+            ax, ay = entry["anchor"]["x"], entry["anchor"]["y"]
+            clip_left, clip_bottom, _, _ = entry["clip_rect_pico2d"]
+            ends = [sx + (x - ax) * scale * (-1 if flip else 1) for x in (197, 326)]
+            # 화면 픽셀 단위로 이어 그려 축소 시 세로줄 사이에 틈이 생기지 않는다.
+            for pixel in range(floor(min(ends)), floor(max(ends)) + 1):
+                x = floor(ax + (pixel + 0.5 - sx) / scale * (-1 if flip else 1))
+                if not 197 <= x < 326:
+                    continue
+                top, bottom = self.gate_aperture(x)
+                height = bottom - top - lift
+                if height <= 0:
+                    continue
+                atlas.clip_draw(clip_left + x, clip_bottom + entry["height"] - bottom,
+                                1, height, pixel + 0.5,
+                                sy + (ay - top - height / 2) * scale, 1, height * scale)
+        # 움직인 격자는 기둥과 상인방 뒤로 들어간다.
+        self.draw("gate_open", sx, sy, scale, flip=flip)
+        return "gate_open"
+
+    def gate_hit_test(self, sx, sy, scale, point, opening, flip=False):
+        if opening <= 0:
+            return self.hit_test("gate_closed", sx, sy, scale, point, flip)
+        if self.hit_test("gate_open", sx, sy, scale, point, flip):
+            return True
+        x = floor(256 + (point[0] - sx) / scale * (-1 if flip else 1))
+        y = 384 - (point[1] - sy) / scale
+        top, bottom = self.gate_aperture(x)
+        lift = round(opening * 144)
+        return (197 <= x < 326 and top <= y < bottom - lift
+                and self.hit_test("gate_closed", sx, sy + lift * scale, scale, point, flip))
+
     def draw(self, name, sx, sy, scale, flip=False, anchor=None):
         """PNG 좌상단 기준점을 pico2d의 위쪽 +y 화면 좌표로 변환한다."""
         entry = self.manifest["sprites"][name]

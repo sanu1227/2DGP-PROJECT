@@ -86,11 +86,12 @@ python -m tests.smoke_click       # 실제 SDL 마우스 선택·경로·취소 
 python -m tests.smoke_placement   # 물건 접점·벨트/발판 높이·운반·클릭 검사
 python -m tests.smoke_interactions # 상호작용 표식·E 안내·표식 클릭·되돌리기 검사
 python -m tests.smoke_gates       # 발판 문 개폐·통과·닫힘 대기·투명 영역 클릭 검사
+python -m tests.smoke_gate_animation # 개폐 시간·중간 프레임·역방향 전환·애니메이션 클릭 검사
 ```
 
 금색 마름모는 주울 수 있는 물건과 작업할 장치를 표시합니다. 표식이나 물체에 마우스를 올리면 하단에 이름이 나오며, 표식을 클릭해 해당 칸으로 이동할 수 있습니다. 같은 칸에서 행동 조건을 충족하면 표식이 청록색 **E**로 바뀝니다. [표식 적용 화면](./docs/screenshots/interaction-markers-stage-06.png), [줍기 가능한 상태](./docs/screenshots/interaction-markers-ready.png)를 확인할 수 있습니다.
 
-4~6번 방의 발판 문은 석재 문틀과 위로 올라가는 철제 격자로 표시합니다. 눌린 발판과 열린 문은 청록색, 닫힌 문은 붉은색, 사람이 나가기를 기다리는 문은 금색 안내로 구분합니다. [닫힌 문](./docs/screenshots/gates/stage-06-closed.png)과 [열린 문](./docs/screenshots/gates/stage-06-open.png)을 비교할 수 있습니다.
+4~6번 방의 발판 문은 석재 문틀과 위로 올라가는 철제 격자로 표시합니다. 문틀은 고정되고 격자는 0.36초 동안 부드럽게 움직입니다. 도중에 발판 상태가 바뀌면 현재 위치에서 반대로 움직이며 되돌리기에도 적용됩니다. 눌린 발판과 열린 문은 청록색, 닫힌 문은 붉은색, 사람이 나가기를 기다리는 문은 금색 안내로 구분합니다. [개폐 미리보기](./docs/screenshots/gate-animation/preview.gif)를 확인할 수 있습니다.
 
 | 입력 | 동작 |
 | --- | --- |

@@ -21,18 +21,24 @@ def main():
     checked = 0
     try:
         view = View()
+        clock = 100.0
         for index in range(3, 6):
             game = Game(levels[index])
             gate, plate = next(iter(game.level.gates.items()))
             statuses = set()
 
             def check():
-                nonlocal checked
+                nonlocal checked, clock
                 before = deepcopy(game.state)
                 status = game.gate_status(gate)
                 statuses.add(status)
-                with patch.object(view.art, "draw", wraps=view.art.draw) as draw:
+                # This suite checks settled artwork; timing and reversals have a separate suite.
+                with patch("game.view.perf_counter", return_value=clock):
                     view.draw(game, index, len(levels))
+                clock += 1
+                with patch("game.view.perf_counter", return_value=clock):
+                    with patch.object(view.art, "draw", wraps=view.art.draw) as draw:
+                        view.draw(game, index, len(levels))
                 assert game.state == before
                 calls = [call for call in draw.call_args_list if call.args[0].startswith("gate_")]
                 assert len(calls) == 1
