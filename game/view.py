@@ -134,7 +134,9 @@ class View:
         return y
 
     def item(self, kind, x, y, scale):
-        self.art.draw(ITEM_SPRITES[kind], x, y, scale)
+        if self.top_down:
+            self.art.load_topdown()
+        self.art.draw(("td_" if self.top_down else "") + ITEM_SPRITES[kind], x, y, scale)
 
     def pick_cell(self, game, x, y):
         """UI는 제외하고 앞에 그려진 물체부터 검사한 뒤 바닥 칸을 고른다."""
