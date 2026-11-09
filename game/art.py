@@ -134,6 +134,56 @@ class Art:
         return sx + left, top - rect["height"] * scale, sx + right, top
 
     @staticmethod
+    def plate_sections(x):
+        """상판 앞면과 고정 받침 경계. 256px 원본의 사선 모양을 따른다."""
+        return floor(164 - abs(x - 126) * .55), floor(194 - abs(x - 128) * .5)
+
+    def draw_plate(self, sx, sy, scale, pressed):
+        """상판은 평행 이동하고 지지대만 짧아진다. 석재 받침은 고정한다."""
+        if pressed <= 0:
+            self.draw("plate_up", sx, sy, scale)
+            return
+        entry = self.manifest["sprites"]["plate_up"]
+        atlas = self.atlases[entry["atlas"]]
+        ax, ay = entry["anchor"]["x"], entry["anchor"]["y"]
+        left, bottom, _, _ = entry["clip_rect_pico2d"]
+        drop = (self.surface_height("plate_up") - self.surface_height("plate_down")) * pressed
+        rect = entry["content_rect"]
+        start = floor(sx + (rect["left"] - ax) * scale)
+        end = floor(sx + (rect["left"] + rect["width"] - ax) * scale)
+        for pixel in range(start, end + 1):
+            x = floor(ax + (pixel + .5 - sx) / scale)
+            if not 0 <= x < entry["width"]:
+                continue
+            if 44 <= x < 209:
+                cap, base = self.plate_sections(x)
+                sections = ((base, entry["height"], base, entry["height"] - base),
+                            (cap, base, cap + drop, base - cap - drop),
+                            (0, cap, drop, cap))
+            else:
+                sections = ((0, entry["height"], 0, entry["height"]),)
+            for source_top, source_bottom, target_top, target_height in sections:
+                if target_height <= 0:
+                    continue
+                atlas.clip_draw(left + x, bottom + entry["height"] - source_bottom,
+                                1, source_bottom - source_top, pixel + .5,
+                                sy + (ay - target_top - target_height / 2) * scale,
+                                1, target_height * scale)
+
+    def plate_hit_test(self, sx, sy, scale, point, pressed):
+        x = floor(128 + (point[0] - sx) / scale)
+        y = 176 - (point[1] - sy) / scale
+        if 44 <= x < 209:
+            cap, base = self.plate_sections(x)
+            drop = (self.surface_height("plate_up") - self.surface_height("plate_down")) * pressed
+            if y < cap + drop:
+                y -= drop
+            elif y < base:
+                y = cap + (y - cap - drop) * (base - cap) / (base - cap - drop)
+        return self.hit_test("plate_up", sx, sy, scale,
+                             (point[0], sy + (176 - y) * scale))
+
+    @staticmethod
     def gate_aperture(x):
         """정규화된 문틀 안쪽의 사선 통로 범위(원본 픽셀)."""
         top = floor(278 - 0.59 * (x - 197))

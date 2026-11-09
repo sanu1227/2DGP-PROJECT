@@ -3,6 +3,7 @@
 import os
 from pathlib import Path
 from time import perf_counter
+from math import floor
 
 import pico2d.pico2d as p
 
@@ -22,6 +23,7 @@ ITEM_NAMES = {None: "빈손", "part": "함정 부품", "bone": "뼈 묶음", "so
 ITEM_SPRITES = {"part": "part", "bone": "bone_bundle", "soldier": "soldier_carried"}
 FACING = {"up": "ne", "right": "se", "down": "sw", "left": "nw"}
 GATE_SECONDS = 0.36
+PLATE_SECONDS = 0.24
 
 
 def font_path() -> str:
@@ -73,7 +75,9 @@ class View:
         self.hit_regions = []
         self.hit_masks = {}
         self.gate_hit_masks = {}
+        self.plate_hit_masks = {}
         self.reset_gates()
+        self.reset_plates()
         self.reset_player()
         try:
             path = font_path()
@@ -96,17 +100,25 @@ class View:
         self.gate_game = None
         self.gate_motions = {}
 
-    def gate_opening(self, pos, target, now):
-        motion = self.gate_motions.get(pos)
+    def reset_plates(self):
+        self.plate_motions = {}
+        self.plate_depths = {}
+
+    @staticmethod
+    def device_progress(motions, pos, target, now, seconds):
+        motion = motions.get(pos)
         if motion is None:
-            self.gate_motions[pos] = (target, target, now, 0)
+            motions[pos] = (target, target, now, 0)
             return target
         start, end, began, duration = motion
         t = min(1, max(0, (now - began) / duration)) if duration else 1
         value = start + (end - start) * t * t * (3 - 2 * t)
         if end != target:
-            self.gate_motions[pos] = (value, target, now, GATE_SECONDS * abs(target - value))
+            motions[pos] = (value, target, now, seconds * abs(target - value))
         return value
+
+    def gate_opening(self, pos, target, now):
+        return self.device_progress(self.gate_motions, pos, target, now, GATE_SECONDS)
 
     def reset_player(self):
         self.facing = "se"
@@ -158,11 +170,22 @@ class View:
     def support_height(self, game, pos):
         """벨트·발판 위 물건과 캐릭터의 접점을 지지면에 맞춘다."""
         if pos in game.level.plates:
-            return self.art.surface_height("plate_down" if game.plate_pressed(pos) else "plate_up")
+            pressed = self.plate_depths.get(pos, float(game.plate_pressed(pos))) if self.gate_game is game else float(game.plate_pressed(pos))
+            up, down = self.art.surface_height("plate_up"), self.art.surface_height("plate_down")
+            return up + (down - up) * pressed
         if pos in game.level.belts:
             direction = game.level.belts[pos]
             return self.art.surface_height("conveyor_ne" if direction in ("up", "left") else "conveyor_se")
         return 0
+
+    def player_support_height(self, game, position):
+        """걸어서 올라가거나 내려올 때도 이동 중 발 높이가 끊기지 않게 한다."""
+        x, y = position
+        left, top = floor(x), floor(y)
+        u, v = x - left, y - top
+        return sum(self.support_height(game, pos) * weight for pos, weight in (
+            ((left, top), (1 - u) * (1 - v)), ((left + 1, top), u * (1 - v)),
+            ((left, top + 1), (1 - u) * v), ((left + 1, top + 1), u * v)))
 
     def pick_cell(self, game, x, y):
         """UI는 제외하고 앞에 그려진 물체부터 검사한 뒤 바닥 칸을 고른다."""
@@ -172,6 +195,12 @@ class View:
             if left <= x < right and bottom <= y < top:
                 mask = self.hit_masks.get((pos, (left, bottom, right, top)))
                 gate_mask = self.gate_hit_masks.get((pos, (left, bottom, right, top)))
+                plate_mask = self.plate_hit_masks.get((pos, (left, bottom, right, top)))
+                if plate_mask:
+                    sx, sy, scale, pressed = plate_mask
+                    if not self.art.plate_hit_test(sx, sy, scale, (x, y), pressed):
+                        continue
+                    return pos
                 if gate_mask:
                     sx, sy, scale, opening, flip = gate_mask
                     if not self.art.gate_hit_test(sx, sy, scale, (x, y), opening, flip):
@@ -271,9 +300,12 @@ class View:
         now = perf_counter()
         if self.gate_game is not game:
             self.reset_gates()
+            self.reset_plates()
             self.gate_game = game
         gate_openings = {pos: self.gate_opening(pos, 0 if game.gate_status(pos) == "closed" else 1, now)
                          for pos in level.gates}
+        self.plate_depths = {pos: self.device_progress(self.plate_motions, pos, float(game.plate_pressed(pos)), now, PLATE_SECONDS)
+                             for pos in level.plates}
         if level.gates:
             self.art.load_gates()
         scene = scene_for(level)
@@ -289,6 +321,7 @@ class View:
         self.hit_regions.clear()
         self.hit_masks.clear()
         self.gate_hit_masks.clear()
+        self.plate_hit_masks.clear()
 
         exit_ready = (state.installed == level.traps and (not level.traps or state.active)
                       and state.soldiers == level.posts and state.carrying is None)
@@ -418,8 +451,16 @@ class View:
                 # 장식의 위쪽 그림이 뒤의 이동 칸/장치 클릭을 가로채지 않는다.
                 continue
             # 논리 칸은 높이를 더하기 전에 결정해야 클릭 대상이 옆 칸으로 밀리지 않는다.
-            if sprite in ITEM_SPRITES.values() or sprite == "player":
+            if sprite == "player":
+                sy += self.player_support_height(game, player) * scale
+            elif sprite in ITEM_SPRITES.values():
                 sy += self.support_height(game, pos) * scale
+            if sprite in ("plate_up", "plate_down"):
+                pressed = self.plate_depths[pos]
+                self.art.draw_plate(sx, sy, scale, pressed)
+                self.sprite_hit_region(pos, "plate_up", sx, sy, scale)
+                self.plate_hit_masks[self.hit_regions[-1]] = (sx, sy, scale, pressed)
+                continue
             if sprite.startswith("belt_"):
                 direction = sprite.removeprefix("belt_")
                 name = "conveyor_ne" if direction in ("up", "left") else "conveyor_se"
@@ -580,6 +621,7 @@ def run(levels, index=0, smoke_frames=None):
                         game.restart()
                         view.reset_player()
                         view.reset_gates()
+                        view.reset_plates()
                     elif event.key == p.SDLK_RETURN and game.state.cleared:
                         index = (index + 1) % len(levels)
                         game = Game(levels[index])
