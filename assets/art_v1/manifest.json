@@ -71,6 +71,42 @@
       "width": 1254,
       "height": 1254,
       "sha256": "aac8af57d33c8b02855038dda664e0860db353ae02d1d15541bc641a8b772e10"
+    },
+    "wall_low_axis_y": {
+      "file": "sources/wall-low-axis-y.png",
+      "width": 1254,
+      "height": 1254,
+      "sha256": "7b69a37fc317cbb419589309bb61e0b4ed83839635951c56ab0e23a620efbc8b"
+    },
+    "wall_low_corner_nw": {
+      "file": "sources/wall-low-corner-nw.png",
+      "width": 1254,
+      "height": 1254,
+      "sha256": "d35e9557e3774ec2a04402db869da77e66459dc27d20da5c55bd68cac84b46f5"
+    },
+    "wall_low_corner_ne": {
+      "file": "sources/wall-low-corner-ne.png",
+      "width": 1254,
+      "height": 1254,
+      "sha256": "53fa408e839dfc84f1470961d55f8a5cd842050dd33b33613d8734704c9e5703"
+    },
+    "wall_low_corner_se": {
+      "file": "sources/wall-low-corner-se.png",
+      "width": 1536,
+      "height": 1024,
+      "sha256": "626a810a5f0acd9398586afb043b985fa4e0b918c5f27135e7affce8596c73b8"
+    },
+    "wall_low_corner_sw": {
+      "file": "sources/wall-low-corner-sw.png",
+      "width": 1254,
+      "height": 1254,
+      "sha256": "72c59297a0096471bc72832783b2878e3b7c8f5d9570400c0628b900959e7926"
+    },
+    "wall_low_pier": {
+      "file": "sources/wall-low-pier.png",
+      "width": 1254,
+      "height": 1254,
+      "sha256": "78e5d7dacb9dc722c00609de1743d605eb20d27bf072dcee5ef8aa1131b15706"
     }
   },
   "atlases": {
@@ -110,13 +146,13 @@
     "low_walls": {
       "file": "atlases/low_walls.png",
       "width": 1024,
-      "height": 256,
+      "height": 768,
       "cell_size": 256,
       "grid": [
         4,
-        1
+        3
       ],
-      "sha256": "d7cccebbd113ffe4d930b65d5d7e6dc0b486e9a21946fc73374ceca2324ec2f3"
+      "sha256": "28882c6b6e37d767a9b1763ff344420ffcc3ae9e9b0cf0b312ec641d8cf80ffd"
     }
   },
   "sprites": {
@@ -1716,7 +1752,7 @@
       "atlas": "low_walls",
       "clip_rect_pico2d": [
         0,
-        0,
+        512,
         256,
         256
       ],
@@ -1753,7 +1789,7 @@
       "atlas": "low_walls",
       "clip_rect_pico2d": [
         256,
-        0,
+        512,
         256,
         256
       ],
@@ -1790,7 +1826,7 @@
       "atlas": "low_walls",
       "clip_rect_pico2d": [
         512,
-        0,
+        512,
         256,
         256
       ],
@@ -1814,6 +1850,228 @@
         "height": 147
       },
       "sha256": "da71d36e640304cb7e6c7a0a025de1086fb243c38bcf06000130c6029f38cde2",
+      "intended_use": "prototype-art"
+    },
+    "wall_low_axis_y": {
+      "file": "tiles/wall_low_axis_y.png",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 160
+      },
+      "atlas": "low_walls",
+      "clip_rect_pico2d": [
+        768,
+        512,
+        256,
+        256
+      ],
+      "source_file": "sources/wall-low-axis-y.png",
+      "source_rect": {
+        "left": 0,
+        "top": 0,
+        "width": 1254,
+        "height": 1254
+      },
+      "source_content_rect": {
+        "left": 115,
+        "top": 390,
+        "width": 1025,
+        "height": 728
+      },
+      "content_rect": {
+        "left": 16,
+        "top": 81,
+        "width": 224,
+        "height": 147
+      },
+      "sha256": "2fd327f7a216c5c37fb31c3b5b190776adb26ee2744d8121f0970cc5da416adc",
+      "intended_use": "prototype-art"
+    },
+    "wall_low_corner_nw": {
+      "file": "tiles/wall_low_corner_nw.png",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 160
+      },
+      "atlas": "low_walls",
+      "clip_rect_pico2d": [
+        0,
+        256,
+        256,
+        256
+      ],
+      "source_file": "sources/wall-low-corner-nw.png",
+      "source_rect": {
+        "left": 0,
+        "top": 0,
+        "width": 1254,
+        "height": 1254
+      },
+      "source_content_rect": {
+        "left": 75,
+        "top": 420,
+        "width": 1105,
+        "height": 632
+      },
+      "content_rect": {
+        "left": 16,
+        "top": 81,
+        "width": 224,
+        "height": 147
+      },
+      "sha256": "7c619857b1ee3eda42fd8103ec1295d3871b73352870ab9d62d8a7319f30c6e5",
+      "intended_use": "prototype-art"
+    },
+    "wall_low_corner_ne": {
+      "file": "tiles/wall_low_corner_ne.png",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 160
+      },
+      "atlas": "low_walls",
+      "clip_rect_pico2d": [
+        256,
+        256,
+        256,
+        256
+      ],
+      "source_file": "sources/wall-low-corner-ne.png",
+      "source_rect": {
+        "left": 0,
+        "top": 0,
+        "width": 1254,
+        "height": 1254
+      },
+      "source_content_rect": {
+        "left": 178,
+        "top": 235,
+        "width": 923,
+        "height": 876
+      },
+      "content_rect": {
+        "left": 16,
+        "top": 43,
+        "width": 224,
+        "height": 185
+      },
+      "sha256": "06cd33bbf84249a9abb92ac70e616336fea21172bf6ec6ff1df7856ca2fd420a",
+      "intended_use": "prototype-art"
+    },
+    "wall_low_corner_se": {
+      "file": "tiles/wall_low_corner_se.png",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 160
+      },
+      "atlas": "low_walls",
+      "clip_rect_pico2d": [
+        512,
+        256,
+        256,
+        256
+      ],
+      "source_file": "sources/wall-low-corner-se.png",
+      "source_rect": {
+        "left": 0,
+        "top": 0,
+        "width": 1536,
+        "height": 1024
+      },
+      "source_content_rect": {
+        "left": 218,
+        "top": 170,
+        "width": 1098,
+        "height": 699
+      },
+      "content_rect": {
+        "left": 16,
+        "top": 81,
+        "width": 224,
+        "height": 147
+      },
+      "sha256": "dfc0bfe839beddf726e37e931032fca339bae6cbc65725043b84ee5da629f988",
+      "intended_use": "prototype-art"
+    },
+    "wall_low_corner_sw": {
+      "file": "tiles/wall_low_corner_sw.png",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 160
+      },
+      "atlas": "low_walls",
+      "clip_rect_pico2d": [
+        768,
+        256,
+        256,
+        256
+      ],
+      "source_file": "sources/wall-low-corner-sw.png",
+      "source_rect": {
+        "left": 0,
+        "top": 0,
+        "width": 1254,
+        "height": 1254
+      },
+      "source_content_rect": {
+        "left": 194,
+        "top": 230,
+        "width": 820,
+        "height": 885
+      },
+      "content_rect": {
+        "left": 16,
+        "top": 43,
+        "width": 224,
+        "height": 185
+      },
+      "sha256": "66efcda60a360bb1ba1a302df4368a7f1f75c6dd3a2208c1bd00d9dfbba80ce7",
+      "intended_use": "prototype-art"
+    },
+    "wall_low_pier": {
+      "file": "tiles/wall_low_pier.png",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 160
+      },
+      "atlas": "low_walls",
+      "clip_rect_pico2d": [
+        0,
+        0,
+        256,
+        256
+      ],
+      "source_file": "sources/wall-low-pier.png",
+      "source_rect": {
+        "left": 0,
+        "top": 0,
+        "width": 1254,
+        "height": 1254
+      },
+      "source_content_rect": {
+        "left": 176,
+        "top": 403,
+        "width": 898,
+        "height": 754
+      },
+      "content_rect": {
+        "left": 16,
+        "top": 81,
+        "width": 224,
+        "height": 147
+      },
+      "sha256": "ca7f09ed7bb0c3b781e6b1b2d5c168c5364070a14ed53e05b95bd3cf17b73b7a",
       "intended_use": "prototype-art"
     }
   },

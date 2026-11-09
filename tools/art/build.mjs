@@ -178,7 +178,12 @@ for (const [group, ids] of Object.entries(groupIds)) {
     cell_size: size, grid: [4, rows], sha256: hash(atlas) };
 }
 // Standalone wall variants use the same footprint and ground anchor as wall_low.
-groupIds.low_walls = ['wall_low_chipped', 'wall_low_patched', 'wall_low_braced'];
+groupIds.low_walls = [
+  'wall_low_chipped', 'wall_low_patched', 'wall_low_braced', 'wall_low_axis_y',
+  'wall_low_corner_nw', 'wall_low_corner_ne', 'wall_low_corner_se', 'wall_low_corner_sw',
+  'wall_low_pier',
+];
+const lowWallRows = Math.ceil(groupIds.low_walls.length / 4);
 const lowWallComposites = [];
 for (const [index, id] of groupIds.low_walls.entries()) {
   const file = `sources/${id.replaceAll('_', '-')}.png`;
@@ -190,7 +195,11 @@ for (const [index, id] of groupIds.low_walls.entries()) {
   const box = bounds(data, info.width, info.height);
   if (box.edge) throw new Error(`${id}: source touches image edge`);
   const reference = manifest.sprites.wall_low;
-  const rect = reference.content_rect;
+  // Side-facing elbows project deeper than a straight wall. Preserve their
+  // masonry height instead of flattening them into the straight-wall box.
+  const rect = ['wall_low_corner_ne', 'wall_low_corner_sw'].includes(id)
+    ? { ...reference.content_rect, top: 43, height: 185 }
+    : reference.content_rect;
   const crop = await sharp(data, { raw: { width: info.width, height: info.height, channels: 4 } })
     .extract({ left: box.left, top: box.top, width: box.width, height: box.height })
     .resize(rect.width, rect.height, { fit: 'fill' }).png().toBuffer();
@@ -200,18 +209,18 @@ for (const [index, id] of groupIds.low_walls.entries()) {
   manifest.sources[id] = { file, width: info.width, height: info.height, sha256: hash(source) };
   manifest.sprites[id] = {
     file: `tiles/${id}.png`, width: size, height: size, anchor: reference.anchor,
-    atlas: 'low_walls', clip_rect_pico2d: [index * size, 0, size, size],
+    atlas: 'low_walls', clip_rect_pico2d: [(index % 4) * size, (lowWallRows - 1 - Math.floor(index / 4)) * size, size, size],
     source_file: file, source_rect: { left: 0, top: 0, width: info.width, height: info.height },
     source_content_rect: { left: box.left, top: box.top, width: box.width, height: box.height },
     content_rect: rect, sha256: hash(bytes), intended_use: 'prototype-art',
   };
-  lowWallComposites.push({ input: bytes, left: index * size, top: 0 });
+  lowWallComposites.push({ input: bytes, left: (index % 4) * size, top: Math.floor(index / 4) * size });
 }
-const lowWalls = await sharp({ create: { width: 4 * size, height: size, channels: 4, background: '#00000000' } })
+const lowWalls = await sharp({ create: { width: 4 * size, height: lowWallRows * size, channels: 4, background: '#00000000' } })
   .composite(lowWallComposites).png().toBuffer();
 await fs.writeFile(path.join(root, 'atlases/low_walls.png'), lowWalls);
-manifest.atlases.low_walls = { file: 'atlases/low_walls.png', width: 4 * size, height: size,
-  cell_size: size, grid: [4, 1], sha256: hash(lowWalls) };
+manifest.atlases.low_walls = { file: 'atlases/low_walls.png', width: 4 * size, height: lowWallRows * size,
+  cell_size: size, grid: [4, lowWallRows], sha256: hash(lowWalls) };
 
 for (const direction of ['ne', 'se', 'sw', 'nw']) {
   manifest.animations.worker[direction] = {
@@ -284,7 +293,7 @@ for (const [i, [a, b, caption]] of [
   sceneLabels += text(1020, sy + 60, caption, 16);
 }
 sceneLabels += text(57, 800, 'Teal repair worker  /  brass mechanisms  /  ivory bones  /  violet guard posts', 18)
-  + text(57, 834, '47 individual PNGs + 4 aligned atlases. Game rules preserved.', 16, '#9eb2b2')
+  + text(57, 834, `${Object.keys(manifest.sprites).length} individual PNGs + ${Object.keys(manifest.atlases).length} aligned atlases. Game rules preserved.`, 16, '#9eb2b2')
   + text(57, 870, 'First art pass. Walk keyframes and small-scale readability still need play review.', 16, '#9eb2b2');
 await sharp({ create: { width: 1440, height: 920, channels: 4, background: '#172329' } })
   .composite([...scene, { input: textSvg(1440, 920, sceneLabels) }]).png().toFile(path.join(root, 'previews/room_composition.png'));

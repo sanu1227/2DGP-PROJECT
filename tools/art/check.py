@@ -46,7 +46,10 @@ def main():
     import pico2d.pico2d as p
 
     sprites, atlases = {}, {}
-    p.open_canvas(1280, 900, sync=True)
+    # Keep six rows visible as the pack grows beyond 48 sprites.
+    columns = max(8, (len(manifest["sprites"]) + 5) // 6)
+    canvas_width = columns * 160
+    p.open_canvas(canvas_width, 900, sync=True)
     try:
         for name, entry in manifest["sprites"].items():
             sprites[name] = p.load_image(str(ROOT / entry["file"]))
@@ -55,16 +58,16 @@ def main():
 
         def render(use_atlas):
             p.clear_canvas()
-            p.draw_rectangle(0, 0, 1280, 900, 23, 35, 41, filled=True)
+            p.draw_rectangle(0, 0, canvas_width, 900, 23, 35, 41, filled=True)
             for index, (name, entry) in enumerate(manifest["sprites"].items()):
-                x, y = 80 + (index % 8) * 160, 820 - (index // 8) * 145
+                x, y = 80 + (index % columns) * 160, 820 - (index // columns) * 145
                 if use_atlas:
                     atlases[entry["atlas"]].clip_draw(*entry["clip_rect_pico2d"], x, y, 138, 138)
                 else:
                     sprites[name].draw(x, y, 138, 138)
-            pixels = (ctypes.c_ubyte * (1280 * 900 * 4))()
+            pixels = (ctypes.c_ubyte * (canvas_width * 900 * 4))()
             result = p.SDL_RenderReadPixels(p.renderer, None, p.SDL_PIXELFORMAT_RGBA8888,
-                                          pixels, 1280 * 4)
+                                          pixels, canvas_width * 4)
             if result != 0:
                 raise RuntimeError("SDL_RenderReadPixels failed")
             p.update_canvas()

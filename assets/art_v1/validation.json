@@ -1,5 +1,5 @@
 {
-  "sprite_count": 47,
+  "sprite_count": 53,
   "atlas_count": 4,
   "checks": {
     "source_has_alpha": true,
@@ -707,6 +707,96 @@
         256
       ],
       "transparent_fraction": 0.696,
+      "content_bounds": {
+        "left": 16,
+        "top": 81,
+        "width": 224,
+        "height": 147
+      },
+      "edge_pixels": 0
+    },
+    {
+      "id": "wall_low_axis_y",
+      "size": [
+        256,
+        256
+      ],
+      "transparent_fraction": 0.6954,
+      "content_bounds": {
+        "left": 16,
+        "top": 81,
+        "width": 224,
+        "height": 147
+      },
+      "edge_pixels": 0
+    },
+    {
+      "id": "wall_low_corner_nw",
+      "size": [
+        256,
+        256
+      ],
+      "transparent_fraction": 0.6569,
+      "content_bounds": {
+        "left": 16,
+        "top": 81,
+        "width": 224,
+        "height": 147
+      },
+      "edge_pixels": 0
+    },
+    {
+      "id": "wall_low_corner_ne",
+      "size": [
+        256,
+        256
+      ],
+      "transparent_fraction": 0.6138,
+      "content_bounds": {
+        "left": 16,
+        "top": 43,
+        "width": 224,
+        "height": 185
+      },
+      "edge_pixels": 0
+    },
+    {
+      "id": "wall_low_corner_se",
+      "size": [
+        256,
+        256
+      ],
+      "transparent_fraction": 0.6461,
+      "content_bounds": {
+        "left": 16,
+        "top": 81,
+        "width": 224,
+        "height": 147
+      },
+      "edge_pixels": 0
+    },
+    {
+      "id": "wall_low_corner_sw",
+      "size": [
+        256,
+        256
+      ],
+      "transparent_fraction": 0.5976,
+      "content_bounds": {
+        "left": 16,
+        "top": 43,
+        "width": 224,
+        "height": 185
+      },
+      "edge_pixels": 0
+    },
+    {
+      "id": "wall_low_pier",
+      "size": [
+        256,
+        256
+      ],
+      "transparent_fraction": 0.6872,
       "content_bounds": {
         "left": 16,
         "top": 81,

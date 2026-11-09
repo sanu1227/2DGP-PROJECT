@@ -1,11 +1,11 @@
 {
   "checked": "2026-11-09",
-  "manifest_sha256": "ad788306fa51c17dc7646a7dbf008504f82b06172adc6888c0f02ed90ae15dca",
-  "pico2d_loaded_images": 51,
-  "individual_sprites_drawn": 47,
-  "atlas_clips_drawn": 47,
+  "manifest_sha256": "eb3c19b6bebde8106067ede233821691fcf9ca1a7254dfb1577b46dd298cfa03",
+  "pico2d_loaded_images": 57,
+  "individual_sprites_drawn": 53,
+  "atlas_clips_drawn": 53,
   "max_rgba_channel_difference": 1,
-  "individual_render_sha256": "e35334e0b420615983b3a8b462e3838a7a1ea43f7893785e16955edf2c0f2c98",
-  "atlas_render_sha256": "054520241b66819fb527206aaaef35757462640fd13be5d3d23db82fb1923778",
+  "individual_render_sha256": "a86e869cc664aaa310d2a483bcc74e7e85990e6d64e7a5e7b0ba6c7feffd8a2a",
+  "atlas_render_sha256": "049322945800a837c286831f2c06475c1461a4aaf81a88416aff55d1a2ec52b9",
   "scope": "Actual SDL texture loading, drawing and atlas clip comparison; not game integration or playtesting."
 }
