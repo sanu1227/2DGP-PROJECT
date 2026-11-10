@@ -94,7 +94,7 @@ def main():
 
     with patch.object(view, "Game", ObservedGame), patch.object(view.View, "draw", draw), \
             patch.object(p, "get_events", events):
-        view.run(levels, index=1)
+        view.run(levels, index=1, show_title=False)
     assert not steps and "failed" in snapshots
     print("Action limit SDL smoke OK: real 75-action exhaustion, blocked inputs/click, "
           "Z/Backspace recovery, restart, room switch and unlimited tutorial HUD.")

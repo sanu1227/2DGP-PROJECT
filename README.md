@@ -77,6 +77,8 @@ python -m venv .venv
 
 이미 pico2d가 설치된 Python에서는 `python main.py`로 실행할 수 있습니다. 파일 경로는 프로젝트 위치를 기준으로 계산하므로 다른 작업 폴더에서도 `python "프로젝트경로/main.py"`로 실행할 수 있습니다.
 
+기본 실행은 [타이틀 화면](./docs/screenshots/onboarding/title.png)에서 시작합니다. **게임 시작**을 선택하면 [조작 설명](./docs/screenshots/onboarding/controls.png)이 나오고, **1번 방 시작**을 누르면 첫 방에 입장합니다. 버튼은 마우스 클릭 또는 방향키/Tab으로 선택한 뒤 Enter/Space로 누를 수 있습니다. 조작 설명에서 Esc는 타이틀로 돌아가며, 타이틀과 게임 안에서 Esc는 종료합니다. `--stage N`을 지정하면 타이틀과 조작 설명을 건너뛰고 해당 방에 바로 입장합니다.
+
 ```powershell
 python main.py --stage 3           # 세 번째 입문방에서 시작
 python main.py --check             # 화면 없이 스테이지 데이터 검사
@@ -90,6 +92,7 @@ python -m tests.smoke_gates       # 발판 문 개폐·통과·닫힘 대기·�
 python -m tests.smoke_gate_animation # 개폐 시간·중간 프레임·역방향 전환·애니메이션 클릭 검사
 python -m tests.smoke_plate_animation # 발판 승강·탑승물 높이·반전·되돌리기·클릭 검사
 python -m tests.smoke_action_limits # 실제 횟수 소진·입력 정지·되돌리기·재시작 검사
+python -m tests.smoke_onboarding  # 타이틀·조작 설명·첫 방 전환과 메뉴 입력 격리 검사
 ```
 
 금색 마름모는 주울 수 있는 물건과 작업할 장치를 표시합니다. 표식이나 물체에 마우스를 올리면 하단에 이름이 나오며, 표식을 클릭해 해당 칸으로 이동할 수 있습니다. 같은 칸에서 행동 조건을 충족하면 표식이 청록색 **E**로 바뀝니다. [표식 적용 화면](./docs/screenshots/interaction-markers-stage-06.png), [줍기 가능한 상태](./docs/screenshots/interaction-markers-ready.png)를 확인할 수 있습니다.

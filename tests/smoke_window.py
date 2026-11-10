@@ -109,7 +109,7 @@ def main():
 
     with patch.object(view, "Game", ObservedGame), patch.object(p, "get_events", scripted_events), \
             patch.object(view.View, "__init__", initialize):
-        view.run(levels)
+        view.run(levels, show_title=False)
     assert not steps
     assert len(games) == len(levels) + 8
     print(f"Native SDL smoke OK: {len(levels)} clears, coordinates/F2, shortcuts 1-6, carry/drop, undo, restart, next/replay, Escape.")

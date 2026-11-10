@@ -13,6 +13,7 @@ from game.scenery import draw_scars, draw_tinted, floor_style, wall_style
 from game.navigation import ClickNavigator, IsoBoard, find_path
 from game.themes import boundary_walls, low_wall_sprite, scene_for, themed_floor
 from game.layout import WIDTH, HEIGHT, BOARD_BOTTOM, BOARD_TOP
+from game.front_end import FrontEnd
 
 INK = (226, 230, 219)
 MUTED = (158, 169, 166)
@@ -81,7 +82,7 @@ class View:
         self.reset_player()
         try:
             path = font_path()
-            for size in (13, 16, 18, 22, 32):
+            for size in (13, 16, 18, 22, 32, 48, 64):
                 self.fonts[size] = p.load_font(path, size)
             self.art = Art()
         except Exception:
@@ -143,6 +144,13 @@ class View:
 
     def text(self, x, y, value, size=18, color=INK):
         self.fonts[size].draw(x, y, str(value), color)
+
+    def centered(self, x, y, value, size=18, color=INK):
+        import ctypes
+
+        width = ctypes.c_int()
+        p.TTF_SizeUTF8(self.fonts[size].font, str(value).encode("utf-8"), ctypes.byref(width), None)
+        self.text(x - width.value / 2, y, value, size, color)
 
     def wrapped(self, x, y, value, width=300, size=16, color=MUTED):
         """UTF-8 실제 글꼴 폭을 기준으로 안내문을 줄바꿈한다."""
@@ -574,7 +582,7 @@ class View:
         self.text(34, 12, "E / Space  상호작용    Q  내려놓기    B  대기    Z / Backspace  되돌리기    R  재시작    Enter  다음 방(완료 후)    Esc  종료", 13, MUTED)
 
 
-def run(levels, index=0, smoke_frames=None):
+def run(levels, index=0, smoke_frames=None, *, show_title=True):
     # 글꼴 오류는 SDL 창을 열기 전에 보고한다.
     font_path()
     p.open_canvas(WIDTH, HEIGHT, sync=True)
@@ -583,6 +591,7 @@ def run(levels, index=0, smoke_frames=None):
         if not p.window or not p.renderer:
             raise RuntimeError("SDL 게임 창 또는 렌더러를 만들 수 없습니다.")
         view = View()
+        front_end = FrontEnd(show_title)
         game = Game(levels[index])
         actions = {
             p.SDLK_UP: "up", p.SDLK_w: "up", p.SDLK_DOWN: "down", p.SDLK_s: "down",
@@ -599,6 +608,20 @@ def run(levels, index=0, smoke_frames=None):
             for event in p.get_events():
                 if event.type == p.SDL_QUIT:
                     running = False
+                    break
+                elif front_end.screen != "playing":
+                    result = front_end.handle(event)
+                    if result == "quit":
+                        running = False
+                    elif result == "start":
+                        index = 0
+                        game = Game(levels[index])
+                        view.reset_player()
+                        view.navigation.cancel()
+                        view.mouse_position = None
+                    if result is not None:
+                        # 전환한 프레임의 나머지 입력이 다음 화면을 건너뛰지 않게 한다.
+                        break
                 elif event.type == p.SDL_MOUSEMOTION:
                     view.mouse_position = (event.x, HEIGHT - 1 - event.y)
                 elif event.type == p.SDL_MOUSEBUTTONDOWN:
@@ -649,12 +672,15 @@ def run(levels, index=0, smoke_frames=None):
                             view.motion = None
             # 이미 보간 중인 한 칸이 끝난 뒤에만 다음 자동 이동을 실행한다.
             now = perf_counter()
-            if running and (view.motion is None or now >= view.motion[2] + 0.18):
+            if running and front_end.screen == "playing" and (view.motion is None or now >= view.motion[2] + 0.18):
                 previous = game.state.player
                 action = view.navigation.tick(game, now)
                 if action is not None:
                     view.move_player(previous, game.state.player, action)
-            view.draw(game, index, len(levels))
+            if front_end.screen == "playing":
+                view.draw(game, index, len(levels))
+            else:
+                front_end.draw(view)
             p.update_canvas()
             p.SDL_SetWindowTitle(p.window, "용사가 지나간 자리 — 기초 프로토타입".encode("utf-8"))
             frames += 1

@@ -137,7 +137,7 @@ def main():
     with patch.object(view, "Game", ObservedGame), patch.object(view.View, "__init__", initialize), \
             patch.object(view, "perf_counter", lambda: now), patch.object(p, "get_events", events), \
             patch.object(p, "update_canvas", update):
-        view.run([level])
+        view.run([level], show_title=False)
     assert not steps and len(games) == 1
     assert games[0].state.carrying is None and not games[0].state.active
     assert games[0].state.player == (3, 7) and "interact" not in games[0].calls
