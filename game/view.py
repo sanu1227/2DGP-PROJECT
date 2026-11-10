@@ -29,14 +29,16 @@ PLATE_SECONDS = 0.24
 TUTORIAL_PANEL = (32, 600, 420, 810)
 
 
-def font_path() -> str:
-    """폰트를 배포하지 않고 로컬 한글 폰트를 사용한다."""
+def font_path(size=18) -> str:
+    """큰 대사는 주아체, 작은 안내는 기호가 풍부한 고운돋움으로 표시한다."""
     override = os.environ.get("DUNGEON_FONT")
     if override:
         if not Path(override).is_file():
             raise OSError(f"DUNGEON_FONT 파일을 찾을 수 없습니다: {override}")
         return override
     candidates = (
+        Path(__file__).resolve().parents[1] / "assets/fonts" / (
+            "Jua-Regular.ttf" if size >= 22 else "GowunDodum-Regular.ttf"),
         Path(os.environ.get("WINDIR", "C:/Windows")) / "Fonts/malgun.ttf",
         Path("/System/Library/Fonts/AppleSDGothicNeo.ttc"),
         Path("/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc"),
@@ -84,9 +86,8 @@ class View:
         self.reset_plates()
         self.reset_player()
         try:
-            path = font_path()
             for size in (13, 16, 18, 22, 32, 48, 64):
-                self.fonts[size] = p.load_font(path, size)
+                self.fonts[size] = p.load_font(font_path(size), size)
             self.art = Art()
         except Exception:
             self.close()
