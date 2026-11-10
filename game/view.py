@@ -624,6 +624,7 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True):
     font_path()
     p.open_canvas(WIDTH, HEIGHT, sync=True)
     view = None
+    front_end = None
     try:
         if not p.window or not p.renderer:
             raise RuntimeError("SDL 게임 창 또는 렌더러를 만들 수 없습니다.")
@@ -727,6 +728,8 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True):
             if smoke_frames is not None and frames >= smoke_frames:
                 running = False
     finally:
+        if front_end:
+            front_end.close()
         if view:
             view.close()
         p.close_canvas()

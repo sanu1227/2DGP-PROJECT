@@ -33,11 +33,19 @@ def main():
     parser.add_argument("--capture-dir", type=Path)
     args = parser.parse_args()
     games, menus, displays = [], [], []
-    original_initialize = view.View.__init__
+    original_initialize, original_text = view.View.__init__, view.View.text
 
     def initialize(display):
         original_initialize(display)
         displays.append(display)
+
+    def checked_text(display, x, y, value, size=18, color=view.INK):
+        if menus and menus[-1].screen != "playing":
+            width = ctypes.c_int()
+            p.TTF_SizeUTF8(display.fonts[size].font, str(value).encode("utf-8"), ctypes.byref(width), None)
+            assert 0 <= x and x + width.value <= view.WIDTH, (value, x, width.value)
+            assert size / 2 <= y <= view.HEIGHT - size / 2, (value, y)
+        original_text(display, x, y, value, size, color)
 
     class ObservedGame(Game):
         def __init__(self, level):
@@ -54,23 +62,38 @@ def main():
         ([], "title", 0, "title"),
         ([p.SDLK_d, p.SDLK_e, p.SDLK_q, p.SDLK_6], "title", 0, None),
         ([("left", 60, 60)], "title", 0, None),
-        ([("right", 320, 326)], "title", 0, None),
-        ([("left", 320, 326), ("left", 1274, 128)], "controls", 0, "controls"),
-        ([p.SDLK_d, p.SDLK_e, p.SDLK_r, p.SDLK_6, p.SDLK_F2], "controls", 0, None),
+        ([("left", 600, 188)], "title", 0, None),
+        ([("right", 800, 227)], "title", 0, None),
+        ([("left", 800, 227), ("left", 1390, 72)], "story:0", 0, "story-01"),
+        ([p.SDLK_d, p.SDLK_e, p.SDLK_r, p.SDLK_6, p.SDLK_F2], "story:0", 0, None),
+        ([p.SDLK_RIGHT], "story:1", 0, "story-02"),
+        ([p.SDLK_LEFT], "story:0", 0, None),
+        ([("left", 1390, 72)], "story:1", 0, None),
+        ([p.SDLK_RETURN], "story:2", 0, "story-03"),
+        ([p.SDLK_SPACE], "story:3", 0, "story-04"),
+        ([p.SDLK_RETURN], "controls:0", 0, "repair-guide"),
+        ([p.SDLK_d, p.SDLK_e, p.SDLK_r, p.SDLK_6, p.SDLK_F2], "controls:0", 0, None),
+        ([("left", 1390, 72)], "controls:1", 0, "controls"),
+        ([("left", 210, 72)], "controls:0", 0, None),
+        ([("left", 210, 72)], "story:3", 0, None),
         ([p.SDLK_ESCAPE], "title", 0, None),
-        ([p.SDLK_TAB, p.SDLK_UP, p.SDLK_RETURN, p.SDLK_RETURN], "controls", 0, None),
-        ([("left", 230, 128)], "title", 0, None),
-        ([p.SDLK_SPACE], "controls", 0, None),
-        ([("left", 1274, 128), p.SDLK_d], "playing", 0, "room-01"),
+        ([p.SDLK_TAB, p.SDLK_UP, p.SDLK_RETURN, p.SDLK_RETURN], "story:0", 0, None),
+        ([("left", 1460, 900)], "controls:0", 0, None),
+        ([p.SDLK_ESCAPE], "title", 0, None),
+        ([p.SDLK_SPACE], "story:0", 0, None),
+        ([("left", 210, 72)], "title", 0, None),
+        ([p.SDLK_RETURN], "story:0", 0, None),
+        ([("left", 1460, 900)], "controls:0", 0, None),
+        ([p.SDLK_RETURN], "controls:1", 0, None),
+        ([("left", 1390, 72), p.SDLK_d], "playing", 0, None),
         ([p.SDLK_d], "playing", 1, None),
         ([p.SDLK_r], "playing", 0, None),
         ([("left", 100, 700)], "playing", 0, None),
     ])
     keys = {"up": p.SDLK_w, "down": p.SDLK_s, "left": p.SDLK_a,
             "right": p.SDLK_d, "interact": p.SDLK_e}
-    captures = {2: "pickup", 3: "carry", 9: "install", 10: "lever", 17: "exit", 19: "complete"}
     for moves, action in enumerate(SOLUTIONS["stage_01"], 1):
-        steps.append(([keys[action]], "playing", moves, captures.get(moves)))
+        steps.append(([keys[action]], "playing", moves, None))
         if action == "interact":
             steps.append(([p.SDLK_z], "playing", moves - 1, None))
             steps.append(([keys[action]], "playing", moves, None))
@@ -110,7 +133,13 @@ def main():
             original_update()
             return
         _, screen, moves, filename, *room = current
-        assert menus[-1].screen == screen, (menus[-1].screen, screen)
+        menu = menus[-1]
+        actual = menu.screen
+        if actual == "story":
+            actual += f":{menu.story_page}"
+        elif actual == "controls":
+            actual += f":{menu.guide_page}"
+        assert actual == screen, (actual, screen)
         assert games[-1].state.moves == moves, (games[-1].state.moves, moves)
         assert games[-1].level.id == (room[0] if room else "stage_01")
         if screen == "playing":
@@ -135,24 +164,28 @@ def main():
 
     with patch.object(view, "Game", ObservedGame), patch.object(view, "FrontEnd", ObservedFrontEnd), \
             patch.object(view.View, "__init__", initialize), patch.object(p, "get_events", events), \
-            patch.object(p, "update_canvas", update):
+            patch.object(view.View, "text", checked_text), patch.object(p, "update_canvas", update):
         view.run(load_levels())
         assert not steps
         # 타이틀 종료 버튼과 키보드 시작, 전환 직후 창 닫기도 실제 루프로 검사한다.
         for scenario in (
             [([p.SDLK_DOWN, p.SDLK_RETURN], "title", 0, None)],
-            [([("left", 320, 235)], "title", 0, None)],
+            [([("left", 800, 131)], "title", 0, None)],
             [([p.SDLK_ESCAPE], "title", 0, None)],
-            [([p.SDLK_RETURN, "close"], "controls", 0, None)],
-            [([p.SDLK_RETURN], "controls", 0, None), (["close"], "controls", 0, None)],
-            [([p.SDLK_RETURN], "controls", 0, None), ([p.SDLK_RETURN], "playing", 0, None),
+            [([p.SDLK_RETURN, "close"], "story:0", 0, None)],
+            [([p.SDLK_RETURN], "story:0", 0, None), (["close"], "story:0", 0, None)],
+            [([p.SDLK_RETURN], "story:0", 0, None),
+             ([p.SDLK_DOWN, p.SDLK_DOWN, p.SDLK_RETURN], "controls:0", 0, None),
+             ([p.SDLK_RETURN], "controls:1", 0, None), ([p.SDLK_RETURN], "playing", 0, None),
              ([p.SDLK_ESCAPE], "playing", 0, None)],
         ):
             current = None
             steps.extend(scenario)
             view.run(load_levels())
             assert not steps
-    print("Native onboarding smoke OK: title/controls, input isolation, all five tutorial steps, target picking, "
+    assert all(not menu.images for menu in menus)
+    print("Native onboarding smoke OK: illustrated title, four comic panels, two guides, back/skip/replay, text bounds, "
+          "input isolation, all five tutorial steps, target picking, "
           "undo/restart, first clear, next room, room shortcut, Escape.")
 
 
