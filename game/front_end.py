@@ -181,10 +181,6 @@ class FrontEnd:
             x = 120 + index * 103 + sin(t) * 13
             y = 310 + (index * 79) % 520 + sin(t * 0.8) * 19
             panel((x, y, x + 2, y + 2), GOLD)
-        for offset in (-1, 1):
-            view.centered(800 + offset, 311 - offset, "용사가 떠난 뒤, 우리의 일이 시작된다.", 22, (12, 25, 28))
-        view.centered(800, 311, "용사가 떠난 뒤, 우리의 일이 시작된다.", 22, INK)
-        view.centered(800, 43, "클릭 / Enter 선택     방향키 / Tab 이동", 16, MUTED)
 
     def draw_comic(self, page):
         atlas = self.image("story")
