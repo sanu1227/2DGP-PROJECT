@@ -77,9 +77,11 @@ python -m venv .venv
 
 이미 pico2d가 설치된 Python에서는 `python main.py`로 실행할 수 있습니다. 파일 경로는 프로젝트 위치를 기준으로 계산하므로 다른 작업 폴더에서도 `python "프로젝트경로/main.py"`로 실행할 수 있습니다.
 
-기본 실행은 던전 일러스트와 중앙 로고를 사용한 [타이틀 화면](./docs/screenshots/onboarding-v3/title.png)에서 시작합니다. 타이틀에는 게임 시작·게임 종료 버튼만 표시하며 소개 문장과 키 안내는 표시하지 않습니다. **게임 시작**을 선택하면 설명보다 먼저 **코믹한 4컷 만화**를 한 장면씩 보여 줍니다. 용사가 해골의 팔까지 챙겨 떠나고, 몸 없이 출근한 병사가 수리공에게 조립을 부탁합니다. 발을 팔로 착각하는 소동 끝에 복구를 마치지만, 가동한 함정 너머에 공구함이 남습니다. 말풍선에 수리공을 ‘당신’으로 표시하고, 부품·뼈를 이용한 복구 목표와 레버 가동 뒤 통로가 막히는 결과를 직접 설명합니다. 하단 설명문 없이 대사로 사건을 연결하며, 만화 그림은 버튼 위까지 확대해 표시합니다. 과장된 표정과 효과음으로 수리공과 해골 병사의 티격태격하는 하루를 표현합니다. 이전·다음 버튼 또는 좌우 방향키로 장면을 넘길 수 있고, 건너뛰기는 작업 안내로 연결합니다. [첫 장면](./docs/screenshots/story-clarity/story-01.png), [조립 소동](./docs/screenshots/story-clarity/story-03.png), [마지막 반전](./docs/screenshots/story-clarity/story-04.png)을 확인할 수 있습니다.
+기본 실행은 던전 일러스트와 중앙 로고를 사용한 [타이틀 화면](./docs/screenshots/overtime-story/title.png)에서 시작합니다. 타이틀에는 게임 시작·게임 종료 버튼만 표시합니다. **게임 시작**을 선택하면 설명보다 먼저 **야근 코미디 8컷 만화**를 한 장면씩 보여 줍니다. 용사가 화려하게 등장해 함정과 병사를 무너뜨리고 보물을 챙겨 떠납니다. 뒤늦게 출근한 수리공은 “오늘도 야근이네”라며 뒷정리를 시작합니다. 상사인 마왕은 내일까지 복구하라며 재촉하고, 해골 병사는 발을 손처럼 흔들거나 실제 팔을 빌려주며 소동을 일으킵니다. 한 방을 고쳐도 추가 업무가 기다리는 수리공의 하루를 하단 설명문 없이 말풍선만으로 전개합니다.
 
-카툰 뒤에는 그림과 실제 게임 에셋을 연결한 [복구 목표 설명](./docs/screenshots/onboarding-v2/repair-guide.png), [조작·복귀 안내](./docs/screenshots/onboarding-v2/controls.png)가 차례로 나옵니다. 부품 운반·함정 설치·레버 가동, 뼈 두 묶음으로 병사 조립·초소 배치, 복구 후 길이 막히는 규칙과 빈손 출구 복귀를 설명합니다. **1번 방 시작**을 누르면 첫 방의 튜토리얼에 입장합니다. 버튼은 마우스 또는 위아래 방향키/Tab으로 선택한 뒤 Enter/Space로 누릅니다. 카툰과 설명에서 Esc는 타이틀로 돌아가고, 다시 게임을 시작하면 카툰도 첫 장면부터 나옵니다. 타이틀과 게임 안에서 Esc는 종료합니다. `--stage N`은 타이틀·카툰·설명을 건너뛰고 해당 방에 바로 입장합니다.
+큰 대사에는 주아체를 적용하고 26px로 확대했습니다. 말풍선에 ‘수리공 (당신)’, ‘마왕 (상사)’를 표시해 인물 관계를 분명히 합니다. 이전·다음 버튼 또는 좌우 방향키로 장면을 넘길 수 있고, 건너뛰기는 작업 안내로 연결합니다. [용사의 등장](./docs/screenshots/overtime-story/story-01.png), [수리공의 출근](./docs/screenshots/overtime-story/story-04.png), [마왕의 재촉](./docs/screenshots/overtime-story/story-05.png), [추가 업무](./docs/screenshots/overtime-story/story-07.png)를 확인할 수 있습니다. [새 만화 원본과 생성 프롬프트](./assets/story_overtime_v1/README.md)는 저장소에 포함했습니다.
+
+카툰 뒤에는 그림과 실제 게임 에셋을 연결한 [복구 목표 설명](./docs/screenshots/overtime-story/repair-guide.png), [조작·복귀 안내](./docs/screenshots/overtime-story/controls.png)가 차례로 나옵니다. 부품 운반·함정 설치·레버 가동, 뼈 두 묶음으로 병사 조립·초소 배치, 복구 후 길이 막히는 규칙과 빈손 출구 복귀를 설명합니다. **1번 방 시작**을 누르면 첫 방의 튜토리얼에 입장합니다. 버튼은 마우스 또는 위아래 방향키/Tab으로 선택한 뒤 Enter/Space로 누릅니다. 카툰과 설명에서 Esc는 타이틀로 돌아가고, 다시 게임을 시작하면 카툰도 첫 장면부터 나옵니다. 타이틀과 게임 안에서 Esc는 종료합니다. `--stage N`은 타이틀·카툰·설명을 건너뛰고 해당 방에 바로 입장합니다.
 
 **1번 방은 플레이와 함께 진행하는 5단계 튜토리얼**입니다. 왼쪽 안내가 부품까지 이동, 줍기, 함정 설치, 건너편 레버 가동, 빈손으로 출구 복귀를 순서대로 설명합니다. 목표 칸과 목표 이름을 강조하며 이름을 클릭해도 이동할 수 있습니다. 부품을 내려놓거나 Z로 되돌리면 현재 상태에 맞춰 안내가 돌아가고, R로 재시작하면 처음부터 안내합니다. 행동 제한은 없으며 완료 후 Enter로 2번 방에 입장하면 튜토리얼 안내가 사라집니다. [첫 안내](./docs/screenshots/onboarding/room-01.png), [함정 설치 안내](./docs/screenshots/onboarding/install.png), [튜토리얼 완료](./docs/screenshots/onboarding/complete.png)를 확인할 수 있습니다.
 
@@ -96,7 +98,7 @@ python -m tests.smoke_gates       # 발판 문 개폐·통과·닫힘 대기·�
 python -m tests.smoke_gate_animation # 개폐 시간·중간 프레임·역방향 전환·애니메이션 클릭 검사
 python -m tests.smoke_plate_animation # 발판 승강·탑승물 높이·반전·되돌리기·클릭 검사
 python -m tests.smoke_action_limits # 실제 횟수 소진·입력 정지·되돌리기·재시작 검사
-python -m tests.smoke_onboarding  # 타이틀·카툰 4컷·안내 2장·튜토리얼·첫 방 클리어 검사
+python -m tests.smoke_onboarding  # 타이틀·카툰 8컷·안내 2장·튜토리얼·첫 방 클리어 검사
 ```
 
 금색 마름모는 주울 수 있는 물건과 작업할 장치를 표시합니다. 표식이나 물체에 마우스를 올리면 하단에 이름이 나오며, 표식을 클릭해 해당 칸으로 이동할 수 있습니다. 같은 칸에서 행동 조건을 충족하면 표식이 청록색 **E**로 바뀝니다. [표식 적용 화면](./docs/screenshots/interaction-markers-stage-06.png), [줍기 가능한 상태](./docs/screenshots/interaction-markers-ready.png)를 확인할 수 있습니다.
@@ -209,6 +211,7 @@ python main.py
 │   ├── levels.py         # 스테이지 데이터와 검증
 │   ├── model.py          # 화면과 독립적인 게임 규칙
 │   ├── front_end.py      # 그림 타이틀·스토리 카툰·복구 및 조작 안내
+│   ├── story.py          # 용사·수리공·마왕·해골 병사의 8컷 대사와 장면
 │   ├── tutorial.py       # 1번 방 상태에 맞춘 5단계 안내
 │   ├── art.py            # 아틀라스 로딩과 기준점 변환
 │   ├── scenery.py        # 좌표에 고정된 파손 흔적과 배경 색상

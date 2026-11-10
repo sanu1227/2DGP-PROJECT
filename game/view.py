@@ -86,7 +86,7 @@ class View:
         self.reset_plates()
         self.reset_player()
         try:
-            for size in (13, 16, 18, 22, 32, 48, 64):
+            for size in (13, 16, 18, 22, 26, 32, 48, 64):
                 self.fonts[size] = p.load_font(font_path(size), size)
             self.art = Art()
         except Exception:

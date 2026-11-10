@@ -1,4 +1,4 @@
-"""그림 타이틀, 네 컷 프롤로그, 그림과 연결된 복구·조작 안내."""
+"""그림 타이틀, 야근 코미디 프롤로그, 그림과 연결된 복구·조작 안내."""
 
 from dataclasses import dataclass
 from math import sin
@@ -8,6 +8,7 @@ from time import perf_counter
 import pico2d.pico2d as p
 
 from game.layout import WIDTH, HEIGHT
+from game.story import STORY
 
 
 INK = (250, 239, 209)
@@ -15,16 +16,11 @@ MUTED = (188, 200, 191)
 GOLD = (239, 193, 103)
 TEAL = (126, 224, 201)
 ART_ROOT = Path(__file__).resolve().parents[1] / "assets" / "menu_v2"
-DIALOGUE = (
-    (("던전을 떠나는 용사", "던전 정복 완료!", "함정도, 해골 병사도", "전부 쓰러뜨렸군!"),
-     ("해골 병사", "그거 제 팔이에요!", "함정도 제 몸도 부수고,", "팔까지 가져가시면요?!")),
-    (("수리공 (당신)", "전 이 던전의 수리공이에요.", "부품으로 함정을 고치고,", "뼈를 모아 병사도 조립하죠."),
-     ("해골 병사", "제 뼈는 여기 다 있어요!", "저부터 다시 조립해 주세요.", "머리만 출근했거든요...")),
-    (("수리공 (당신)", "함정 수리는 끝났어요.", "병사도 조립해서", "초소에 세우면 복구 완료!"),
-     ("해골 병사", "다시 초소를 지킬게요!", "그런데... 그건 발이에요!", "팔 자리에 붙이지 마세요!")),
-    (("수리공 (당신)", "병사 배치 끝! 레버도 켰고!", "함정이 길을 막았으니", "이제 출구로 나가면 퇴근!"),
-     ("해골 병사", "그런데 공구함은 저쪽에...", "함정 때문에 못 돌아가요!", "짐부터 챙기셨어야죠!")),
-)
+STORY_ROOT = ART_ROOT.parent / "story_overtime_v1"
+STORY_IMAGES = {"overtime_01": STORY_ROOT / "act_01.png",
+                "overtime_02": STORY_ROOT / "act_02.png"}
+DIALOGUE_BOUNDS = ((258, 750, 658, 900), (936, 750, 1336, 900))
+DIALOGUE_SIZE = 26
 
 
 def panel(bounds, color, filled=True):
@@ -71,7 +67,8 @@ class FrontEnd:
 
     def image(self, name):
         if name not in self.images:
-            self.images[name] = p.load_image(str(ART_ROOT / f"{name}.png"))
+            path = STORY_IMAGES[name] if name in STORY_IMAGES else ART_ROOT / f"{name}.png"
+            self.images[name] = p.load_image(str(path))
             p.SDL_SetTextureScaleMode(self.images[name].texture, p.SDL_ScaleModeLinear)
         return self.images[name]
 
@@ -84,7 +81,7 @@ class FrontEnd:
             )
         if self.screen == "story":
             return (
-                Button("story_next", "작업 안내" if self.story_page == 3 else "다음 이야기", (1260, 44, 1520, 100)),
+                Button("story_next", "작업 안내" if self.story_page == len(STORY) - 1 else "다음 이야기", (1260, 44, 1520, 100)),
                 Button("story_back", "타이틀로" if self.story_page == 0 else "이전 이야기", (80, 44, 340, 100)),
                 Button("controls", "건너뛰기", (1370, 876, 1540, 924)),
             )
@@ -103,7 +100,7 @@ class FrontEnd:
         elif action == "story":
             self.screen, self.story_page = "story", 0
         elif action == "story_next":
-            if self.story_page < len(DIALOGUE) - 1:
+            if self.story_page < len(STORY) - 1:
                 self.story_page += 1
             else:
                 self.screen, self.guide_page = "controls", 0
@@ -124,7 +121,7 @@ class FrontEnd:
             if self.guide_page:
                 self.guide_page -= 1
             else:
-                self.screen, self.story_page = "story", len(DIALOGUE) - 1
+                self.screen, self.story_page = "story", len(STORY) - 1
         return action
 
     def handle(self, event):
@@ -152,9 +149,10 @@ class FrontEnd:
         if self.screen == "title":
             self.draw_title(view)
         elif self.screen == "story":
-            self.draw_comic(self.story_page, "story_comic", footer_height=112)
+            page = STORY[self.story_page]
+            self.draw_comic(page.cell, page.atlas, footer_height=112)
             self.draw_dialogue(view)
-            self.page_mark(view, "던전의 하루", self.story_page + 1, 4)
+            self.page_mark(view, "오늘도 야근", self.story_page + 1, len(STORY))
         else:
             self.draw_controls(view)
         for index, button in enumerate(self.buttons):
@@ -201,8 +199,8 @@ class FrontEnd:
 
     def draw_dialogue(self, view):
         # 자막은 그림에 굽지 않아 작은 글자도 선명하게 읽고 수정할 수 있다.
-        for bounds, words in zip(((258, 750, 658, 900), (936, 750, 1336, 900)),
-                                 DIALOGUE[self.story_page]):
+        page = STORY[self.story_page]
+        for bounds, words in zip(DIALOGUE_BOUNDS, page.dialogue):
             left, bottom, right, top = bounds
             fill, outline = (255, 249, 225), (31, 37, 36)
             bevel((left + 4, bottom - 4, right + 4, top - 4), outline, outline)
@@ -218,9 +216,8 @@ class FrontEnd:
             p.draw_line(anchor + 12, bottom, tip, bottom - 28, *outline)
             view.text(left + 18, top - 18, words[0], 13, (109, 93, 61))
             for index, value in enumerate(words[1:]):
-                view.centered((left + right) / 2, top - 50 - index * 33, value, 22, outline)
-        x, y, effect = ((1080, 331, "와장창!"), (590, 323, "하아..."),
-                        (1050, 380, "멈칫!"), (980, 475, "아차!"))[self.story_page]
+                view.centered((left + right) / 2, top - 50 - index * 33, value, DIALOGUE_SIZE, outline)
+        x, y, effect = page.effect
         for dx, dy in ((-2, 0), (2, 0), (0, -2), (0, 2)):
             view.centered(x + dx, y + dy, effect, 32, (22, 31, 31))
         view.centered(x, y, effect, 32, GOLD)
