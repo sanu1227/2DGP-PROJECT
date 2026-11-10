@@ -79,6 +79,8 @@ python -m venv .venv
 
 기본 실행은 [타이틀 화면](./docs/screenshots/onboarding/title.png)에서 시작합니다. **게임 시작**을 선택하면 [조작 설명](./docs/screenshots/onboarding/controls.png)이 나오고, **1번 방 시작**을 누르면 첫 방에 입장합니다. 버튼은 마우스 클릭 또는 방향키/Tab으로 선택한 뒤 Enter/Space로 누를 수 있습니다. 조작 설명에서 Esc는 타이틀로 돌아가며, 타이틀과 게임 안에서 Esc는 종료합니다. `--stage N`을 지정하면 타이틀과 조작 설명을 건너뛰고 해당 방에 바로 입장합니다.
 
+**1번 방은 플레이와 함께 진행하는 5단계 튜토리얼**입니다. 왼쪽 안내가 부품까지 이동, 줍기, 함정 설치, 건너편 레버 가동, 빈손으로 출구 복귀를 순서대로 설명합니다. 목표 칸과 목표 이름을 강조하며 이름을 클릭해도 이동할 수 있습니다. 부품을 내려놓거나 Z로 되돌리면 현재 상태에 맞춰 안내가 돌아가고, R로 재시작하면 처음부터 안내합니다. 행동 제한은 없으며 완료 후 Enter로 2번 방에 입장하면 튜토리얼 안내가 사라집니다. [첫 안내](./docs/screenshots/onboarding/room-01.png), [함정 설치 안내](./docs/screenshots/onboarding/install.png), [튜토리얼 완료](./docs/screenshots/onboarding/complete.png)를 확인할 수 있습니다.
+
 ```powershell
 python main.py --stage 3           # 세 번째 입문방에서 시작
 python main.py --check             # 화면 없이 스테이지 데이터 검사
@@ -92,7 +94,7 @@ python -m tests.smoke_gates       # 발판 문 개폐·통과·닫힘 대기·�
 python -m tests.smoke_gate_animation # 개폐 시간·중간 프레임·역방향 전환·애니메이션 클릭 검사
 python -m tests.smoke_plate_animation # 발판 승강·탑승물 높이·반전·되돌리기·클릭 검사
 python -m tests.smoke_action_limits # 실제 횟수 소진·입력 정지·되돌리기·재시작 검사
-python -m tests.smoke_onboarding  # 타이틀·조작 설명·첫 방 전환과 메뉴 입력 격리 검사
+python -m tests.smoke_onboarding  # 메뉴·튜토리얼 5단계·복구·첫 방 클리어·다음 방 검사
 ```
 
 금색 마름모는 주울 수 있는 물건과 작업할 장치를 표시합니다. 표식이나 물체에 마우스를 올리면 하단에 이름이 나오며, 표식을 클릭해 해당 칸으로 이동할 수 있습니다. 같은 칸에서 행동 조건을 충족하면 표식이 청록색 **E**로 바뀝니다. [표식 적용 화면](./docs/screenshots/interaction-markers-stage-06.png), [줍기 가능한 상태](./docs/screenshots/interaction-markers-ready.png)를 확인할 수 있습니다.
@@ -114,7 +116,7 @@ python -m tests.smoke_onboarding  # 타이틀·조작 설명·첫 방 전환과 
 | Z / Backspace | 직전 유효 행동 되돌리기. 횟수 제한 없음 |
 | R | 현재 방 재시작. 되돌리기 기록도 초기화 |
 | Enter | 완료 후 다음 방. 마지막 방 완료 후 첫 방으로 복귀 |
-| Esc / 창 닫기 | 종료 |
+| Esc / 창 닫기 | 종료. 조작 설명 화면의 Esc는 타이틀로 복귀 |
 | 1~6 (키보드 윗줄) | 개발용 방 이동. 해당 방을 초기 상태부터 시작 |
 | F2 | 개발용 타일 좌표 표시 켜기·끄기. 기본값은 꺼짐 |
 
@@ -204,6 +206,8 @@ python main.py
 │   ├── navigation.py    # 사선 좌표 선택과 한 칸씩 클릭 이동
 │   ├── levels.py         # 스테이지 데이터와 검증
 │   ├── model.py          # 화면과 독립적인 게임 규칙
+│   ├── front_end.py      # 타이틀·조작 설명과 버튼 입력
+│   ├── tutorial.py       # 1번 방 상태에 맞춘 5단계 안내
 │   ├── art.py            # 아틀라스 로딩과 기준점 변환
 │   ├── scenery.py        # 좌표에 고정된 파손 흔적과 배경 색상
 │   ├── themes.py         # 스테이지별 테마 선택과 장식 배치 확인

@@ -14,6 +14,7 @@ from game.navigation import ClickNavigator, IsoBoard, find_path
 from game.themes import boundary_walls, low_wall_sprite, scene_for, themed_floor
 from game.layout import WIDTH, HEIGHT, BOARD_BOTTOM, BOARD_TOP
 from game.front_end import FrontEnd
+from game.tutorial import first_room_hint
 
 INK = (226, 230, 219)
 MUTED = (158, 169, 166)
@@ -25,6 +26,7 @@ ITEM_SPRITES = {"part": "part", "bone": "bone_bundle", "soldier": "soldier_carri
 FACING = {"up": "ne", "right": "se", "down": "sw", "left": "nw"}
 GATE_SECONDS = 0.36
 PLATE_SECONDS = 0.24
+TUTORIAL_PANEL = (32, 600, 420, 810)
 
 
 def font_path() -> str:
@@ -73,6 +75,7 @@ class View:
         self.navigation = ClickNavigator()
         self.mouse_position = None
         self.show_coordinates = False
+        self.tutorial = None
         self.hit_regions = []
         self.hit_masks = {}
         self.gate_hit_masks = {}
@@ -198,6 +201,9 @@ class View:
     def pick_cell(self, game, x, y):
         """UI는 제외하고 앞에 그려진 물체부터 검사한 뒤 바닥 칸을 고른다."""
         if not BOARD_BOTTOM < y < BOARD_TOP:
+            return None
+        left, bottom, right, top = TUTORIAL_PANEL
+        if self.tutorial and left <= x <= right and bottom <= y <= top:
             return None
         for pos, (left, bottom, right, top) in reversed(self.hit_regions):
             if left <= x < right and bottom <= y < top:
@@ -529,8 +535,38 @@ class View:
                 box(sx - width / 2, sy, sx + width / 2, sy + 18, (19, 27, 32))
                 self.text(sx - width / 2 + 3, sy + 9, label, 13, GOLD)
 
+    def tutorial_overlay(self, game):
+        hint = self.tutorial
+        if hint is None:
+            return
+        if hint.target is not None:
+            projection = IsoBoard(game.level.width, game.level.height)
+            sx, sy = projection.screen(hint.target)
+            color = TEAL if game.state.player == hint.target else GOLD
+            for inset in (3, 5):
+                diamond(sx, sy, projection.half_width - inset,
+                        int(projection.half_height) - inset // 2, None, color)
+            # 목표 안내도 해당 타일로 이동하는 클릭 영역이다.
+            bounds = (sx - 66, sy - 59, sx + 66, sy - 33)
+            box(*bounds, (25, 40, 42))
+            box(*bounds, color, filled=False)
+            self.centered(sx, sy - 46, hint.target_label, 16, color)
+            self.hit_regions.append((hint.target, bounds))
+        box(*TUTORIAL_PANEL, (25, 39, 42))
+        box(*TUTORIAL_PANEL, (101, 120, 104), filled=False)
+        self.text(52, 786, "첫 근무 · 튜토리얼", 16, GOLD)
+        self.text(344, 786, f"{hint.step} / 5", 16, TEAL)
+        for index in range(5):
+            completed = hint.complete or index < hint.step - 1
+            color = TEAL if completed else GOLD if index == hint.step - 1 else (59, 77, 77)
+            box(52 + index * 70, 762, 112 + index * 70, 765, color)
+        self.text(52, 730, hint.title, 22, INK)
+        self.wrapped(52, 690, hint.instruction, width=344, size=16, color=INK)
+        self.text(52, 619, "행동 무제한 · Z 되돌리기 · R 다시 시작", 13, MUTED)
+
     def draw(self, game, index, total):
         level, state = game.level, game.state
+        self.tutorial = first_room_hint(game)
         if game.failed:
             self.navigation.cancel()
         scene = scene_for(level)
@@ -545,6 +581,7 @@ class View:
         self.wrapped(450, HEIGHT - 69, level.hint, width=WIDTH - 490, size=16)
 
         self.board(game)
+        self.tutorial_overlay(game)
 
         # 정보는 위·아래 띠에 모아 넓어진 지도 전체를 한 화면에 유지한다.
         box(32, BOARD_TOP, WIDTH - 32, BOARD_TOP + 34, (28, 39, 44))
@@ -605,10 +642,13 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True):
         }
         running, frames = True, 0
         while running:
+            screen_changed = False
             for event in p.get_events():
                 if event.type == p.SDL_QUIT:
                     running = False
                     break
+                elif screen_changed:
+                    continue
                 elif front_end.screen != "playing":
                     result = front_end.handle(event)
                     if result == "quit":
@@ -620,8 +660,8 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True):
                         view.navigation.cancel()
                         view.mouse_position = None
                     if result is not None:
-                        # 전환한 프레임의 나머지 입력이 다음 화면을 건너뛰지 않게 한다.
-                        break
+                        # 전환 뒤 입력은 무시하되 같은 묶음의 창 닫기는 처리한다.
+                        screen_changed = True
                 elif event.type == p.SDL_MOUSEMOTION:
                     view.mouse_position = (event.x, HEIGHT - 1 - event.y)
                 elif event.type == p.SDL_MOUSEBUTTONDOWN:
