@@ -16,18 +16,28 @@ GOLD = (239, 193, 103)
 TEAL = (126, 224, 201)
 ART_ROOT = Path(__file__).resolve().parents[1] / "assets" / "menu_v2"
 STORY = (
-    ("용사는 승리하고 떠났다.",
-     "깊은 던전을 돌파한 용사의 발걸음이 멀어진다.",
-     "남은 것은 부서진 함정과, 뿔뿔이 흩어진 해골 병사들."),
-    ("누군가는, 그 뒤를 고쳐야 한다.",
-     "던전 수리공인 당신의 근무는 이제 시작이다.",
-     "쓸 만한 부품을 모으고, 흩어진 동료들을 다시 일으켜 세우자."),
-    ("다시 움직일 수 있도록.",
+    ("용사 퇴근. 던전 야근.",
+     "함정은 박살, 병사는 산산조각.",
+     "누군가의 멋진 모험이 끝나면, 누군가의 근무가 시작된다."),
+    ("오늘의 업무: 전원 재조립",
      "부품은 함정으로, 뼈는 작업대로.",
-     "텅 빈 초소에 병사가 돌아오면 던전도 조금씩 제 모습을 찾는다."),
-    ("마지막으로, 돌아올 길을 남겨라.",
-     "레버를 당기면 함정이 깨어나고, 익숙한 통로는 막힌다.",
-     "수리를 끝내는 것만큼 중요한 일. 무사히 출구로 돌아오기."),
+     "던전 수리공인 당신이 동료들을 다시 일으켜 세울 차례!"),
+    ("조립에는 순서가 있습니다",
+     "뼈를 모아 병사를 조립하고, 망가진 함정을 고친다.",
+     "병사는 제자리에, 부품은 맞는 자리에. 발은... 팔 자리가 아니다."),
+    ("복구 완료! 퇴근은... 잠깐.",
+     "레버를 당기자 함정이 솟고, 돌아가던 통로가 막혔다.",
+     "출구와 남은 짐부터 확인할 것. 오늘도 하나 배웠다."),
+)
+DIALOGUE = (
+    (("용사", "후후, 완벽한", "마무리였어!"),
+     ("해골 병사", "제 팔까지", "챙기셨는데요?!")),
+    (("수리공", "오늘도", "전원 분해네요."),
+     ("해골 병사", "저... 출근은 했는데", "몸이 안 따라줘요.")),
+    (("수리공", "가만히 좀 있어 봐요!", "이 팔만 붙이면..."),
+     ("해골 병사", "잠깐만요!!", "그거 제 발인데요?!")),
+    (("수리공", "복구 끝!", "이제 퇴..."),
+     ("해골 병사", "대장님! 공구함은", "여기 있는데요?!")),
 )
 
 
@@ -156,9 +166,10 @@ class FrontEnd:
         if self.screen == "title":
             self.draw_title(view)
         elif self.screen == "story":
-            self.draw_comic(self.story_page)
+            self.draw_comic(self.story_page, "story_comic")
+            self.draw_dialogue(view)
             self.caption(view, *STORY[self.story_page])
-            self.page_mark(view, "프롤로그", self.story_page + 1, 4)
+            self.page_mark(view, "던전의 하루", self.story_page + 1, 4)
         else:
             self.draw_controls(view)
         for index, button in enumerate(self.buttons):
@@ -182,8 +193,8 @@ class FrontEnd:
             y = 310 + (index * 79) % 520 + sin(t * 0.8) * 19
             panel((x, y, x + 2, y + 2), GOLD)
 
-    def draw_comic(self, page):
-        atlas = self.image("story")
+    def draw_comic(self, page, image_name="story"):
+        atlas = self.image(image_name)
         width, height = atlas.w // 2, atlas.h // 2
         left = (page % 2) * width
         bottom = (1 - page // 2) * height
@@ -198,6 +209,32 @@ class FrontEnd:
         # 그림 아래 자막을 분리해 복구 동작이 글자에 가리지 않게 한다.
         panel((0, 0, WIDTH, 238), (14, 25, 28))
         p.draw_line(80, 237, 1520, 237, *GOLD)
+
+    def draw_dialogue(self, view):
+        # 자막은 그림에 굽지 않아 작은 글자도 선명하게 읽고 수정할 수 있다.
+        for bounds, words in zip(((342, 790, 722, 900), (878, 790, 1258, 900)),
+                                 DIALOGUE[self.story_page]):
+            left, bottom, right, top = bounds
+            fill, outline = (255, 249, 225), (31, 37, 36)
+            bevel((left + 4, bottom - 4, right + 4, top - 4), outline, outline)
+            bevel(bounds, fill, outline)
+            anchor = left + 205
+            tip = anchor + 27
+            for row in range(29):
+                t = row / 28
+                x1 = anchor - 12 + (tip - anchor + 12) * t
+                x2 = anchor + 12 + (tip - anchor - 12) * t
+                p.draw_line(x1, bottom - row, x2, bottom - row, *fill)
+            p.draw_line(anchor - 12, bottom, tip, bottom - 28, *outline)
+            p.draw_line(anchor + 12, bottom, tip, bottom - 28, *outline)
+            view.text(left + 18, top - 18, words[0], 13, (109, 93, 61))
+            view.centered((left + right) / 2, top - 47, words[1], 22, outline)
+            view.centered((left + right) / 2, top - 80, words[2], 22, outline)
+        x, y, effect = ((1080, 331, "와장창!"), (590, 323, "하아..."),
+                        (1050, 380, "멈칫!"), (980, 475, "아차!"))[self.story_page]
+        for dx, dy in ((-2, 0), (2, 0), (0, -2), (0, 2)):
+            view.centered(x + dx, y + dy, effect, 32, (22, 31, 31))
+        view.centered(x, y, effect, 32, GOLD)
 
     @staticmethod
     def caption(view, title, first, second):

@@ -109,6 +109,8 @@ def main():
 
     def events():
         nonlocal current
+        # 창을 다시 열 때 발생하는 실제 마우스 이동이 버튼 포커스를 바꾸지 않게 한다.
+        original_events()
         current = steps.popleft()
         for value in current[0]:
             event = p.SDL_Event()
@@ -139,7 +141,7 @@ def main():
             actual += f":{menu.story_page}"
         elif actual == "controls":
             actual += f":{menu.guide_page}"
-        assert actual == screen, (actual, screen)
+        assert actual == screen, (actual, screen, current[0])
         assert games[-1].state.moves == moves, (games[-1].state.moves, moves)
         assert games[-1].level.id == (room[0] if room else "stage_01")
         if screen == "playing":
