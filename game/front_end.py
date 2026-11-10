@@ -15,29 +15,15 @@ MUTED = (188, 200, 191)
 GOLD = (239, 193, 103)
 TEAL = (126, 224, 201)
 ART_ROOT = Path(__file__).resolve().parents[1] / "assets" / "menu_v2"
-STORY = (
-    ("용사 퇴근. 던전 야근.",
-     "함정은 박살, 병사는 산산조각.",
-     "누군가의 멋진 모험이 끝나면, 누군가의 근무가 시작된다."),
-    ("오늘의 업무: 전원 재조립",
-     "부품은 함정으로, 뼈는 작업대로.",
-     "던전 수리공인 당신이 동료들을 다시 일으켜 세울 차례!"),
-    ("조립에는 순서가 있습니다",
-     "뼈를 모아 병사를 조립하고, 망가진 함정을 고친다.",
-     "병사는 제자리에, 부품은 맞는 자리에. 발은... 팔 자리가 아니다."),
-    ("복구 완료! 퇴근은... 잠깐.",
-     "레버를 당기자 함정이 솟고, 돌아가던 통로가 막혔다.",
-     "출구와 남은 짐부터 확인할 것. 오늘도 하나 배웠다."),
-)
 DIALOGUE = (
     (("용사", "후후, 완벽한", "마무리였어!"),
      ("해골 병사", "제 팔까지", "챙기셨는데요?!")),
-    (("수리공", "오늘도", "전원 분해네요."),
-     ("해골 병사", "저... 출근은 했는데", "몸이 안 따라줘요.")),
-    (("수리공", "가만히 좀 있어 봐요!", "이 팔만 붙이면..."),
+    (("수리공", "함정에 병사까지...", "오늘도 전부 고쳐야겠네."),
+     ("해골 병사", "저부터 조립해 주세요!", "몸이 안 따라줘요.")),
+    (("수리공", "함정은 다 고쳤고,", "이 팔만 붙이면..."),
      ("해골 병사", "잠깐만요!!", "그거 제 발인데요?!")),
-    (("수리공", "복구 끝!", "이제 퇴..."),
-     ("해골 병사", "대장님! 공구함은", "여기 있는데요?!")),
+    (("수리공", "레버도 켰고!", "이제 퇴..."),
+     ("해골 병사", "대장님! 공구함은", "함정 건너편인데요?!")),
 )
 
 
@@ -117,7 +103,7 @@ class FrontEnd:
         elif action == "story":
             self.screen, self.story_page = "story", 0
         elif action == "story_next":
-            if self.story_page < len(STORY) - 1:
+            if self.story_page < len(DIALOGUE) - 1:
                 self.story_page += 1
             else:
                 self.screen, self.guide_page = "controls", 0
@@ -138,7 +124,7 @@ class FrontEnd:
             if self.guide_page:
                 self.guide_page -= 1
             else:
-                self.screen, self.story_page = "story", len(STORY) - 1
+                self.screen, self.story_page = "story", len(DIALOGUE) - 1
         return action
 
     def handle(self, event):
@@ -166,9 +152,8 @@ class FrontEnd:
         if self.screen == "title":
             self.draw_title(view)
         elif self.screen == "story":
-            self.draw_comic(self.story_page, "story_comic")
+            self.draw_comic(self.story_page, "story_comic", footer_height=112)
             self.draw_dialogue(view)
-            self.caption(view, *STORY[self.story_page])
             self.page_mark(view, "던전의 하루", self.story_page + 1, 4)
         else:
             self.draw_controls(view)
@@ -193,7 +178,7 @@ class FrontEnd:
             y = 310 + (index * 79) % 520 + sin(t * 0.8) * 19
             panel((x, y, x + 2, y + 2), GOLD)
 
-    def draw_comic(self, page, image_name="story"):
+    def draw_comic(self, page, image_name="story", *, footer_height=238):
         atlas = self.image(image_name)
         width, height = atlas.w // 2, atlas.h // 2
         left = (page % 2) * width
@@ -204,11 +189,15 @@ class FrontEnd:
             atlas.clip_draw(left, bottom, width, height, 800, 480, 1600, 1200)
         finally:
             p.SDL_SetTextureColorMod(atlas.texture, 255, 255, 255)
-        atlas.clip_draw(left, bottom, width, height, 800, 600, 960, 720)
-        panel((318, 238, 1282, 960), (144, 119, 75), False)
-        # 그림 아래 자막을 분리해 복구 동작이 글자에 가리지 않게 한다.
-        panel((0, 0, WIDTH, 238), (14, 25, 28))
-        p.draw_line(80, 237, 1520, 237, *GOLD)
+        picture_height = HEIGHT - footer_height - 2
+        picture_width = picture_height * width / height
+        atlas.clip_draw(left, bottom, width, height, WIDTH / 2, HEIGHT - picture_height / 2,
+                        picture_width, picture_height)
+        panel(((WIDTH - picture_width) / 2 - 2, footer_height,
+               (WIDTH + picture_width) / 2 + 2, HEIGHT), (144, 119, 75), False)
+        # 스토리는 버튼 높이만 남겨 그림을 키우고, 작업 안내는 설명 공간을 확보한다.
+        panel((0, 0, WIDTH, footer_height), (14, 25, 28))
+        p.draw_line(80, footer_height - 1, 1520, footer_height - 1, *GOLD)
 
     def draw_dialogue(self, view):
         # 자막은 그림에 굽지 않아 작은 글자도 선명하게 읽고 수정할 수 있다.
