@@ -340,7 +340,8 @@ class View:
             self.hit_regions.append((pos, rect))
         hovered = self.pick_cell(game, *self.mouse_position) if self.mouse_position else None
         if hovered in targets and hovered != state.player:
-            self.interaction_hint = f"상호작용 대상: {targets[hovered]} · 해당 칸에서 E"
+            self.interaction_hint = (f"상호작용 대상: {targets[hovered]} · 해당 칸에서 E"
+                                     if level.id == "stage_01" else targets[hovered])
 
     def gate(self, level, pos, sx, sy, scale, status, opening=None):
         """문틀의 사선 축을 양옆 벽에 맞추고 열린 중앙은 클릭을 통과시킨다."""
@@ -630,11 +631,74 @@ class View:
         self.wrapped(52, 690, hint.instruction, width=344, size=16, color=INK)
         self.text(52, 619, "행동 무제한 · Z 되돌리기 · R 다시 시작", 13, MUTED)
 
+    def play_context(self, game):
+        """입문방 이후에는 지금 필요한 작업과 피드백만 한 줄로 표시한다."""
+        if game.failed:
+            return game.context_action(), RED
+        if game.state.cleared:
+            return "복구 완료", TEAL
+        if self.transporting(game):
+            return "벨트 자동 운반 중", TEAL
+        if self.interaction_hint:
+            return self.interaction_hint, GOLD
+        level = game.level
+        targets = level.traps | level.benches | level.posts | level.levers | level.chutes.keys() | game.state.items.keys()
+        if game.can_interact() or game.state.player in targets:
+            return game.context_action(), TEAL if game.can_interact() else MUTED
+        quiet = {
+            "물건이나 장치 위에서 E를 누르세요.", "현재 서 있는 칸입니다.",
+            "선택한 칸으로 이동합니다. 우클릭으로 취소할 수 있습니다.",
+            "자동 이동을 취소했습니다.", "직전 행동을 되돌렸습니다.",
+        }
+        if game.message not in quiet and not game.message.startswith("한 칸 이동했습니다."):
+            return game.message, MUTED
+        return "", MUTED
+
+    def draw_play(self, game, index, total):
+        """2번 방부터 사용하는 간결한 플레이 HUD. 게임판 좌표는 유지한다."""
+        level, state = game.level, game.state
+        scene = scene_for(level)
+        background = tuple(scene["background"]) if scene else (19, 27, 32)
+        box(0, 0, WIDTH, HEIGHT, background)
+        self.text(40, HEIGHT - 48, f"{index + 1:02d} / {total:02d}", 18, GOLD)
+        self.text(150, HEIGHT - 48, level.title, 26, INK)
+        self.board(game)
+
+        box(32, BOARD_TOP, WIDTH - 32, BOARD_TOP + 40, (28, 39, 44))
+        x = 48
+        if level.traps:
+            self.text(x, BOARD_TOP + 20, f"함정 {len(state.installed)} / {len(level.traps)}", 18)
+            self.text(x + 150, BOARD_TOP + 20, "가동 완료" if state.active else "미가동", 16,
+                      TEAL if state.active else MUTED)
+            x += 300
+        if level.posts:
+            self.text(x, BOARD_TOP + 20, f"병사 {len(state.soldiers)} / {len(level.posts)}", 18)
+        self.text(740, BOARD_TOP + 20, f"운반: {ITEM_NAMES[state.carrying]}", 18, GOLD if state.carrying else MUTED)
+        if state.carrying:
+            self.item(state.carrying, 940, BOARD_TOP + 8, 0.19)
+        remaining = game.remaining_actions
+        budget = "행동 무제한" if remaining is None else f"남은 행동 {remaining} / {level.action_limit}"
+        color = (TEAL if state.cleared else MUTED if remaining is None else RED if remaining <= 5
+                 else GOLD if remaining <= max(5, level.action_limit // 5) else INK)
+        self.text(WIDTH - 340, BOARD_TOP + 27, budget, 18, color)
+        self.text(WIDTH - 340, BOARD_TOP + 10, f"사용 {state.moves}회", 13, MUTED)
+
+        context, color = self.play_context(game)
+        if context:
+            box(32, 32, WIDTH - 32, 78, (28, 39, 44))
+            self.text(48, 55, context, 18, color)
+        if state.cleared:
+            label = "E / Space  다음 방" if index + 1 < total else "E / Space  처음부터 다시"
+            self.text(WIDTH - 323, 55, label, 18, TEAL)
+
     def draw(self, game, index, total):
         level, state = game.level, game.state
         self.tutorial = first_room_hint(game)
         if game.failed:
             self.navigation.cancel()
+        if level.id != "stage_01":
+            self.draw_play(game, index, total)
+            return
         scene = scene_for(level)
         background = tuple(scene["background"]) if scene else (19, 27, 32)
         accent = tuple(scene["accent"]) if scene else MUTED
