@@ -1,7 +1,6 @@
 """그림 타이틀, 야근 코미디 프롤로그, 그림과 연결된 복구·조작 안내."""
 
 from dataclasses import dataclass
-from math import sin
 from pathlib import Path
 from time import perf_counter
 
@@ -11,6 +10,8 @@ from game.layout import WIDTH, HEIGHT
 from game.story import STORY, ComicPlayback, REVEAL_SECONDS
 from game.comic import PANEL_BOUNDS, draw_comic_page
 from game.comic_motion import MOTION_IMAGES
+from game.story_audio import StoryAudio
+from game.title_motion import TITLE_IMAGES, draw_title
 
 
 INK = (250, 239, 209)
@@ -20,7 +21,7 @@ TEAL = (126, 224, 201)
 ART_ROOT = Path(__file__).resolve().parents[1] / "assets" / "menu_v2"
 STORY_ROOT = ART_ROOT.parent / "story_overtime_v1"
 STORY_IMAGES = {"overtime_01": STORY_ROOT / "act_01.png",
-                "overtime_02": STORY_ROOT / "act_02.png", **MOTION_IMAGES}
+                "overtime_02": STORY_ROOT / "act_02.png", **MOTION_IMAGES, **TITLE_IMAGES}
 
 
 def panel(bounds, color, filled=True):
@@ -55,15 +56,19 @@ class Button:
 
 
 class FrontEnd:
-    def __init__(self, show_title=True):
+    def __init__(self, show_title=True, audio=None):
         self.screen = "title" if show_title else "playing"
         self.selected = 0
         self.comic = ComicPlayback()
         self.story_clock = None
         self.guide_page = 0
         self.images = {}
+        self.audio = audio if audio is not None else StoryAudio()
+        self.title_elapsed = 0.0
+        self.title_clock = perf_counter() if show_title else None
 
     def close(self):
+        self.audio.close()
         self.images.clear()
 
     @property
@@ -73,7 +78,13 @@ class FrontEnd:
     def update(self, now):
         if self.screen == "story" and self.story_clock is not None:
             self.comic.update(now - self.story_clock)
+            self.audio.update(self.story_page, self.comic.elapsed, self.comic.paused)
+        elif self.screen != "story":
+            self.audio.stop()
         self.story_clock = now if self.screen == "story" else None
+        if self.screen == "title" and self.title_clock is not None:
+            self.title_elapsed += max(0, now - self.title_clock)
+        self.title_clock = now if self.screen == "title" else None
 
     def image(self, name):
         if name not in self.images:
@@ -106,10 +117,12 @@ class FrontEnd:
 
     def activate(self, action):
         self.selected = 0
+        resuming_story = action == "story_play" and not self.comic.finished
         if action == "title":
             self.screen = "title"
             self.comic.reset()
             self.guide_page = 0
+            self.title_elapsed = 0.0
         elif action == "story":
             self.screen = "story"
             self.comic.reset()
@@ -131,6 +144,7 @@ class FrontEnd:
                 self.guide_page = 1
             else:
                 self.screen = "playing"
+                self.audio.stop()
                 return "start"
         elif action == "guide_back":
             if self.guide_page:
@@ -141,6 +155,18 @@ class FrontEnd:
                 self.comic.elapsed = min(REVEAL_SECONDS, self.comic.duration)
                 self.comic.paused = True
         self.story_clock = perf_counter() if self.screen == "story" else None
+        if self.screen == "story":
+            if resuming_story:
+                self.audio.set_paused(self.comic.paused)
+            else:
+                self.audio.seek(self.story_page, self.comic.elapsed, self.comic.paused)
+        else:
+            self.audio.stop()
+        if self.screen == "title":
+            self.title_elapsed = 0.0
+            self.title_clock = perf_counter()
+        else:
+            self.title_clock = None
         return action
 
     def handle(self, event):
@@ -193,12 +219,7 @@ class FrontEnd:
             view.centered(x, y, button.label, size, INK if focused else MUTED)
 
     def draw_title(self, view):
-        self.image("title").draw(WIDTH / 2, HEIGHT / 2, WIDTH, HEIGHT)
-        for index in range(14):
-            t = perf_counter() * 0.28 + index * 2.1
-            x = 120 + index * 103 + sin(t) * 13
-            y = 310 + (index * 79) % 520 + sin(t * 0.8) * 19
-            panel((x, y, x + 2, y + 2), GOLD)
+        draw_title(self.image, self.title_elapsed)
 
     def draw_comic(self, page, image_name="story", *, footer_height=238):
         atlas = self.image(image_name)
