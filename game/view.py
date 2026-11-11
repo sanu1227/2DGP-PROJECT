@@ -617,7 +617,7 @@ class View:
             self.text(WIDTH - 362, 71, status, 16, MUTED)
 
         self.text(34, 32, "좌클릭  이동    우클릭  취소    WASD / 방향키  이동    개발용 1~6 방 이동 · F2 좌표    (x,y): x 오른쪽 아래 / y 왼쪽 아래", 13, MUTED)
-        self.text(34, 12, "E / Space  상호작용    Q  내려놓기    B  대기    Z / Backspace  되돌리기    R  재시작    Enter  다음 방(완료 후)    Esc  종료", 13, MUTED)
+        self.text(34, 12, "E / Space  상호작용·내려놓기    B  대기    Z / Backspace  되돌리기    R  재시작    Enter  다음 방(완료 후)    Esc  종료", 13, MUTED)
 
 
 def run(levels, index=0, smoke_frames=None, *, show_title=True):
@@ -635,7 +635,7 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True):
         actions = {
             p.SDLK_UP: "up", p.SDLK_w: "up", p.SDLK_DOWN: "down", p.SDLK_s: "down",
             p.SDLK_LEFT: "left", p.SDLK_a: "left", p.SDLK_RIGHT: "right", p.SDLK_d: "right",
-            p.SDLK_e: "interact", p.SDLK_SPACE: "interact", p.SDLK_q: "drop",
+            p.SDLK_e: "interact", p.SDLK_SPACE: "interact",
             p.SDLK_b: "wait",
         }
         stage_keys = {

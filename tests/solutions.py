@@ -3,7 +3,7 @@
 
 EXTRA_SOLUTIONS = {
     'stage_04': (
-        "down right interact down down drop right right right up up right interact down "
+        "down right interact down down interact right right right up up right interact down "
         "left down left left down down left interact up up right right right down down "
         "right right interact left left up up left left down down left interact down "
         "right interact up up up left interact up right interact down down down left "
@@ -15,8 +15,8 @@ EXTRA_SOLUTIONS = {
         "down right right"
     ).split(),
     'stage_06': (
-        "down right interact down right drop wait wait down left interact down right "
-        "interact down interact up interact up right right right right down drop wait "
+        "down right interact down right interact wait wait down left interact down right "
+        "interact down interact up interact up right right right right down interact wait "
         "down interact down interact up up up left left up interact down down down down "
         "left interact left left interact down left"
     ).split(),

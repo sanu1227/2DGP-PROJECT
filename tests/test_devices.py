@@ -56,6 +56,48 @@ def belt_stage(belts=None):
             "map": ["".join(row) for row in rows]}
 
 
+class ContextDropTests(unittest.TestCase):
+    def test_interact_drops_on_supported_surfaces_with_matching_hint_and_undo(self):
+        cases = (
+            (plate_stage(), (3, 2), "part", (3, 2)),
+            (plate_stage(), (2, 1), "part", (2, 1)),
+            (plate_stage(), (4, 1), "part", (4, 1)),
+            (chute_stage(), (5, 1), "bone", (5, 1)),
+            (belt_stage(), (3, 3), "part", (4, 3)),
+        )
+        for stage, position, kind, destination in cases:
+            with self.subTest(position=position, stage=stage["id"]):
+                game = Game(load_stage(stage))
+                source = next(pos for pos, item in game.state.items.items() if item == kind)
+                game.state.carrying = game.state.items.pop(source)
+                game.state.player = position
+                before = deepcopy(game.state)
+                self.assertTrue(game.can_interact())
+                self.assertIn("내려놓기", game.context_action())
+                self.assertTrue(game.act("interact"))
+                self.assertIsNone(game.state.carrying)
+                self.assertEqual(game.state.items[destination], kind)
+                self.assertEqual(game.state.moves, before.moves + 1)
+                self.assertEqual(len(game.history), 1)
+                self.assertTrue(game.undo())
+                self.assertEqual(game.state, before)
+
+    def test_unavailable_device_actions_never_fall_back_to_drop(self):
+        for position, kind in (((2, 1), "part"), ((4, 2), "bone"), ((5, 2), "part"),
+                               ((3, 3), "part"), ((5, 3), "part"), ((6, 1), "part"),
+                               ((1, 2), "part")):
+            with self.subTest(position=position):
+                game = Game(load_stage(chute_stage()))
+                source = next(pos for pos, item in game.state.items.items() if item == kind)
+                game.state.carrying = game.state.items.pop(source)
+                game.state.player = position
+                before = deepcopy(game.state)
+                self.assertFalse(game.can_interact())
+                self.assertFalse(game.act("interact"))
+                self.assertEqual(game.state, before)
+                self.assertEqual(game.history, [])
+
+
 class PlateTests(unittest.TestCase):
     def setUp(self):
         self.game = Game(load_stage(plate_stage()))
@@ -291,7 +333,7 @@ class BeltTests(unittest.TestCase):
         game.state.player = (3, 3)
         game.state.carrying = game.state.items.pop((2, 1))
         before = deepcopy(game.state)
-        self.assertTrue(game.act("drop"))
+        self.assertTrue(game.act("interact"))
         after_drop = deepcopy(game.state)
         self.assertEqual(game.state.items[(4, 3)], "part")
         self.assertNotIn((5, 3), game.state.items)
@@ -374,6 +416,8 @@ class BeltTests(unittest.TestCase):
         self.assertTrue(game.act("interact"))
         carrying = deepcopy(game.state)
         history = deepcopy(game.history)
+        self.assertFalse(game.can_interact())
+        self.assertFalse(game.act("interact"))
         self.assertFalse(game.act("drop"))
         self.assertEqual(game.state, carrying)
         self.assertEqual(game.history, history)

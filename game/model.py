@@ -184,13 +184,26 @@ class Game:
             return "activate", "E: 모든 함정 가동"
         if pos == self.level.exit:
             return None, "복구를 마친 뒤 빈손으로 돌아오세요."
+        if state.carrying is not None:
+            return self._drop_interaction(state)
         if pos in self.level.plates:
-            return None, f"{self.level.device_labels[pos]} 발판: Q로 물건을 놓아 문을 유지하세요."
+            return None, f"{self.level.device_labels[pos]} 발판: 물건을 가져와 E / Space로 놓아 문을 유지하세요."
         if pos in self.level.gates:
             return None, "문이 닫혀도 현재 칸에서 나갈 수 있습니다."
         if pos in self.level.belts:
-            return None, "벨트: 부품·병사를 Q로 놓으세요. B로 한 차례 기다립니다."
+            return None, "벨트: 부품·병사를 가져와 E / Space로 놓으세요. B로 한 차례 기다립니다."
         return None, "물건이나 장치 위에서 E를 누르세요."
+
+    def _drop_interaction(self, state: State) -> tuple[str | None, str]:
+        """내려놓기 가능 여부를 입력 처리와 현재 칸 안내에 함께 사용한다."""
+        if state.carrying is None:
+            return None, "들고 있는 물건이 없습니다."
+        devices = self.level.traps | self.level.posts | self.level.benches | self.level.levers | self.level.chutes.keys() | {self.level.exit}
+        if state.player in devices or state.player in state.items:
+            return None, "빈 일반 바닥에만 내려놓을 수 있습니다."
+        if state.player in self.level.belts and state.carrying == "bone":
+            return None, "벨트에는 부품이나 조립한 병사만 놓을 수 있습니다."
+        return "drop", f"E / Space: {ITEM_NAMES[state.carrying]} 내려놓기"
 
     def _apply(self, state: State, action: str) -> tuple[bool, str]:
         if action == "wait":
@@ -210,22 +223,14 @@ class Game:
             state.player = destination
             return True, "한 칸 이동했습니다."
 
-        if action == "drop":
-            if state.carrying is None:
-                return False, "들고 있는 물건이 없습니다."
-            devices = self.level.traps | self.level.posts | self.level.benches | self.level.levers | self.level.chutes.keys() | {self.level.exit}
-            if state.player in devices or state.player in state.items:
-                return False, "빈 일반 바닥에만 내려놓을 수 있습니다."
-            if state.player in self.level.belts and state.carrying == "bone":
-                return False, "벨트에는 부품이나 조립한 병사만 놓을 수 있습니다."
-            state.items[state.player] = state.carrying
-            state.carrying = None
-            return True, "물건을 바닥에 내려놓았습니다."
-
-        operation, message = self._interaction(state)
+        operation, message = self._drop_interaction(state) if action == "drop" else self._interaction(state)
         if operation is None:
             return False, message
         pos = state.player
+        if operation == "drop":
+            state.items[pos] = state.carrying
+            state.carrying = None
+            return True, "물건을 바닥에 내려놓았습니다."
         if operation == "send_bone":
             state.items[self.level.chutes[pos]] = "bone"
             state.carrying = None

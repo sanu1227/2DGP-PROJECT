@@ -65,7 +65,8 @@ def main():
         (p.SDLK_d, lambda: expect(1)),
         (p.SDLK_DOWN, lambda: expect(2)),
         (p.SDLK_e, lambda: expect(3, "part")),
-        (p.SDLK_q, lambda: expect(4)),
+        (p.SDLK_q, lambda: expect(3, "part")),  # Removed key must not drop or consume a turn.
+        (p.SDLK_e, lambda: expect(4)),
         (p.SDLK_BACKSPACE, lambda: expect(3, "part")),
         (p.SDLK_z, lambda: expect(2)),
         (p.SDLK_r, lambda: expect(0)),
@@ -79,7 +80,7 @@ def main():
     for stage in (5, 4, 3, 2, 1, 0):
         steps.append((p.SDLK_1 + stage, lambda stage=stage: expect_room(stage)))
     keys = {"up": p.SDLK_w, "down": p.SDLK_s, "left": p.SDLK_a,
-            "right": p.SDLK_RIGHT, "interact": p.SDLK_SPACE, "drop": p.SDLK_q, "wait": p.SDLK_b}
+            "right": p.SDLK_RIGHT, "interact": p.SDLK_SPACE, "wait": p.SDLK_b}
     for index, level in enumerate(levels):
         actions = SOLUTIONS[level.id]
         for action in actions:
@@ -112,7 +113,7 @@ def main():
         view.run(levels, show_title=False)
     assert not steps
     assert len(games) == len(levels) + 8
-    print(f"Native SDL smoke OK: {len(levels)} clears, coordinates/F2, shortcuts 1-6, carry/drop, undo, restart, next/replay, Escape.")
+    print(f"Native SDL smoke OK: {len(levels)} clears, coordinates/F2, shortcuts 1-6, E/Space drop, Q ignored, undo, restart, next/replay, Escape.")
 
 
 if __name__ == "__main__":

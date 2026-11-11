@@ -268,7 +268,7 @@ class FrontEnd:
             self.key_hint(view, 160, 527, "우클릭", "자동 이동 취소")
             self.key_hint(view, 160, 418, "E / Space", "현재 칸에서 작업")
             view.centered(1440, 837, "차근차근 복구", 32, GOLD)
-            self.key_hint(view, 1440, 745, "Q", "물건 내려놓기")
+            self.key_hint(view, 1440, 745, "E / Space", "빈 바닥에 내려놓기")
             self.key_hint(view, 1440, 636, "B", "한 차례 대기")
             self.key_hint(view, 1440, 527, "Z / Backspace", "직전 행동 되돌리기")
             self.key_hint(view, 1440, 418, "R", "현재 방 다시 시작")
