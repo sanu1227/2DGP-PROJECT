@@ -58,7 +58,7 @@ def main():
             # Compare settled anchors; automatic transport now reaches the animated plate immediately.
             with patch("game.view.perf_counter", return_value=float(step)):
                 display.draw(game, 5, len(levels))
-            with patch("game.view.perf_counter", return_value=step + .5), \
+            with patch("game.view.perf_counter", return_value=step + 1.1), \
                     patch.object(display.art, "draw", wraps=display.art.draw) as draw:
                 display.draw(game, 5, len(levels))
             if step == 3:

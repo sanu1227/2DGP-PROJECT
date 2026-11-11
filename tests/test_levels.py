@@ -43,7 +43,7 @@ class LevelTests(unittest.TestCase):
             self.assertTrue(level.hint)
 
     def test_shipped_rooms_have_connected_floor_and_expected_repair_targets(self):
-        targets = ((1, 0), (0, 1), (2, 2), (1, 1), (0, 1), (1, 1))
+        targets = ((1, 0), (0, 1), (2, 1), (1, 1), (0, 1), (1, 1))
         for level, (traps, posts) in zip(load_levels(), targets):
             with self.subTest(stage=level.id):
                 self.assertEqual(len(level.traps), traps)

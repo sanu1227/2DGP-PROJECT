@@ -33,7 +33,8 @@ def check_frames(levels, capture):
         projection = view.IsoBoard(10, 10)
         scale = projection.half_width * 2 / 224
         for now, position in ((0, (3, 3)), (.08, (3.5, 3)), (.16, (4, 3)),
-                              (.24, (4.5, 3)), (.32, (5, 3)), (.7, (5, 3))):
+                              (.24, (4.5, 3)), (.32, (5, 3)), (.4, (5, 2.5)),
+                              (.48, (5, 2)), (.56, (5, 1.5)), (.64, (5, 1)), (1.1, (5, 1))):
             with patch.object(view, "perf_counter", return_value=now), \
                     patch.object(display.art, "draw", wraps=display.art.draw) as draw:
                 display.draw(game, 5, len(levels))
@@ -44,14 +45,14 @@ def check_frames(levels, capture):
             assert math.isclose(parts[0].args[1], x, abs_tol=1e-7)
             assert math.isclose(parts[0].args[2], y, abs_tol=1e-7)
             assert game.state == final and len(game.history) == 6
-            if now < .32:
-                assert display.plate_depths[(5, 3)] == 0
+            if now < .64:
+                assert display.plate_depths[(5, 1)] == 0
                 assert display.gate_motions[(6, 4)][1] == 0
                 assert not display.interaction_regions
-            if capture and now in (.24, .7):
+            if capture and now in (.24, 1.1):
                 save_frame(capture / ("moving.png" if now == .24 else "arrived.png"))
             p.update_canvas()
-        assert display.plate_depths[(5, 3)] == 1
+        assert display.plate_depths[(5, 1)] == 1
         assert display.gate_motions[(6, 4)][1] == 1
     finally:
         if display:
@@ -84,7 +85,7 @@ def check_inputs(levels):
         assert displays[-1].transporting(game, now[0]) == busy
         assert displays[-1].navigation.active == navigating
         if stage == 5 and moves == 6:
-            assert game.state.items[(5, 3)] == "part"
+            assert game.state.items[(5, 1)] == "part"
             assert game.gate_status((6, 4)) == "open"
         if stage == 5 and moves == 5:
             assert game.state.carrying == "part" and game.state.player == (3, 3)
@@ -109,11 +110,12 @@ def check_inputs(levels):
         (.16, [p.SDLK_1], lambda: expect(0, stage=0)),
         (.18, [p.SDLK_6], lambda: expect(5)),
         (.2, [p.SDLK_e], lambda: expect(6, True)),
-        (.6, [p.SDLK_RIGHT], prepare_navigation),
+        (.9, [p.SDLK_RIGHT], prepare_navigation),
         (1, ["path"], lambda: expect(1, True, navigating=True)),
         (1.2, [], lambda: expect(1, True, navigating=True)),
-        (1.34, [], lambda: expect(2)),
-        (1.5, [p.SDLK_ESCAPE], None),
+        (1.34, [], lambda: expect(2, True)),
+        (1.52, [], lambda: expect(2)),
+        (1.7, [p.SDLK_ESCAPE], None),
     ])
     original_events = p.get_events
     pending = None
@@ -151,7 +153,7 @@ def main():
     levels = load_levels()
     check_frames(levels, args.capture)
     check_inputs(levels)
-    print("Automatic belt SDL smoke OK: six animation samples, support height, plate/gate arrival, "
+    print("Automatic belt SDL smoke OK: ten animation samples, support height, plate/gate arrival, "
           "single action/history, movement/interaction/click lock, undo/restart/room switch, input/navigation resume.")
 
 

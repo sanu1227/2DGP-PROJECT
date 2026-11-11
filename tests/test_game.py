@@ -9,41 +9,13 @@ import unittest
 
 from game.levels import load_levels
 from game.model import Game
-from tests.solutions import EXTRA_SOLUTIONS
+from tests.solutions import SOLUTIONS
 
 
 DIRECTIONS = {
     "up": (0, -1), "down": (0, 1),
     "left": (-1, 0), "right": (1, 0),
 }
-
-# Authored walkthroughs double as regression checks for the actual room data.
-SOLUTIONS = {
-    'stage_01': (
-        "down right interact right right right right down down interact down down "
-        "left left left down interact left left"
-    ).split(),
-    'stage_02': (
-        "down down down down right right right right right right right up up up left "
-        "interact down right down down left left left left left interact right right "
-        "right down down right interact up up left left left left interact right right "
-        "interact left down down down left left left"
-    ).split(),
-    'stage_03': (
-        "down down right right right right up right right interact down left left left "
-        "interact right right interact left left left left down down interact up up "
-        "right right right down right right right interact up left left left left left "
-        "left down down interact up up right interact left down down down right right "
-        "right down right right interact up left left left interact right right "
-        "interact left left left left up interact down right right right down down "
-        "right right right interact up up left left left left left left up interact "
-        "down right interact left down interact down left"
-    ).split(),
-}
-
-
-SOLUTIONS.update(EXTRA_SOLUTIONS)
-
 
 def make_level(rows=None):
     """A small mixed room keeps the test scenarios independent of shipped maps."""
@@ -353,8 +325,8 @@ class GameTests(unittest.TestCase):
 
     def test_third_room_first_guard_requires_leaving_toward_remaining_work(self):
         self.game = Game(load_levels()[2])
-        # Finish the upper storeroom before closing its only entrance.
-        for target in ((7, 2), (4, 3), (6, 3), (2, 5), (8, 4), (2, 5), (3, 3)):
+        # Collect both rooms' bones before closing the upper entrance.
+        for target in ((7, 2), (4, 3), (6, 3), (2, 5), (8, 8), (2, 5), (3, 3)):
             self.go(target)
             self.act("interact")
         self.assertEqual(self.game.state.soldiers, {(3, 3)})

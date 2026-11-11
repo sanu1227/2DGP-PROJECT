@@ -5,6 +5,7 @@ from dataclasses import replace
 from heapq import heappop, heappush
 from itertools import count, permutations
 import argparse
+import hashlib
 import json
 from pathlib import Path
 import sys
@@ -159,8 +160,10 @@ def main():
     parser.add_argument("--stage", type=int, nargs="+")
     parser.add_argument("--max-states", type=int, default=500_000)
     parser.add_argument("--output", type=Path)
+    parser.add_argument("--check", action="store_true", help="최단 풀이와 최소+2회 제한 검증")
+    parser.add_argument("--check-mechanics", action="store_true", help="4~6번 핵심 장치를 생략하면 제한 내 완료 불가인지 검사")
     args = parser.parse_args()
-    from tests.test_game import SOLUTIONS
+    from tests.solutions import MINIMUM_ACTIONS, SOLUTIONS
     results = {}
     for index, level in enumerate(load_levels(), 1):
         if args.stage and index not in args.stage:
@@ -169,10 +172,34 @@ def main():
         check = Game(replace(level, action_limit=None))
         valid = all(check.act(a) for a in route) and check.state.cleared
         result = solve(level, args.max_states, len(route) if valid else None)
+        if args.check:
+            expected_limit = None if index == 1 else MINIMUM_ACTIONS[level.id] + 2
+            if (not valid or result is None or result["minimum"] != MINIMUM_ACTIONS[level.id]
+                    or len(route) != result["minimum"] or level.action_limit != expected_limit):
+                raise ValueError(f"{level.id}: 기준 풀이·최소 행동·제한 규칙 불일치")
+        if args.check_mechanics and index in (4, 5, 6):
+            def forbidden(game, action):
+                if action not in {"interact", "drop"}:
+                    return False
+                operation = (game._drop_interaction(game.state) if action == "drop" else
+                             game._interaction(game.state))[0]
+                return ((index == 4 and operation == "drop" and game.state.player in level.plates)
+                        or (index == 5 and operation == "send_bone")
+                        or (index == 6 and operation == "drop" and game.state.player in level.belts))
+
+            bypass = solve(level, args.max_states, level.action_limit, forbidden)
+            if bypass is not None:
+                raise ValueError(f"{level.id}: 핵심 장치 없이 {bypass['minimum']}회에 완료 가능")
+            result["core_mechanic_required_within_limit"] = True
+        result["action_limit"] = level.action_limit
         results[level.id] = result
-        print(json.dumps({"stage": level.id, **(result or {"solvable": False})}), flush=True)
+        print(json.dumps({"stage": level.id, **{k: v for k, v in result.items() if k != "actions"}}), flush=True)
     if args.output:
-        args.output.write_text(json.dumps(results, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        root = Path(__file__).resolve().parents[1]
+        fingerprints = {name: hashlib.sha256((root / name).read_bytes()).hexdigest()
+                        for name in ("data/stages.json", "game/model.py", "tools/solve_levels.py")}
+        report = {"sha256": fingerprints, "stages": results}
+        args.output.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
 if __name__ == "__main__":

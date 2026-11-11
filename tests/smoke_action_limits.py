@@ -1,4 +1,4 @@
-"""Native SDL failure/recovery checks using the shipped 75-action room budget."""
+"""Native SDL failure/recovery checks using the shipped room budget."""
 
 from collections import deque
 from copy import deepcopy
@@ -20,6 +20,7 @@ def main():
     parser.add_argument("--capture", type=Path)
     args = parser.parse_args()
     levels, games = load_levels(), []
+    budget = levels[1].action_limit
     displays, snapshots = [], {}
     original_draw = view.View.draw
 
@@ -34,7 +35,7 @@ def main():
             original_draw(display, game, index, total)
         labels = [call.args[2] for call in text.call_args_list]
         if game.failed:
-            assert "남은 행동 0 / 75" in labels
+            assert f"남은 행동 0 / {budget}" in labels
             assert any("실패" in label and "재시작" in label for label in labels)
             assert not display.interaction_regions and not display.navigation.active
             if args.capture and "failed" not in snapshots:
@@ -42,8 +43,8 @@ def main():
             snapshots.setdefault("failed", deepcopy(game.state))
         elif index == 0:
             assert "행동 무제한" in labels
-        elif game.state.moves == 74:
-            assert "남은 행동 1 / 75" in labels
+        elif game.state.moves == budget - 1:
+            assert f"남은 행동 1 / {budget}" in labels
 
     def expect(moves, failed=False, stage=1):
         game = games[-1]
@@ -52,19 +53,20 @@ def main():
         assert len(game.history) == moves
         if failed:
             assert game.state == snapshots["failed"]
-        if args.capture and moves == 74 and "failed" in snapshots and "recovered" not in snapshots:
+        if args.capture and moves == budget - 1 and "failed" in snapshots and "recovered" not in snapshots:
             save_frame(args.capture / "recovered.png")
             snapshots["recovered"] = True
 
     steps = deque([(p.SDLK_UP, lambda: expect(0))])  # Wall bump is free.
-    steps.extend((p.SDLK_RIGHT if index % 2 == 0 else p.SDLK_LEFT, None) for index in range(74))
-    steps.append((p.SDLK_RIGHT, lambda: expect(75, True)))
+    steps.extend((p.SDLK_RIGHT if index % 2 == 0 else p.SDLK_LEFT, None) for index in range(budget - 1))
+    last_key = p.SDLK_RIGHT if (budget - 1) % 2 == 0 else p.SDLK_LEFT
+    steps.append((last_key, lambda: expect(budget, True)))
     for key in (p.SDLK_RIGHT, p.SDLK_e, p.SDLK_q, p.SDLK_b, p.SDLK_RETURN, "click"):
-        steps.append((key, lambda: expect(75, True)))
+        steps.append((key, lambda: expect(budget, True)))
     steps.extend([
-        (p.SDLK_z, lambda: expect(74)),
-        (p.SDLK_RIGHT, lambda: expect(75, True)),
-        (p.SDLK_BACKSPACE, lambda: expect(74)),
+        (p.SDLK_z, lambda: expect(budget - 1)),
+        (last_key, lambda: expect(budget, True)),
+        (p.SDLK_BACKSPACE, lambda: expect(budget - 1)),
         (p.SDLK_r, lambda: expect(0)),
         (p.SDLK_RIGHT, lambda: expect(1)),
         (p.SDLK_1, lambda: expect(0, stage=0)),
@@ -96,7 +98,7 @@ def main():
             patch.object(p, "get_events", events):
         view.run(levels, index=1, show_title=False)
     assert not steps and "failed" in snapshots
-    print("Action limit SDL smoke OK: real 75-action exhaustion, blocked inputs/click, "
+    print(f"Action limit SDL smoke OK: real {budget}-action exhaustion, blocked inputs/click, "
           "Z/Backspace recovery, restart, room switch and unlimited tutorial HUD.")
 
 
