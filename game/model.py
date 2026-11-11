@@ -47,6 +47,18 @@ class Game:
         return None if limit is None else max(0, limit - self.state.moves)
 
     @property
+    def repair_percent(self) -> int:
+        """현재 방의 복구 작업 진행률. 운반·출구 복귀는 작업량에 포함하지 않는다."""
+        total = 2 * len(self.level.traps) + 3 * len(self.level.posts)
+        if not total:
+            return 100
+        state = self.state
+        assembled = sum(kind == "soldier" for kind in state.items.values()) + int(state.carrying == "soldier")
+        done = (len(state.installed) + (len(self.level.traps) if state.active else 0)
+                + sum(state.bench_bones.values()) + 2 * assembled + 3 * len(state.soldiers))
+        return min(100, done * 100 // total)
+
+    @property
     def failed(self) -> bool:
         # 실패 여부를 행동 수에서 계산하므로 undo로 상태와 횟수가 함께 복구된다.
         return not self.state.cleared and self.remaining_actions == 0

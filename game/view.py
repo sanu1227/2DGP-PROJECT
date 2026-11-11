@@ -639,6 +639,8 @@ class View:
             return "복구 완료", TEAL
         if self.transporting(game):
             return "벨트 자동 운반 중", TEAL
+        if game.repair_percent == 100:
+            return "복구 완료 · 출구로 돌아가세요", TEAL
         if self.interaction_hint:
             return self.interaction_hint, GOLD
         level = game.level
@@ -653,6 +655,14 @@ class View:
         if game.message not in quiet and not game.message.startswith("한 칸 이동했습니다."):
             return game.message, MUTED
         return "", MUTED
+
+    def repair_progress(self, game, left, width):
+        percent = game.repair_percent
+        color = TEAL if percent == 100 else GOLD
+        self.text(left, BOARD_TOP + 25, f"복구율 {percent}%", 16, color)
+        box(left, BOARD_TOP + 5, left + width, BOARD_TOP + 9, (59, 77, 77))
+        if percent:
+            box(left, BOARD_TOP + 5, left + width * percent / 100, BOARD_TOP + 9, color)
 
     def draw_play(self, game, index, total):
         """2번 방부터 사용하는 간결한 플레이 HUD. 게임판 좌표는 유지한다."""
@@ -676,6 +686,7 @@ class View:
         self.text(740, BOARD_TOP + 20, f"운반: {ITEM_NAMES[state.carrying]}", 18, GOLD if state.carrying else MUTED)
         if state.carrying:
             self.item(state.carrying, 940, BOARD_TOP + 8, 0.19)
+        self.repair_progress(game, 1000, 200)
         remaining = game.remaining_actions
         budget = "행동 무제한" if remaining is None else f"남은 행동 {remaining} / {level.action_limit}"
         color = (TEAL if state.cleared else MUTED if remaining is None else RED if remaining <= 5
@@ -724,6 +735,7 @@ class View:
             self.item(state.carrying, 940, BOARD_TOP + 5, 0.19)
         diamond(982, BOARD_TOP + 17, 6, 6, None, GOLD)
         self.text(997, BOARD_TOP + 17, "상호작용 대상", 13, GOLD)
+        self.repair_progress(game, 1120, 110)
         remaining = game.remaining_actions
         budget = "행동 무제한" if remaining is None else f"남은 행동 {remaining} / {level.action_limit}"
         budget_color = (TEAL if state.cleared else MUTED if remaining is None else RED if remaining <= 5

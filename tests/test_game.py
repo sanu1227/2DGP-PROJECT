@@ -190,6 +190,53 @@ class GameTests(unittest.TestCase):
         self.assertFalse(self.game.undo())
         self.assertEqual(self.game.state, initial)
 
+    def test_repair_percent_counts_work_and_preserves_assembled_progress(self):
+        game = self.game
+        self.assertEqual(game.repair_percent, 0)
+        self.go((2, 1))
+        self.act("interact")
+        self.assertEqual(game.repair_percent, 0)
+        self.go((4, 1))
+        self.act("interact")
+        self.assertEqual(game.repair_percent, 20)
+        self.go((5, 1))
+        self.act("interact")
+        self.assertEqual(game.repair_percent, 40)
+        for bone, expected in (((1, 3), 60), ((1, 4), 80)):
+            self.go(bone)
+            self.act("interact")
+            self.go((3, 3))
+            self.act("interact")
+            self.assertEqual(game.repair_percent, expected)
+        self.go((3, 4))
+        self.act("interact")  # A loose assembled soldier retains both delivered bones.
+        self.assertEqual(game.repair_percent, 80)
+        self.act("interact")
+        self.assertEqual(game.repair_percent, 80)
+        self.go((5, 3))
+        self.act("interact")
+        self.assertEqual(game.repair_percent, 100)
+        self.assertFalse(game.state.cleared)
+        self.assertTrue(game.undo())
+        self.assertEqual(game.repair_percent, 80)
+        game.restart()
+        self.assertEqual(game.repair_percent, 0)
+
+    def test_repair_percent_for_traps_only_and_soldiers_only(self):
+        for level, expected in zip(load_levels()[:2], ([0, 50, 100], [0, 33, 66, 100])):
+            with self.subTest(level=level.id):
+                game = Game(level)
+                changes, before_actions = [game.repair_percent], []
+                for action in SOLUTIONS[level.id]:
+                    before_actions.append(game.repair_percent)
+                    self.assertTrue(game.act(action))
+                    if game.repair_percent != changes[-1]:
+                        changes.append(game.repair_percent)
+                self.assertEqual(changes, expected)
+                for percent in reversed(before_actions):
+                    self.assertTrue(game.undo())
+                    self.assertEqual(game.repair_percent, percent)
+
     def test_failed_inputs_do_not_change_inventory_or_history(self):
         for action in ("up", "left", "interact", "drop"):
             self.assert_rejected(action)
