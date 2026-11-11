@@ -1,0 +1,406 @@
+{
+  "version": 1,
+  "generator": "built-in image_gen",
+  "sources": {
+    "background": {
+      "file": "sources/background.png",
+      "width": 1586,
+      "height": 992,
+      "sha256": "9a3e350b767914617aca9548bb81e054f6e6bf34ccd8e04a085dc92fc2d208f5"
+    },
+    "logo": {
+      "file": "sources/logo.png",
+      "width": 1536,
+      "height": 1024,
+      "sha256": "8700828423ab4931dc9aa2f2a30824f767858ffa734792b369fdf3c7a857c032"
+    },
+    "characters": {
+      "file": "sources/characters.png",
+      "width": 1821,
+      "height": 864,
+      "sha256": "8de607c32660a31a8abad223809d3c9a29191c98191b183d38ef195139f6a70c"
+    },
+    "flames": {
+      "file": "sources/flames.png",
+      "width": 1774,
+      "height": 887,
+      "sha256": "c4b2dc85195aac461aa9bce05d2742bf0a5c5ac53aceb283ce7edfefea1bc0e4"
+    }
+  },
+  "sprites": {
+    "logo": {
+      "file": "sprites/logo.png",
+      "width": 1536,
+      "height": 1024,
+      "sha256": "91a9b81a64a210acffc52e395212b953d3539ae901a54ea096b04738e82326f1",
+      "crop": {
+        "left": 0,
+        "top": 0,
+        "width": 1536,
+        "height": 1024
+      },
+      "bounds": {
+        "left": 86,
+        "top": 19,
+        "width": 1348,
+        "height": 946
+      },
+      "anchor": [
+        768,
+        965
+      ]
+    },
+    "skeleton_0": {
+      "file": "sprites/skeleton_0.png",
+      "width": 455,
+      "height": 432,
+      "sha256": "962a6e85775e95310ccae0f75ff553aa2ee09c91bdb36e1c3403bf3516a250c2",
+      "crop": {
+        "left": 0,
+        "top": 0,
+        "width": 455,
+        "height": 432
+      },
+      "bounds": {
+        "left": 21,
+        "top": 27,
+        "width": 408,
+        "height": 346
+      },
+      "anchor": [
+        227.5,
+        373
+      ]
+    },
+    "skeleton_1": {
+      "file": "sprites/skeleton_1.png",
+      "width": 456,
+      "height": 432,
+      "sha256": "343315fa535c476e6cc76013e5f85a45652459eee27fdbfc8039b68828ac3d67",
+      "crop": {
+        "left": 455,
+        "top": 0,
+        "width": 456,
+        "height": 432
+      },
+      "bounds": {
+        "left": 20,
+        "top": 27,
+        "width": 409,
+        "height": 346
+      },
+      "anchor": [
+        228,
+        373
+      ]
+    },
+    "skeleton_2": {
+      "file": "sprites/skeleton_2.png",
+      "width": 455,
+      "height": 432,
+      "sha256": "a4989a895b8e48d5032b71a273f94b3d348471eb4f65ddd8fcf8120dc5603b84",
+      "crop": {
+        "left": 911,
+        "top": 0,
+        "width": 455,
+        "height": 432
+      },
+      "bounds": {
+        "left": 20,
+        "top": 27,
+        "width": 409,
+        "height": 345
+      },
+      "anchor": [
+        227.5,
+        372
+      ]
+    },
+    "skeleton_3": {
+      "file": "sprites/skeleton_3.png",
+      "width": 455,
+      "height": 432,
+      "sha256": "8ea2f9a2ee402802a340b5b861ebcc6fa013b5dd18ac687f5b3b93ff4f782e14",
+      "crop": {
+        "left": 1366,
+        "top": 0,
+        "width": 455,
+        "height": 432
+      },
+      "bounds": {
+        "left": 20,
+        "top": 27,
+        "width": 410,
+        "height": 345
+      },
+      "anchor": [
+        227.5,
+        372
+      ]
+    },
+    "worker_0": {
+      "file": "sprites/worker_0.png",
+      "width": 455,
+      "height": 432,
+      "sha256": "34c72d4bde135dbbce9792305e85525a944f4161f8ed0d38ca7ed7e22e7b792e",
+      "crop": {
+        "left": 0,
+        "top": 432,
+        "width": 455,
+        "height": 432
+      },
+      "bounds": {
+        "left": 78,
+        "top": 16,
+        "width": 291,
+        "height": 380
+      },
+      "anchor": [
+        227.5,
+        396
+      ]
+    },
+    "worker_1": {
+      "file": "sprites/worker_1.png",
+      "width": 456,
+      "height": 432,
+      "sha256": "599f7dab21b9bd46b886236a112b8925e444e7b2920779fc738a2d883d7d3dfd",
+      "crop": {
+        "left": 455,
+        "top": 432,
+        "width": 456,
+        "height": 432
+      },
+      "bounds": {
+        "left": 78,
+        "top": 16,
+        "width": 291,
+        "height": 379
+      },
+      "anchor": [
+        228,
+        395
+      ]
+    },
+    "worker_2": {
+      "file": "sprites/worker_2.png",
+      "width": 455,
+      "height": 432,
+      "sha256": "4827ee6b78d129fbddfe2768b5e9aaaa5c027c9ab0a8774ea8f01a97f64f51cf",
+      "crop": {
+        "left": 911,
+        "top": 432,
+        "width": 455,
+        "height": 432
+      },
+      "bounds": {
+        "left": 78,
+        "top": 16,
+        "width": 291,
+        "height": 380
+      },
+      "anchor": [
+        227.5,
+        396
+      ]
+    },
+    "worker_3": {
+      "file": "sprites/worker_3.png",
+      "width": 455,
+      "height": 432,
+      "sha256": "2e36a991b216eff14776681b96226958ca01b515863cb816d60907826d912c28",
+      "crop": {
+        "left": 1366,
+        "top": 432,
+        "width": 455,
+        "height": 432
+      },
+      "bounds": {
+        "left": 78,
+        "top": 16,
+        "width": 291,
+        "height": 380
+      },
+      "anchor": [
+        227.5,
+        396
+      ]
+    },
+    "flame_0": {
+      "file": "sprites/flame_0.png",
+      "width": 444,
+      "height": 444,
+      "sha256": "eb0c7f21918f461b1e5a359603b136829a04b054606c3e5cfcff3e8b98f0ffcd",
+      "crop": {
+        "left": 0,
+        "top": 0,
+        "width": 444,
+        "height": 444
+      },
+      "bounds": {
+        "left": 95,
+        "top": 86,
+        "width": 229,
+        "height": 284
+      },
+      "anchor": [
+        222,
+        370
+      ]
+    },
+    "flame_1": {
+      "file": "sprites/flame_1.png",
+      "width": 443,
+      "height": 444,
+      "sha256": "695b72d451aeee88a6c73f5997c3c653b7e37011000e42c2e4bb3fc174a822a7",
+      "crop": {
+        "left": 444,
+        "top": 0,
+        "width": 443,
+        "height": 444
+      },
+      "bounds": {
+        "left": 101,
+        "top": 57,
+        "width": 228,
+        "height": 313
+      },
+      "anchor": [
+        221.5,
+        370
+      ]
+    },
+    "flame_2": {
+      "file": "sprites/flame_2.png",
+      "width": 444,
+      "height": 444,
+      "sha256": "9fe683c4a3788099392affa901cf58b1f3bd2b232d5033a3ab28fd12d1a9c071",
+      "crop": {
+        "left": 887,
+        "top": 0,
+        "width": 444,
+        "height": 444
+      },
+      "bounds": {
+        "left": 114,
+        "top": 43,
+        "width": 228,
+        "height": 327
+      },
+      "anchor": [
+        222,
+        370
+      ]
+    },
+    "flame_3": {
+      "file": "sprites/flame_3.png",
+      "width": 443,
+      "height": 444,
+      "sha256": "e5ca18867b14f60f3338b885ed937745a916c7a1e9f51fdb7129a1a5ec094d07",
+      "crop": {
+        "left": 1331,
+        "top": 0,
+        "width": 443,
+        "height": 444
+      },
+      "bounds": {
+        "left": 117,
+        "top": 44,
+        "width": 232,
+        "height": 326
+      },
+      "anchor": [
+        221.5,
+        370
+      ]
+    },
+    "flame_4": {
+      "file": "sprites/flame_4.png",
+      "width": 444,
+      "height": 443,
+      "sha256": "af90e4242626079b338645643f0cb388caae2b41dc9ae5744d8f11ff07abf3d6",
+      "crop": {
+        "left": 0,
+        "top": 444,
+        "width": 444,
+        "height": 443
+      },
+      "bounds": {
+        "left": 112,
+        "top": 52,
+        "width": 232,
+        "height": 319
+      },
+      "anchor": [
+        222,
+        371
+      ]
+    },
+    "flame_5": {
+      "file": "sprites/flame_5.png",
+      "width": 443,
+      "height": 443,
+      "sha256": "96bc30904e270a6873115627262605397f5f2b23ced5543c943b3b4f74b07d45",
+      "crop": {
+        "left": 444,
+        "top": 444,
+        "width": 443,
+        "height": 443
+      },
+      "bounds": {
+        "left": 106,
+        "top": 51,
+        "width": 230,
+        "height": 320
+      },
+      "anchor": [
+        221.5,
+        371
+      ]
+    },
+    "flame_6": {
+      "file": "sprites/flame_6.png",
+      "width": 444,
+      "height": 443,
+      "sha256": "acbca8db1b54a2d42592ccec7f94533ff0ef7cca41a6aa94fa422ab9eafdbdc0",
+      "crop": {
+        "left": 887,
+        "top": 444,
+        "width": 444,
+        "height": 443
+      },
+      "bounds": {
+        "left": 101,
+        "top": 58,
+        "width": 237,
+        "height": 313
+      },
+      "anchor": [
+        222,
+        371
+      ]
+    },
+    "flame_7": {
+      "file": "sprites/flame_7.png",
+      "width": 443,
+      "height": 443,
+      "sha256": "4db28153719adb45a92808f271dba1456e716857842d1f8c94c8cd99a142c616",
+      "crop": {
+        "left": 1331,
+        "top": 444,
+        "width": 443,
+        "height": 443
+      },
+      "bounds": {
+        "left": 100,
+        "top": 81,
+        "width": 231,
+        "height": 290
+      },
+      "anchor": [
+        221.5,
+        371
+      ]
+    }
+  }
+}

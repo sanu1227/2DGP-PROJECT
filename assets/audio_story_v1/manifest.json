@@ -1,0 +1,42 @@
+{
+  "authoring": "Original procedural synthesis; no recordings or third-party samples",
+  "format": "44100 Hz, stereo, signed 16-bit PCM",
+  "seeded": true,
+  "clips": {
+    "hero_arrival": {
+      "file": "hero_arrival.wav",
+      "seconds": 1.25,
+      "peak": 0.56,
+      "rms": 0.14157584605525242,
+      "sha256": "ac891b2012ed22d5d8910707384dc9d5561827b576443f3072ea2056f389c75c"
+    },
+    "boss_bark": {
+      "file": "boss_bark.wav",
+      "seconds": 0.82,
+      "peak": 0.58,
+      "rms": 0.10918845390403023,
+      "sha256": "1a356dfca8f3a7292d28a05d1166a87df78a9d73ee6ae54d7d3354dc1d17d8f4"
+    },
+    "step_left": {
+      "file": "step_left.wav",
+      "seconds": 0.29,
+      "peak": 0.32,
+      "rms": 0.049736216243929265,
+      "sha256": "55bd74f2bfdd5a714a00444b1f12a09a7497439cb5a7db48c425aaa278bd98d9"
+    },
+    "step_right": {
+      "file": "step_right.wav",
+      "seconds": 0.29,
+      "peak": 0.28508141625360583,
+      "rms": 0.043910919518866005,
+      "sha256": "a4bd4269a9b82e735c9b8deb58f3f7a66a07b9c7006d36f3e1e719672432415d"
+    },
+    "worker_sigh": {
+      "file": "worker_sigh.wav",
+      "seconds": 1.2,
+      "peak": 0.36000000000000004,
+      "rms": 0.0763133637098239,
+      "sha256": "0867f9e7b48f3712f605d88269f4589962ece45b46bd25c750c4fe9a12a916ae"
+    }
+  }
+}
