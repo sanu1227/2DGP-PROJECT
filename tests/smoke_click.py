@@ -97,7 +97,7 @@ def main():
                             continue
                         for sy in range(ceil(top) - 1, floor(bottom) - 1, -1):
                             for sx in range(ceil(left), ceil(right)):
-                                if (display.art.hit_test(*mask[:4], (sx, sy), mask[4])
+                                if (display.art.hit_test(*mask[:4], (sx, sy), *mask[4:])
                                         and display.pick_cell(games[-1], sx, sy) == value
                                         # The grounded fragment now fits inside its own tile.
                                         # Use the tall lever to verify picking above another tile.

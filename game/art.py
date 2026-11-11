@@ -111,12 +111,12 @@ class Art:
                 p.SDL_FreeSurface(source)
         return self.alpha_masks[atlas_name]
 
-    def hit_test(self, name, sx, sy, scale, point, flip=False):
+    def hit_test(self, name, sx, sy, scale, point, flip=False, height_scale=1.0):
         """그림의 투명한 모서리를 통과시켜 뒤의 바닥을 선택할 수 있게 한다."""
         entry = self.manifest["sprites"][name]
         offset = (point[0] - sx) / scale
         x = floor(entry["anchor"]["x"] + (-offset if flip else offset))
-        y = floor(entry["anchor"]["y"] - (point[1] - sy) / scale)
+        y = floor(entry["anchor"]["y"] - (point[1] - sy) / (scale * height_scale))
         if not (0 <= x < entry["width"] and 0 <= y < entry["height"]):
             return False
         atlas = self.manifest["atlases"][entry["atlas"]]
@@ -125,7 +125,7 @@ class Art:
         width, alpha = self._alpha(entry["atlas"])
         return alpha[(top + y) * width + left + x] >= 16
 
-    def bounds(self, name, sx, sy, scale, flip=False):
+    def bounds(self, name, sx, sy, scale, flip=False, height_scale=1.0):
         """투명 여백을 제외한 표시 영역. 물체를 클릭하면 발이 놓인 칸을 고른다."""
         entry = self.manifest["sprites"][name]
         rect, anchor = entry["content_rect"], entry["anchor"]
@@ -133,8 +133,8 @@ class Art:
         right = left + rect["width"] * scale
         if flip:
             left, right = -right, -left
-        top = sy + (anchor["y"] - rect["top"]) * scale
-        return sx + left, top - rect["height"] * scale, sx + right, top
+        top = sy + (anchor["y"] - rect["top"]) * scale * height_scale
+        return sx + left, top - rect["height"] * scale * height_scale, sx + right, top
 
     @staticmethod
     def plate_sections(x):
@@ -232,7 +232,7 @@ class Art:
         return (197 <= x < 326 and top <= y < bottom - lift
                 and self.hit_test("gate_closed", sx, sy + lift * scale, scale, point, flip))
 
-    def draw(self, name, sx, sy, scale, flip=False, anchor=None):
+    def draw(self, name, sx, sy, scale, flip=False, anchor=None, height_scale=1.0):
         """PNG 좌상단 기준점을 pico2d의 위쪽 +y 화면 좌표로 변환한다."""
         entry = self.manifest["sprites"][name]
         width, height = entry["width"], entry["height"]
@@ -241,13 +241,13 @@ class Art:
             self.atlases[entry["atlas"]].clip_composite_draw(
                 *entry["clip_rect_pico2d"], 0, "h",
                 sx - (width / 2 - anchor["x"]) * scale,
-                sy + (anchor["y"] - height / 2) * scale,
-                width * scale, height * scale,
+                sy + (anchor["y"] - height / 2) * scale * height_scale,
+                width * scale, height * scale * height_scale,
             )
             return
         self.atlases[entry["atlas"]].clip_draw(
             *entry["clip_rect_pico2d"],
             sx + (width / 2 - anchor["x"]) * scale,
-            sy + (anchor["y"] - height / 2) * scale,
-            width * scale, height * scale,
+            sy + (anchor["y"] - height / 2) * scale * height_scale,
+            width * scale, height * scale * height_scale,
         )

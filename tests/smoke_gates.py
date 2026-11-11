@@ -48,7 +48,7 @@ def main():
                 region, mask = next((region, mask) for region, mask in view.hit_masks.items()
                                     if region[0] == gate and mask[0] == sprite)
                 _, (left, bottom, right, top) = region
-                assert any(view.art.hit_test(*mask[:4], (x, y), mask[4])
+                assert any(view.art.hit_test(*mask[:4], (x, y), *mask[4:])
                            and view.pick_cell(game, x, y) == gate
                            for y in range(ceil(top) - 1, floor(bottom), -1)
                            for x in range(ceil(left), ceil(right)))

@@ -21,7 +21,7 @@ def visible_item_pixel(display, game, pos, sprite):
         left, bottom, right, top = rect
         for y in range(ceil(top) - 1, floor(bottom) - 1, -1):
             for x in range(ceil(left), ceil(right)):
-                if (display.art.hit_test(*mask[:4], (x, y), mask[4])
+                if (display.art.hit_test(*mask[:4], (x, y), *mask[4:])
                         and display.pick_cell(game, x, y) == pos):
                     return x, y
     raise AssertionError(f"No visible clickable pixel: {game.level.id} {pos} {sprite}")

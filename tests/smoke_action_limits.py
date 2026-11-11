@@ -13,6 +13,68 @@ from game import view
 from game.levels import load_levels
 from game.model import Game
 from tests.smoke_gate_animation import save_frame
+from tests.test_game import SOLUTIONS
+
+
+def check_feedback(levels, capture):
+    """실제 풀이의 경고 경계·클리어와 운반 자세·클릭 영역을 검사한다."""
+    p.open_canvas(view.WIDTH, view.HEIGHT, sync=True)
+    display = None
+    checked = 0
+    try:
+        display = view.View()
+        for index, level in enumerate(levels):
+            game = Game(level)
+            limit = level.action_limit
+            threshold = max(5, limit // 5) if limit else 0
+            samples = {None, threshold + 1, threshold, 6, 5, 2}
+            for action in [None, *SOLUTIONS[level.id]]:
+                if action:
+                    assert game.act(action), game.message
+                if game.remaining_actions not in samples and not game.state.cleared:
+                    continue
+                before = deepcopy(game.state)
+                with patch("game.view.perf_counter", return_value=10):
+                    display.draw(game, index, len(levels))
+                assert game.state == before
+                tired = display.fatigue(game)
+                expected = (0 if limit is None or game.state.cleared else
+                            2 if game.remaining_actions <= 5 else
+                            1 if game.remaining_actions <= threshold else 0)
+                assert tired == expected
+                region, mask = next((r, m) for r, m in display.hit_masks.items()
+                                    if m[0].startswith("worker_"))
+                left, bottom, right, top = region[1]
+                assert any(display.art.hit_test(*mask[:4], (x, y), *mask[4:])
+                           and display.pick_cell(game, x, y) == game.state.player
+                           for x in range(int(left) + 2, int(right), 4)
+                           for y in range(int(bottom) + 2, int(top), 4))
+                badge = display.action_badge_bounds
+                assert badge[1] > top
+                assert display.pick_cell(game, (badge[0] + badge[2]) / 2,
+                                         (badge[1] + badge[3]) / 2) is None
+                assert all(badge[2] <= x1 or badge[0] >= x2 or badge[3] <= y1 or badge[1] >= y2
+                           for x1, y1, x2, y2 in display.interaction_regions.values())
+                with patch("game.view.perf_counter", return_value=10.2):
+                    display.draw(game, index, len(levels))
+                second = next(m for m in display.hit_masks.values() if m[0].startswith("worker_"))
+                assert (mask[-1] != second[-1]) == bool(tired)
+                assert game.state == before
+                if capture and index == 1 and (game.remaining_actions in (threshold, 5) or game.state.cleared):
+                    name = "cleared" if game.state.cleared else "tired" if tired == 1 else "critical"
+                    save_frame(capture / f"{name}.png")
+                checked += 1
+            assert game.state.cleared and display.fatigue(game) == 0
+            assert game.undo()
+            assert display.fatigue(game) == (0 if limit is None else 2)
+            game.restart()
+            assert display.fatigue(game) == 0
+        p.update_canvas()
+        return checked
+    finally:
+        if display:
+            display.close()
+        p.close_canvas()
 
 
 def main():
@@ -40,6 +102,8 @@ def main():
         assert view.BOARD_BOTTOM < bottom < top < view.BOARD_TOP
         assert all(right <= x1 or left >= x2 or top <= y1 or bottom >= y2
                    for x1, y1, x2, y2 in display.interaction_regions.values())
+        effort = {0: None, 1: "후우…", 2: "헉…", 3: "털썩…"}[display.fatigue(game)]
+        assert not effort or effort in labels
         if game.failed:
             assert display.fatigue(game) == 3
             assert any("실패" in label and "재시작" in label for label in labels)
@@ -104,8 +168,9 @@ def main():
             patch.object(p, "get_events", events):
         view.run(levels, index=1, show_title=False)
     assert not steps and "failed" in snapshots
+    checked = check_feedback(levels, args.capture)
     print(f"Action limit SDL smoke OK: real {budget}-action exhaustion, blocked inputs/click, "
-          "Z/Backspace recovery, restart, room switch and unlimited tutorial HUD.")
+          f"Z/Backspace recovery, restart, room switch; {checked} feedback states across eight rooms.")
 
 
 if __name__ == "__main__":

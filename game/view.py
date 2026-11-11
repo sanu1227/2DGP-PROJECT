@@ -176,6 +176,37 @@ class View:
         size = 22 if game.remaining_actions is None else 32
         self.centered(x, bottom + 23, value, size, accent)
 
+    @staticmethod
+    def worker_height(tired, now):
+        """발은 지지면에 두고 상체를 낮추며, 남은 행동이 적을수록 숨을 가쁘게 쉰다."""
+        if not tired:
+            return 1.0
+        base, amplitude, speed = ((.92, .018, 4.5), (.83, .028, 7), (.72, .012, 3))[tired - 1]
+        return base + sin(now * speed) * amplitude
+
+    def worker_effort(self, bounds, tired, now):
+        if not tired:
+            return
+        left, bottom, right, top = bounds
+        side = 1 if self.facing in ("ne", "se") else -1
+        x = right + 6 if side == 1 else left - 6
+        # 크기와 낙하 위상이 다른 물방울로 반복되는 땀을 표현한다.
+        for index in range(1 if tired == 1 else 2):
+            phase = (now * (.9 if tired == 1 else 1.3) + index * .5) % 1
+            y = top - 8 - phase * 23
+            radius = 2 + sin(phase * 3.14159) * 2
+            dx = x + side * index * 11
+            for offset in range(6):
+                span = radius * offset / 5
+                line(dx - span, y + 6 - offset, dx + span, y + 6 - offset, (119, 222, 244))
+            rounded_box(dx - radius, y - radius, dx + radius, y + 1, radius, (119, 222, 244))
+            line(dx - 1, y, dx - 1, y + 2, (235, 255, 255))
+        value = ("후우…", "헉…", "털썩…")[tired - 1]
+        tx = right + 14 if side == 1 else left - 61
+        ty = max(bottom + 18, top - 38) + sin(now * 3) * 2
+        self.text(tx + 1, ty - 1, value, 18, (23, 31, 36))
+        self.text(tx, ty, value, 18, (255, 231, 178) if tired == 1 else (255, 187, 169))
+
     def player_position(self, fallback, now):
         if self.motion is None:
             return fallback
@@ -256,6 +287,10 @@ class View:
         left, bottom, right, top = TUTORIAL_PANEL
         if self.tutorial and left <= x <= right and bottom <= y <= top:
             return None
+        if self.action_badge_bounds:
+            left, bottom, right, top = self.action_badge_bounds
+            if left <= x <= right and bottom - 9 <= y <= top:
+                return None
         for pos, (left, bottom, right, top) in reversed(self.hit_regions):
             if left <= x < right and bottom <= y < top:
                 mask = self.hit_masks.get((pos, (left, bottom, right, top)))
@@ -272,16 +307,16 @@ class View:
                         continue
                     return pos
                 if mask:
-                    sprite, sx, sy, scale, flip = mask
-                    if not self.art.hit_test(sprite, sx, sy, scale, (x, y), flip):
+                    sprite, sx, sy, scale, flip, height_scale = mask
+                    if not self.art.hit_test(sprite, sx, sy, scale, (x, y), flip, height_scale):
                         continue
                 return pos
         return IsoBoard(game.level.width, game.level.height).pick(x, y)
 
-    def sprite_hit_region(self, pos, sprite, sx, sy, scale, flip=False):
-        region = (pos, self.art.bounds(sprite, sx, sy, scale, flip))
+    def sprite_hit_region(self, pos, sprite, sx, sy, scale, flip=False, height_scale=1.0):
+        region = (pos, self.art.bounds(sprite, sx, sy, scale, flip, height_scale))
         self.hit_regions.append(region)
-        self.hit_masks[region] = (sprite, sx, sy, scale, flip)
+        self.hit_masks[region] = (sprite, sx, sy, scale, flip, height_scale)
 
     def navigation_overlay(self, game, projection):
         if game.failed or game.state.cleared:
@@ -610,15 +645,18 @@ class View:
                 pose = "walk_a" if now - self.motion[2] < 0.09 else "walk_b"
             if state.carrying:
                 pose = "carry"
+            tired = self.fatigue(game)
+            height_scale = self.worker_height(tired, now)
             # 뒤를 볼 때 운반물은 몸 뒤에, 앞을 볼 때는 손 위에 합성한다.
             offset_x = 12 if self.facing in ("ne", "se") else -12
             if state.carrying and self.facing in ("ne", "nw"):
-                self.item(state.carrying, sx + offset_x, sy + 32, scale * 0.65)
-            self.art.draw(f"worker_{self.facing}_{pose}", sx, sy, scale)
-            self.sprite_hit_region(pos, f"worker_{self.facing}_{pose}", sx, sy, scale)
+                self.item(state.carrying, sx + offset_x, sy + 32 * height_scale, scale * 0.65)
+            self.art.draw(f"worker_{self.facing}_{pose}", sx, sy, scale, height_scale=height_scale)
+            self.sprite_hit_region(pos, f"worker_{self.facing}_{pose}", sx, sy, scale, height_scale=height_scale)
             self.place_action_badge(game, sx, self.hit_regions[-1][1][3], now)
+            self.worker_effort(self.hit_regions[-1][1], tired, now)
             if state.carrying and self.facing in ("se", "sw"):
-                self.item(state.carrying, sx + offset_x, sy + 24, scale * 0.65)
+                self.item(state.carrying, sx + offset_x, sy + 24 * height_scale, scale * 0.65)
 
         # 상태 문구를 바닥 아트와 함께 유지해 색이나 작은 그림에만 의존하지 않는다.
         for pos, label in labels:
