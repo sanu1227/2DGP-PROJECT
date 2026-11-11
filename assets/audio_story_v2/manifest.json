@@ -1,0 +1,221 @@
+{
+  "authoring": "Edited licensed recordings and musical/game samples; original sources retained",
+  "format": "44100 Hz, stereo, signed 16-bit PCM",
+  "clips": {
+    "hero_arrival": {
+      "file": "hero_arrival.wav",
+      "seconds": 1.15,
+      "peak": 0.62,
+      "rms": 0.15486430133333318,
+      "sha256": "8d5b499ae9138ce6a70b64ad8612eaa3f4c0d1cecc4b7316dadaaa703a0f8a7a",
+      "layers": [
+        {
+          "source": "jingles_HIT00",
+          "start": 0,
+          "gain": 0.2,
+          "speed": 1
+        },
+        {
+          "source": "jingles_SAX00",
+          "start": 0,
+          "gain": 0.7,
+          "speed": 0.92
+        },
+        {
+          "source": "jingles_SAX00",
+          "start": 0.18,
+          "gain": 0.68,
+          "speed": 1.1
+        },
+        {
+          "source": "jingles_SAX00",
+          "start": 0.37,
+          "gain": 0.82,
+          "speed": 1.38
+        }
+      ]
+    },
+    "dungeon_collapse": {
+      "file": "dungeon_collapse.wav",
+      "seconds": 2.05,
+      "peak": 0.64,
+      "rms": 0.07340324185366358,
+      "sha256": "c85a135a32310a5cd9c8b73584eaf41d5d4524f99165ebfb85b6ab5cee6b4894",
+      "layers": [
+        {
+          "source": "impactWood_heavy_000",
+          "start": 0,
+          "gain": 0.74,
+          "speed": 0.88
+        },
+        {
+          "source": "impactMetal_heavy_000",
+          "start": 0.015,
+          "gain": 0.54,
+          "speed": 0.85
+        },
+        {
+          "source": "impactGlass_heavy_000",
+          "start": 0.075,
+          "gain": 0.52,
+          "speed": 0.92
+        },
+        {
+          "source": "metalPot1",
+          "start": 0.03,
+          "gain": 0.46,
+          "speed": 1.2
+        },
+        {
+          "source": "impactTin_medium_000",
+          "start": 0.24,
+          "gain": 0.46,
+          "speed": 1.05,
+          "pan": -0.2
+        },
+        {
+          "source": "impactWood_heavy_000",
+          "start": 0.39,
+          "gain": 0.36,
+          "speed": 1.2,
+          "pan": 0.18
+        },
+        {
+          "source": "impactMetal_heavy_000",
+          "start": 0.57,
+          "gain": 0.29,
+          "speed": 1.28,
+          "pan": -0.15
+        },
+        {
+          "source": "impactGlass_heavy_000",
+          "start": 0.73,
+          "gain": 0.25,
+          "speed": 1.34,
+          "pan": 0.13
+        },
+        {
+          "source": "impactTin_medium_000",
+          "start": 0.94,
+          "gain": 0.22,
+          "speed": 1.45
+        },
+        {
+          "source": "BounceYoFrankie",
+          "start": 1.16,
+          "gain": 0.25,
+          "speed": 0.78
+        },
+        {
+          "source": "impactTin_medium_000",
+          "start": 1.59,
+          "gain": 0.13,
+          "speed": 1.65,
+          "pan": 0.08
+        }
+      ]
+    },
+    "boss_bark": {
+      "file": "boss_bark.wav",
+      "seconds": 0.71,
+      "peak": 0.58,
+      "rms": 0.11980051537019079,
+      "sha256": "a8c11a9ac952f98ad8f9f60fa2049ffc3a795500ecfedd7f574a2a69d68e03fc",
+      "layers": [
+        {
+          "source": "qubodup-shout",
+          "start": 0,
+          "gain": 0.95,
+          "speed": 0.75
+        },
+        {
+          "source": "impactWood_heavy_000",
+          "start": 0.015,
+          "gain": 0.15,
+          "speed": 1.35
+        }
+      ]
+    },
+    "step_left": {
+      "file": "step_left.wav",
+      "seconds": 0.36,
+      "peak": 0.2837314383848726,
+      "rms": 0.06523604811653555,
+      "sha256": "cd659b556d45b14238cc452d58e4f93f293d950c3dcc414ad2d6b58916608f96",
+      "layers": [
+        {
+          "source": "footstep_concrete_000",
+          "start": 0,
+          "gain": 0.7,
+          "speed": 0.85,
+          "pan": -0.07
+        },
+        {
+          "source": "cloth1",
+          "start": 0.018,
+          "gain": 0.18,
+          "speed": 1,
+          "length": 0.27
+        },
+        {
+          "source": "BounceYoFrankie",
+          "start": 0.045,
+          "gain": 0.25,
+          "speed": 1.02,
+          "pan": -0.07
+        }
+      ]
+    },
+    "step_right": {
+      "file": "step_right.wav",
+      "seconds": 0.36,
+      "peak": 0.38,
+      "rms": 0.0706585316514376,
+      "sha256": "a6ba08ecbc1ae683dad42df6a93dca37e4087e7f4ef5bec05ead3e6cfe31455b",
+      "layers": [
+        {
+          "source": "footstep_concrete_001",
+          "start": 0,
+          "gain": 0.7,
+          "speed": 0.85,
+          "pan": 0.07
+        },
+        {
+          "source": "cloth2",
+          "start": 0.018,
+          "gain": 0.18,
+          "speed": 1,
+          "length": 0.27
+        },
+        {
+          "source": "BounceYoFrankie",
+          "start": 0.045,
+          "gain": 0.25,
+          "speed": 1.15,
+          "pan": 0.07
+        }
+      ]
+    },
+    "worker_sigh": {
+      "file": "worker_sigh.wav",
+      "seconds": 1.5,
+      "peak": 0.5,
+      "rms": 0.0811381220015243,
+      "sha256": "ad3135ed10411d134064309efd89423e35a5aa2c3ab362e7a3c6a93cc87ad1a0",
+      "layers": [
+        {
+          "source": "wjtaylor-sigh",
+          "start": 0,
+          "gain": 0.92,
+          "speed": 1
+        },
+        {
+          "source": "jingles_SAX10",
+          "start": 0.52,
+          "gain": 0.21,
+          "speed": 0.92
+        }
+      ]
+    }
+  }
+}

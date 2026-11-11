@@ -1,0 +1,173 @@
+{
+  "retrieved": "2026-11-11",
+  "sources": {
+    "jingles_SAX00": {
+      "original": "sources/raw/jingles_SAX00.ogg",
+      "pcm": "sources/pcm/jingles_SAX00.wav",
+      "author": "Kenney",
+      "title": "jingles_SAX00",
+      "page": "https://kenney.nl/assets/music-jingles",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "original_sha256": "f87605d2a3c717e6a26e584f57d24eac44e47f5a01470dad18809e5d6c9eb618",
+      "pcm_sha256": "7ec194bd972501499e7cf76cce0b6471858cce848d9cc159c29e0d460d7ccf56"
+    },
+    "jingles_SAX10": {
+      "original": "sources/raw/jingles_SAX10.ogg",
+      "pcm": "sources/pcm/jingles_SAX10.wav",
+      "author": "Kenney",
+      "title": "jingles_SAX10",
+      "page": "https://kenney.nl/assets/music-jingles",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "original_sha256": "ee9092e858526e3638f7a639f25c2218f14432466c3e4dd7e1e84073925390ae",
+      "pcm_sha256": "d8ebb0a65ea518b40cf799947a61d90fab5e9de361e17c34812660cab5ba8110"
+    },
+    "jingles_HIT00": {
+      "original": "sources/raw/jingles_HIT00.ogg",
+      "pcm": "sources/pcm/jingles_HIT00.wav",
+      "author": "Kenney",
+      "title": "jingles_HIT00",
+      "page": "https://kenney.nl/assets/music-jingles",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "original_sha256": "e23d8c9e971a4e34484bc834a3ec1d560811ec6f5edd5efa2c61e583c18c504a",
+      "pcm_sha256": "12754dee13321c9b3348de1781034d40a8a8774cc267f35f4e8cbda97724e0ea"
+    },
+    "footstep_concrete_000": {
+      "original": "sources/raw/footstep_concrete_000.ogg",
+      "pcm": "sources/pcm/footstep_concrete_000.wav",
+      "author": "Kenney",
+      "title": "footstep_concrete_000",
+      "page": "https://kenney.nl/assets/impact-sounds",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "original_sha256": "d7267e183067757c92c169de2a379abea592cfca6b39bb2e8feea15221ad79fe",
+      "pcm_sha256": "07a77e97de6c8d35abed2028103372b82868ab956be4ade8dd1a8eec5ead46aa"
+    },
+    "footstep_concrete_001": {
+      "original": "sources/raw/footstep_concrete_001.ogg",
+      "pcm": "sources/pcm/footstep_concrete_001.wav",
+      "author": "Kenney",
+      "title": "footstep_concrete_001",
+      "page": "https://kenney.nl/assets/impact-sounds",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "original_sha256": "507a75eb19b897087855a3be3cf11a12d7fa37d143ad535eeebe0b8031c7325d",
+      "pcm_sha256": "b4a6b247c31a7f3a7539d5add60cef8a2ab9eadf86ab753e0f168f5897c49586"
+    },
+    "impactWood_heavy_000": {
+      "original": "sources/raw/impactWood_heavy_000.ogg",
+      "pcm": "sources/pcm/impactWood_heavy_000.wav",
+      "author": "Kenney",
+      "title": "impactWood_heavy_000",
+      "page": "https://kenney.nl/assets/impact-sounds",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "original_sha256": "15ff82332f342c30e469215539e1cc57e11b221aa2cf7e11e811d313a9927f3d",
+      "pcm_sha256": "b1fc02e4a3c3c8caae30c251549ed644f447a6ea699b4be3640188972386c908"
+    },
+    "impactMetal_heavy_000": {
+      "original": "sources/raw/impactMetal_heavy_000.ogg",
+      "pcm": "sources/pcm/impactMetal_heavy_000.wav",
+      "author": "Kenney",
+      "title": "impactMetal_heavy_000",
+      "page": "https://kenney.nl/assets/impact-sounds",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "original_sha256": "e07045693e4a2b3d165c424e3dab4c781d9ff8880a386880ac89a51315d7f831",
+      "pcm_sha256": "729a5275bc68c9b4054f3af1bd4866d71e0503722340411046f798884c899ee4"
+    },
+    "impactGlass_heavy_000": {
+      "original": "sources/raw/impactGlass_heavy_000.ogg",
+      "pcm": "sources/pcm/impactGlass_heavy_000.wav",
+      "author": "Kenney",
+      "title": "impactGlass_heavy_000",
+      "page": "https://kenney.nl/assets/impact-sounds",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "original_sha256": "b44b39a940e8948e74b9bd3776bff980df43cf220abdaf0d467dc4c43c0244a5",
+      "pcm_sha256": "96a1a33d838da0860b0cde932a048729739f25eb1cdf2ddcf387b8f2d86df321"
+    },
+    "impactTin_medium_000": {
+      "original": "sources/raw/impactTin_medium_000.ogg",
+      "pcm": "sources/pcm/impactTin_medium_000.wav",
+      "author": "Kenney",
+      "title": "impactTin_medium_000",
+      "page": "https://kenney.nl/assets/impact-sounds",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "original_sha256": "f4bbee66ca191ec744b84fc07ac9ed2a6fda955d51cfed8360f12b62815d3cbd",
+      "pcm_sha256": "09affcd0f2c5535eefd4d4e453ad7dc3f465056b7bc168ebc24db5d77acdcf18"
+    },
+    "metalPot1": {
+      "original": "sources/raw/metalPot1.ogg",
+      "pcm": "sources/pcm/metalPot1.wav",
+      "author": "Kenney",
+      "title": "metalPot1",
+      "page": "https://kenney.nl/assets/rpg-audio",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "original_sha256": "159def979e8e386c2c539f5e99cc30a080eb2dcb6c911fa2e4ccc0785b2522fd",
+      "pcm_sha256": "391732fa262b33646a4bcd057cfab8a8d1af985263f7d312c9d400ec055e7f6a"
+    },
+    "cloth1": {
+      "original": "sources/raw/cloth1.ogg",
+      "pcm": "sources/pcm/cloth1.wav",
+      "author": "Kenney",
+      "title": "cloth1",
+      "page": "https://kenney.nl/assets/rpg-audio",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "original_sha256": "ddb93a3671233f95da0e0b10367f082f7eb42fa6caaddcf776410aa8833c747d",
+      "pcm_sha256": "7bd5b79e72caf036ca1fd6598e1fffac563237e957f72aecc5aa66108b10b02c"
+    },
+    "cloth2": {
+      "original": "sources/raw/cloth2.ogg",
+      "pcm": "sources/pcm/cloth2.wav",
+      "author": "Kenney",
+      "title": "cloth2",
+      "page": "https://kenney.nl/assets/rpg-audio",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "original_sha256": "8a7451193c38bc05483aec25dd193e163a15d44cf7fff04ac7912573231b0201",
+      "pcm_sha256": "b6b85da25171048b8dc735cca60583fbf1e673a775d72a5c1761dc30d7a1ec58"
+    },
+    "wjtaylor-sigh": {
+      "original": "sources/raw/wjtaylor-sigh.mp3",
+      "pcm": "sources/pcm/wjtaylor-sigh.wav",
+      "author": "wjtaylor",
+      "title": "sigh",
+      "page": "https://freesound.org/people/wjtaylor/sounds/265249/",
+      "download_url": "https://cdn.freesound.org/previews/265/265249_4989900-hq.mp3",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "original_sha256": "a547ca4ef17f2796764c88832c2463c6acc02efce5d0800f0941e08933930960",
+      "pcm_sha256": "daaf2cd452b7f2d7ca34bda92a4bef2dfcaffdb578aaa7e3537f525e8c2fa260"
+    },
+    "qubodup-shout": {
+      "original": "sources/raw/qubodup-shout.mp3",
+      "pcm": "sources/pcm/qubodup-shout.wav",
+      "author": "qubodup",
+      "title": "Small Evil Creature Attack Shout 1",
+      "page": "https://freesound.org/people/qubodup/sounds/744792/",
+      "download_url": "https://cdn.freesound.org/previews/744/744792_71257-hq.mp3",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "original_sha256": "bf08c2948365ea448e71371adbc433899b916f79f30003e2f5c10d04d98b2ed7",
+      "pcm_sha256": "c4645ce3f3c88b8fc8b7cce31de017e9bb4ce8c5b3870bc0f02de3390b276bd1"
+    },
+    "BounceYoFrankie": {
+      "original": "sources/raw/BounceYoFrankie.flac",
+      "pcm": "sources/pcm/BounceYoFrankie.wav",
+      "author": "Blender Foundation",
+      "title": "Funny Comic Cartoon Bounce Sound (Yo Frankie!)",
+      "page": "https://opengameart.org/content/funny-comic-cartoon-bounce-sound",
+      "download_url": "https://opengameart.org/sites/default/files/BounceYoFrankie.flac",
+      "license": "CC-BY-3.0",
+      "license_url": "https://creativecommons.org/licenses/by/3.0/",
+      "original_sha256": "80abfe50382c0fb16a8fa1b1444bc703ab3101d18978311eda9b4e44a66618ab",
+      "pcm_sha256": "3934aad3bd65f48d3a26129b342278207f5ee9206db4b9d74d5666553dd4c0ef"
+    }
+  }
+}
