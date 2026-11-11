@@ -28,7 +28,8 @@ STORY = (
     ), "야근 확정!"),
 )
 
-PANEL_SECONDS = 6.5
+# 짧은 컷은 바로 이어지고, 수리공 컷만 한숨을 마칠 시간을 확보한다.
+PANEL_DURATIONS = (3.5, 3.5, 5.0, 3.5)
 BALLOON_DELAYS = (0.55, 1.8)
 REVEAL_SECONDS = MOTION_END
 
@@ -40,8 +41,12 @@ class ComicPlayback:
     paused: bool = False
 
     @property
+    def duration(self):
+        return PANEL_DURATIONS[self.index]
+
+    @property
     def finished(self):
-        return self.index == len(STORY) - 1 and self.elapsed >= PANEL_SECONDS
+        return self.index == len(STORY) - 1 and self.elapsed >= self.duration
 
     def reset(self):
         self.index, self.elapsed, self.paused = 0, 0.0, False
@@ -50,10 +55,10 @@ class ComicPlayback:
         if self.paused:
             return
         self.elapsed += max(0.0, seconds)
-        while self.elapsed >= PANEL_SECONDS and self.index < len(STORY) - 1:
-            self.elapsed -= PANEL_SECONDS
+        while self.elapsed >= self.duration and self.index < len(STORY) - 1:
+            self.elapsed -= self.duration
             self.index += 1
-        self.elapsed = min(self.elapsed, PANEL_SECONDS)
+        self.elapsed = min(self.elapsed, self.duration)
 
     def advance(self):
         if self.index == len(STORY) - 1:
@@ -66,10 +71,10 @@ class ComicPlayback:
         if self.index == 0:
             return False
         self.index -= 1
-        self.elapsed, self.paused = REVEAL_SECONDS, True
+        self.elapsed, self.paused = min(REVEAL_SECONDS, self.duration), True
         return True
 
     def age(self, index):
         if index > self.index:
             return None
-        return PANEL_SECONDS if index < self.index else self.elapsed
+        return PANEL_DURATIONS[index] if index < self.index else self.elapsed

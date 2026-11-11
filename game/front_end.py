@@ -138,7 +138,8 @@ class FrontEnd:
             else:
                 self.screen = "story"
                 self.comic.index = len(STORY) - 1
-                self.comic.elapsed, self.comic.paused = REVEAL_SECONDS, True
+                self.comic.elapsed = min(REVEAL_SECONDS, self.comic.duration)
+                self.comic.paused = True
         self.story_clock = perf_counter() if self.screen == "story" else None
         return action
 

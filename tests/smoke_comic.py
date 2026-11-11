@@ -16,10 +16,9 @@ os.environ["SDL_RENDER_DRIVER"] = "software"
 import pico2d.pico2d as p
 
 from game.comic import PANEL_BOUNDS
-from game.character_motion import MOTION_END
 from game.front_end import FrontEnd
 from game.layout import WIDTH, HEIGHT
-from game.story import PANEL_SECONDS
+from game.story import PANEL_DURATIONS
 from game.view import View
 from tests.smoke_onboarding import capture
 
@@ -68,7 +67,7 @@ def main():
             menu.activate("story")
         snapshots = []
         for index in range(4):
-            menu.update(index * PANEL_SECONDS + MOTION_END + .3)
+            menu.update(sum(PANEL_DURATIONS[:index + 1]) - .01)
             assert menu.story_page == index
             menu.draw(display)
             data = pixels()
@@ -151,7 +150,7 @@ def main():
             menu.comic.paused = False
             # 24Hz로 실제 게임을 샘플링해 이동 보간과 새 연결 포즈를 함께 검토한다.
             fps = 24
-            for step in range(round(PANEL_SECONDS * fps)):
+            for step in range(round(PANEL_DURATIONS[2] * fps)):
                 menu.comic.elapsed = step / fps
                 menu.draw(display)
                 filename = f"worker-{step:03d}.png"
@@ -166,12 +165,12 @@ def main():
                 menu.activate("story")
             frames = []
             for index in range(4):
-                for step in range(43):
-                    menu.update(index * PANEL_SECONDS + step * 0.125)
+                for step in range(round(PANEL_DURATIONS[index] * 8)):
+                    menu.update(sum(PANEL_DURATIONS[:index]) + step * 0.125)
                     menu.draw(display)
                     filename = f"frame-{len(frames):03d}.png"
                     capture(args.animation_dir / filename)
-                    frames.append({"file": filename, "duration_ms": 125 if step < 42 else 1250})
+                    frames.append({"file": filename, "duration_ms": 125})
             (args.animation_dir / "frames.json").write_text(json.dumps(frames), encoding="utf-8")
         print("Comic smoke OK: dummy/software rendering, four automatic reveals, earlier panels unchanged, "
               "future panels hidden, character motion over fixed background, walk/sigh/paused pixels, "

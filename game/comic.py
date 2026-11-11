@@ -6,7 +6,7 @@ from math import sin, sqrt
 import pico2d.pico2d as p
 
 from game.layout import HEIGHT, WIDTH
-from game.story import BALLOON_DELAYS, PANEL_SECONDS, STORY
+from game.story import BALLOON_DELAYS, STORY
 from game.comic_motion import draw_actors
 from game.character_motion import EXHALE_START
 
@@ -114,5 +114,5 @@ def draw_comic_page(view, playback, load_image):
         color = GOLD if index <= playback.index else (66, 83, 82)
         p.draw_rectangle(x, 18, x + 30, 23, *color, filled=True)
         if index == playback.index and not playback.finished:
-            p.draw_rectangle(x, 18, x + 30 * playback.elapsed / PANEL_SECONDS, 23,
+            p.draw_rectangle(x, 18, x + 30 * min(1, playback.elapsed / playback.duration), 23,
                              126, 224, 201, filled=True)

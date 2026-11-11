@@ -2,7 +2,7 @@
 
 import unittest
 
-from game.story import ComicPlayback, PANEL_SECONDS, REVEAL_SECONDS, STORY
+from game.story import ComicPlayback, PANEL_DURATIONS, REVEAL_SECONDS, STORY
 
 
 class ComicTests(unittest.TestCase):
@@ -13,13 +13,13 @@ class ComicTests(unittest.TestCase):
             self.assertEqual(comic.index, index)
             self.assertEqual([i for i in range(4) if comic.age(i) is not None], list(range(index + 1)))
             for earlier in range(index):
-                self.assertEqual(comic.age(earlier), PANEL_SECONDS)
-            comic.update(PANEL_SECONDS - comic.elapsed - 0.01)
+                self.assertEqual(comic.age(earlier), PANEL_DURATIONS[earlier])
+            comic.update(comic.duration - comic.elapsed - 0.01)
             self.assertEqual(comic.index, index)
             comic.update(0.02)
         self.assertTrue(comic.finished)
         comic.update(1000)
-        self.assertEqual((comic.index, comic.elapsed), (3, PANEL_SECONDS))
+        self.assertEqual((comic.index, comic.elapsed), (3, PANEL_DURATIONS[3]))
 
     def test_variable_frame_times_produce_the_same_sequence(self):
         one_frame, many_frames = ComicPlayback(), ComicPlayback()
@@ -31,14 +31,15 @@ class ComicTests(unittest.TestCase):
 
     def test_pause_and_back_allow_reading_without_timer_advancing(self):
         comic = ComicPlayback()
-        comic.update(PANEL_SECONDS * 2 + 1)
+        comic.update(sum(PANEL_DURATIONS[:2]) + 1)
         self.assertTrue(comic.back())
-        self.assertEqual((comic.index, comic.elapsed, comic.paused), (1, REVEAL_SECONDS, True))
+        rest_time = min(REVEAL_SECONDS, comic.duration)
+        self.assertEqual((comic.index, comic.elapsed, comic.paused), (1, rest_time, True))
         comic.update(100)
         self.assertEqual(comic.index, 1)
-        self.assertEqual(comic.elapsed, REVEAL_SECONDS)
+        self.assertEqual(comic.elapsed, rest_time)
         comic.paused = False
-        comic.update(PANEL_SECONDS - REVEAL_SECONDS + 0.01)
+        comic.update(comic.duration - rest_time + 0.01)
         self.assertEqual(comic.index, 2)
 
     def test_manual_navigation_and_replay_reset_visibility(self):

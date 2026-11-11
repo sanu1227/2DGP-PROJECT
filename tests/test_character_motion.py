@@ -4,7 +4,7 @@ import unittest
 
 from game.character_motion import (ACCEL_SECONDS, EXHALE_END, EXHALE_START, INHALE_START,
                                    MOTION_END, WALK_START, WALK_END, worker_motion)
-from game.story import ComicPlayback, PANEL_SECONDS, REVEAL_SECONDS
+from game.story import ComicPlayback, PANEL_DURATIONS
 
 
 class CharacterMotionTests(unittest.TestCase):
@@ -54,13 +54,13 @@ class CharacterMotionTests(unittest.TestCase):
 
     def test_finished_and_previous_panel_hold_the_rest_pose(self):
         rest = worker_motion(MOTION_END)
-        self.assertEqual(worker_motion(PANEL_SECONDS), rest)
+        self.assertEqual(worker_motion(PANEL_DURATIONS[2]), rest)
         self.assertEqual(worker_motion(1000), rest)
         comic = ComicPlayback(index=3)
         self.assertEqual(worker_motion(comic.age(2)), rest)
         comic.back()
         self.assertEqual(comic.index, 2)
-        self.assertGreaterEqual(REVEAL_SECONDS, MOTION_END)
+        self.assertGreaterEqual(comic.elapsed, EXHALE_END)
         self.assertEqual(worker_motion(comic.elapsed), rest)
 
     def test_pause_freezes_pose_and_replay_returns_to_entry(self):
@@ -72,7 +72,7 @@ class CharacterMotionTests(unittest.TestCase):
         comic.update(.3)
         self.assertNotEqual(worker_motion(comic.age(2)), pose)
         comic.reset()
-        comic.update(PANEL_SECONDS * 2)
+        comic.update(sum(PANEL_DURATIONS[:2]))
         self.assertEqual(worker_motion(comic.age(2)), worker_motion(0))
 
 
