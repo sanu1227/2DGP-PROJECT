@@ -1,0 +1,20 @@
+{
+  "assets": {
+    "tukorea.png": {
+      "bytes": 34281,
+      "sha256": "73daa29ab3946f198e7e1698cf70a0d60698268747b89c72de1ec7c9835e71b6",
+      "width": 980,
+      "height": 890
+    },
+    "2dgp.png": {
+      "bytes": 2363741,
+      "sha256": "d5ab50f951898713f89d810c75eb9c2f0b89ee0215ff2150de8cd6f1bd33f46f",
+      "width": 1619,
+      "height": 971
+    },
+    "sources/tukorea-signature.ai": {
+      "bytes": 1767479,
+      "sha256": "9c7191de806d9d4813ab8c1f354a0b90e09a13f3452b4151cb438e130b6c7d30"
+    }
+  }
+}
