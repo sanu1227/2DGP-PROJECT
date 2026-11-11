@@ -95,7 +95,7 @@ def main():
         # Inputs from the same event batch must not act in the newly opened room.
         steps.append(((next_key, p.SDLK_d, p.SDLK_SPACE),
                       lambda stage=(index + 1) % len(levels): expect(0, stage=stage)))
-    steps.append((p.SDLK_ESCAPE, None))
+    steps.append(("close", None))
 
     original_events = p.get_events
     pending_check = None
@@ -110,11 +110,12 @@ def main():
         key, pending_check = steps.popleft()
         for queued_key in key if isinstance(key, tuple) else (key,):
             event = p.SDL_Event()
-            event.type = p.SDL_KEYDOWN
+            event.type = p.SDL_QUIT if queued_key == "close" else p.SDL_KEYDOWN
             event.key.windowID = p.SDL_GetWindowID(p.window)
             event.key.state = p.SDL_PRESSED
             event.key.repeat = 0
-            event.key.keysym.sym = queued_key
+            if queued_key != "close":
+                event.key.keysym.sym = queued_key
             if p.SDL_PushEvent(ctypes.byref(event)) != 1:
                 raise RuntimeError("SDL 검사 이벤트를 넣을 수 없습니다.")
         return original_events()

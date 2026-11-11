@@ -115,7 +115,7 @@ def check_inputs(levels):
         (1.2, [], lambda: expect(1, True, navigating=True)),
         (1.34, [], lambda: expect(2, True)),
         (1.52, [], lambda: expect(2)),
-        (1.7, [p.SDLK_ESCAPE], None),
+        (1.7, ["close"], None),
     ])
     original_events = p.get_events
     pending = None
@@ -127,7 +127,9 @@ def check_inputs(levels):
         now[0], keys, pending = steps.popleft()
         for key in keys:
             event = p.SDL_Event()
-            if key in ("click", "path"):
+            if key == "close":
+                event.type = p.SDL_QUIT
+            elif key in ("click", "path"):
                 x, y = view.IsoBoard(10, 10).screen((4, 3) if key == "click" else (5, 1))
                 event.type = p.SDL_MOUSEBUTTONDOWN
                 event.button.button = p.SDL_BUTTON_LEFT

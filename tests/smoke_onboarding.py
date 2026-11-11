@@ -122,7 +122,7 @@ def main():
         ([p.SDLK_a], "playing", 19, None),
         ([p.SDLK_SPACE], "playing", 0, None, "stage_02"),
         ([p.SDLK_1], "playing", 0, None),
-        ([p.SDLK_ESCAPE], "playing", 0, None),
+        (["close"], "playing", 0, None),
     ])
     original_events, original_update = p.get_events, p.update_canvas
     current = None
@@ -204,7 +204,7 @@ def main():
             [([p.SDLK_RETURN], "story:0", 0, None),
              ([p.SDLK_DOWN, p.SDLK_DOWN, p.SDLK_RETURN], "controls:0", 0, None),
              ([p.SDLK_RETURN], "controls:1", 0, None), ([p.SDLK_RETURN], "playing", 0, None),
-             ([p.SDLK_ESCAPE], "playing", 0, None)],
+             (["close"], "playing", 0, None)],
         ):
             current = None
             skip_logos()
@@ -217,7 +217,7 @@ def main():
             steps.extend([
                 ([p.SDLK_0, p.SDLK_9], "title", 0, None),
                 ([p.SDLK_1 + index, p.SDLK_d, p.SDLK_SPACE], "playing", 0, None, level.id),
-                ([p.SDLK_ESCAPE], "playing", 0, None, level.id),
+                (["close"], "playing", 0, None, level.id),
             ])
             view.run(load_levels())
             assert not steps

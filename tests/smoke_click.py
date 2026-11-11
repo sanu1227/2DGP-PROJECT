@@ -49,7 +49,7 @@ def main():
         steps.append((2.3 + index * 0.2, ("object", (3, 7)) if index == 0 else None,
                       action, index + 1 < len(route)))
     steps.extend(((5.3, ("motion", (2, 2)), None, False),
-                  (5.5, ("key", p.SDLK_ESCAPE), None, False)))
+                  (5.5, ("close", None), None, False)))
     now, current = 0, None
     original_init, original_events, original_update = view.View.__init__, p.get_events, p.update_canvas
 
@@ -82,7 +82,9 @@ def main():
             kind, value = command
             event = p.SDL_Event()
             window = p.SDL_GetWindowID(p.window)
-            if kind == "key":
+            if kind == "close":
+                event.type = p.SDL_QUIT
+            elif kind == "key":
                 event.type, event.key.windowID = p.SDL_KEYDOWN, window
                 event.key.state, event.key.repeat, event.key.keysym.sym = p.SDL_PRESSED, 0, value
             else:

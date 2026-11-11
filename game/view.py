@@ -16,6 +16,7 @@ from game.layout import WIDTH, HEIGHT, BOARD_BOTTOM, BOARD_TOP
 from game.front_end import FrontEnd
 from game.tutorial import first_room_hint
 from game.transport import BeltAnimation
+from game.play_menu import PlayClock, PlayMenu
 
 INK = (226, 230, 219)
 MUTED = (158, 169, 166)
@@ -81,6 +82,7 @@ def diamond(x, y, half_width, half_height, color, outline=None):
 
 class View:
     def __init__(self):
+        self.clock = PlayClock()
         self.fonts = {}
         self.art = None
         self.navigation = ClickNavigator()
@@ -102,6 +104,15 @@ class View:
         except Exception:
             self.close()
             raise
+
+    def now(self):
+        return self.clock.now(perf_counter())
+
+    def pause(self):
+        self.clock.pause(perf_counter())
+
+    def resume(self):
+        self.clock.resume(perf_counter())
 
     def close(self):
         if self.art:
@@ -220,13 +231,13 @@ class View:
 
     def move_player(self, previous, destination, action):
         """논리 이동은 즉시 완료하고 표시 위치만 짧게 보간한다."""
-        now = perf_counter()
+        now = self.now()
         start = self.player_position(previous, now)
         self.facing = FACING[action]
         self.motion = (start, destination, now)
 
     def transporting(self, game, now=None):
-        return self.belt_animation.sample(game, perf_counter() if now is None else now) is not None
+        return self.belt_animation.sample(game, self.now() if now is None else now) is not None
 
     def text(self, x, y, value, size=18, color=INK):
         self.fonts[size].draw(x, y, str(value), color)
@@ -467,7 +478,7 @@ class View:
 
     def board(self, game):
         level, state = game.level, game.state
-        now = perf_counter()
+        now = self.now()
         transport = self.belt_animation.sample(game, now)
         moving_items = {}
         moving_sources = set()
@@ -623,7 +634,7 @@ class View:
         # 바닥 전체를 먼저 그려 앞 칸의 바닥이 캐릭터 다리를 덮지 않게 한다.
         target_x, target_y = screen(state.player)
         diamond(target_x, target_y, half_width - 3, int(half_height) - 2, None, TEAL)
-        now = perf_counter()
+        now = self.now()
         player = self.player_position(state.player, now)
         px, py = screen(player)
         # 같은 칸의 작업대나 배치한 병사와 구별되도록 약간 앞쪽에 선다.
@@ -875,7 +886,7 @@ class View:
             self.text(WIDTH - 362, 71, status, 16, MUTED)
 
         self.text(34, 32, f"좌클릭  이동    우클릭  취소    WASD / 방향키  이동    개발용 1~{total} 방 이동 · F2 좌표    (x,y): x 오른쪽 아래 / y 왼쪽 아래", 13, MUTED)
-        self.text(34, 12, "E / Space  상호작용·내려놓기·다음 방(완료 후)    Z / Backspace  되돌리기    R  재시작    Esc  종료", 13, MUTED)
+        self.text(34, 12, "E / Space  상호작용·내려놓기·다음 방(완료 후)    Z / Backspace  되돌리기    R  재시작    Esc  일시정지", 13, MUTED)
 
 
 def run(levels, index=0, smoke_frames=None, *, show_title=True):
@@ -889,6 +900,7 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True):
             raise RuntimeError("SDL 게임 창 또는 렌더러를 만들 수 없습니다.")
         view = View()
         front_end = FrontEnd(show_title)
+        play_menu = PlayMenu()
         game = Game(levels[index])
         actions = {
             p.SDLK_UP: "up", p.SDLK_w: "up", p.SDLK_DOWN: "down", p.SDLK_s: "down",
@@ -930,6 +942,24 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True):
                     if result is not None:
                         # 전환 뒤 입력은 무시하되 같은 묶음의 창 닫기는 처리한다.
                         screen_changed = True
+                elif play_menu.active:
+                    result = play_menu.handle(event)
+                    if result in ("resume", "restart", "title"):
+                        play_menu.close(view)
+                        if result != "resume":
+                            view.navigation.cancel()
+                            view.reset_player()
+                            view.reset_gates()
+                            view.reset_plates()
+                            if result == "restart":
+                                game.restart()
+                            else:
+                                front_end.activate("title")
+                    if result is not None:
+                        screen_changed = True
+                elif event.type == p.SDL_KEYDOWN and event.key == p.SDLK_ESCAPE:
+                    play_menu.open(view)
+                    screen_changed = True
                 elif event.type == p.SDL_MOUSEMOTION:
                     view.mouse_position = (event.x, HEIGHT - 1 - event.y)
                 elif event.type == p.SDL_MOUSEBUTTONDOWN:
@@ -941,7 +971,7 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True):
                     elif event.button == p.SDL_BUTTON_LEFT and not view.transporting(game):
                         target = view.pick_cell(game, *view.mouse_position)
                         if target is not None:
-                            now = perf_counter()
+                            now = view.now()
                             ready_at = view.motion[2] + 0.18 if view.motion else now
                             view.navigation.start(game, target, now, ready_at=ready_at)
                 elif event.type == p.SDL_KEYDOWN:
@@ -951,9 +981,7 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True):
                             p.SDLK_ESCAPE, p.SDLK_F2, p.SDLK_z, p.SDLK_BACKSPACE, p.SDLK_r, *stage_keys):
                         continue
                     view.navigation.cancel()
-                    if event.key == p.SDLK_ESCAPE:
-                        running = False
-                    elif event.key == p.SDLK_F2:
+                    if event.key == p.SDLK_F2:
                         view.show_coordinates = not view.show_coordinates
                     elif event.key in stage_keys and stage_keys[event.key] < len(levels):
                         index = stage_keys[event.key]
@@ -962,6 +990,7 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True):
                         view.hit_regions.clear()
                         view.hit_masks.clear()
                         view.mouse_position = None
+                        screen_changed = True
                     elif event.key in (p.SDLK_z, p.SDLK_BACKSPACE):
                         game.undo()
                         view.reset_player()
@@ -985,11 +1014,11 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True):
                             # 도착 직후 상호작용하면 그 칸에 바로 정렬한다.
                             view.motion = None
                         if changed:
-                            view.belt_animation.start(game, perf_counter())
+                            view.belt_animation.start(game, view.now())
             # 이미 보간 중인 한 칸이 끝난 뒤에만 다음 자동 이동을 실행한다.
-            now = perf_counter()
-            front_end.update(now)
-            if (running and front_end.screen == "playing" and not view.transporting(game, now)
+            now = view.now()
+            front_end.update(perf_counter())
+            if (running and front_end.screen == "playing" and not play_menu.active and not view.transporting(game, now)
                     and (view.motion is None or now >= view.motion[2] + 0.18)):
                 previous = game.state.player
                 action = view.navigation.tick(game, now)
@@ -998,6 +1027,8 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True):
                     view.belt_animation.start(game, now)
             if front_end.screen == "playing":
                 view.draw(game, index, len(levels))
+                if play_menu.active:
+                    play_menu.draw(view, game)
             else:
                 front_end.draw(view)
             p.update_canvas()

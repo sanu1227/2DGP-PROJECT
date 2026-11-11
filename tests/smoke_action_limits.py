@@ -142,7 +142,7 @@ def main():
         (p.SDLK_1, lambda: expect(0, stage=0)),
         (p.SDLK_RIGHT, lambda: expect(1, stage=0)),
         (p.SDLK_2, lambda: expect(0)),
-        (p.SDLK_ESCAPE, None),
+        ("close", None),
     ])
     original_events, pending = p.get_events, None
 
@@ -152,7 +152,9 @@ def main():
             pending()
         key, pending = steps.popleft()
         event = p.SDL_Event()
-        if key == "click":
+        if key == "close":
+            event.type = p.SDL_QUIT
+        elif key == "click":
             sx, sy = view.IsoBoard(10, 10).screen((4, 1))
             event.type = p.SDL_MOUSEBUTTONDOWN
             event.button.button = p.SDL_BUTTON_LEFT
