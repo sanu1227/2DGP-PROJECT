@@ -12,7 +12,11 @@ def main():
     parser.add_argument("frames", type=Path, help="Directory containing frames.json and PNG captures")
     parser.add_argument("output", type=Path)
     parser.add_argument("--width", type=int)
+    parser.add_argument("--palette-samples", type=int, default=1,
+                        help="Palette reference frames; use several for different scenes")
     args = parser.parse_args()
+    if args.palette_samples < 1:
+        parser.error("--palette-samples must be at least 1")
     items = json.loads((args.frames / "frames.json").read_text(encoding="utf-8"))
 
     def read(item):
@@ -23,7 +27,16 @@ def main():
                                        Image.Resampling.LANCZOS)
             return result
 
-    palette = read(items[-1]).quantize(colors=192)
+    if args.palette_samples == 1:
+        palette = read(items[-1]).quantize(colors=192)
+    else:
+        count = min(args.palette_samples, len(items))
+        samples = [read(items[round(i * (len(items) - 1) / max(1, count - 1))]) for i in range(count)]
+        sw, sh = samples[0].size
+        contact = Image.new("RGB", (sw, sh * count))
+        for index, sample in enumerate(samples):
+            contact.paste(sample, (0, index * sh))
+        palette = contact.quantize(colors=192)
     frames = [read(item).quantize(palette=palette, dither=Image.Dither.NONE) for item in items]
     elapsed, previous, durations = 0, 0, []
     # GIF stores centiseconds. Round the timeline rather than every frame,
