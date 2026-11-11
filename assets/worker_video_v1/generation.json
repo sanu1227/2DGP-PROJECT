@@ -1,0 +1,28 @@
+{
+  "prompt_id": "f4bdc775-6970-44cf-84ab-391bb76eeec4",
+  "server": "http://127.0.0.1:8189",
+  "source": "assets\\story_overtime_v1\\act_01.png",
+  "source_sha256": "44ede3d6c537b169bfaf2b75d5b4591b9c2059198aaba7de584390bfa2fb1afb",
+  "crop": {
+    "x": 726,
+    "y": 545,
+    "width": 720,
+    "height": 539
+  },
+  "seed": 2026111101,
+  "width": 640,
+  "height": 480,
+  "steps": 20,
+  "generated_frames": 97,
+  "delivered_frames": 96,
+  "fps": 24,
+  "seconds": 4,
+  "submitted_at": "2026-11-11T20:41:07+0900",
+  "status": "success",
+  "elapsed_seconds": 1145.85,
+  "exported_files": {
+    "3": "input.png",
+    "15": "worker_trudge_sigh.mp4"
+  },
+  "server_stopped_after_review": true
+}

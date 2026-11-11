@@ -1,0 +1,19 @@
+{
+  "file": "worker_trudge_sigh.mp4",
+  "sha256": "0cd0fa792ed7a69088cef341f6c5ad24ccd09c90f5dd6bdda99d6598b8ab1dbd",
+  "bytes": 1638638,
+  "codec": "h264",
+  "width": 640,
+  "height": 480,
+  "frames": 96,
+  "fps": "24/1",
+  "duration_seconds": 4.0,
+  "unique_decoded_frames": 96,
+  "uniform_frame_timestamps": true,
+  "adjacent_frame_mean_absolute_difference": {
+    "min": 1.0730533854166666,
+    "mean": 12.137644474141082,
+    "max": 28.85438910590278
+  },
+  "motion_review": "Contact sheet and frame sequences require separate visual inspection."
+}

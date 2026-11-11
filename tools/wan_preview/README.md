@@ -44,7 +44,15 @@ Invoke-RestMethod http://127.0.0.1:8189/system_stats
 - 8GB VRAM에 맞춰 diffusion weights를 실행 시 FP8로 변환하고, 메모리 오프로딩 및 타일 VAE 디코딩 사용
 - Wan의 시간 축 규격에 맞춰 97프레임을 생성한 뒤 마지막 한 프레임을 제외한다. 최종 목표는 96프레임, 정확히 4초이다. 프레임 복제나 보간으로 채우지 않는다.
 - 결과 원본은 ComfyUI의 `output/dungeon_preview`에 저장된다.
-- API 워크플로와 요청·실행 기록은 `assets/worker_video_v1`에 저장된다.
+- 생성 성공 시 영상과 입력 그림을 `assets/worker_video_v1`로 복사한다. API 워크플로와 요청·실행 기록도 같은 폴더에 저장된다.
+
+영상 검사:
+
+```powershell
+& "$env:USERPROFILE/AI/ComfyUI/.venv/Scripts/python.exe" tools/wan_preview/inspect_video.py assets/worker_video_v1/worker_trudge_sigh.mp4
+```
+
+96프레임, 24fps, 4초, 모든 프레임의 시간 간격과 중복 여부를 검사하고 `verification.json` 및 `contact_sheet.jpg`를 만든다. 첫 결과와 시각 검토 기록은 `assets/worker_video_v1/README.md`에 있다.
 
 영상의 시간·코덱 검사와 실제 동작의 시각 검토는 별개다. 파일 생성 성공만으로 걷기와 한숨 표현의 성공을 판단하지 않는다.
 
