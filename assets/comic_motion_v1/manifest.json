@@ -1,0 +1,378 @@
+{
+  "version": 1,
+  "generator": "built-in image_gen",
+  "canvas": [
+    362,
+    362
+  ],
+  "worker_anchor": [
+    210,
+    344
+  ],
+  "cast_anchor": [
+    181,
+    344
+  ],
+  "sources": {
+    "worker": {
+      "file": "sources/worker.png",
+      "width": 1448,
+      "height": 1086,
+      "sha256": "5c6589094533e2c5f84b359c53ee2b9aa9f0255e383ba5119cb51e50f7ce6371"
+    },
+    "cast": {
+      "file": "sources/cast.png",
+      "width": 1774,
+      "height": 887,
+      "sha256": "19bf04960f698a7419fa8b4e048720be3a6ed6c5df9a9eab94f9e85bcde36e96"
+    },
+    "backgrounds": {
+      "file": "sources/backgrounds.png",
+      "width": 1448,
+      "height": 1086,
+      "sha256": "78d29a4fcbf13abb0023b06569b445d4a60e1c6ea508cd3ae7fcabd6f244d832"
+    }
+  },
+  "sprites": {
+    "worker_00": {
+      "file": "sprites/worker_00.png",
+      "sha256": "8b76cceab33339d34cd36d786db9a504c6d7d971646bcee98079963e2372ac3b",
+      "source_cell": 0,
+      "source_crop": {
+        "left": 30,
+        "top": 13,
+        "width": 283,
+        "height": 316
+      },
+      "bounds": {
+        "left": 18,
+        "top": 28,
+        "width": 283,
+        "height": 316
+      }
+    },
+    "worker_01": {
+      "file": "sprites/worker_01.png",
+      "sha256": "911de5be659cba078314f051d6a3645ecc9be8ec6192633392cb600c9ed7c4f6",
+      "source_cell": 1,
+      "source_crop": {
+        "left": 392,
+        "top": 13,
+        "width": 283,
+        "height": 317
+      },
+      "bounds": {
+        "left": 18,
+        "top": 27,
+        "width": 283,
+        "height": 317
+      }
+    },
+    "worker_02": {
+      "file": "sprites/worker_02.png",
+      "sha256": "3b6828e09023686725f5d6d86bdc36a38ea76dc8fe30780ff9f2467a1f34f33d",
+      "source_cell": 2,
+      "source_crop": {
+        "left": 754,
+        "top": 13,
+        "width": 283,
+        "height": 315
+      },
+      "bounds": {
+        "left": 18,
+        "top": 29,
+        "width": 283,
+        "height": 315
+      }
+    },
+    "worker_03": {
+      "file": "sprites/worker_03.png",
+      "sha256": "8e5ea9fbb7275204615def13a89435022c1b209867c6e298a27057999e995fff",
+      "source_cell": 3,
+      "source_crop": {
+        "left": 1116,
+        "top": 13,
+        "width": 283,
+        "height": 315
+      },
+      "bounds": {
+        "left": 18,
+        "top": 29,
+        "width": 283,
+        "height": 315
+      }
+    },
+    "worker_04": {
+      "file": "sprites/worker_04.png",
+      "sha256": "bfc3a45c3140f7fcc401b4df2bed8619ee0aa461a00b17353666ced634c2081b",
+      "source_cell": 4,
+      "source_crop": {
+        "left": 30,
+        "top": 375,
+        "width": 282,
+        "height": 318
+      },
+      "bounds": {
+        "left": 18,
+        "top": 26,
+        "width": 282,
+        "height": 318
+      }
+    },
+    "worker_05": {
+      "file": "sprites/worker_05.png",
+      "sha256": "8aecd6d081728fce05dcac27bfcf9845c8763092100b49f3c7ecc30a4d90a7d8",
+      "source_cell": 5,
+      "source_crop": {
+        "left": 392,
+        "top": 375,
+        "width": 283,
+        "height": 314
+      },
+      "bounds": {
+        "left": 18,
+        "top": 30,
+        "width": 283,
+        "height": 314
+      }
+    },
+    "worker_06": {
+      "file": "sprites/worker_06.png",
+      "sha256": "732d3f5ace653d446806d867c71ebae142cfddb368a549bfbb9387f1d347f245",
+      "source_cell": 6,
+      "source_crop": {
+        "left": 754,
+        "top": 372,
+        "width": 284,
+        "height": 319
+      },
+      "bounds": {
+        "left": 18,
+        "top": 25,
+        "width": 284,
+        "height": 319
+      }
+    },
+    "worker_07": {
+      "file": "sprites/worker_07.png",
+      "sha256": "26e5e198594a4c93ff45e4011ccd23c4fc36734743b60e993c5c6d8eb9a30a7e",
+      "source_cell": 7,
+      "source_crop": {
+        "left": 1116,
+        "top": 373,
+        "width": 281,
+        "height": 318
+      },
+      "bounds": {
+        "left": 18,
+        "top": 26,
+        "width": 281,
+        "height": 318
+      }
+    },
+    "worker_08": {
+      "file": "sprites/worker_08.png",
+      "sha256": "5a0b7d313ecf8a036e08b0d00a4b634a7c82dd98f987d8e07225681c09b07d15",
+      "source_cell": 8,
+      "source_crop": {
+        "left": 30,
+        "top": 735,
+        "width": 284,
+        "height": 318
+      },
+      "bounds": {
+        "left": 18,
+        "top": 26,
+        "width": 284,
+        "height": 318
+      }
+    },
+    "worker_09": {
+      "file": "sprites/worker_09.png",
+      "sha256": "f27d955a3d9bf6e4e1fdd16d084ef77ef84c349c9c8a423a32a8a3294570032e",
+      "source_cell": 9,
+      "source_crop": {
+        "left": 392,
+        "top": 740,
+        "width": 286,
+        "height": 313
+      },
+      "bounds": {
+        "left": 18,
+        "top": 31,
+        "width": 286,
+        "height": 313
+      }
+    },
+    "worker_10": {
+      "file": "sprites/worker_10.png",
+      "sha256": "fe1c871306617887729ac411a87cb2b341e455d1f36403131cf9865079c8bd28",
+      "source_cell": 10,
+      "source_crop": {
+        "left": 754,
+        "top": 744,
+        "width": 284,
+        "height": 309
+      },
+      "bounds": {
+        "left": 18,
+        "top": 35,
+        "width": 284,
+        "height": 309
+      }
+    },
+    "worker_11": {
+      "file": "sprites/worker_11.png",
+      "sha256": "424fc246d5c2a60e829a120dd543b27dbd3f4aa9442aa800544d8a3522b586ce",
+      "source_cell": 11,
+      "source_crop": {
+        "left": 1116,
+        "top": 743,
+        "width": 285,
+        "height": 310
+      },
+      "bounds": {
+        "left": 18,
+        "top": 34,
+        "width": 285,
+        "height": 310
+      }
+    },
+    "hero_enter": {
+      "file": "sprites/hero_enter.png",
+      "sha256": "16c573439aa692123ca90995a6f54b57dd54cc7ab17ef5678cdc7ada4a8a032d",
+      "source_cell": 0,
+      "source_crop": {
+        "left": 27,
+        "top": 21,
+        "width": 434,
+        "height": 408
+      },
+      "bounds": {
+        "left": 16,
+        "top": 34,
+        "width": 330,
+        "height": 310
+      }
+    },
+    "hero_leave": {
+      "file": "sprites/hero_leave.png",
+      "sha256": "cdcb1c0dee7549b618a0fe95259efa60dcaa49dcb74d88fc5d37259a281f21ad",
+      "source_cell": 1,
+      "source_crop": {
+        "left": 485,
+        "top": 30,
+        "width": 371,
+        "height": 382
+      },
+      "bounds": {
+        "left": 21,
+        "top": 14,
+        "width": 320,
+        "height": 330
+      }
+    },
+    "skeleton_guard": {
+      "file": "sprites/skeleton_guard.png",
+      "sha256": "ef8a119ac5c057e030610a31fe10a60b7e7d7c9b7291a1e22068c3d9c24f89d9",
+      "source_cell": 2,
+      "source_crop": {
+        "left": 994,
+        "top": 20,
+        "width": 229,
+        "height": 400
+      },
+      "bounds": {
+        "left": 87,
+        "top": 14,
+        "width": 189,
+        "height": 330
+      }
+    },
+    "skeleton_broken": {
+      "file": "sprites/skeleton_broken.png",
+      "sha256": "94d87a7371c5ca3e91a8807b042c85b1c6065983a23bdead9b28e148e5426f99",
+      "source_cell": 3,
+      "source_crop": {
+        "left": 1353,
+        "top": 61,
+        "width": 392,
+        "height": 345
+      },
+      "bounds": {
+        "left": 16,
+        "top": 54,
+        "width": 330,
+        "height": 290
+      }
+    },
+    "boss": {
+      "file": "sprites/boss.png",
+      "sha256": "96e526ee10a8554fe774c5eafad546c76a246b822f2a2b8c9a0a70e4a66ff370",
+      "source_cell": 4,
+      "source_crop": {
+        "left": 17,
+        "top": 458,
+        "width": 403,
+        "height": 417
+      },
+      "bounds": {
+        "left": 22,
+        "top": 14,
+        "width": 319,
+        "height": 330
+      }
+    },
+    "worker_cower": {
+      "file": "sprites/worker_cower.png",
+      "sha256": "67f6c9ebdad1ebdddd2fe5ed316b75c1bff1aa139d5d8e8d8e1916bb7350fdb3",
+      "source_cell": 5,
+      "source_crop": {
+        "left": 487,
+        "top": 466,
+        "width": 351,
+        "height": 395
+      },
+      "bounds": {
+        "left": 35,
+        "top": 14,
+        "width": 293,
+        "height": 330
+      }
+    },
+    "skeleton_skull": {
+      "file": "sprites/skeleton_skull.png",
+      "sha256": "54c92cd9ad07927f740d38220be977c49cc82080372f49af1a582f54fd498cc9",
+      "source_cell": 6,
+      "source_crop": {
+        "left": 975,
+        "top": 510,
+        "width": 261,
+        "height": 332
+      },
+      "bounds": {
+        "left": 52,
+        "top": 14,
+        "width": 259,
+        "height": 330
+      }
+    },
+    "breath": {
+      "file": "sprites/breath.png",
+      "sha256": "aa38083c24b9d94cabbb9277e2d1dd2084ab8d3669fa62f91bd1e60de170b2a9",
+      "source_cell": 7,
+      "source_crop": {
+        "left": 1450,
+        "top": 598,
+        "width": 172,
+        "height": 128
+      },
+      "bounds": {
+        "left": 16,
+        "top": 98,
+        "width": 330,
+        "height": 246
+      }
+    }
+  }
+}
