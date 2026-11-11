@@ -7,6 +7,7 @@ from game.layout import WIDTH, HEIGHT
 from game.logo_mode import fade_to_black
 from game.tutorial import device_lessons
 from game.device_guide import target_bounds, card_bounds, draw_lesson
+from game.device_catalog import PAGE_COUNT, catalog_buttons, draw_catalog
 
 INK = (239, 237, 219)
 MUTED = (164, 182, 177)
@@ -46,6 +47,7 @@ class PlayMenu:
         self.return_mode = None
         self.guide_bounds = {}
         self.guide_card = (32, 360, 452, 790)
+        self.catalog_page = 0
 
     @property
     def active(self):
@@ -81,6 +83,8 @@ class PlayMenu:
 
     @property
     def buttons(self):
+        if self.mode == "catalog":
+            return catalog_buttons()
         if self.mode == "device":
             left, bottom, right, _ = self.guide_card
             label = "안내 마치기" if self.page_index == len(self.pages) - 1 else "다음 장치"
@@ -94,10 +98,16 @@ class PlayMenu:
         return tuple(Button(action, label, (550, 574 - i * 80, 1050, 636 - i * 80))
                      for i, (action, label) in enumerate((
                          ("resume", "계속하기"), ("restart", "다시 시작"),
-                         ("controls", "조작법"), ("title", "타이틀로"))))
+                         ("controls", "조작법"), ("catalog", "장치 도감"), ("title", "타이틀로"))))
 
     def activate(self, action):
-        if action in ("guide_next", "guide_skip"):
+        if action == "catalog":
+            self.mode, self.selected, self.catalog_page = "catalog", 2, 0
+        elif action in ("catalog_prev", "catalog_next"):
+            self.catalog_page = (self.catalog_page + (1 if action == "catalog_next" else -1)) % PAGE_COUNT
+        elif action == "catalog_back":
+            self.mode, self.selected = "pause", 3
+        elif action in ("guide_next", "guide_skip"):
             self.seen_devices.update(lesson.kind for lesson in
                                      (self.pages if action == "guide_skip" else (self.pages[self.page_index],)))
             if action == "guide_skip" or self.page_index + 1 == len(self.pages):
@@ -123,8 +133,10 @@ class PlayMenu:
                         return self.activate(button.action)
                     break
         elif event.type == p.SDL_KEYDOWN:
+            if self.mode == "catalog" and event.key in (p.SDLK_LEFT, p.SDLK_RIGHT):
+                return self.activate("catalog_prev" if event.key == p.SDLK_LEFT else "catalog_next")
             if event.key == p.SDLK_ESCAPE:
-                action = "guide_skip" if self.mode == "device" else "back" if self.mode == "controls" else "resume"
+                action = {"device": "guide_skip", "controls": "back", "catalog": "catalog_back"}.get(self.mode, "resume")
                 return self.activate(action)
             if event.key in (p.SDLK_UP, p.SDLK_w, p.SDLK_DOWN, p.SDLK_s, p.SDLK_TAB):
                 step = -1 if event.key in (p.SDLK_UP, p.SDLK_w) else 1
@@ -141,6 +153,10 @@ class PlayMenu:
             view.centered((left + right) / 2, (bottom + top) / 2, button.label, 26, INK)
 
     def draw(self, view, game):
+        if self.mode == "catalog":
+            draw_catalog(view, game, self.catalog_page)
+            self.draw_buttons(view)
+            return
         if self.mode == "device":
             lesson = self.pages[self.page_index]
             self.guide_bounds = target_bounds(view, game.level, lesson.targets)
@@ -149,7 +165,7 @@ class PlayMenu:
             self.draw_buttons(view)
             return
         fade_to_black(.72)
-        bevel((380, 180, 1220, 800), (23, 36, 40), (104, 139, 127))
+        bevel((380, 180 if self.mode == "controls" else 136, 1220, 800), (23, 36, 40), (104, 139, 127))
         if self.mode == "controls":
             view.centered(800, 742, "작업 조작법", 48, GOLD)
             controls = (
@@ -169,8 +185,8 @@ class PlayMenu:
             view.centered(800, 742, "잠깐 휴식", 48, GOLD)
             view.centered(800, 686, game.level.title, 22, INK)
             hint = ("다시 시작하면 현재 방의 작업과 행동 횟수가 초기화됩니다." if self.selected == 1 else
-                    "타이틀로 돌아가면 현재 방의 진행이 초기화됩니다." if self.selected == 3 else
+                    "타이틀로 돌아가면 현재 방의 진행이 초기화됩니다." if self.selected == 4 else
                     "이동과 장치가 멈춰 있습니다. 천천히 쉬어 가세요.")
-            view.centered(800, 278, hint, 18, MUTED)
+            view.centered(800, 198, hint, 18, MUTED)
         self.draw_buttons(view)
-        view.centered(800, 130, "↑ ↓ 선택    Enter / Space 결정    Esc 돌아가기    마우스 클릭", 18, MUTED)
+        view.centered(800, 98, "↑ ↓ 선택    Enter / Space 결정    Esc 돌아가기    마우스 클릭", 18, MUTED)
