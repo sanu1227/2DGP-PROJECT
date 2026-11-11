@@ -103,6 +103,8 @@ python -m venv .venv
 
 **1번 방은 플레이와 함께 진행하는 5단계 튜토리얼**입니다. 왼쪽 안내가 부품까지 이동, 줍기, 함정 설치, 건너편 레버 가동, 빈손으로 출구 복귀를 순서대로 설명합니다. 목표 칸과 목표 이름을 강조하며 이름을 클릭해도 이동할 수 있습니다. 부품을 내려놓거나 Z로 되돌리면 현재 상태에 맞춰 안내가 돌아가고, R로 재시작하면 처음부터 안내합니다. 행동 제한은 없으며 완료 후 E / Space로 2번 방에 입장하면 튜토리얼 안내가 사라집니다. [첫 안내](./docs/screenshots/onboarding/room-01.png), [함정 설치 안내](./docs/screenshots/onboarding/install.png), [튜토리얼 완료](./docs/screenshots/onboarding/complete.png)를 확인할 수 있습니다.
 
+**방 시작·복구 완료 연출**을 추가했습니다. 방에 들어가면 구역 번호와 이름을 1.6초 동안 표시하며, 먼저 행동하면 배너가 사라집니다. 새 장치 안내나 일시정지를 읽는 시간에는 배너 시간도 멈춥니다. 빈손으로 출구까지 복귀하면 완료 도장과 사용·남은 행동 수, 함정 가동·병사 배치 실적이 표시됩니다. E/Space 또는 결과 화면의 버튼으로 다음 방에 갈 수 있고 Z 되돌리기·R 재시작·Esc 메뉴도 사용할 수 있습니다. 마지막 방은 전체 복구 완료를 알리고 처음부터 다시 시작합니다. [입장 배너](./docs/screenshots/stage-feedback/entry.png), [마지막 방 작업 보고](./docs/screenshots/stage-feedback/clear-08.png)를 확인할 수 있습니다.
+
 **처음 보는 장치 안내**는 2번 방의 병사 조립, 4번 방의 발판·연결문, 5번 방의 뼈 투입구, 6번 방의 벨트에 자동으로 표시됩니다. 설명할 장치는 밝게 남기고 주변을 어둡게 하며, 연결된 발판·문과 투입구·배출구를 함께 강조합니다. 안내 중에는 행동과 애니메이션이 정지합니다. Enter/Space 또는 버튼으로 읽고 Esc로 건너뛰세요. 같은 플레이에서는 이미 본 장치를 다시 안내하지 않으며, 재시작·되돌리기도 안내를 반복하지 않습니다. **Esc 메뉴 > 조작법 > 이 방 장치 안내**에서 다시 볼 수 있습니다. 타이틀의 게임 시작으로 새 게임을 시작하면 안내 기록도 초기화됩니다. 개발 단축키나 `--stage`로 뒤쪽 방에 바로 들어가면 그 방의 아직 보지 않은 장치를 차례로 설명합니다. [발판·문 안내](./docs/screenshots/device-guide/stage_04-plate.png), [뼈 투입구 안내](./docs/screenshots/device-guide/stage_05-chute.png), [벨트 안내](./docs/screenshots/device-guide/stage_06-belt.png)를 확인할 수 있습니다.
 
 **Esc 일시정지 메뉴**에서 계속하기·다시 시작·조작법·타이틀 복귀를 선택할 수 있습니다. 방향키 또는 W/S·Tab으로 선택하고 Enter/Space나 마우스 클릭으로 실행합니다. 메뉴와 조작법을 읽는 동안 자동 이동, 걷기, 문·발판·벨트 애니메이션이 함께 멈추며, 계속하기는 멈춘 시점과 남은 경로부터 재개합니다. 다시 시작과 타이틀 복귀는 현재 방의 진행을 초기화합니다. [일시정지 화면](./docs/screenshots/play-menu/pause.png), [조작법 화면](./docs/screenshots/play-menu/controls.png)을 확인할 수 있습니다.
@@ -129,6 +131,7 @@ python -m tests.smoke_gate_animation # 개폐 시간·중간 프레임·역방�
 python -m tests.smoke_plate_animation # 발판 승강·탑승물 높이·반전·되돌리기·클릭 검사
 python -m tests.smoke_action_limits # 실제 횟수 소진·입력 정지·되돌리기·재시작 검사
 python -m tests.smoke_comic       # 창 없는 네 컷·캐릭터 동작·고정 배경·일시정지 검사
+python -m tests.smoke_stage_feedback # 시작·완료·결과 수치·다음 방·되돌리기 검사
 python -m tests.smoke_play_menu   # 플레이 메뉴·시간 정지·재개·입력 격리 검사
 python -m tests.smoke_device_guide # 새 장치 강조·연결·첫 안내·건너뛰기·다시 보기 검사
 python -m tests.smoke_onboarding  # 타이틀·카툰 4컷·안내 2장·튜토리얼·첫 방 클리어 검사

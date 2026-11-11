@@ -17,6 +17,7 @@ from game.front_end import FrontEnd
 from game.tutorial import first_room_hint
 from game.transport import BeltAnimation
 from game.play_menu import PlayClock, PlayMenu
+from game.stage_feedback import StageFeedback
 
 INK = (226, 230, 219)
 MUTED = (158, 169, 166)
@@ -901,7 +902,16 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True):
         view = View()
         front_end = FrontEnd(show_title)
         play_menu = PlayMenu()
+        feedback = StageFeedback()
         game = Game(levels[index])
+
+        def next_room():
+            nonlocal game, index
+            index = (index + 1) % len(levels)
+            game = Game(levels[index])
+            view.reset_player()
+            view.navigation.cancel()
+            view.mouse_position = None
         actions = {
             p.SDLK_UP: "up", p.SDLK_w: "up", p.SDLK_DOWN: "down", p.SDLK_s: "down",
             p.SDLK_LEFT: "left", p.SDLK_a: "left", p.SDLK_RIGHT: "right", p.SDLK_d: "right",
@@ -956,6 +966,7 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True):
                             view.reset_plates()
                             if result == "restart":
                                 game.restart()
+                                feedback.enter(game, view.now())
                             else:
                                 front_end.activate("title")
                     if result is not None:
@@ -972,11 +983,16 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True):
                             game.message = "자동 이동을 취소했습니다."
                         view.navigation.cancel()
                     elif event.button == p.SDL_BUTTON_LEFT and not view.transporting(game):
-                        target = view.pick_cell(game, *view.mouse_position)
-                        if target is not None:
-                            now = view.now()
-                            ready_at = view.motion[2] + 0.18 if view.motion else now
-                            view.navigation.start(game, target, now, ready_at=ready_at)
+                        if game.state.cleared:
+                            if feedback.next_button(index, len(levels)).contains(view.mouse_position):
+                                next_room()
+                                screen_changed = True
+                        else:
+                            target = view.pick_cell(game, *view.mouse_position)
+                            if target is not None:
+                                now = view.now()
+                                ready_at = view.motion[2] + 0.18 if view.motion else now
+                                view.navigation.start(game, target, now, ready_at=ready_at)
                 elif event.type == p.SDL_KEYDOWN:
                     if event.key in (p.SDLK_b, p.SDLK_q):
                         continue
@@ -999,13 +1015,12 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True):
                         view.reset_player()
                     elif event.key == p.SDLK_r:
                         game.restart()
+                        feedback.enter(game, view.now())
                         view.reset_player()
                         view.reset_gates()
                         view.reset_plates()
                     elif event.key in (p.SDLK_e, p.SDLK_SPACE) and game.state.cleared:
-                        index = (index + 1) % len(levels)
-                        game = Game(levels[index])
-                        view.reset_player()
+                        next_room()
                         screen_changed = True
                     elif event.key in actions:
                         action = actions[event.key]
@@ -1018,6 +1033,8 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True):
                             view.motion = None
                         if changed:
                             view.belt_animation.start(game, view.now())
+                            if game.state.cleared:
+                                screen_changed = True
             # 이미 보간 중인 한 칸이 끝난 뒤에만 다음 자동 이동을 실행한다.
             if front_end.screen == "playing":
                 play_menu.offer(game, view)
@@ -1031,9 +1048,12 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True):
                     view.move_player(previous, game.state.player, action)
                     view.belt_animation.start(game, now)
             if front_end.screen == "playing":
+                feedback.update(game, now)
                 view.draw(game, index, len(levels))
                 if play_menu.active:
                     play_menu.draw(view, game)
+                else:
+                    feedback.draw(view, game, index, len(levels))
             else:
                 front_end.draw(view)
             p.update_canvas()
