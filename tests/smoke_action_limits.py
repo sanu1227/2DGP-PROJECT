@@ -57,18 +57,18 @@ def main():
             snapshots["recovered"] = True
 
     steps = deque([(p.SDLK_UP, lambda: expect(0))])  # Wall bump is free.
-    steps.extend((p.SDLK_b, None) for _ in range(74))
-    steps.append((p.SDLK_b, lambda: expect(75, True)))
+    steps.extend((p.SDLK_RIGHT if index % 2 == 0 else p.SDLK_LEFT, None) for index in range(74))
+    steps.append((p.SDLK_RIGHT, lambda: expect(75, True)))
     for key in (p.SDLK_RIGHT, p.SDLK_e, p.SDLK_q, p.SDLK_b, p.SDLK_RETURN, "click"):
         steps.append((key, lambda: expect(75, True)))
     steps.extend([
         (p.SDLK_z, lambda: expect(74)),
-        (p.SDLK_b, lambda: expect(75, True)),
+        (p.SDLK_RIGHT, lambda: expect(75, True)),
         (p.SDLK_BACKSPACE, lambda: expect(74)),
         (p.SDLK_r, lambda: expect(0)),
-        (p.SDLK_b, lambda: expect(1)),
+        (p.SDLK_RIGHT, lambda: expect(1)),
         (p.SDLK_1, lambda: expect(0, stage=0)),
-        (p.SDLK_b, lambda: expect(1, stage=0)),
+        (p.SDLK_RIGHT, lambda: expect(1, stage=0)),
         (p.SDLK_2, lambda: expect(0)),
         (p.SDLK_ESCAPE, None),
     ])

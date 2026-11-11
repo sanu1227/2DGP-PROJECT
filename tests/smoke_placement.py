@@ -55,7 +55,11 @@ def main():
             assert game.act(action), game.message
             if step not in (3, 6, 7):
                 continue
-            with patch.object(display.art, "draw", wraps=display.art.draw) as draw:
+            # Compare settled anchors; automatic transport now reaches the animated plate immediately.
+            with patch("game.view.perf_counter", return_value=float(step)):
+                display.draw(game, 5, len(levels))
+            with patch("game.view.perf_counter", return_value=step + .5), \
+                    patch.object(display.art, "draw", wraps=display.art.draw) as draw:
                 display.draw(game, 5, len(levels))
             if step == 3:
                 assert game.state.carrying == "part"
@@ -64,7 +68,7 @@ def main():
                                        for call in carried)
                 continue
             pos = next(pos for pos, kind in game.state.items.items() if kind == "part")
-            assert pos in (game.level.belts if step == 6 else game.level.plates)
+            assert pos in game.level.plates
             visible_item_pixel(display, game, pos, "part")
             sx, sy = projection.screen(pos)
             calls = [call for call in draw.call_args_list if call.args[0] == "part"]
@@ -75,7 +79,8 @@ def main():
             checkpoints[step] = (deepcopy(game.state), [region for region, mask in display.hit_masks.items()
                                                       if mask[0] == "part"])
         assert game.undo()
-        display.draw(game, 5, len(levels))
+        with patch("game.view.perf_counter", return_value=8):
+            display.draw(game, 5, len(levels))
         assert game.state == checkpoints[6][0]
         assert [region for region, mask in display.hit_masks.items() if mask[0] == "part"] == checkpoints[6][1]
         p.update_canvas()

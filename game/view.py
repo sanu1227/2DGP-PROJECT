@@ -15,6 +15,7 @@ from game.themes import boundary_walls, low_wall_sprite, scene_for, themed_floor
 from game.layout import WIDTH, HEIGHT, BOARD_BOTTOM, BOARD_TOP
 from game.front_end import FrontEnd
 from game.tutorial import first_room_hint
+from game.transport import BeltAnimation
 
 INK = (226, 230, 219)
 MUTED = (158, 169, 166)
@@ -75,6 +76,7 @@ class View:
         self.fonts = {}
         self.art = None
         self.navigation = ClickNavigator()
+        self.belt_animation = BeltAnimation()
         self.mouse_position = None
         self.show_coordinates = False
         self.tutorial = None
@@ -145,6 +147,9 @@ class View:
         start = self.player_position(previous, now)
         self.facing = FACING[action]
         self.motion = (start, destination, now)
+
+    def transporting(self, game, now=None):
+        return self.belt_animation.sample(game, perf_counter() if now is None else now) is not None
 
     def text(self, x, y, value, size=18, color=INK):
         self.fonts[size].draw(x, y, str(value), color)
@@ -315,13 +320,19 @@ class View:
     def board(self, game):
         level, state = game.level, game.state
         now = perf_counter()
+        transport = self.belt_animation.sample(game, now)
+        moving_items = {}
+        moving_sources = set()
+        if transport:
+            state, moves, fraction = transport
+            moving_sources = {source for source, _, _ in moves}
         if self.gate_game is not game:
             self.reset_gates()
             self.reset_plates()
             self.gate_game = game
-        gate_openings = {pos: self.gate_opening(pos, 0 if game.gate_status(pos) == "closed" else 1, now)
+        gate_openings = {pos: self.gate_opening(pos, 0 if game.gate_status(pos, state) == "closed" else 1, now)
                          for pos in level.gates}
-        self.plate_depths = {pos: self.device_progress(self.plate_motions, pos, float(game.plate_pressed(pos)), now, PLATE_SECONDS)
+        self.plate_depths = {pos: self.device_progress(self.plate_motions, pos, float(game.plate_pressed(pos, state)), now, PLATE_SECONDS)
                              for pos in level.plates}
         if level.gates:
             self.art.load_gates()
@@ -413,11 +424,11 @@ class View:
                     if pos not in level.plates:
                         labels.append((pos, f"{level.device_labels[pos]} 배출"))
                 if pos in level.plates:
-                    pressed = game.plate_pressed(pos)
+                    pressed = game.plate_pressed(pos, state)
                     objects.append((depth, 1, "plate_down" if pressed else "plate_up", sx, sy))
                     labels.append((pos, f"{level.device_labels[pos]} " + ("눌림" if pressed else "발판")))
                 elif pos in level.gates:
-                    status = game.gate_status(pos)
+                    status = game.gate_status(pos, state)
                     objects.append((depth, 1, f"gate_{status}", sx, sy))
                     labels.append((pos, f"{level.device_labels[pos]} " + {"open": "열림", "held": "닫힘 대기", "closed": "닫힘"}[status]))
                 elif pos in level.levers:
@@ -427,10 +438,18 @@ class View:
                     stored = state.bench_bones.get(pos, 0)
                     objects.append((depth, 1, "bench_one_bone" if stored else "bench_empty", sx, sy))
                     labels.append((pos, f"조립 {stored}/2"))
-                if pos in state.items:
+                if pos in state.items and pos not in moving_sources:
                     objects.append((depth, 2, ITEM_SPRITES[state.items[pos]], sx, sy))
                 if pos in state.soldiers:
                     objects.append((depth, 2, "soldier_deployed", sx, sy))
+
+        if transport:
+            for source, destination, kind in moves:
+                position = tuple(a + (b - a) * fraction for a, b in zip(source, destination))
+                sx, sy = screen(position)
+                sprite = ITEM_SPRITES[kind]
+                objects.append((sum(position), 2, sprite, sx, sy))
+                moving_items[(sprite, sx, sy)] = (position, source)
 
         if scene:
             for mount in scene.get("wall_mounts", ()):
@@ -462,6 +481,9 @@ class View:
         objects.append((sum(player), 3, "player", px, py))
         for _, _, sprite, sx, sy in sorted(objects, key=lambda obj: obj[:2]):
             pos = state.player if sprite == "player" else projection.pick(sx, sy)
+            moving = moving_items.get((sprite, sx, sy))
+            if moving:
+                pos = moving[1]
             decor_scale = decor_draws.get((sprite, sx, sy))
             if decor_scale is not None:
                 self.art.draw(sprite, sx, sy, decor_scale)
@@ -471,7 +493,8 @@ class View:
             if sprite == "player":
                 sy += self.player_support_height(game, player) * scale
             elif sprite in ITEM_SPRITES.values():
-                sy += self.support_height(game, pos) * scale
+                sy += (self.player_support_height(game, moving[0]) if moving
+                       else self.support_height(game, pos)) * scale
             if sprite in ("plate_up", "plate_down"):
                 pressed = self.plate_depths[pos]
                 self.art.draw_plate(sx, sy, scale, pressed)
@@ -516,13 +539,17 @@ class View:
             box(sx - width / 2, sy - 28, sx + width / 2, sy - 6, (24, 35, 40))
             color = TEAL if pos == level.exit and exit_ready else INK
             if pos in level.gates:
-                color = {"open": TEAL, "held": GOLD, "closed": RED}[game.gate_status(pos)]
+                color = {"open": TEAL, "held": GOLD, "closed": RED}[game.gate_status(pos, state)]
             elif pos in level.plates:
-                color = TEAL if game.plate_pressed(pos) else GOLD
+                color = TEAL if game.plate_pressed(pos, state) else GOLD
             self.text(sx - width / 2 + 5, sy - 17, label, 16, color)
             self.hit_regions.append((pos, (sx - width / 2, sy - 28, sx + width / 2, sy - 6)))
-        self.interaction_markers(game, projection)
-        self.navigation_overlay(game, projection)
+        if transport:
+            self.interaction_regions = {}
+            self.interaction_hint = None
+        else:
+            self.interaction_markers(game, projection)
+            self.navigation_overlay(game, projection)
         if self.show_coordinates:
             self.coordinate_overlay(level, projection)
 
@@ -603,8 +630,10 @@ class View:
         self.text(WIDTH - 340, BOARD_TOP + 8, f"사용 {state.moves} · 되돌리기 {len(game.history)}", 13, MUTED)
 
         box(32, 48, WIDTH - 32, BOARD_BOTTOM, (41, 55, 58))
-        self.text(48, 80, self.interaction_hint or game.context_action(), 18, RED if game.failed else TEAL)
-        self.text(48, 59, game.message, 16, INK)
+        transporting = self.transporting(game)
+        context = "벨트 자동 운반 중 · Z 되돌리기 / R 재시작" if transporting else self.interaction_hint or game.context_action()
+        self.text(48, 80, context, 18, RED if game.failed else TEAL)
+        self.text(48, 59, "운반이 끝나면 다음 행동을 할 수 있습니다." if transporting else game.message, 16, INK)
         if state.cleared:
             box(WIDTH - 340, 53, WIDTH - 44, 89, (46, 96, 81))
             label = "Enter  다음 방" if index + 1 < total else "Enter  처음부터 다시"
@@ -617,7 +646,7 @@ class View:
             self.text(WIDTH - 362, 71, status, 16, MUTED)
 
         self.text(34, 32, "좌클릭  이동    우클릭  취소    WASD / 방향키  이동    개발용 1~6 방 이동 · F2 좌표    (x,y): x 오른쪽 아래 / y 왼쪽 아래", 13, MUTED)
-        self.text(34, 12, "E / Space  상호작용·내려놓기    B  대기    Z / Backspace  되돌리기    R  재시작    Enter  다음 방(완료 후)    Esc  종료", 13, MUTED)
+        self.text(34, 12, "E / Space  상호작용·내려놓기    Z / Backspace  되돌리기    R  재시작    Enter  다음 방(완료 후)    Esc  종료", 13, MUTED)
 
 
 def run(levels, index=0, smoke_frames=None, *, show_title=True):
@@ -636,7 +665,6 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True):
             p.SDLK_UP: "up", p.SDLK_w: "up", p.SDLK_DOWN: "down", p.SDLK_s: "down",
             p.SDLK_LEFT: "left", p.SDLK_a: "left", p.SDLK_RIGHT: "right", p.SDLK_d: "right",
             p.SDLK_e: "interact", p.SDLK_SPACE: "interact",
-            p.SDLK_b: "wait",
         }
         stage_keys = {
             p.SDLK_1: 0, p.SDLK_2: 1, p.SDLK_3: 2,
@@ -672,13 +700,18 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True):
                         if view.navigation.active:
                             game.message = "자동 이동을 취소했습니다."
                         view.navigation.cancel()
-                    elif event.button == p.SDL_BUTTON_LEFT:
+                    elif event.button == p.SDL_BUTTON_LEFT and not view.transporting(game):
                         target = view.pick_cell(game, *view.mouse_position)
                         if target is not None:
                             now = perf_counter()
                             ready_at = view.motion[2] + 0.18 if view.motion else now
                             view.navigation.start(game, target, now, ready_at=ready_at)
                 elif event.type == p.SDL_KEYDOWN:
+                    if event.key in (p.SDLK_b, p.SDLK_q):
+                        continue
+                    if view.transporting(game) and event.key not in (
+                            p.SDLK_ESCAPE, p.SDLK_F2, p.SDLK_z, p.SDLK_BACKSPACE, p.SDLK_r, *stage_keys):
+                        continue
                     view.navigation.cancel()
                     if event.key == p.SDLK_ESCAPE:
                         running = False
@@ -712,13 +745,17 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True):
                         elif changed:
                             # 도착 직후 상호작용하면 그 칸에 바로 정렬한다.
                             view.motion = None
+                        if changed:
+                            view.belt_animation.start(game, perf_counter())
             # 이미 보간 중인 한 칸이 끝난 뒤에만 다음 자동 이동을 실행한다.
             now = perf_counter()
-            if running and front_end.screen == "playing" and (view.motion is None or now >= view.motion[2] + 0.18):
+            if (running and front_end.screen == "playing" and not view.transporting(game, now)
+                    and (view.motion is None or now >= view.motion[2] + 0.18)):
                 previous = game.state.player
                 action = view.navigation.tick(game, now)
                 if action is not None:
                     view.move_player(previous, game.state.player, action)
+                    view.belt_animation.start(game, now)
             if front_end.screen == "playing":
                 view.draw(game, index, len(levels))
             else:

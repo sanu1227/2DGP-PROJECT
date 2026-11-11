@@ -54,7 +54,7 @@ class Game:
     def act(self, action: str) -> bool:
         """성공한 상태 변경만 한 행동으로 기록한다. 실패는 안내만 바꾼다."""
         self.belt_steps = []
-        if action not in {*DIRECTIONS, "interact", "drop", "wait"}:
+        if action not in {*DIRECTIONS, "interact", "drop"}:
             raise ValueError(f"알 수 없는 행동: {action}")
         if self.state.cleared:
             self.message = "복구 완료! 다음 방으로 진행하세요."
@@ -210,7 +210,7 @@ class Game:
         if pos in self.level.gates:
             return None, "문이 닫혀도 현재 칸에서 나갈 수 있습니다."
         if pos in self.level.belts:
-            return None, "벨트: 부품·병사를 가져와 E / Space로 놓으세요. B로 한 차례 기다립니다."
+            return None, "벨트: E / Space로 부품·병사를 놓으면 끝이나 장애물까지 자동 운반합니다."
         return None, "물건이나 장치 위에서 E를 누르세요."
 
     def _drop_interaction(self, state: State) -> tuple[str | None, str]:
@@ -225,8 +225,6 @@ class Game:
         return "drop", f"E / Space: {ITEM_NAMES[state.carrying]} 내려놓기"
 
     def _apply(self, state: State, action: str) -> tuple[bool, str]:
-        if action == "wait":
-            return True, "한 차례 기다렸습니다."
         if action in DIRECTIONS:
             dx, dy = DIRECTIONS[action]
             x, y = state.player
