@@ -8,6 +8,7 @@ import pico2d.pico2d as p
 from game.layout import HEIGHT, WIDTH
 from game.story import BALLOON_DELAYS, STORY
 from game.comic_motion import draw_actors
+from game.comic_effects import CAMERA_MARGIN, draw_effects, sample_impact
 from game.character_motion import EXHALE_START
 
 
@@ -61,6 +62,9 @@ def draw_picture(load_image, bounds, age, index):
     left, bottom, right, top = bounds
     width, height = right - left, top - bottom
     entrance = ease(age / 0.6)
+    impact = sample_impact(index, age)
+    dx, dy = round(impact.x), round(impact.y)
+    camera_bounds = (left + dx, bottom + dy, right + dx, top + dy)
     image = load_image("motion_backgrounds")
     clip = p.SDL_Rect(left, HEIGHT - top, width, height)
     previous = p.SDL_Rect()
@@ -71,9 +75,10 @@ def draw_picture(load_image, bounds, age, index):
         image.opacify(0.18 + 0.82 * entrance)
         cw, ch = image.w // 2, image.h // 2
         image.clip_draw((index % 2) * cw + 2, (1 - index // 2) * ch + 2,
-                        cw - 4, ch - 4, (left + right) / 2, (bottom + top) / 2,
-                        width, height)
-        draw_actors(load_image, bounds, age, index, 0.18 + 0.82 * entrance)
+                        cw - 4, ch - 4, (left + right) / 2 + dx, (bottom + top) / 2 + dy,
+                        width + CAMERA_MARGIN * 2, height + CAMERA_MARGIN * 2)
+        draw_actors(load_image, camera_bounds, age, index, 0.18 + 0.82 * entrance)
+        draw_effects(camera_bounds, age, index, impact)
     finally:
         image.opacify(1)
         p.SDL_RenderSetClipRect(p.renderer, byref(previous) if enabled else None)

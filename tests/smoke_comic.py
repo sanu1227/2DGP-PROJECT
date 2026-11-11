@@ -15,10 +15,11 @@ os.environ["SDL_RENDER_DRIVER"] = "software"
 
 import pico2d.pico2d as p
 
-from game.comic import PANEL_BOUNDS
+from game.comic import PANEL_BOUNDS, dialogue_bounds
+from game.comic_effects import Impact, draw_effects, sample_impact
 from game.front_end import FrontEnd
 from game.layout import WIDTH, HEIGHT
-from game.story import PANEL_DURATIONS
+from game.story import BALLOON_DELAYS, PANEL_DURATIONS
 from game.view import View
 from tests.smoke_onboarding import capture
 
@@ -144,10 +145,47 @@ def main():
         assert interior(pixels(), PANEL_BOUNDS[2]) == interior(motion_frames[3.95], PANEL_BOUNDS[2]), \
             "Pause changed the character or breath"
 
+        # 효과가 실제 픽셀을 바꾸되 말풍선·다른 컷은 움직이지 않아야 한다.
+        for index, age in ((0, .67), (1, .60), (2, 1.50), (2, 3.80), (3, .67)):
+            menu.comic.index, menu.comic.elapsed, menu.comic.paused = index, age, True
+            menu.draw(display)
+            effected = pixels()
+            if args.capture_dir:
+                capture(args.capture_dir / f"effect-{index + 1}-{age:.2f}.png")
+            menu.update(3000 + index + age)
+            menu.draw(display)
+            assert interior(pixels(), PANEL_BOUNDS[index]) == interior(effected, PANEL_BOUNDS[index]), \
+                "Pause changed an effect"
+            with patch("game.comic.sample_impact", return_value=Impact()), patch("game.comic.draw_effects"):
+                menu.draw(display)
+                plain = pixels()
+            assert interior(effected, PANEL_BOUNDS[index]) != interior(plain, PANEL_BOUNDS[index]), \
+                "Missing visible effect"
+            for other in range(4):
+                if other != index:
+                    assert interior(effected, PANEL_BOUNDS[other]) == interior(plain, PANEL_BOUNDS[other]), \
+                        "Effect moved another panel"
+            for balloon, delay in zip(dialogue_bounds(index), BALLOON_DELAYS):
+                if age >= delay:
+                    assert interior(effected, balloon) == interior(plain, balloon), \
+                        f"Effect moved dialogue in panel {index} at {age}"
+            assert not p.SDL_RenderIsClipEnabled(p.renderer)
+
+        # 반투명 선·먼지를 그린 뒤 SDL의 색과 합성 모드를 원래대로 돌려놓는다.
+        p.SDL_SetRenderDrawBlendMode(p.renderer, p.SDL_BLENDMODE_NONE)
+        p.SDL_SetRenderDrawColor(p.renderer, 17, 28, 39, 51)
+        draw_effects(PANEL_BOUNDS[3], .67, 3, sample_impact(3, .67))
+        blend = ctypes.c_int()
+        rgba = [ctypes.c_ubyte() for _ in range(4)]
+        p.SDL_GetRenderDrawBlendMode(p.renderer, ctypes.byref(blend))
+        p.SDL_GetRenderDrawColor(p.renderer, *(ctypes.byref(value) for value in rgba))
+        assert blend.value == p.SDL_BLENDMODE_NONE
+        assert [value.value for value in rgba] == [17, 28, 39, 51]
+
         if args.worker_dir:
             args.worker_dir.mkdir(parents=True, exist_ok=True)
             frames = []
-            menu.comic.paused = False
+            menu.comic.index, menu.comic.paused = 2, False
             # 24Hz로 실제 게임을 샘플링해 이동 보간과 새 연결 포즈를 함께 검토한다.
             fps = 24
             for step in range(round(PANEL_DURATIONS[2] * fps)):
@@ -164,17 +202,20 @@ def main():
             with patch("game.front_end.perf_counter", return_value=0):
                 menu.activate("story")
             frames = []
+            fps = 24
             for index in range(4):
-                for step in range(round(PANEL_DURATIONS[index] * 8)):
-                    menu.update(sum(PANEL_DURATIONS[:index]) + step * 0.125)
+                for step in range(round(PANEL_DURATIONS[index] * fps)):
+                    menu.update(sum(PANEL_DURATIONS[:index]) + step / fps)
                     menu.draw(display)
                     filename = f"frame-{len(frames):03d}.png"
                     capture(args.animation_dir / filename)
-                    frames.append({"file": filename, "duration_ms": 125})
+                    duration = round((step + 1) * 1000 / fps) - round(step * 1000 / fps)
+                    frames.append({"file": filename, "duration_ms": duration})
             (args.animation_dir / "frames.json").write_text(json.dumps(frames), encoding="utf-8")
         print("Comic smoke OK: dummy/software rendering, four automatic reveals, earlier panels unchanged, "
               "future panels hidden, character motion over fixed background, walk/sigh/paused pixels, "
-              "pause/resume/replay, pointer/Space/back, texture/clip restoration.")
+              "pause/resume/replay, pointer/Space/back, visible effects/fixed dialogue, "
+              "texture/clip/blend/color restoration.")
     finally:
         if menu:
             menu.close()
