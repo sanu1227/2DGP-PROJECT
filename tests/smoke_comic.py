@@ -16,6 +16,7 @@ os.environ["SDL_RENDER_DRIVER"] = "software"
 import pico2d.pico2d as p
 
 from game.comic import PANEL_BOUNDS
+from game.character_motion import MOTION_END
 from game.front_end import FrontEnd
 from game.layout import WIDTH, HEIGHT
 from game.story import PANEL_SECONDS
@@ -36,10 +37,27 @@ def interior(data, bounds):
                     for y in range(HEIGHT - top + 8, HEIGHT - bottom - 8))
 
 
+def capture_worker(path):
+    left, bottom, right, top = PANEL_BOUNDS[2]
+    width, height = right - left, top - bottom
+    surface = p.SDL_CreateRGBSurfaceWithFormat(0, width, height, 32, p.SDL_PIXELFORMAT_RGBA32)
+    if not surface:
+        raise RuntimeError("Worker capture surface creation failed")
+    try:
+        rect = p.SDL_Rect(left, HEIGHT - top, width, height)
+        assert p.SDL_RenderReadPixels(p.renderer, ctypes.byref(rect), p.SDL_PIXELFORMAT_RGBA32,
+                                     surface.contents.pixels, surface.contents.pitch) == 0
+        path.parent.mkdir(parents=True, exist_ok=True)
+        assert p.IMG_SavePNG(surface, str(path).encode("utf-8")) == 0
+    finally:
+        p.SDL_FreeSurface(surface)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--capture-dir", type=Path)
     parser.add_argument("--animation-dir", type=Path)
+    parser.add_argument("--worker-dir", type=Path)
     args = parser.parse_args()
     p.open_canvas(WIDTH, HEIGHT)
     display = menu = None
@@ -50,7 +68,7 @@ def main():
             menu.activate("story")
         snapshots = []
         for index in range(4):
-            menu.update(index * PANEL_SECONDS + 2.5)
+            menu.update(index * PANEL_SECONDS + MOTION_END + .3)
             assert menu.story_page == index
             menu.draw(display)
             data = pixels()
@@ -105,21 +123,56 @@ def main():
             menu.activate("story")
             assert menu.story_page == 0 and not menu.comic.paused
 
+        # 고정 배경은 동일하지만 발과 얼굴이 있는 영역은 실제로 바뀌어야 한다.
+        motion_frames = {}
+        menu.comic.index = 2
+        for age in (1.1, 2.1, 2.8, 3.2, 3.95, 4.3, 5.2):
+            menu.comic.elapsed = age
+            menu.draw(display)
+            motion_frames[age] = pixels()
+            if args.capture_dir:
+                capture_worker(args.capture_dir / f"worker-{age:.2f}.png")
+        left, bottom, _, _ = PANEL_BOUNDS[2]
+        background = (left + 312, bottom + 238, left + 354, bottom + 290)
+        body = (left + 12, bottom + 12, left + 310, bottom + 295)
+        face = (left + 170, bottom + 140, left + 332, bottom + 280)
+        assert interior(motion_frames[1.1], background) == interior(motion_frames[2.1], background)
+        assert interior(motion_frames[1.1], body) != interior(motion_frames[2.1], body)
+        assert interior(motion_frames[3.2], face) != interior(motion_frames[3.95], face)
+        menu.comic.elapsed, menu.comic.paused = 3.95, True
+        menu.update(2000)
+        menu.draw(display)
+        assert interior(pixels(), PANEL_BOUNDS[2]) == interior(motion_frames[3.95], PANEL_BOUNDS[2]), \
+            "Pause changed the character or breath"
+
+        if args.worker_dir:
+            args.worker_dir.mkdir(parents=True, exist_ok=True)
+            frames = []
+            menu.comic.paused = False
+            for step in range(43):
+                menu.comic.elapsed = step * .125
+                menu.draw(display)
+                filename = f"worker-{step:03d}.png"
+                capture_worker(args.worker_dir / filename)
+                frames.append({"file": filename, "duration_ms": 125 if step < 42 else 1250})
+            (args.worker_dir / "frames.json").write_text(json.dumps(frames), encoding="utf-8")
+
         if args.animation_dir:
             args.animation_dir.mkdir(parents=True, exist_ok=True)
             with patch("game.front_end.perf_counter", return_value=0):
                 menu.activate("story")
             frames = []
             for index in range(4):
-                for step in range(18):
-                    menu.update(index * PANEL_SECONDS + step * 0.15)
+                for step in range(43):
+                    menu.update(index * PANEL_SECONDS + step * 0.125)
                     menu.draw(display)
                     filename = f"frame-{len(frames):03d}.png"
                     capture(args.animation_dir / filename)
-                    frames.append({"file": filename, "duration_ms": 150 if step < 17 else 3950})
+                    frames.append({"file": filename, "duration_ms": 125 if step < 42 else 1250})
             (args.animation_dir / "frames.json").write_text(json.dumps(frames), encoding="utf-8")
         print("Comic smoke OK: dummy/software rendering, four automatic reveals, earlier panels unchanged, "
-              "future panels hidden, entrance motion, pause/resume/replay, pointer/Space/back, texture/clip restoration.")
+              "future panels hidden, character motion over fixed background, walk/sigh/paused pixels, "
+              "pause/resume/replay, pointer/Space/back, texture/clip restoration.")
     finally:
         if menu:
             menu.close()

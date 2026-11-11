@@ -1,5 +1,6 @@
 """왼쪽 위부터 쌓이는 네 컷의 야근 코미디와 재생 상태."""
 from dataclasses import dataclass
+from game.character_motion import MOTION_END
 
 @dataclass(frozen=True)
 class StoryPage:
@@ -29,7 +30,7 @@ STORY = (
 
 PANEL_SECONDS = 6.5
 BALLOON_DELAYS = (0.55, 1.8)
-REVEAL_SECONDS = 2.4
+REVEAL_SECONDS = MOTION_END
 
 @dataclass
 class ComicPlayback:

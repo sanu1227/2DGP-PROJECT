@@ -7,6 +7,7 @@ import pico2d.pico2d as p
 
 from game.layout import HEIGHT, WIDTH
 from game.story import BALLOON_DELAYS, PANEL_SECONDS, STORY
+from game.comic_motion import draw_actors
 
 
 PANEL_BOUNDS = ((254, 516, 790, 918), (810, 516, 1346, 918),
@@ -55,19 +56,11 @@ def bubble(view, bounds, words, progress, side):
         view.centered((left + right) / 2, top - 41 - line * 27, text, DIALOGUE_SIZE, INK)
 
 
-def draw_picture(image, cell, bounds, age, index):
+def draw_picture(load_image, bounds, age, index):
     left, bottom, right, top = bounds
     width, height = right - left, top - bottom
-    active = age < PANEL_SECONDS
     entrance = ease(age / 0.6)
-    zoom = 1.0 + 0.055 * (1 - entrance)
-    # 등장 움직임은 컷 안으로 제한하고 이미 읽은 컷은 정지한다.
-    dx = (1 - entrance) * (-16 if index % 2 == 0 else 16)
-    dy = (1 - entrance) * 10
-    if active and index == 2 and age < 2.4:
-        dy += sin(age * 8) * 1.8 * sin(min(age / 2.4, 1) * 3.14159)
-    if active and index == 3 and 0.15 < age < 0.7:
-        dx += sin(age * 80) * (0.7 - age) * 7
+    image = load_image("motion_backgrounds")
     clip = p.SDL_Rect(left, HEIGHT - top, width, height)
     previous = p.SDL_Rect()
     enabled = p.SDL_RenderIsClipEnabled(p.renderer)
@@ -76,9 +69,10 @@ def draw_picture(image, cell, bounds, age, index):
     try:
         image.opacify(0.18 + 0.82 * entrance)
         cw, ch = image.w // 2, image.h // 2
-        image.clip_draw((cell % 2) * cw + 2, (1 - cell // 2) * ch + 2,
-                        cw - 4, ch - 4, (left + right) / 2 + dx, (bottom + top) / 2 + dy,
-                        width * zoom, height * zoom)
+        image.clip_draw((index % 2) * cw + 2, (1 - index // 2) * ch + 2,
+                        cw - 4, ch - 4, (left + right) / 2, (bottom + top) / 2,
+                        width, height)
+        draw_actors(load_image, bounds, age, index, 0.18 + 0.82 * entrance)
     finally:
         image.opacify(1)
         p.SDL_RenderSetClipRect(p.renderer, byref(previous) if enabled else None)
@@ -97,21 +91,22 @@ def draw_comic_page(view, playback, load_image):
         age = playback.age(index)
         if age is None:
             continue
-        draw_picture(load_image(page.atlas), page.cell, bounds, age, index)
+        draw_picture(load_image, bounds, age, index)
         if index == playback.index:
             p.draw_rectangle(left - 2, bottom - 2, right + 2, top + 2, *GOLD)
         for side, (bounds, words, delay) in enumerate(zip(dialogue_bounds(index), page.dialogue, BALLOON_DELAYS)):
             if age >= delay:
                 bubble(view, bounds, words, (age - delay) / 0.3, side)
         if age >= 0.2:
+            effect = "하아..." if index == 2 and age >= 3.5 else page.effect
             pop = ease((age - 0.2) / 0.35)
             x = left + (right - left) * 0.58
             y = bottom + 54 + (1 - pop) * 14
             if index == playback.index and age < 1.0:
                 x += sin(age * 35) * (1 - pop) * 5
             for dx, dy in ((-2, 0), (2, 0), (0, -2), (0, 2)):
-                view.centered(x + dx, y + dy, page.effect, 26, INK)
-            view.centered(x, y, page.effect, 26, GOLD)
+                view.centered(x + dx, y + dy, effect, 26, INK)
+            view.centered(x, y, effect, 26, GOLD)
     # 이야기 설명문 대신 현재 컷과 다음 컷까지의 진행만 표시한다.
     for index in range(4):
         x = 716 + index * 46

@@ -10,6 +10,7 @@ import pico2d.pico2d as p
 from game.layout import WIDTH, HEIGHT
 from game.story import STORY, ComicPlayback, REVEAL_SECONDS
 from game.comic import PANEL_BOUNDS, draw_comic_page
+from game.comic_motion import MOTION_IMAGES
 
 
 INK = (250, 239, 209)
@@ -19,7 +20,7 @@ TEAL = (126, 224, 201)
 ART_ROOT = Path(__file__).resolve().parents[1] / "assets" / "menu_v2"
 STORY_ROOT = ART_ROOT.parent / "story_overtime_v1"
 STORY_IMAGES = {"overtime_01": STORY_ROOT / "act_01.png",
-                "overtime_02": STORY_ROOT / "act_02.png"}
+                "overtime_02": STORY_ROOT / "act_02.png", **MOTION_IMAGES}
 
 
 def panel(bounds, color, filled=True):
