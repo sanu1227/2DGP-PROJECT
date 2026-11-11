@@ -1,0 +1,18 @@
+{
+  "date": "2026-11-11",
+  "generator": "built-in image_gen",
+  "transparent_background": true,
+  "input_images": [
+    {
+      "path": "assets/art_v1/tiles/post_empty.png",
+      "role": "edit target before replacement; original retained in sources/environment.png"
+    },
+    {
+      "path": "assets/art_v1/objects/soldier_deployed.png",
+      "role": "style reference only"
+    }
+  ],
+  "source_image": "assets/art_v1/sources/monster-post.png",
+  "output_sprite": "assets/art_v1/tiles/post_empty.png",
+  "prompt": "Use case: precise-object-edit.\nAsset type: one transparent PNG sprite for a 2:1 isometric dungeon puzzle game, replacing an unclear empty monster deployment tile.\nInput image 1: edit target, existing dull stone floor post tile. Preserve its flat square diamond footprint, view direction, 2:1 top-plane projection, shallow stone thickness, isolated transparent background, and hand-painted softly rendered 3D game art style.\nInput image 2: style and scale reference only, a cute skeleton guard who will be placed on this tile at runtime. DO NOT draw this guard or any character into the output.\nPrimary request: redesign the empty tile so a player immediately recognizes a designated MONSTER / SKELETON GUARD DEPLOYMENT SPOT even when the tile is only 115 pixels wide on screen.\nDesign: a bold warm ivory skull insignia with two short rounded horns, large and clearly legible, inset flat into the back half of the tile; a broad saturated violet-purple circular inset / muster ring on the top surface with a thick aged brass rim; two large pale ivory monster foot-position marks in the middle / front half to show where a creature stands. Make the empty standing space clear. Keep big simple readable shapes and strong contrast. The stone outside the circular inset is charcoal gray. Brass corner bindings give the square platform a deliberate fortified guard-post identity. The skull emblem, circle, and paired foot marks should dominate, not tiny runes or surface noise. A restrained lavender emissive accent around the circle is allowed, contained on the tile, not a floating light effect.\nComposition: exactly one entire diamond-shaped floor tile, centered on a generously padded transparent square canvas; all ornament and markings are on the tile surface, no tall backboard, no towers, no fence, no extra floating objects. The top diamond is twice as wide as it is tall. Very shallow stone side faces. The floor tile remains walkable when empty; it is not a trap, treasure chest, portal, or grave. No spikes, pit, flames, smoke, magic beam, or raised center pedestal. No lettering, digits, captions, border, watermark, or background. Keep original warm upper-left lighting and outline softness. The sprite must remain recognizable at small scale and match the supplied skeleton's cute fantasy dungeon art. Output genuine transparent alpha."
+}

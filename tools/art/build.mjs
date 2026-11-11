@@ -39,7 +39,10 @@ const dimensions = {
   conveyor_ne: { width: 190 }, conveyor_se: { width: 190 }, brazier: { width: 100 },
 };
 // Standalone replacements retain the original atlas slot and runtime anchor.
-const replacements = { part: 'sources/part-fragment.png' };
+const replacements = {
+  part: 'sources/part-fragment.png',
+  post_empty: 'sources/monster-post.png',
+};
 const manifest = {
   version: 1, created: '2026-11-08', status: 'first-production-art-pass',
   generator: 'built-in image_gen',
@@ -128,7 +131,7 @@ for (const [group, ids] of Object.entries(groupIds)) {
     if (group === 'environment') {
       scaleX = tileWidth / box.width;
       // Floor top face is fitted to a 2:1 diamond; a 12px stone lip remains below it.
-      scaleY = (tileHeight + stoneLip) / cells[0].box.height;
+      scaleY = (tileHeight + stoneLip) / (cell.sourceFile ? box.height : cells[0].box.height);
       sourceAnchor = [box.left + box.width / 2,
         box.top + box.height - (tileHeight / 2 + stoneLip) / scaleY];
       anchor = { x: 128, y: 160 };

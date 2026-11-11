@@ -28,6 +28,12 @@
         3
       ]
     },
+    "post_empty_replacement": {
+      "file": "sources/monster-post.png",
+      "width": 1774,
+      "height": 887,
+      "sha256": "ede9a8bbda3293c2a39eb683b59b857095952450f7bb9de3fa57902d0c9fc9bc"
+    },
     "props": {
       "file": "sources/props.png",
       "width": 1254,
@@ -119,7 +125,7 @@
         4,
         3
       ],
-      "sha256": "e1bb34982a21724d01e9725caba2644a31d975c8ac92a549638a7c31e7658690"
+      "sha256": "b4c75f9381110f9b55b5cdf7b7e876fdace7ca75acf2ccebe3a11b06af6ade89"
     },
     "props": {
       "file": "atlases/props.png",
@@ -496,24 +502,25 @@
         256
       ],
       "source_rect": {
-        "left": 362,
-        "top": 724,
-        "width": 362,
-        "height": 362
+        "left": 0,
+        "top": 0,
+        "width": 1774,
+        "height": 887
       },
       "source_content_rect": {
-        "left": 17,
-        "top": 87,
-        "width": 332,
-        "height": 206
+        "left": 279,
+        "top": 69,
+        "width": 1214,
+        "height": 743
       },
+      "source_file": "sources/monster-post.png",
       "content_rect": {
         "left": 16,
         "top": 104,
         "width": 224,
         "height": 124
       },
-      "sha256": "892704955e2d715c5e881e8fabe0825da9454a41bd74510cada9c5be1e7e29fe",
+      "sha256": "bb3c0582488efde69f694525c770b49ca506f1d8aa0a08f789b098b242d8b557",
       "intended_use": "prototype-art"
     },
     "exit_closed": {

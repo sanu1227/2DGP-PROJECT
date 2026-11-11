@@ -522,7 +522,7 @@ class View:
                 elif pos in level.posts:
                     tile = "post_empty"
                     tint = None
-                    labels.append((pos, "배치" if pos in state.soldiers else "초소"))
+                    labels.append((pos, "배치 완료" if pos in state.soldiers else "몬스터 배치"))
                 elif pos == level.exit:
                     tile = "exit_ready" if exit_ready else "exit_closed"
                     tint = None
@@ -667,7 +667,9 @@ class View:
             width = len(label) * 16 + 10
             box(sx - width / 2, sy - 28, sx + width / 2, sy - 6, (24, 35, 40))
             color = TEAL if pos == level.exit and exit_ready else INK
-            if pos in level.gates:
+            if pos in level.posts:
+                color = TEAL if pos in state.soldiers else (218, 174, 255)
+            elif pos in level.gates:
                 color = {"open": TEAL, "held": GOLD, "closed": RED}[game.gate_status(pos, state)]
             elif pos in level.plates:
                 color = TEAL if game.plate_pressed(pos, state) else GOLD
