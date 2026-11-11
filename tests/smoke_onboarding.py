@@ -74,7 +74,7 @@ def main():
     # 각 tuple은 입력 묶음, 표시 화면, 행동 수, 선택적인 캡처 이름이다.
     steps = deque([
         ([], "title", 0, "title"),
-        ([p.SDLK_d, p.SDLK_e, p.SDLK_q, p.SDLK_6], "title", 0, None),
+        ([p.SDLK_d, p.SDLK_e, p.SDLK_q, p.SDLK_7], "title", 0, None),
         ([("left", 60, 60)], "title", 0, None),
         ([("left", 600, 188)], "title", 0, None),
         ([("right", 800, 227)], "title", 0, None),
@@ -167,7 +167,7 @@ def main():
         assert games[-1].level.id == (room[0] if room else "stage_01")
         if screen == "playing":
             display = displays[-1]
-            if room == ["stage_02"]:
+            if room and room[0] != "stage_01":
                 assert display.tutorial is None
             else:
                 expected_step = 1 if moves < 2 else 2 if moves == 2 else 3 if moves < 10 else 4 if moves < 17 else 5
@@ -206,10 +206,28 @@ def main():
             steps.extend(scenario)
             view.run(load_levels())
             assert not steps
+        for index, level in enumerate(load_levels()):
+            current = None
+            steps.extend([
+                ([p.SDLK_0, p.SDLK_7, p.SDLK_9], "title", 0, None),
+                ([p.SDLK_1 + index, p.SDLK_d, p.SDLK_SPACE], "playing", 0, None, level.id),
+                ([p.SDLK_ESCAPE], "playing", 0, None, level.id),
+            ])
+            view.run(load_levels())
+            assert not steps
+            assert games[-1].state == Game(level).state and not games[-1].history
+        # A shortcut for a room absent from the supplied level list must be ignored.
+        current = None
+        steps.extend([
+            ([p.SDLK_6], "title", 0, None),
+            ([p.SDLK_2, "close"], "playing", 0, None, "stage_02"),
+        ])
+        view.run(load_levels()[:2])
+        assert not steps
     assert all(not menu.images for menu in menus)
     print("Native onboarding smoke OK: illustrated title, eight comic panels, two guides, back/skip/replay, glyphs and balloon bounds, "
           "input isolation, all five tutorial steps, target picking, "
-          "undo/restart, first clear, next room, room shortcut, Escape.")
+          "undo/restart, first clear, next room, title shortcuts 1-6, invalid shortcut isolation, Escape.")
 
 
 if __name__ == "__main__":

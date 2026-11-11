@@ -793,6 +793,15 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True):
                     break
                 elif screen_changed:
                     continue
+                elif (front_end.screen == "title" and event.type == p.SDL_KEYDOWN
+                      and event.key in stage_keys and stage_keys[event.key] < len(levels)):
+                    index = stage_keys[event.key]
+                    game = Game(levels[index])
+                    front_end.screen = "playing"
+                    view.reset_player()
+                    view.navigation.cancel()
+                    view.mouse_position = None
+                    screen_changed = True
                 elif front_end.screen != "playing":
                     result = front_end.handle(event)
                     if result == "quit":
