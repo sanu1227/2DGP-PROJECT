@@ -120,7 +120,7 @@ def main():
     steps.extend([
         ([p.SDLK_BACKSPACE], "playing", 18, None),
         ([p.SDLK_a], "playing", 19, None),
-        ([p.SDLK_RETURN], "playing", 0, None, "stage_02"),
+        ([p.SDLK_SPACE], "playing", 0, None, "stage_02"),
         ([p.SDLK_1], "playing", 0, None),
         ([p.SDLK_ESCAPE], "playing", 0, None),
     ])

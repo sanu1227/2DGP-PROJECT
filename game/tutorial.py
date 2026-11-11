@@ -22,7 +22,7 @@ def first_room_hint(game: Game) -> TutorialHint | None:
         return None
     state, level = game.state, game.level
     if state.cleared:
-        return TutorialHint(5, "첫 복구 완료!", "잘했어요! Enter를 눌러 2번 방에서 병사 복구를 배워 보세요.",
+        return TutorialHint(5, "첫 복구 완료!", "E / Space를 눌러 2번 방에서 병사 복구를 배워 보세요.",
                             None, complete=True)
     if state.active:
         return TutorialHint(5, "빈손으로 출구 복귀", "함정이 가동되어 길이 막혔어요. 표시된 출구까지 이동하면 완료!",

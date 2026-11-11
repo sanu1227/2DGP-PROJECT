@@ -60,6 +60,8 @@ def main():
 
     # 두 이동 방식, 상호작용, 내려놓기, 두 undo 키, 재시작을 검사한다.
     steps = deque([
+        (p.SDLK_e, lambda: expect(0)),
+        (p.SDLK_SPACE, lambda: expect(0)),
         (p.SDLK_F2, lambda: expect_coordinates(True)),
         (p.SDLK_F2, lambda: expect_coordinates(False)),
         (p.SDLK_d, lambda: expect(1)),
@@ -88,7 +90,11 @@ def main():
             steps.append((keys[action], None))
         key, _ = steps.pop()
         steps.append((key, lambda count=len(actions), stage=index: expect(count, cleared=True, stage=stage)))
-        steps.append((p.SDLK_RETURN, lambda stage=(index + 1) % len(levels): expect(0, stage=stage)))
+        steps.append((p.SDLK_RETURN, lambda count=len(actions), stage=index: expect(count, cleared=True, stage=stage)))
+        next_key = p.SDLK_e if index % 2 == 0 else p.SDLK_SPACE
+        # Inputs from the same event batch must not act in the newly opened room.
+        steps.append(((next_key, p.SDLK_d, p.SDLK_SPACE),
+                      lambda stage=(index + 1) % len(levels): expect(0, stage=stage)))
     steps.append((p.SDLK_ESCAPE, None))
 
     original_events = p.get_events
@@ -102,14 +108,15 @@ def main():
         if displays[-1].transporting(games[-1]):
             return original_events()
         key, pending_check = steps.popleft()
-        event = p.SDL_Event()
-        event.type = p.SDL_KEYDOWN
-        event.key.windowID = p.SDL_GetWindowID(p.window)
-        event.key.state = p.SDL_PRESSED
-        event.key.repeat = 0
-        event.key.keysym.sym = key
-        if p.SDL_PushEvent(ctypes.byref(event)) != 1:
-            raise RuntimeError("SDL 검사 이벤트를 넣을 수 없습니다.")
+        for queued_key in key if isinstance(key, tuple) else (key,):
+            event = p.SDL_Event()
+            event.type = p.SDL_KEYDOWN
+            event.key.windowID = p.SDL_GetWindowID(p.window)
+            event.key.state = p.SDL_PRESSED
+            event.key.repeat = 0
+            event.key.keysym.sym = queued_key
+            if p.SDL_PushEvent(ctypes.byref(event)) != 1:
+                raise RuntimeError("SDL 검사 이벤트를 넣을 수 없습니다.")
         return original_events()
 
     with patch.object(view, "Game", ObservedGame), patch.object(p, "get_events", scripted_events), \
@@ -117,7 +124,7 @@ def main():
         view.run(levels, show_title=False)
     assert not steps
     assert len(games) == len(levels) + 8
-    print(f"Native SDL smoke OK: {len(levels)} clears, coordinates/F2, shortcuts 1-6, E/Space drop, Q/B ignored, undo, restart, next/replay, Escape.")
+    print(f"Native SDL smoke OK: {len(levels)} clears, coordinates/F2, shortcuts 1-6, E/Space drop and next/replay, Q/B/Enter ignored, transition input isolation, undo, restart, Escape.")
 
 
 if __name__ == "__main__":

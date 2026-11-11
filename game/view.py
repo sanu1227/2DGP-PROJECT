@@ -674,7 +674,7 @@ class View:
         self.text(48, 59, "운반이 끝나면 다음 행동을 할 수 있습니다." if transporting else game.message, 16, INK)
         if state.cleared:
             box(WIDTH - 340, 53, WIDTH - 44, 89, (46, 96, 81))
-            label = "Enter  다음 방" if index + 1 < total else "Enter  처음부터 다시"
+            label = "E / Space  다음 방" if index + 1 < total else "E / Space  처음부터 다시"
             self.text(WIDTH - 323, 71, label, 18)
         elif game.failed:
             box(WIDTH - 362, 53, WIDTH - 44, 89, (96, 45, 39))
@@ -684,7 +684,7 @@ class View:
             self.text(WIDTH - 362, 71, status, 16, MUTED)
 
         self.text(34, 32, "좌클릭  이동    우클릭  취소    WASD / 방향키  이동    개발용 1~6 방 이동 · F2 좌표    (x,y): x 오른쪽 아래 / y 왼쪽 아래", 13, MUTED)
-        self.text(34, 12, "E / Space  상호작용·내려놓기    Z / Backspace  되돌리기    R  재시작    Enter  다음 방(완료 후)    Esc  종료", 13, MUTED)
+        self.text(34, 12, "E / Space  상호작용·내려놓기·다음 방(완료 후)    Z / Backspace  되돌리기    R  재시작    Esc  종료", 13, MUTED)
 
 
 def run(levels, index=0, smoke_frames=None, *, show_title=True):
@@ -770,10 +770,11 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True):
                         view.reset_player()
                         view.reset_gates()
                         view.reset_plates()
-                    elif event.key == p.SDLK_RETURN and game.state.cleared:
+                    elif event.key in (p.SDLK_e, p.SDLK_SPACE) and game.state.cleared:
                         index = (index + 1) % len(levels)
                         game = Game(levels[index])
                         view.reset_player()
+                        screen_changed = True
                     elif event.key in actions:
                         action = actions[event.key]
                         previous = game.state.player
