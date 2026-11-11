@@ -1,0 +1,99 @@
+{
+  "key": "treasury",
+  "title": "봉인된 보물창고",
+  "subtitle": "TREASURY",
+  "date": "2026-11-11",
+  "generator": "built-in image_gen",
+  "transparent_background": true,
+  "prompt": "Use case: stylized-concept. Asset: production game sprite atlas for a Korean isometric dungeon restoration puzzle. Exactly 16 isolated sprites in a precise 4x4 grid of equal invisible cells, square image, true transparent alpha background. Every sprite strictly inside its cell with generous 35px equivalent safe margins. No labels, text, frames, drawn grid, checkerboard, watermark, people or complete room scene. Hand-painted stylized 3D miniature look, chunky readable forms, subtly weathered stone and metal, consistent orthographic 2:1 isometric view from above, top-left warm soft lighting. Row 1 has four flat diamond floor tiles all same 2:1 top footprint and thin front lip. Row 2 has four LOW walls on matching floor diamonds: back-left edge wall, back-right edge wall, corner joining both rear edges, broken back-left wall. Wall height less than half floor diamond width; no tall architecture here. Rows 3 and 4 contain eight individual freestanding decoration props, no floor tile or platform beneath props except an object's intrinsic small base. Exact reading order below. Keep each object centered with all pixels contained in its own cell. Theme: 봉인된 보물창고. Exact cell contents in row-major order:\n1. dark teal slate diamond with restrained brass edge inlay.\n2. matching tile with a flat gold geometric vault seal.\n3. matching tile with fine cracks and a few tiny dull coin details.\n4. matching tile with thin faded emerald carpet and gold trim.\n5. low dark teal masonry with brass trim on back-left edge.\n6. matching low wall on back-right edge.\n7. matching joined low rear corner.\n8. matching broken low back-left wall.\n9. one large open wooden treasure chest overflowing with gold coins and a few rubies.\n10. one compact mound of gold coins and bullion bars.\n11. one heavy closed iron strongbox with ornate golden lock.\n12. one emerald gemstone on a squat gold display plinth.\n13. one circular brass vault-door mechanism standing upright on a short intrinsic base.\n14. one freestanding emerald swallowtail banner with gold geometric coin emblem.\n15. one open crate holding gold goblets and a small crown.\n16. one antique brass balance scale for weighing treasure.",
+  "entries": [
+    {
+      "id": "treasury_floor_plain",
+      "kind": "floor",
+      "description": "dark teal slate diamond with restrained brass edge inlay"
+    },
+    {
+      "id": "treasury_floor_seal",
+      "kind": "floor",
+      "description": "matching tile with a flat gold geometric vault seal"
+    },
+    {
+      "id": "treasury_floor_cracked",
+      "kind": "floor",
+      "description": "matching tile with fine cracks and a few tiny dull coin details"
+    },
+    {
+      "id": "treasury_floor_runner",
+      "kind": "floor",
+      "description": "matching tile with thin faded emerald carpet and gold trim"
+    },
+    {
+      "id": "treasury_wall_nw",
+      "kind": "wall",
+      "description": "low dark teal masonry with brass trim on back-left edge"
+    },
+    {
+      "id": "treasury_wall_ne",
+      "kind": "wall",
+      "description": "matching low wall on back-right edge"
+    },
+    {
+      "id": "treasury_wall_corner",
+      "kind": "wall",
+      "description": "matching joined low rear corner"
+    },
+    {
+      "id": "treasury_wall_broken",
+      "kind": "wall",
+      "description": "matching broken low back-left wall"
+    },
+    {
+      "id": "treasury_chest_open",
+      "kind": "prop",
+      "description": "one large open wooden treasure chest overflowing with gold coins and a few rubies",
+      "width": 190
+    },
+    {
+      "id": "treasury_coin_hoard",
+      "kind": "prop",
+      "description": "one compact mound of gold coins and bullion bars",
+      "width": 170
+    },
+    {
+      "id": "treasury_locked_coffer",
+      "kind": "prop",
+      "description": "one heavy closed iron strongbox with ornate golden lock",
+      "width": 160
+    },
+    {
+      "id": "treasury_jewel_pedestal",
+      "kind": "prop",
+      "description": "one emerald gemstone on a squat gold display plinth",
+      "width": 105
+    },
+    {
+      "id": "treasury_vault_seal",
+      "kind": "prop",
+      "description": "one circular brass vault-door mechanism standing upright on a short intrinsic base",
+      "width": 155
+    },
+    {
+      "id": "treasury_treasure_banner",
+      "kind": "prop",
+      "description": "one freestanding emerald swallowtail banner with gold geometric coin emblem",
+      "width": 100
+    },
+    {
+      "id": "treasury_goblet_crate",
+      "kind": "prop",
+      "description": "one open crate holding gold goblets and a small crown",
+      "width": 145
+    },
+    {
+      "id": "treasury_scales",
+      "kind": "prop",
+      "description": "one antique brass balance scale for weighing treasure",
+      "width": 125
+    }
+  ]
+}

@@ -9,7 +9,7 @@ const project = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../.
 const pack = path.join(project, 'assets/map_pack_v1');
 const oldRoot = path.join(project, 'assets/art_v1');
 const oldManifest = JSON.parse(await fs.readFile(path.join(oldRoot, 'manifest.json'), 'utf8'));
-const allThemes = ['crypt', 'sewer', 'forge', 'archive'];
+const allThemes = ['crypt', 'sewer', 'forge', 'archive', 'treasury', 'boss'];
 const themes = process.argv.slice(2).length ? process.argv.slice(2) : allThemes;
 const hash = data => crypto.createHash('sha256').update(data).digest('hex');
 const json = (file, data) => fs.writeFile(file, JSON.stringify(data, null, 2) + '\n');
@@ -38,13 +38,23 @@ for (const theme of themes) {
   const original = await fs.readFile(path.join(root, 'source/atlas.png'));
   const meta = await sharp(original).metadata();
   if (!meta.hasAlpha || spec.entries.length !== 16) throw new Error(`${theme}: expected alpha source and 16 entries`);
+  const rowEdges = spec.row_edges ?? Array.from({ length: 5 }, (_, i) => Math.round(i * meta.height / 4));
+  const columnEdges = spec.column_edges ?? Array.from({ length: 5 }, (_, i) => Math.round(i * meta.width / 4));
+  if (rowEdges.length !== 5 || rowEdges[0] !== 0 || rowEdges[4] !== meta.height
+      || rowEdges.some((value, i) => !Number.isInteger(value) || (i && value <= rowEdges[i - 1]))) {
+    throw new Error(`${theme}: invalid source row boundaries`);
+  }
+  if (columnEdges.length !== 5 || columnEdges[0] !== 0 || columnEdges[4] !== meta.width
+      || columnEdges.some((value, i) => !Number.isInteger(value) || (i && value <= columnEdges[i - 1]))) {
+    throw new Error(`${theme}: invalid source column boundaries`);
+  }
   for (const dir of ['tiles', 'props', 'previews']) await fs.mkdir(path.join(root, dir), { recursive: true });
   const cells = [];
   for (let i = 0; i < 16; i++) {
     const col = i % 4, row = Math.floor(i / 4);
-    const left = Math.round(col * meta.width / 4), top = Math.round(row * meta.height / 4);
-    const rect = { left, top, width: Math.round((col + 1) * meta.width / 4) - left,
-      height: Math.round((row + 1) * meta.height / 4) - top };
+    const left = columnEdges[col], top = rowEdges[row];
+    const rect = { left, top, width: columnEdges[col + 1] - left,
+      height: rowEdges[row + 1] - top };
     const { data, info } = await sharp(original).extract(rect).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
     for (let p = 3; p < data.length; p += 4) if (data[p] <= 8) data[p] = 0;
     const box = bounds(data, info.width, info.height);
@@ -72,7 +82,7 @@ for (const theme of themes) {
     status: 'map-decoration-pack; stage placement lives in data/scenery.json',
     coordinates: { image: 'top-left origin; anchor and source_rect use x right, y down',
       pico2d: 'clip_rect_pico2d uses bottom-left origin', tile_footprint: { width: 224, height: 112 } },
-    source: { file: 'source/atlas.png', width: meta.width, height: meta.height, sha256: hash(original), grid: [4, 4] },
+    source: { file: 'source/atlas.png', width: meta.width, height: meta.height, sha256: hash(original), grid: [4, 4], row_edges: rowEdges, column_edges: columnEdges },
     atlases: {}, sprites: {},
     ...(extraSources.length ? { extra_sources: extraSources } : {}),
     placement: 'Wall variants are rear-edge boundary decorations. Neither walls nor props create collision rules automatically.',
@@ -182,7 +192,7 @@ for (const theme of themes) {
   console.log(`${theme}: ${cells.length} RGBA sprites + atlas + previews; source borders and output padding passed.`);
 }
 
-// Aggregate previews only when all four individual packs have been built.
+// Aggregate previews only when every individual pack has been built.
 if ((await Promise.all(allThemes.map(async t => {
   try { await fs.access(path.join(pack, t, 'previews/room.png')); return true; } catch { return false; }
 }))).every(Boolean)) {
@@ -190,6 +200,6 @@ if ((await Promise.all(allThemes.map(async t => {
     input: await fs.readFile(path.join(pack, theme, 'previews/room.png')),
     left: (i % 2) * 960, top: Math.floor(i / 2) * 640,
   })));
-  await sharp({ create: { width: 1920, height: 1280, channels: 4, background: '#19252b' } })
+  await sharp({ create: { width: 1920, height: Math.ceil(allThemes.length / 2) * 640, channels: 4, background: '#19252b' } })
     .composite(combined).png().toFile(path.join(pack, 'theme_comparison.png'));
 }

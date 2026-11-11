@@ -1,0 +1,88 @@
+{
+  "count": 16,
+  "alpha": true,
+  "source_cells_unclipped": true,
+  "output_padding": true,
+  "sprites": [
+    {
+      "id": "boss_floor_plain",
+      "visible_pixels": 15400,
+      "edge_pixels": 0
+    },
+    {
+      "id": "boss_floor_sigil",
+      "visible_pixels": 15568,
+      "edge_pixels": 0
+    },
+    {
+      "id": "boss_floor_cracked",
+      "visible_pixels": 15352,
+      "edge_pixels": 0
+    },
+    {
+      "id": "boss_floor_runner",
+      "visible_pixels": 15829,
+      "edge_pixels": 0
+    },
+    {
+      "id": "boss_wall_nw",
+      "visible_pixels": 18205,
+      "edge_pixels": 0
+    },
+    {
+      "id": "boss_wall_ne",
+      "visible_pixels": 18175,
+      "edge_pixels": 0
+    },
+    {
+      "id": "boss_wall_corner",
+      "visible_pixels": 21117,
+      "edge_pixels": 0
+    },
+    {
+      "id": "boss_wall_broken",
+      "visible_pixels": 17044,
+      "edge_pixels": 0
+    },
+    {
+      "id": "boss_throne",
+      "visible_pixels": 18216,
+      "edge_pixels": 0
+    },
+    {
+      "id": "boss_brazier",
+      "visible_pixels": 9823,
+      "edge_pixels": 0
+    },
+    {
+      "id": "boss_boss_banner",
+      "visible_pixels": 8377,
+      "edge_pixels": 0
+    },
+    {
+      "id": "boss_fallen_crown",
+      "visible_pixels": 8088,
+      "edge_pixels": 0
+    },
+    {
+      "id": "boss_broken_pillar",
+      "visible_pixels": 11396,
+      "edge_pixels": 0
+    },
+    {
+      "id": "boss_war_trophy",
+      "visible_pixels": 12891,
+      "edge_pixels": 0
+    },
+    {
+      "id": "boss_sealed_altar",
+      "visible_pixels": 15626,
+      "edge_pixels": 0
+    },
+    {
+      "id": "boss_horned_statue",
+      "visible_pixels": 16963,
+      "edge_pixels": 0
+    }
+  ]
+}

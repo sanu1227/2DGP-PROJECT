@@ -1,0 +1,88 @@
+{
+  "count": 16,
+  "alpha": true,
+  "source_cells_unclipped": true,
+  "output_padding": true,
+  "sprites": [
+    {
+      "id": "treasury_floor_plain",
+      "visible_pixels": 15184,
+      "edge_pixels": 0
+    },
+    {
+      "id": "treasury_floor_seal",
+      "visible_pixels": 15071,
+      "edge_pixels": 0
+    },
+    {
+      "id": "treasury_floor_cracked",
+      "visible_pixels": 14899,
+      "edge_pixels": 0
+    },
+    {
+      "id": "treasury_floor_runner",
+      "visible_pixels": 15037,
+      "edge_pixels": 0
+    },
+    {
+      "id": "treasury_wall_nw",
+      "visible_pixels": 18803,
+      "edge_pixels": 0
+    },
+    {
+      "id": "treasury_wall_ne",
+      "visible_pixels": 18765,
+      "edge_pixels": 0
+    },
+    {
+      "id": "treasury_wall_corner",
+      "visible_pixels": 21787,
+      "edge_pixels": 0
+    },
+    {
+      "id": "treasury_wall_broken",
+      "visible_pixels": 17600,
+      "edge_pixels": 0
+    },
+    {
+      "id": "treasury_chest_open",
+      "visible_pixels": 24834,
+      "edge_pixels": 0
+    },
+    {
+      "id": "treasury_coin_hoard",
+      "visible_pixels": 11692,
+      "edge_pixels": 0
+    },
+    {
+      "id": "treasury_locked_coffer",
+      "visible_pixels": 16883,
+      "edge_pixels": 0
+    },
+    {
+      "id": "treasury_jewel_pedestal",
+      "visible_pixels": 5314,
+      "edge_pixels": 0
+    },
+    {
+      "id": "treasury_vault_seal",
+      "visible_pixels": 23569,
+      "edge_pixels": 0
+    },
+    {
+      "id": "treasury_treasure_banner",
+      "visible_pixels": 8779,
+      "edge_pixels": 0
+    },
+    {
+      "id": "treasury_goblet_crate",
+      "visible_pixels": 13041,
+      "edge_pixels": 0
+    },
+    {
+      "id": "treasury_scales",
+      "visible_pixels": 6974,
+      "edge_pixels": 0
+    }
+  ]
+}

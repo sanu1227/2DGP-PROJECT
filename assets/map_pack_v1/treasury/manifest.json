@@ -1,0 +1,625 @@
+{
+  "version": 1,
+  "created": "2026-11-11",
+  "theme": "treasury",
+  "title": "봉인된 보물창고",
+  "generator": "built-in image_gen",
+  "status": "map-decoration-pack; stage placement lives in data/scenery.json",
+  "coordinates": {
+    "image": "top-left origin; anchor and source_rect use x right, y down",
+    "pico2d": "clip_rect_pico2d uses bottom-left origin",
+    "tile_footprint": {
+      "width": 224,
+      "height": 112
+    }
+  },
+  "source": {
+    "file": "source/atlas.png",
+    "width": 1254,
+    "height": 1254,
+    "sha256": "5fa32ef3849920c15b5ec81164238131400647c11b01540fc42236757d814529",
+    "grid": [
+      4,
+      4
+    ],
+    "row_edges": [
+      0,
+      314,
+      627,
+      941,
+      1254
+    ]
+  },
+  "atlases": {
+    "treasury": {
+      "file": "atlas.png",
+      "width": 1024,
+      "height": 1024,
+      "cell_size": 256,
+      "grid": [
+        4,
+        4
+      ],
+      "sha256": "6c612e0cd7571cc968082f69a728c39dc3e3d26969089b920057057ca5da44bc"
+    }
+  },
+  "sprites": {
+    "treasury_floor_plain": {
+      "file": "tiles/treasury_floor_plain.png",
+      "kind": "floor",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 160
+      },
+      "atlas": "treasury",
+      "clip_rect_pico2d": [
+        0,
+        768,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 0,
+        "top": 0,
+        "width": 314,
+        "height": 314
+      },
+      "source_content_rect": {
+        "left": 22,
+        "top": 85,
+        "width": 270,
+        "height": 166
+      },
+      "content_rect": {
+        "left": 16,
+        "top": 104,
+        "width": 224,
+        "height": 124
+      },
+      "sha256": "d6cebf2774a34ea41f19d4e597b9ca606e85924aa45a8057aba54b53a9ae3e2f"
+    },
+    "treasury_floor_seal": {
+      "file": "tiles/treasury_floor_seal.png",
+      "kind": "floor",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 160
+      },
+      "atlas": "treasury",
+      "clip_rect_pico2d": [
+        256,
+        768,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 314,
+        "top": 0,
+        "width": 313,
+        "height": 314
+      },
+      "source_content_rect": {
+        "left": 20,
+        "top": 84,
+        "width": 275,
+        "height": 167
+      },
+      "content_rect": {
+        "left": 16,
+        "top": 103,
+        "width": 224,
+        "height": 125
+      },
+      "sha256": "9e44d6b15faaa18bdbe698f556880b46203e149f7c7d8e45fc30f03a7663519c"
+    },
+    "treasury_floor_cracked": {
+      "file": "tiles/treasury_floor_cracked.png",
+      "kind": "floor",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 160
+      },
+      "atlas": "treasury",
+      "clip_rect_pico2d": [
+        512,
+        768,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 627,
+        "top": 0,
+        "width": 314,
+        "height": 314
+      },
+      "source_content_rect": {
+        "left": 20,
+        "top": 86,
+        "width": 273,
+        "height": 165
+      },
+      "content_rect": {
+        "left": 16,
+        "top": 105,
+        "width": 224,
+        "height": 123
+      },
+      "sha256": "610a1b2384188b07c349aaaca48190dc4fc1c98b44226e16de6b1e6ab6eb54ab"
+    },
+    "treasury_floor_runner": {
+      "file": "tiles/treasury_floor_runner.png",
+      "kind": "floor",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 160
+      },
+      "atlas": "treasury",
+      "clip_rect_pico2d": [
+        768,
+        768,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 941,
+        "top": 0,
+        "width": 313,
+        "height": 314
+      },
+      "source_content_rect": {
+        "left": 21,
+        "top": 85,
+        "width": 273,
+        "height": 166
+      },
+      "content_rect": {
+        "left": 16,
+        "top": 104,
+        "width": 224,
+        "height": 124
+      },
+      "sha256": "a2a350a8ff8bab1bf297cc31a6a1016e3e8db269a27fbc818cac4d0782fa6271"
+    },
+    "treasury_wall_nw": {
+      "file": "tiles/treasury_wall_nw.png",
+      "kind": "wall",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 160
+      },
+      "atlas": "treasury",
+      "clip_rect_pico2d": [
+        0,
+        512,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 0,
+        "top": 314,
+        "width": 314,
+        "height": 313
+      },
+      "source_content_rect": {
+        "left": 21,
+        "top": 56,
+        "width": 271,
+        "height": 207
+      },
+      "content_rect": {
+        "left": 16,
+        "top": 73,
+        "width": 224,
+        "height": 155
+      },
+      "sha256": "8dcaef90d0e787764cb05a50cb269eed8f77a8ad124d708d1c673bff2bce30c2"
+    },
+    "treasury_wall_ne": {
+      "file": "tiles/treasury_wall_ne.png",
+      "kind": "wall",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 160
+      },
+      "atlas": "treasury",
+      "clip_rect_pico2d": [
+        256,
+        512,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 314,
+        "top": 314,
+        "width": 313,
+        "height": 313
+      },
+      "source_content_rect": {
+        "left": 19,
+        "top": 56,
+        "width": 274,
+        "height": 207
+      },
+      "content_rect": {
+        "left": 16,
+        "top": 73,
+        "width": 224,
+        "height": 155
+      },
+      "sha256": "afed3ff592235f046d26db1cc349e2b8c04208d86e4bdd3b2d0393f2e4c8016d"
+    },
+    "treasury_wall_corner": {
+      "file": "tiles/treasury_wall_corner.png",
+      "kind": "wall",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 160
+      },
+      "atlas": "treasury",
+      "clip_rect_pico2d": [
+        512,
+        512,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 627,
+        "top": 314,
+        "width": 314,
+        "height": 313
+      },
+      "source_content_rect": {
+        "left": 19,
+        "top": 54,
+        "width": 276,
+        "height": 209
+      },
+      "content_rect": {
+        "left": 16,
+        "top": 72,
+        "width": 224,
+        "height": 156
+      },
+      "sha256": "cfdd3e3b9526ac7017f815d98f4b23a37839d2448c9d170e86a0882751b01ed4"
+    },
+    "treasury_wall_broken": {
+      "file": "tiles/treasury_wall_broken.png",
+      "kind": "wall",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 160
+      },
+      "atlas": "treasury",
+      "clip_rect_pico2d": [
+        768,
+        512,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 941,
+        "top": 314,
+        "width": 313,
+        "height": 313
+      },
+      "source_content_rect": {
+        "left": 19,
+        "top": 67,
+        "width": 274,
+        "height": 196
+      },
+      "content_rect": {
+        "left": 16,
+        "top": 82,
+        "width": 224,
+        "height": 146
+      },
+      "sha256": "41d0fa6b20a97ef2da7b7ee7130ba1bbb1aa0d7eb2afecb3a462d11f9ebddd1d"
+    },
+    "treasury_chest_open": {
+      "file": "props/treasury_chest_open.png",
+      "kind": "prop",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 220
+      },
+      "atlas": "treasury",
+      "clip_rect_pico2d": [
+        0,
+        256,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 0,
+        "top": 627,
+        "width": 314,
+        "height": 314
+      },
+      "source_content_rect": {
+        "left": 29,
+        "top": 20,
+        "width": 255,
+        "height": 271
+      },
+      "content_rect": {
+        "left": 36,
+        "top": 24,
+        "width": 184,
+        "height": 196
+      },
+      "sha256": "a051e9cf652b96d6526a4b74cad9292c164dd8c898c492edf52f1bd636e15f6b"
+    },
+    "treasury_coin_hoard": {
+      "file": "props/treasury_coin_hoard.png",
+      "kind": "prop",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 220
+      },
+      "atlas": "treasury",
+      "clip_rect_pico2d": [
+        256,
+        256,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 314,
+        "top": 627,
+        "width": 313,
+        "height": 314
+      },
+      "source_content_rect": {
+        "left": 25,
+        "top": 74,
+        "width": 257,
+        "height": 172
+      },
+      "content_rect": {
+        "left": 43,
+        "top": 106,
+        "width": 170,
+        "height": 114
+      },
+      "sha256": "2f804e25b40e8c30d7a900af38097f3eee9dd438c115dcee5ead34b6794dceb9"
+    },
+    "treasury_locked_coffer": {
+      "file": "props/treasury_locked_coffer.png",
+      "kind": "prop",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 220
+      },
+      "atlas": "treasury",
+      "clip_rect_pico2d": [
+        512,
+        256,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 627,
+        "top": 627,
+        "width": 314,
+        "height": 314
+      },
+      "source_content_rect": {
+        "left": 38,
+        "top": 51,
+        "width": 247,
+        "height": 223
+      },
+      "content_rect": {
+        "left": 48,
+        "top": 76,
+        "width": 160,
+        "height": 144
+      },
+      "sha256": "a96b1a8e23a96cef1be9da6f28ee55eae93147a180f4a79a3e517d65e57a53a7"
+    },
+    "treasury_jewel_pedestal": {
+      "file": "props/treasury_jewel_pedestal.png",
+      "kind": "prop",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 220
+      },
+      "atlas": "treasury",
+      "clip_rect_pico2d": [
+        768,
+        256,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 941,
+        "top": 627,
+        "width": 313,
+        "height": 314
+      },
+      "source_content_rect": {
+        "left": 39,
+        "top": 83,
+        "width": 233,
+        "height": 187
+      },
+      "content_rect": {
+        "left": 76,
+        "top": 136,
+        "width": 105,
+        "height": 84
+      },
+      "sha256": "314b2fc97e79942b8015aafdc4499ff7cfd51611951486def0c53ba70f6c3f26"
+    },
+    "treasury_vault_seal": {
+      "file": "props/treasury_vault_seal.png",
+      "kind": "prop",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 220
+      },
+      "atlas": "treasury",
+      "clip_rect_pico2d": [
+        0,
+        0,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 0,
+        "top": 941,
+        "width": 314,
+        "height": 313
+      },
+      "source_content_rect": {
+        "left": 59,
+        "top": 21,
+        "width": 209,
+        "height": 269
+      },
+      "content_rect": {
+        "left": 52,
+        "top": 24,
+        "width": 152,
+        "height": 196
+      },
+      "sha256": "5b31caac403d919e00725970e01f8132159922529338973ed19a4783ced00caa"
+    },
+    "treasury_treasure_banner": {
+      "file": "props/treasury_treasure_banner.png",
+      "kind": "prop",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 220
+      },
+      "atlas": "treasury",
+      "clip_rect_pico2d": [
+        256,
+        0,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 314,
+        "top": 941,
+        "width": 313,
+        "height": 313
+      },
+      "source_content_rect": {
+        "left": 70,
+        "top": 1,
+        "width": 177,
+        "height": 287
+      },
+      "content_rect": {
+        "left": 78,
+        "top": 58,
+        "width": 100,
+        "height": 162
+      },
+      "sha256": "5e4f5be216a8685f51bd143c57863b3d632924a07315641eea329af05550e05c"
+    },
+    "treasury_goblet_crate": {
+      "file": "props/treasury_goblet_crate.png",
+      "kind": "prop",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 220
+      },
+      "atlas": "treasury",
+      "clip_rect_pico2d": [
+        512,
+        0,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 627,
+        "top": 941,
+        "width": 314,
+        "height": 313
+      },
+      "source_content_rect": {
+        "left": 23,
+        "top": 47,
+        "width": 268,
+        "height": 239
+      },
+      "content_rect": {
+        "left": 56,
+        "top": 91,
+        "width": 145,
+        "height": 129
+      },
+      "sha256": "a3345e0c9663a6716b4c9191208e834b5597ececa181dae3dc22cee68eaa19c8"
+    },
+    "treasury_scales": {
+      "file": "props/treasury_scales.png",
+      "kind": "prop",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 220
+      },
+      "atlas": "treasury",
+      "clip_rect_pico2d": [
+        768,
+        0,
+        256,
+        256
+      ],
+      "source_rect": {
+        "left": 941,
+        "top": 941,
+        "width": 313,
+        "height": 313
+      },
+      "source_content_rect": {
+        "left": 29,
+        "top": 20,
+        "width": 257,
+        "height": 265
+      },
+      "content_rect": {
+        "left": 66,
+        "top": 91,
+        "width": 125,
+        "height": 129
+      },
+      "sha256": "45252b145c1dc9b7ef708b68d15dbd79740973c5ad4cb5d174a60d0208d6e599"
+    }
+  },
+  "placement": "Wall variants are rear-edge boundary decorations. Neither walls nor props create collision rules automatically."
+}

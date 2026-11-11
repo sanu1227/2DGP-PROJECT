@@ -1,0 +1,101 @@
+{
+  "key": "boss",
+  "title": "마왕의 왕좌",
+  "subtitle": "BOSS",
+  "date": "2026-11-11",
+  "generator": "built-in image_gen",
+  "transparent_background": true,
+  "row_edges": [0, 270, 515, 861, 1254],
+  "column_edges": [0, 330, 625, 925, 1254],
+  "prompt": "Use case: stylized-concept. Asset: production game sprite atlas for a Korean isometric dungeon restoration puzzle. Exactly 16 isolated sprites in a precise 4x4 grid of equal invisible cells, square image, true transparent alpha background. Every sprite strictly inside its cell with generous 35px equivalent safe margins. No labels, text, frames, drawn grid, checkerboard, watermark, people or complete room scene. Hand-painted stylized 3D miniature look, chunky readable forms, subtly weathered stone and metal, consistent orthographic 2:1 isometric view from above, top-left warm soft lighting. Row 1 has four flat diamond floor tiles all same 2:1 top footprint and thin front lip. Row 2 has four LOW walls on matching floor diamonds: back-left edge wall, back-right edge wall, corner joining both rear edges, broken back-left wall. Wall height less than half floor diamond width; no tall architecture here. Rows 3 and 4 contain eight individual freestanding decoration props, no floor tile or platform beneath props except an object's intrinsic small base. Exact reading order below. Keep each object centered with all pixels contained in its own cell. Theme: 마왕의 왕좌. Exact cell contents in row-major order:\n1. dark obsidian slate diamond with subtle crimson seams.\n2. matching tile with flat worn circular demonic royal sigil, no text.\n3. matching tile with shallow battle scars and dim ember cracks.\n4. matching tile with rich torn crimson carpet and tarnished gold border.\n5. low obsidian masonry with bronze corner trim on back-left edge.\n6. matching low wall on back-right edge.\n7. matching joined low rear corner.\n8. matching shattered low back-left wall.\n9. one imposing empty obsidian demon-king throne with broad crimson seat, curved horns and gold armrests, whole silhouette visible.\n10. one squat black-iron brazier with restrained red-orange flame.\n11. one tall freestanding crimson royal banner with simple golden horned crest, no writing.\n12. one large dented gold demon crown with two broken horns on a small dark cushion.\n13. one broken obsidian column stump with carved bronze collar.\n14. one mounted battered greatsword and shield on a compact stand.\n15. one low ritual altar with a dim red crystal and chain fittings.\n16. one small weathered horned gargoyle statue on its integral square base, inanimate.",
+  "entries": [
+    {
+      "id": "boss_floor_plain",
+      "kind": "floor",
+      "description": "dark obsidian slate diamond with subtle crimson seams"
+    },
+    {
+      "id": "boss_floor_sigil",
+      "kind": "floor",
+      "description": "matching tile with flat worn circular demonic royal sigil, no text"
+    },
+    {
+      "id": "boss_floor_cracked",
+      "kind": "floor",
+      "description": "matching tile with shallow battle scars and dim ember cracks"
+    },
+    {
+      "id": "boss_floor_runner",
+      "kind": "floor",
+      "description": "matching tile with rich torn crimson carpet and tarnished gold border"
+    },
+    {
+      "id": "boss_wall_nw",
+      "kind": "wall",
+      "description": "low obsidian masonry with bronze corner trim on back-left edge"
+    },
+    {
+      "id": "boss_wall_ne",
+      "kind": "wall",
+      "description": "matching low wall on back-right edge"
+    },
+    {
+      "id": "boss_wall_corner",
+      "kind": "wall",
+      "description": "matching joined low rear corner"
+    },
+    {
+      "id": "boss_wall_broken",
+      "kind": "wall",
+      "description": "matching shattered low back-left wall"
+    },
+    {
+      "id": "boss_throne",
+      "kind": "prop",
+      "description": "one imposing empty obsidian demon-king throne with broad crimson seat, curved horns and gold armrests, whole silhouette visible",
+      "width": 190
+    },
+    {
+      "id": "boss_brazier",
+      "kind": "prop",
+      "description": "one squat black-iron brazier with restrained red-orange flame",
+      "width": 110
+    },
+    {
+      "id": "boss_boss_banner",
+      "kind": "prop",
+      "description": "one tall freestanding crimson royal banner with simple golden horned crest, no writing",
+      "width": 100
+    },
+    {
+      "id": "boss_fallen_crown",
+      "kind": "prop",
+      "description": "one large dented gold demon crown with two broken horns on a small dark cushion",
+      "width": 130
+    },
+    {
+      "id": "boss_broken_pillar",
+      "kind": "prop",
+      "description": "one broken obsidian column stump with carved bronze collar",
+      "width": 130
+    },
+    {
+      "id": "boss_war_trophy",
+      "kind": "prop",
+      "description": "one mounted battered greatsword and shield on a compact stand",
+      "width": 140
+    },
+    {
+      "id": "boss_sealed_altar",
+      "kind": "prop",
+      "description": "one low ritual altar with a dim red crystal and chain fittings",
+      "width": 175
+    },
+    {
+      "id": "boss_horned_statue",
+      "kind": "prop",
+      "description": "one small weathered horned gargoyle statue on its integral square base, inanimate",
+      "width": 130
+    }
+  ]
+}
