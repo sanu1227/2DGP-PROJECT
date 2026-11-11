@@ -4,10 +4,10 @@ from copy import deepcopy
 from collections import Counter
 from dataclasses import dataclass, field
 
-from game.levels import Level, Pos
+from game.levels import BELT_DIRECTIONS, Level, Pos
 
 
-DIRECTIONS = {"up": (0, -1), "down": (0, 1), "left": (-1, 0), "right": (1, 0)}
+DIRECTIONS = BELT_DIRECTIONS
 ITEM_NAMES = {"part": "함정 부품", "bone": "뼈 묶음", "soldier": "해골 병사"}
 
 
@@ -24,6 +24,12 @@ class State:
     cleared: bool = False
 
 
+@dataclass
+class BeltStep:
+    state: State
+    moves: tuple[tuple[Pos, Pos, str], ...]
+
+
 class Game:
     def __init__(self, level: Level):
         self.level = level
@@ -32,6 +38,7 @@ class Game:
     def restart(self) -> None:
         self.state = State(player=self.level.start, items=dict(self.level.initial_items))
         self.history: list[State] = []
+        self.belt_steps: list[BeltStep] = []
         self.message = "물건이나 장치 위에서 E를 누르세요."
 
     @property
@@ -46,6 +53,7 @@ class Game:
 
     def act(self, action: str) -> bool:
         """성공한 상태 변경만 한 행동으로 기록한다. 실패는 안내만 바꾼다."""
+        self.belt_steps = []
         if action not in {*DIRECTIONS, "interact", "drop", "wait"}:
             raise ValueError(f"알 수 없는 행동: {action}")
         if self.state.cleared:
@@ -60,9 +68,9 @@ class Game:
         self.message = message
         if not changed:
             return False
-        transported = self._advance_belts(candidate)
-        if transported:
-            self.message += f" 벨트가 물건 {transported}개를 옮겼습니다."
+        self._settle_belts(candidate)
+        if self.belt_steps:
+            self.message += " 벨트 자동 운반을 마쳤습니다."
         # ponytail: 최대 12×12칸에서는 전체 복사가 충분하다. 대형 맵이 필요해지면 행동별 차이를 기록한다.
         self.history.append(deepcopy(self.state))
         candidate.moves += 1
@@ -81,6 +89,7 @@ class Game:
         return True
 
     def undo(self) -> bool:
+        self.belt_steps = []
         if not self.history:
             self.message = "되돌릴 행동이 없습니다."
             return False
@@ -119,8 +128,23 @@ class Game:
                 and not (state.active and pos in self.level.traps)
                 and (pos not in self.level.gates or self.gate_status(pos, state) == "open"))
 
-    def _advance_belts(self, state: State) -> int:
-        """행동 후의 동일한 배치를 기준으로 한 칸 이동을 동시에 확정한다."""
+    def _settle_belts(self, state: State) -> None:
+        """막히거나 벨트가 끝날 때까지 운반하고 표시용 한 칸 기록을 남긴다."""
+        # 각 물건은 순환 없는 벨트 칸을 최대 한 번씩 지난다.
+        # 잘못 생성한 Level도 게임을 멈추지 않도록 상한을 둔다.
+        for _ in range(len(self.level.belts) * len(state.items) + 1):
+            moves = self._belt_moves(state)
+            if not moves:
+                return
+            self.belt_steps.append(BeltStep(deepcopy(state), tuple(moves)))
+            for source, _, _ in moves:
+                del state.items[source]
+            for _, destination, kind in moves:
+                state.items[destination] = kind
+        raise ValueError("순환 벨트는 사용할 수 없습니다.")
+
+    def _belt_moves(self, state: State) -> list[tuple[Pos, Pos, str]]:
+        """한 구간의 점유·충돌을 같은 배치에서 판정한다."""
         fixed = self.level.traps | self.level.posts | self.level.benches | self.level.levers | self.level.chutes.keys() | {self.level.exit}
         candidates = {}
         for source, direction in self.level.belts.items():
@@ -133,13 +157,8 @@ class Game:
                 continue
             candidates[source] = destination
         counts = Counter(candidates.values())
-        moves = [(source, destination, state.items[source]) for source, destination in candidates.items()
-                 if counts[destination] == 1]
-        for source, _, _ in moves:
-            del state.items[source]
-        for _, destination, kind in moves:
-            state.items[destination] = kind
-        return len(moves)
+        return [(source, destination, state.items[source]) for source, destination in candidates.items()
+                if counts[destination] == 1]
 
     def _interaction(self, state: State) -> tuple[str | None, str]:
         """현재 칸에서 가능한 행동과 안내를 함께 결정한다."""

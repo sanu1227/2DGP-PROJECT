@@ -7,6 +7,22 @@ import re
 
 
 Pos = tuple[int, int]
+BELT_DIRECTIONS = {"up": (0, -1), "down": (0, 1), "left": (-1, 0), "right": (1, 0)}
+
+
+def validate_belts(belts: dict[Pos, str], prefix: str = "") -> None:
+    """자동 운반이 끝나지 않는 방향 순환을 지도 로딩 때 거부한다."""
+    checked = set()
+    for start in belts:
+        path = set()
+        pos = start
+        while pos in belts and pos not in checked:
+            if pos in path:
+                raise ValueError(prefix + "순환 벨트는 사용할 수 없습니다.")
+            path.add(pos)
+            dx, dy = BELT_DIRECTIONS[belts[pos]]
+            pos = pos[0] + dx, pos[1] + dy
+        checked.update(path)
 
 
 @dataclass(frozen=True)
@@ -125,6 +141,9 @@ def load_levels(path: Path | str | None = None) -> list[Level]:
             labels[pos] = labels[pos] + "/" + identifier if pos in labels else identifier
         items = {pos: "part" for pos in positions["P"]}
         items.update({pos: "bone" for pos in positions["B"]})
+        belts = {pos: direction for glyph, direction in (("^", "up"), ("v", "down"), ("<", "left"), (">", "right"))
+                 for pos in positions[glyph]}
+        validate_belts(belts, prefix)
         levels.append(Level(
             id=raw["id"], title=raw["title"], hint=raw["hint"], rows=tuple(rows),
             width=width, height=height, start=next(iter(positions["@"])), exit=next(iter(positions["E"])),
@@ -132,7 +151,6 @@ def load_levels(path: Path | str | None = None) -> list[Level]:
             benches=positions["A"], posts=positions["S"], initial_items=items,
             plates=positions["F"], gates={gate: plate for plate, gate in plate_links.items()}, device_labels=labels,
             chutes=chutes, action_limit=action_limit,
-            belts={pos: direction for glyph, direction in (("^", "up"), ("v", "down"), ("<", "left"), (">", "right"))
-                   for pos in positions[glyph]},
+            belts=belts,
         ))
     return levels

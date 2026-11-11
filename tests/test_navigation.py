@@ -78,7 +78,7 @@ class NavigationTests(unittest.TestCase):
         self.assertEqual(game.state, stopped)
         self.assertEqual(game.history, history)
 
-    def test_each_path_step_advances_belts_once_and_has_one_undo_snapshot(self):
+    def test_each_path_step_settles_belts_and_has_one_undo_snapshot(self):
         game = Game(load_stage(belt_stage()))
         original_items = deepcopy(game.level.initial_items)
         game.state.items[(3, 3)] = game.state.items.pop((2, 1))
@@ -87,7 +87,7 @@ class NavigationTests(unittest.TestCase):
         self.assertTrue(navigation.start(game, (1, 3), 0))
         self.assertEqual(navigation.tick(game, 0), "down")
         first = deepcopy(game.state)
-        self.assertEqual(game.state.items[(4, 3)], "part")
+        self.assertEqual(game.state.items[(5, 3)], "part")
         self.assertEqual((game.state.moves, len(game.history)), (1, 1))
         self.assertIsNone(navigation.tick(game, 0.10))
         self.assertEqual(game.state, first)

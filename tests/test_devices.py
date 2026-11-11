@@ -63,7 +63,7 @@ class ContextDropTests(unittest.TestCase):
             (plate_stage(), (2, 1), "part", (2, 1)),
             (plate_stage(), (4, 1), "part", (4, 1)),
             (chute_stage(), (5, 1), "bone", (5, 1)),
-            (belt_stage(), (3, 3), "part", (4, 3)),
+            (belt_stage(), (3, 3), "part", (5, 3)),
         )
         for stage, position, kind, destination in cases:
             with self.subTest(position=position, stage=stage["id"]):
@@ -328,15 +328,17 @@ class BeltTests(unittest.TestCase):
                     self.assertEqual(game.state.items[target], kind)
                     self.assertEqual(game.state.player, (1, 1))
 
-    def test_drop_and_belt_tick_share_one_undo_and_failed_input_has_no_tick(self):
+    def test_drop_and_full_transport_share_one_undo_and_failed_input_has_no_tick(self):
         game = Game(load_stage(belt_stage()))
         game.state.player = (3, 3)
         game.state.carrying = game.state.items.pop((2, 1))
         before = deepcopy(game.state)
         self.assertTrue(game.act("interact"))
         after_drop = deepcopy(game.state)
-        self.assertEqual(game.state.items[(4, 3)], "part")
-        self.assertNotIn((5, 3), game.state.items)
+        self.assertEqual(game.state.items[(5, 3)], "part")
+        self.assertEqual(len(game.belt_steps), 2)
+        self.assertEqual(game.belt_steps[0].state.items[(3, 3)], "part")
+        self.assertEqual(game.belt_steps[1].state.items[(4, 3)], "part")
         history = deepcopy(game.history)
         self.assertFalse(game.act("interact"))
         self.assertEqual(game.state, after_drop)
@@ -351,14 +353,12 @@ class BeltTests(unittest.TestCase):
         self.assertEqual(game.state, Game(game.level).state)
         self.assertEqual(game.history, [])
 
-    def test_conflicts_swaps_and_vacated_sources_use_one_occupancy_snapshot(self):
+    def test_conflicts_stop_and_queues_follow_vacated_sources_automatically(self):
         cases = (
             ({(3, 3): ">", (5, 3): "<"}, {(3, 3): "part", (5, 3): "soldier"},
              {(3, 3): "part", (5, 3): "soldier"}),
-            ({(3, 3): ">", (4, 3): "<"}, {(3, 3): "part", (4, 3): "soldier"},
-             {(3, 3): "part", (4, 3): "soldier"}),
             ({(3, 3): ">", (4, 3): ">"}, {(3, 3): "part", (4, 3): "soldier"},
-             {(3, 3): "part", (5, 3): "soldier"}),
+             {(4, 3): "part", (5, 3): "soldier"}),
         )
         for belts, items, expected in cases:
             for reversed_order in (False, True):
@@ -424,7 +424,7 @@ class BeltTests(unittest.TestCase):
         game.state.cleared = True
         self.assertFalse(game.act("wait"))
 
-    def test_arrival_on_plate_opens_gate_for_the_next_tick_and_undo_restores_both(self):
+    def test_arrival_on_plate_opens_gate_and_resumes_transport_in_the_same_action(self):
         stage = belt_stage({(3, 3): ">", (5, 3): ">"})
         stage["map"][3] = "#..>F>G#"
         stage["plate_links"] = [{"id": "P1", "plate": [4, 3], "gate": [6, 3]}]
@@ -433,8 +433,10 @@ class BeltTests(unittest.TestCase):
         initial = deepcopy(game.state)
         self.assertEqual(game.gate_status((6, 3)), "closed")
         self.assertTrue(game.act("wait"))
-        self.assertEqual(game.state.items, {(4, 3): "part", (5, 3): "soldier"})
+        self.assertEqual(game.state.items, {(4, 3): "part", (6, 3): "soldier"})
         self.assertEqual(game.gate_status((6, 3)), "open")
+        self.assertEqual(len(game.belt_steps), 2)
+        self.assertEqual(game.belt_steps[1].state.items, {(4, 3): "part", (5, 3): "soldier"})
         after_first = deepcopy(game.state)
         self.assertTrue(game.act("right"))  # A successful ordinary action also advances belts.
         self.assertEqual(game.state.items, {(4, 3): "part", (6, 3): "soldier"})
@@ -443,6 +445,31 @@ class BeltTests(unittest.TestCase):
         self.assertTrue(game.undo())
         self.assertEqual(game.state, initial)
         self.assertEqual(game.gate_status((6, 3)), "closed")
+
+    def test_player_leaving_belt_exit_resumes_transport_without_wait(self):
+        game = Game(load_stage(belt_stage()))
+        game.state.items[(3, 3)] = game.state.items.pop((2, 1))
+        # Entering the first belt exit lets the item approach, then block.
+        game.state.player = (5, 2)
+        self.assertTrue(game.act("down"))
+        self.assertEqual(game.state.items[(4, 3)], "part")
+        before = deepcopy(game.state)
+        self.assertTrue(game.act("up"))
+        self.assertEqual(game.state.items[(5, 3)], "part")
+        self.assertTrue(game.undo())
+        self.assertEqual(game.state, before)
+
+    def test_cyclic_belt_maps_are_rejected_but_bends_are_allowed(self):
+        for belts in ({(3, 3): ">", (4, 3): "<"},
+                      {(3, 3): ">", (4, 3): "v", (4, 4): "<", (3, 4): "^"}):
+            with self.subTest(belts=belts), self.assertRaisesRegex(ValueError, "순환 벨트"):
+                load_stage(belt_stage(belts))
+        game = Game(load_stage(belt_stage({(3, 3): ">", (4, 3): "v"})))
+        game.state.player = (3, 3)
+        game.state.carrying = game.state.items.pop((2, 1))
+        self.assertTrue(game.act("interact"))
+        self.assertEqual(game.state.items[(4, 4)], "part")
+        self.assertEqual(len(game.history), 1)
 
 
 if __name__ == "__main__":
