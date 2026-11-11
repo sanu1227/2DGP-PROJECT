@@ -14,6 +14,7 @@ from game.front_end import FrontEnd
 from game.levels import load_levels
 from game.model import Game
 from game.play_menu import PlayMenu
+from game.tutorial import device_lessons
 from tests.smoke_onboarding import capture
 from tests.solutions import SOLUTIONS
 
@@ -42,6 +43,7 @@ def animation_checks(levels, folder):
         menu = PlayMenu()
         # 실제 발판과 문이 움직이는 중간 프레임에서 정지한다.
         game = Game(levels[3])
+        menu.lessons = device_lessons(game.level)
         plate = next(iter(game.level.plates))
         with patch.object(view, "perf_counter", return_value=10):
             display.draw(game, 3, len(levels))

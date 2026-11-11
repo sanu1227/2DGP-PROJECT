@@ -120,12 +120,14 @@ def main():
                 raise RuntimeError("SDL 검사 이벤트를 넣을 수 없습니다.")
         return original_events()
 
-    with patch.object(view, "Game", ObservedGame), patch.object(p, "get_events", scripted_events), \
+    # 자동 장치 안내는 smoke_device_guide에서 별도로 검사한다.
+    with patch.object(view.PlayMenu, "offer"), \
+            patch.object(view, "Game", ObservedGame), patch.object(p, "get_events", scripted_events), \
             patch.object(view.View, "__init__", initialize):
         view.run(levels, show_title=False)
     assert not steps
     assert len(games) == 2 * len(levels) + 2
-    print(f"Native SDL smoke OK: {len(levels)} clears, coordinates/F2, shortcuts 1-{len(levels)}, E/Space drop and next/replay, Q/B/Enter ignored, transition input isolation, undo, restart, Escape.")
+    print(f"Native SDL smoke OK: {len(levels)} clears, coordinates/F2, shortcuts 1-{len(levels)}, E/Space drop and next/replay, Q/B/Enter ignored, transition input isolation, undo, restart, window close.")
 
 
 if __name__ == "__main__":

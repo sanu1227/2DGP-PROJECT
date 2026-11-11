@@ -913,6 +913,8 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True):
         }
         running, frames = True, 0
         while running:
+            if front_end.screen == "playing":
+                play_menu.offer(game, view)
             screen_changed = False
             for event in p.get_events():
                 if event.type == p.SDL_QUIT:
@@ -936,6 +938,7 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True):
                     elif result == "start":
                         index = 0
                         game = Game(levels[index])
+                        play_menu.seen_devices.clear()
                         view.reset_player()
                         view.navigation.cancel()
                         view.mouse_position = None
@@ -1016,6 +1019,8 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True):
                         if changed:
                             view.belt_animation.start(game, view.now())
             # 이미 보간 중인 한 칸이 끝난 뒤에만 다음 자동 이동을 실행한다.
+            if front_end.screen == "playing":
+                play_menu.offer(game, view)
             now = view.now()
             front_end.update(perf_counter())
             if (running and front_end.screen == "playing" and not play_menu.active and not view.transporting(game, now)

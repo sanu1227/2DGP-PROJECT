@@ -5,6 +5,8 @@ import pico2d.pico2d as p
 from game.front_end import Button, bevel
 from game.layout import WIDTH, HEIGHT
 from game.logo_mode import fade_to_black
+from game.tutorial import device_lessons
+from game.device_guide import target_bounds, card_bounds, draw_lesson
 
 INK = (239, 237, 219)
 MUTED = (164, 182, 177)
@@ -36,6 +38,14 @@ class PlayMenu:
     def __init__(self):
         self.mode = None
         self.selected = 0
+        self.seen_devices = set()
+        self.room = None
+        self.lessons = ()
+        self.pages = ()
+        self.page_index = 0
+        self.return_mode = None
+        self.guide_bounds = {}
+        self.guide_card = (32, 360, 452, 790)
 
     @property
     def active(self):
@@ -51,9 +61,35 @@ class PlayMenu:
         view.resume()
         view.mouse_position = None
 
+    def offer(self, game, view):
+        if self.room is game:
+            return
+        self.room = game
+        self.lessons = device_lessons(game.level)
+        unseen = tuple(lesson for lesson in self.lessons if lesson.kind not in self.seen_devices)
+        if unseen:
+            self.pages, self.page_index = unseen, 0
+            self.mode, self.selected, self.return_mode = "device", 0, None
+            view.pause()
+            view.mouse_position = None
+
+    def finish_guide(self):
+        if self.return_mode == "controls":
+            self.mode, self.selected = "controls", 0
+            return "controls"
+        return "resume"
+
     @property
     def buttons(self):
+        if self.mode == "device":
+            left, bottom, right, _ = self.guide_card
+            label = "안내 마치기" if self.page_index == len(self.pages) - 1 else "다음 장치"
+            return (Button("guide_next", label, (left + 22, bottom + 24, left + 226, bottom + 80)),
+                    Button("guide_skip", "건너뛰기", (left + 242, bottom + 24, right - 22, bottom + 80)))
         if self.mode == "controls":
+            if self.lessons:
+                return (Button("devices", "이 방 장치 안내", (420, 224, 780, 282)),
+                        Button("back", "메뉴로 돌아가기", (820, 224, 1180, 282)))
             return (Button("back", "메뉴로 돌아가기", (610, 224, 990, 282)),)
         return tuple(Button(action, label, (550, 574 - i * 80, 1050, 636 - i * 80))
                      for i, (action, label) in enumerate((
@@ -61,7 +97,17 @@ class PlayMenu:
                          ("controls", "조작법"), ("title", "타이틀로"))))
 
     def activate(self, action):
-        if action == "controls":
+        if action in ("guide_next", "guide_skip"):
+            self.seen_devices.update(lesson.kind for lesson in
+                                     (self.pages if action == "guide_skip" else (self.pages[self.page_index],)))
+            if action == "guide_skip" or self.page_index + 1 == len(self.pages):
+                return self.finish_guide()
+            self.page_index += 1
+            self.selected = 0
+        elif action == "devices":
+            self.pages, self.page_index = self.lessons, 0
+            self.mode, self.selected, self.return_mode = "device", 0, "controls"
+        elif action == "controls":
             self.mode, self.selected = "controls", 0
         elif action == "back":
             self.mode, self.selected = "pause", 2
@@ -78,7 +124,8 @@ class PlayMenu:
                     break
         elif event.type == p.SDL_KEYDOWN:
             if event.key == p.SDLK_ESCAPE:
-                return self.activate("back" if self.mode == "controls" else "resume")
+                action = "guide_skip" if self.mode == "device" else "back" if self.mode == "controls" else "resume"
+                return self.activate(action)
             if event.key in (p.SDLK_UP, p.SDLK_w, p.SDLK_DOWN, p.SDLK_s, p.SDLK_TAB):
                 step = -1 if event.key in (p.SDLK_UP, p.SDLK_w) else 1
                 self.selected = (self.selected + step) % len(self.buttons)
@@ -94,6 +141,13 @@ class PlayMenu:
             view.centered((left + right) / 2, (bottom + top) / 2, button.label, 26, INK)
 
     def draw(self, view, game):
+        if self.mode == "device":
+            lesson = self.pages[self.page_index]
+            self.guide_bounds = target_bounds(view, game.level, lesson.targets)
+            self.guide_card = card_bounds(self.guide_bounds.values())
+            draw_lesson(view, game, lesson, self.guide_bounds, self.guide_card, self.page_index, len(self.pages))
+            self.draw_buttons(view)
+            return
         fade_to_black(.72)
         bevel((380, 180, 1220, 800), (23, 36, 40), (104, 139, 127))
         if self.mode == "controls":

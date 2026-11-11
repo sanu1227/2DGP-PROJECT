@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 
-from game.levels import Pos
+from game.levels import Level, Pos
 from game.model import Game
 
 
@@ -14,6 +14,49 @@ class TutorialHint:
     target: Pos | None
     target_label: str = ""
     complete: bool = False
+
+
+@dataclass(frozen=True)
+class DeviceLesson:
+    kind: str
+    title: str
+    instruction: str
+    reminder: str
+    targets: tuple[tuple[Pos, str], ...]
+    links: tuple[tuple[Pos, Pos], ...] = ()
+
+
+def device_lessons(level: Level) -> tuple[DeviceLesson, ...]:
+    """지도에 실제로 있는 장치와 연결만 설명한다. 정답 경로는 제공하지 않는다."""
+    lessons = []
+    if level.benches and level.posts:
+        bench, post = min(level.benches), min(level.posts)
+        lessons.append(DeviceLesson(
+            "assembly", "해골 병사 조립", "뼈 묶음 2개를 작업대에 하나씩 가져와 E / Space로 납품하세요. "
+            "완성된 병사는 손에 들립니다. 몬스터 배치대에서 E / Space로 배치하세요.",
+            "병사를 배치한 칸은 다시 들어갈 수 없어요.",
+            ((bench, "작업대"), (post, "몬스터 배치대"))))
+    if level.gates:
+        gate, plate = min(level.gates.items())
+        lessons.append(DeviceLesson(
+            "plate", "무게로 여는 문", "발판 위에 서거나 물건을 놓으면 연결된 문이 열립니다. "
+            "발판에서 무게가 사라지면 문이 닫힙니다.",
+            "표시한 발판과 문은 서로 연결된 한 쌍이에요.",
+            ((plate, "발판"), (gate, "연결문")), ((plate, gate),)))
+    if level.chutes:
+        inlet, outlet = min(level.chutes.items())
+        lessons.append(DeviceLesson(
+            "chute", "벽 너머로 뼈 보내기", "뼈를 들고 투입구 위에서 E / Space를 누르면 "
+            "연결된 배출구로 보냅니다. 배출구가 물건이나 병사로 막혀 있으면 보낼 수 없어요.",
+            "투입구에는 뼈만 넣을 수 있어요.",
+            ((inlet, "뼈 투입구"), (outlet, "배출구")), ((inlet, outlet),)))
+    if level.belts:
+        lessons.append(DeviceLesson(
+            "belt", "운반은 벨트에게", "벨트 위에서 E / Space로 부품이나 조립한 병사를 내려놓으세요. "
+            "화살표 방향으로 자동 운반하며, 앞이 막히면 멈춥니다.",
+            "뼈와 수리공은 운반하지 않아요. 자동 운반은 추가 행동을 쓰지 않아요.",
+            tuple((pos, "운반 벨트" if i == 0 else "") for i, pos in enumerate(sorted(level.belts)))))
+    return tuple(lessons)
 
 
 def first_room_hint(game: Game) -> TutorialHint | None:

@@ -141,7 +141,9 @@ def check_inputs(levels):
             assert p.SDL_PushEvent(ctypes.byref(event)) == 1
         return original_events()
 
-    with patch.object(view, "Game", ObservedGame), patch.object(view.View, "__init__", initialize), \
+    # 자동 장치 안내는 smoke_device_guide에서 별도로 검사한다.
+    with patch.object(view.PlayMenu, "offer"), \
+            patch.object(view, "Game", ObservedGame), patch.object(view.View, "__init__", initialize), \
             patch.object(view, "perf_counter", side_effect=lambda: now[0]), \
             patch.object(p, "get_events", events):
         view.run(levels, index=5, show_title=False)
