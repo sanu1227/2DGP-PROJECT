@@ -12,6 +12,7 @@ from game.comic import PANEL_BOUNDS, draw_comic_page
 from game.comic_motion import MOTION_IMAGES
 from game.story_audio import StoryAudio
 from game.title_motion import TITLE_IMAGES, draw_title
+from game.logo_mode import LOGO_IMAGES, LogoPlayback, draw_logos, fade_to_black, smooth, FADE_SECONDS
 
 
 INK = (250, 239, 209)
@@ -21,7 +22,7 @@ TEAL = (126, 224, 201)
 ART_ROOT = Path(__file__).resolve().parents[1] / "assets" / "menu_v2"
 STORY_ROOT = ART_ROOT.parent / "story_overtime_v1"
 STORY_IMAGES = {"overtime_01": STORY_ROOT / "act_01.png",
-                "overtime_02": STORY_ROOT / "act_02.png", **MOTION_IMAGES, **TITLE_IMAGES}
+                "overtime_02": STORY_ROOT / "act_02.png", **MOTION_IMAGES, **TITLE_IMAGES, **LOGO_IMAGES}
 
 
 def panel(bounds, color, filled=True):
@@ -57,7 +58,9 @@ class Button:
 
 class FrontEnd:
     def __init__(self, show_title=True, audio=None):
-        self.screen = "title" if show_title else "playing"
+        self.screen = "logo" if show_title else "playing"
+        self.logos = LogoPlayback()
+        self.logo_clock = None
         self.selected = 0
         self.comic = ComicPlayback()
         self.story_clock = None
@@ -65,7 +68,8 @@ class FrontEnd:
         self.images = {}
         self.audio = audio if audio is not None else StoryAudio()
         self.title_elapsed = 0.0
-        self.title_clock = perf_counter() if show_title else None
+        self.title_clock = None
+        self.title_fade_in = False
 
     def close(self):
         self.audio.close()
@@ -76,6 +80,12 @@ class FrontEnd:
         return self.comic.index
 
     def update(self, now):
+        if self.screen == "logo":
+            if self.logo_clock is not None:
+                self.logos.update(now - self.logo_clock)
+            self.logo_clock = now
+            if self.logos.finished:
+                self.finish_logos(now)
         if self.screen == "story" and self.story_clock is not None:
             self.comic.update(now - self.story_clock)
             self.audio.update(self.story_page, self.comic.elapsed, self.comic.paused)
@@ -85,6 +95,14 @@ class FrontEnd:
         if self.screen == "title" and self.title_clock is not None:
             self.title_elapsed += max(0, now - self.title_clock)
         self.title_clock = now if self.screen == "title" else None
+
+    def finish_logos(self, now):
+        self.screen = "title"
+        self.logo_clock = None
+        self.selected = 0
+        self.title_elapsed = 0.0
+        self.title_clock = now
+        self.title_fade_in = True
 
     def image(self, name):
         if name not in self.images:
@@ -116,6 +134,13 @@ class FrontEnd:
         return ()
 
     def activate(self, action):
+        if action == "logo_next":
+            self.logos.advance()
+            if self.logos.finished:
+                self.finish_logos(perf_counter())
+            else:
+                self.logo_clock = perf_counter()
+            return action
         self.selected = 0
         resuming_story = action == "story_play" and not self.comic.finished
         if action == "title":
@@ -165,11 +190,23 @@ class FrontEnd:
         if self.screen == "title":
             self.title_elapsed = 0.0
             self.title_clock = perf_counter()
+            self.title_fade_in = False
         else:
             self.title_clock = None
+        if self.screen != "logo":
+            self.logo_clock = None
         return action
 
     def handle(self, event):
+        if self.screen == "logo":
+            if event.type == p.SDL_KEYDOWN:
+                if event.key in (p.SDLK_RETURN, p.SDLK_SPACE):
+                    return self.activate("logo_next")
+                if event.key == p.SDLK_ESCAPE:
+                    return self.activate("title")
+            elif event.type == p.SDL_MOUSEBUTTONDOWN and event.button == p.SDL_BUTTON_LEFT:
+                return self.activate("logo_next")
+            return None
         if event.type in (p.SDL_MOUSEMOTION, p.SDL_MOUSEBUTTONDOWN):
             point = (event.x, HEIGHT - 1 - event.y)
             for index, button in enumerate(self.buttons):
@@ -199,7 +236,9 @@ class FrontEnd:
         return None
 
     def draw(self, view):
-        if self.screen == "title":
+        if self.screen == "logo":
+            draw_logos(self.image, self.logos)
+        elif self.screen == "title":
             self.draw_title(view)
         elif self.screen == "story":
             draw_comic_page(view, self.comic, self.image)
@@ -217,6 +256,8 @@ class FrontEnd:
             x, y = (left + right) / 2, (bottom + top) / 2
             view.centered(x + 1, y - 2, button.label, size, (10, 21, 22))
             view.centered(x, y, button.label, size, INK if focused else MUTED)
+        if self.screen == "title" and self.title_fade_in:
+            fade_to_black(1 - smooth(self.title_elapsed / FADE_SECONDS))
 
     def draw_title(self, view):
         draw_title(self.image, self.title_elapsed)

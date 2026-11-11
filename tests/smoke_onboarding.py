@@ -74,6 +74,9 @@ def main():
 
     # 각 tuple은 입력 묶음, 표시 화면, 행동 수, 선택적인 캡처 이름이다.
     steps = deque([
+        ([], "logo", 0, None),
+        ([p.SDLK_SPACE, p.SDLK_RETURN], "logo", 0, None),
+        ([p.SDLK_RETURN, p.SDLK_SPACE], "title", 0, None),
         ([], "title", 0, "title"),
         ([p.SDLK_d, p.SDLK_e, p.SDLK_q, p.SDLK_9], "title", 0, None),
         ([("left", 60, 60)], "title", 0, None),
@@ -123,6 +126,10 @@ def main():
     ])
     original_events, original_update = p.get_events, p.update_canvas
     current = None
+
+    def skip_logos():
+        steps.extend([([p.SDLK_SPACE], "logo", 0, None),
+                      ([p.SDLK_RETURN], "title", 0, None)])
 
     def events():
         nonlocal current
@@ -200,11 +207,13 @@ def main():
              ([p.SDLK_ESCAPE], "playing", 0, None)],
         ):
             current = None
+            skip_logos()
             steps.extend(scenario)
             view.run(load_levels())
             assert not steps
         for index, level in enumerate(load_levels()):
             current = None
+            skip_logos()
             steps.extend([
                 ([p.SDLK_0, p.SDLK_9], "title", 0, None),
                 ([p.SDLK_1 + index, p.SDLK_d, p.SDLK_SPACE], "playing", 0, None, level.id),
@@ -215,6 +224,7 @@ def main():
             assert games[-1].state == Game(level).state and not games[-1].history
         # A shortcut for a room absent from the supplied level list must be ignored.
         current = None
+        skip_logos()
         steps.extend([
             ([p.SDLK_6], "title", 0, None),
             ([p.SDLK_2, "close"], "playing", 0, None, "stage_02"),

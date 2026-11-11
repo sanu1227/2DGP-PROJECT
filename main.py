@@ -8,7 +8,7 @@ from game.levels import load_levels
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="용사가 지나간 자리 — 기초 프로토타입")
-    parser.add_argument("--stage", type=int, help="타이틀을 건너뛰고 시작할 방 번호 (1부터)")
+    parser.add_argument("--stage", type=int, help="시작 로고와 타이틀을 건너뛰고 시작할 방 번호 (1부터)")
     parser.add_argument("--check", action="store_true", help="창 없이 스테이지 데이터 검사")
     parser.add_argument("--smoke-frames", type=int, help="지정 프레임만 표시한 뒤 종료 (창 검사)")
     args = parser.parse_args()
