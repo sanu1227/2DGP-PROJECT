@@ -8,3 +8,5 @@
 - `sources/flames.png`: 횃불 8포즈.
 
 `node tools/art/build-title-motion.mjs`로 로고 1개·인물 8개·불꽃 8개의 투명 PNG를 추출한다. 투명 여백·셀 경계·포즈 고유성을 검사하고 크기·발 기준점·SHA-256을 `manifest.json`에 저장한다. 원본의 알파 채널을 보존하며 포즈를 임의로 새로 그리지 않는다.
+
+`game/title_motion.py`가 약 1.1초의 로고 등장, 4px 범위의 부유, 배경 시차, 해골 손짓, 수리공 깜박임·호흡, 12fps 불꽃을 독립적으로 재생한다. 타이틀로 돌아오면 등장부터 다시 시작한다. 버튼과 클릭 영역은 움직이지 않는다. `tests.smoke_menu_media`의 `--animation-dir`로 24fps 캡처를 저장할 수 있다.
