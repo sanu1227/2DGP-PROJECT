@@ -3,7 +3,7 @@
 import os
 from pathlib import Path
 from time import perf_counter
-from math import floor
+from math import floor, sin, sqrt
 
 import pico2d.pico2d as p
 
@@ -56,6 +56,14 @@ def box(x1, y1, x2, y2, color, filled=True):
 
 def line(x1, y1, x2, y2, color):
     p.draw_line(x1, y1, x2, y2, *color)
+
+
+def rounded_box(left, bottom, right, top, radius, color):
+    """작은 UI 배지의 모서리를 별도 이미지 없이 둥글게 채운다."""
+    for y in range(round(bottom), round(top) + 1):
+        distance = max(bottom + radius - y, y - (top - radius), 0)
+        inset = radius - sqrt(max(0, radius * radius - distance * distance))
+        line(left + inset, y, right - inset, y, color)
 
 
 def diamond(x, y, half_width, half_height, color, outline=None):
@@ -130,6 +138,43 @@ class View:
     def reset_player(self):
         self.facing = "se"
         self.motion = None
+        self.action_badge_bounds = None
+
+    @staticmethod
+    def fatigue(game):
+        """행동 제한의 시각적 경고 단계. 퍼즐 규칙과 이동 속도는 바꾸지 않는다."""
+        remaining = game.remaining_actions
+        if remaining is None or game.state.cleared:
+            return 0
+        if remaining == 0:
+            return 3
+        if remaining <= 5:
+            return 2
+        return int(remaining <= max(5, game.level.action_limit // 5))
+
+    def place_action_badge(self, game, x, head_top, now):
+        value = "무제한" if game.remaining_actions is None else str(game.remaining_actions)
+        width = max(88, len(value) * 22 + 24)
+        x = min(WIDTH - 40 - width / 2, max(40 + width / 2, x))
+        bottom = min(BOARD_TOP - 76, head_top + 16 + sin(now * 2.5) * 2)
+        self.action_badge_bounds = (x - width / 2, bottom, x + width / 2, bottom + 64)
+
+    def action_badge(self, game):
+        """벽·장치보다 나중에 그려 남은 행동을 항상 머리 위에서 읽게 한다."""
+        left, bottom, right, top = self.action_badge_bounds
+        x = (left + right) / 2
+        tired = self.fatigue(game)
+        accent = ((58, 129, 113), (168, 110, 37), (190, 69, 66), (157, 54, 64))[tired]
+        fill = ((238, 250, 225), (255, 242, 201), (255, 224, 215), (250, 215, 222))[tired]
+        rounded_box(left + 2, bottom - 4, right + 2, top - 4, 18, (18, 32, 36))
+        for offset in range(9):
+            line(x - offset, bottom - 9 + offset, x + offset, bottom - 9 + offset, accent)
+        rounded_box(left, bottom, right, top, 18, accent)
+        rounded_box(left + 3, bottom + 3, right - 3, top - 3, 15, fill)
+        self.centered(x, top - 15, "남은 행동", 13, accent)
+        value = "무제한" if game.remaining_actions is None else str(game.remaining_actions)
+        size = 22 if game.remaining_actions is None else 32
+        self.centered(x, bottom + 23, value, size, accent)
 
     def player_position(self, fallback, now):
         if self.motion is None:
@@ -314,6 +359,9 @@ class View:
             # 같은 칸 캐릭터까지 포함해 표식이 머리나 물건에 가려지지 않게 한다.
             top = max((rect[3] for cell, rect in self.hit_masks if cell == pos), default=sy + 8)
             y = min(top + 15, BOARD_TOP - 15)
+            if pos == state.player and self.action_badge_bounds:
+                sx = self.action_badge_bounds[2] + 18
+                y = self.action_badge_bounds[1] + 22
             original_y = y
             # 사선상 앞뒤 물건의 표식이 겹치면 위아래로 나누고 연결선을 남긴다.
             for offset in (0, 28, -28, 56, -56, 84, -84, 112, -112):
@@ -322,7 +370,8 @@ class View:
                     continue
                 if all(sx + 12 <= left or sx - 12 >= right
                        or candidate + 12 <= bottom or candidate - 12 >= upper
-                       for left, bottom, right, upper in self.interaction_regions.values()):
+                       for left, bottom, right, upper in (
+                           *self.interaction_regions.values(), self.action_badge_bounds)):
                     y = candidate
                     break
             if y != original_y:
@@ -567,6 +616,7 @@ class View:
                 self.item(state.carrying, sx + offset_x, sy + 32, scale * 0.65)
             self.art.draw(f"worker_{self.facing}_{pose}", sx, sy, scale)
             self.sprite_hit_region(pos, f"worker_{self.facing}_{pose}", sx, sy, scale)
+            self.place_action_badge(game, sx, self.hit_regions[-1][1][3], now)
             if state.carrying and self.facing in ("se", "sw"):
                 self.item(state.carrying, sx + offset_x, sy + 24, scale * 0.65)
 
@@ -594,6 +644,7 @@ class View:
             self.coordinate_overlay(level, projection)
         if not transport:
             self.navigation_overlay(game, projection)
+        self.action_badge(game)
 
     def coordinate_overlay(self, level, projection):
         """벽과 물체 위에도 데이터의 (열, 행) 좌표를 표시한다."""
@@ -690,12 +741,6 @@ class View:
         if state.carrying:
             self.item(state.carrying, 940, BOARD_TOP + 8, 0.19)
         self.repair_progress(game, 1000, 200)
-        remaining = game.remaining_actions
-        budget = "행동 무제한" if remaining is None else f"남은 행동 {remaining} / {level.action_limit}"
-        color = (TEAL if state.cleared else MUTED if remaining is None else RED if remaining <= 5
-                 else GOLD if remaining <= max(5, level.action_limit // 5) else INK)
-        self.text(WIDTH - 340, BOARD_TOP + 27, budget, 18, color)
-        self.text(WIDTH - 340, BOARD_TOP + 10, f"사용 {state.moves}회", 13, MUTED)
 
         context, color = self.play_context(game)
         if context:
@@ -739,12 +784,6 @@ class View:
         diamond(982, BOARD_TOP + 17, 6, 6, None, GOLD)
         self.text(997, BOARD_TOP + 17, "상호작용 대상", 13, GOLD)
         self.repair_progress(game, 1120, 110)
-        remaining = game.remaining_actions
-        budget = "행동 무제한" if remaining is None else f"남은 행동 {remaining} / {level.action_limit}"
-        budget_color = (TEAL if state.cleared else MUTED if remaining is None else RED if remaining <= 5
-                        else GOLD if remaining <= max(5, level.action_limit // 5) else INK)
-        self.text(WIDTH - 340, BOARD_TOP + 24, budget, 16, budget_color)
-        self.text(WIDTH - 340, BOARD_TOP + 8, f"사용 {state.moves} · 되돌리기 {len(game.history)}", 13, MUTED)
 
         box(32, 48, WIDTH - 32, BOARD_BOTTOM, (41, 55, 58))
         transporting = self.transporting(game)

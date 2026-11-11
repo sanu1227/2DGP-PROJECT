@@ -34,17 +34,23 @@ def main():
         with patch.object(display, "text", wraps=display.text) as text:
             original_draw(display, game, index, total)
         labels = [call.args[2] for call in text.call_args_list]
+        assert "남은 행동" in labels
+        assert ("무제한" if game.remaining_actions is None else str(game.remaining_actions)) in labels
+        left, bottom, right, top = display.action_badge_bounds
+        assert view.BOARD_BOTTOM < bottom < top < view.BOARD_TOP
+        assert all(right <= x1 or left >= x2 or top <= y1 or bottom >= y2
+                   for x1, y1, x2, y2 in display.interaction_regions.values())
         if game.failed:
-            assert f"남은 행동 0 / {budget}" in labels
+            assert display.fatigue(game) == 3
             assert any("실패" in label and "재시작" in label for label in labels)
             assert not display.interaction_regions and not display.navigation.active
             if args.capture and "failed" not in snapshots:
                 save_frame(args.capture / "failed.png")
             snapshots.setdefault("failed", deepcopy(game.state))
         elif index == 0:
-            assert "행동 무제한" in labels
+            assert "무제한" in labels and display.fatigue(game) == 0
         elif game.state.moves == budget - 1:
-            assert f"남은 행동 1 / {budget}" in labels
+            assert display.fatigue(game) == 2
 
     def expect(moves, failed=False, stage=1):
         game = games[-1]
