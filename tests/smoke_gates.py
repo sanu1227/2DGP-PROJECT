@@ -2,6 +2,7 @@
 
 from copy import deepcopy
 from dataclasses import replace
+import ctypes
 from math import ceil, floor
 from unittest.mock import patch
 
@@ -53,6 +54,20 @@ def main():
                            for y in range(ceil(top) - 1, floor(bottom), -1)
                            for x in range(ceil(left), ceil(right)))
                 assert game.walkable(gate) == (status == "open")
+                alpha = ctypes.c_ubyte()
+                assert p.SDL_GetTextureAlphaMod(view.art.atlases["gates"].texture, ctypes.byref(alpha)) == 0
+                assert alpha.value == 255  # Transparency must not leak into the next gate draw.
+                if index == 4:
+                    assert view.gate_inlets
+                    inlet_region = next(iter(view.gate_inlets.values()))[0]
+                    inlet = view.hit_masks[inlet_region]
+                    ix1, iy1, ix2, iy2 = inlet_region[1]
+                    assert any(view.art.hit_test(*inlet[:4], (x, y), *inlet[4:])
+                               and view.art.gate_hit_test(*view.gate_hit_masks[region][:3], (x, y),
+                                                         *view.gate_hit_masks[region][3:])
+                               and view.pick_cell(game, x, y) == inlet_region[0]
+                               for y in range(ceil(iy1), floor(iy2), 2)
+                               for x in range(ceil(ix1), floor(ix2), 2))
                 checked += 1
 
             check()

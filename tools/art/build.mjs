@@ -35,13 +35,14 @@ const dimensions = {
   bench_empty: { width: 180 }, bench_one_bone: { width: 180 }, bench_assembled: { width: 180 },
   lever_off: { width: 112 }, lever_on: { width: 112 },
   plate_up: { width: 192 }, plate_down: { width: 192 },
-  chute_inlet: { width: 130 }, chute_outlet: { width: 130 },
+  chute_inlet: { width: 176 }, chute_outlet: { width: 130 },
   conveyor_ne: { width: 190 }, conveyor_se: { width: 190 }, brazier: { width: 100 },
 };
 // Standalone replacements retain the original atlas slot and runtime anchor.
 const replacements = {
   part: 'sources/part-fragment.png',
   post_empty: 'sources/monster-post-base-v2.png',
+  chute_inlet: 'sources/bone-inlet-v2.png',
 };
 const manifest = {
   version: 1, created: '2026-11-08', status: 'first-production-art-pass',

@@ -50,6 +50,12 @@
       "height": 1024,
       "sha256": "3980ea80b5065ad5d08fc0d4bf76fa08fb79049abdd19e1c5a5943a8bb07bd88"
     },
+    "chute_inlet_replacement": {
+      "file": "sources/bone-inlet-v2.png",
+      "width": 1254,
+      "height": 1254,
+      "sha256": "a7c91c798641bca2b673c7d4c3570f9eb7dcc9cc9f0f446980c23d8229ef7c23"
+    },
     "worker": {
       "file": "sources/worker.png",
       "width": 1254,
@@ -142,7 +148,7 @@
         4,
         4
       ],
-      "sha256": "233a9f619f73c905b8f205ed07297af85ac175d9f36b39c87eb49a0fe820b5f0"
+      "sha256": "50533c454e666d090e8ffb3fecf902ae5c3f2d324bbd5af89c9c8065ac297445"
     },
     "worker": {
       "file": "atlases/worker.png",
@@ -1025,24 +1031,25 @@
         256
       ],
       "source_rect": {
-        "left": 941,
-        "top": 627,
-        "width": 313,
-        "height": 314
+        "left": 0,
+        "top": 0,
+        "width": 1254,
+        "height": 1254
       },
       "source_content_rect": {
-        "left": 26,
-        "top": 39,
-        "width": 252,
-        "height": 255
+        "left": 293,
+        "top": 316,
+        "width": 661,
+        "height": 755
       },
+      "source_file": "sources/bone-inlet-v2.png",
       "content_rect": {
-        "left": 63,
-        "top": 88,
-        "width": 130,
-        "height": 132
+        "left": 40,
+        "top": 19,
+        "width": 176,
+        "height": 201
       },
-      "sha256": "2f157f2012d7d5b54169e1db2b7b6f1f6c23e49d5f70dada6bad69dfb276b2a7",
+      "sha256": "4e919630267e9007518ed15d28325cdcd6f71143a4d1f0e72e2cab35050ab89f",
       "intended_use": "planned-mechanic-art"
     },
     "chute_outlet": {

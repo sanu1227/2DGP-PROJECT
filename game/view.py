@@ -114,6 +114,7 @@ class View:
     def reset_gates(self):
         self.gate_game = None
         self.gate_motions = {}
+        self.gate_inlets = {}
 
     def reset_plates(self):
         self.plate_motions = {}
@@ -303,6 +304,18 @@ class View:
                     return pos
                 if gate_mask:
                     sx, sy, scale, opening, flip = gate_mask
+                    # 반투명 문 너머 실제로 보이는 투입구를 클릭하면 그 칸을 고른다.
+                    through_inlet = False
+                    for inlet_region in self.gate_inlets.get((pos, (left, bottom, right, top)), ()):
+                        if inlet_region not in self.hit_regions:
+                            continue
+                        inlet = self.hit_masks[inlet_region]
+                        if self.art.hit_test(*inlet[:4], (x, y), *inlet[4:]):
+                            through_inlet = True
+                            break
+                    if through_inlet:
+                        # 문만 통과시켜 그 사이의 다른 불투명 물체는 정상적으로 판정한다.
+                        continue
                     if not self.art.gate_hit_test(sx, sy, scale, (x, y), opening, flip):
                         continue
                     return pos
@@ -435,9 +448,22 @@ class View:
         flip = along_x > along_y
         if opening is None:
             opening = 0 if status == "closed" else 1
-        sprite = self.art.draw_gate(sx, sy, scale, opening, flip=flip)
+        left, bottom, right, top = self.art.bounds("gate_closed", sx, sy, scale, flip)
+        hidden_inlets = [region for region, mask in self.hit_masks.items()
+                         if mask[0] == "chute_inlet"
+                         and min(right, region[1][2]) - max(left, region[1][0]) > 12
+                         and min(top, region[1][3]) - max(bottom, region[1][1]) > 12]
+        atlas = self.art.atlases["gates"]
+        # 앞쪽 문의 형체는 남기되, 뒤에 있는 필수 장치가 완전히 묻히지 않게 한다.
+        atlas.opacify(.42 if hidden_inlets else 1)
+        try:
+            sprite = self.art.draw_gate(sx, sy, scale, opening, flip=flip)
+        finally:
+            atlas.opacify(1)
         self.sprite_hit_region(pos, sprite, sx, sy, scale, flip)
         self.gate_hit_masks[self.hit_regions[-1]] = (sx, sy, scale, opening, flip)
+        if hidden_inlets:
+            self.gate_inlets[self.hit_regions[-1]] = hidden_inlets
 
     def board(self, game):
         level, state = game.level, game.state
@@ -471,6 +497,7 @@ class View:
         self.hit_regions.clear()
         self.hit_masks.clear()
         self.gate_hit_masks.clear()
+        self.gate_inlets.clear()
         self.plate_hit_masks.clear()
 
         exit_ready = (state.installed == level.traps and (not level.traps or state.active)
@@ -543,7 +570,7 @@ class View:
                     labels.append((pos, "벨트 " + {"up": "↗", "right": "↘", "down": "↙", "left": "↖"}[direction]))
                 if pos in level.chutes:
                     objects.append((depth, 1, "chute_inlet", sx, sy))
-                    labels.append((pos, f"{level.device_labels[pos]} 투입"))
+                    labels.append((pos, "뼈 투입구"))
                 elif pos in level.chutes.values():
                     objects.append((depth, 0.5, "chute_outlet", sx, sy))
                     if pos not in level.plates:
