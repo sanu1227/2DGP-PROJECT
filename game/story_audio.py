@@ -14,7 +14,7 @@ STEP_TIMES = (WALK_START, *(WALK_START + ACCEL_SECONDS / 2
               WALK_END + (INHALE_START - WALK_END) * .53)
 CUES = (
     ((IMPACTS[0][0][0], "hero_arrival"),),
-    (),
+    ((IMPACTS[1][0][0], "dungeon_collapse"),),
     (*((time, "step_left" if index % 2 == 0 else "step_right")
        for index, time in enumerate(STEP_TIMES)), (EXHALE_START, "worker_sigh")),
     tuple((start, "boss_bark") for start, _, _ in IMPACTS[3]),

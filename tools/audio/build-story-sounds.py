@@ -79,6 +79,41 @@ def foot(seed):
     return data
 
 
+def collapse():
+    """짧은 균열·석재 충격 뒤 크기가 다른 잔해가 연달아 굴러 떨어진다."""
+    rng = random.Random(7281)
+    length = 1.95
+    # 큰 돌부터 작은 조각까지 간격과 음높이를 달리해 떨어지는 잔해를 표현한다.
+    debris = ((.16, 105, .30), (.29, 155, .27), (.41, 82, .30),
+              (.55, 210, .21), (.68, 135, .20), (.79, 290, .17),
+              (.93, 175, .16), (1.08, 360, .13), (1.22, 245, .11),
+              (1.39, 420, .085), (1.56, 310, .06))
+    low = dust = 0
+    data = []
+    for i in range(round(length * RATE)):
+        t = i / RATE
+        noise = rng.uniform(-1, 1)
+        low += .065 * (noise - low)
+        dust += .28 * (noise - dust)
+        # 첫 충격의 저음과 짧고 거친 파열음을 겹친다.
+        rumble = (.75 * low + .20 * math.sin(TAU * (68 * t - 9 * t * t))) * math.exp(-t * 5)
+        cracks = sum((noise - dust) * .20 * math.exp(-(t - start) * 65)
+                     for start in (0, .025, .074, .12) if t >= start)
+        falling = 0
+        for start, pitch, gain in debris:
+            u = t - start
+            if 0 <= u < .32:
+                # 짧은 비주기 공명과 긁히는 소리로 돌 조각의 충돌을 만든다.
+                stone = (math.sin(TAU * pitch * u)
+                         + .45 * math.sin(TAU * pitch * 1.43 * u)
+                         + .22 * math.sin(TAU * pitch * 2.71 * u))
+                falling += gain * (stone * math.exp(-u * 38)
+                                   + (dust - low) * 2.4 * math.exp(-u * 22)) * fade(u, .32, .002, .08)
+        gravel = (dust - low) * .27 * math.exp(-t * 2.3) * min(1, t / .12)
+        data.append((rumble + cracks + falling + gravel) * fade(t, length, .002, .20))
+    return echo(data, ((.055, .16), (.115, .08)))
+
+
 def sigh():
     rng = random.Random(382)
     length, fast, slow, phase = 1.2, 0, 0, 0
@@ -122,6 +157,7 @@ def write(name, data, peak, pan=0):
 def main():
     ROOT.mkdir(parents=True, exist_ok=True)
     clips = {"hero_arrival": write("hero_arrival", hero(), .56),
+             "dungeon_collapse": write("dungeon_collapse", collapse(), .56),
              "boss_bark": write("boss_bark", boss(), .58),
              "step_left": write("step_left", foot(14), .32, -.08),
              "step_right": write("step_right", foot(37), .30, .08),

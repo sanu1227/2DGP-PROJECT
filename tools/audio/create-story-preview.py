@@ -17,9 +17,9 @@ def main():
     parser.add_argument("--montage", action="store_true", help="효과음 종류별 짧은 미리듣기")
     args = parser.parse_args()
     if args.montage:
-        events = ((.10, "hero_arrival"), (1.65, "boss_bark"), (2.80, "step_left"),
-                  (3.30, "step_right"), (3.80, "step_left"), (4.40, "worker_sigh"))
-        duration = 6.0
+        events = ((.10, "hero_arrival"), (1.65, "dungeon_collapse"), (4.0, "boss_bark"),
+                  (5.15, "step_left"), (5.65, "step_right"), (6.15, "step_left"), (6.80, "worker_sigh"))
+        duration = 8.4
     else:
         events = [(sum(PANEL_DURATIONS[:index]) + time, name)
                   for index, cues in enumerate(CUES) for time, name in cues]

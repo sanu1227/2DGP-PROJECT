@@ -64,15 +64,31 @@ def main():
             with patch("game.front_end.perf_counter", return_value=20):
                 menu.activate("story_next")
                 assert not backend.active_channels()
+            menu.update(20.29)
+            assert [call.args[0] for call in played.call_args_list] == ["hero_arrival", "dungeon_collapse"]
+            channels = backend.active_channels()
+            assert channels and all(p.Mix_Playing(channel) for channel in channels)
+            with patch("game.front_end.perf_counter", return_value=20.29):
+                menu.activate("story_play")
+            assert all(p.Mix_Paused(channel) for channel in channels)
+            menu.update(21.29)
+            assert played.call_count == 2 and abs(menu.comic.elapsed - .29) < 1e-6
+            with patch("game.front_end.perf_counter", return_value=21.29):
+                menu.activate("story_play")
+            assert all(not p.Mix_Paused(channel) for channel in channels)
+            menu.update(21.31)
+            assert played.call_count == 2
+            with patch("game.front_end.perf_counter", return_value=22):
                 menu.activate("story_next")
+            assert not backend.active_channels(), "Collapse must stop when leaving panel two"
             for time, _ in CUES[2]:
-                menu.update(20 + time + .01)
-            assert [call.args[0] for call in played.call_args_list][1:] == [name for _, name in CUES[2]]
+                menu.update(22 + time + .01)
+            assert [call.args[0] for call in played.call_args_list][2:] == [name for _, name in CUES[2]]
             with patch("game.front_end.perf_counter", return_value=30):
                 menu.activate("story_next")
             for time, _ in CUES[3]:
                 menu.update(30 + time + .01)
-            assert len(backend.sounds) == 5 and not backend.disabled
+            assert len(backend.sounds) == 6 and not backend.disabled
             with patch("game.front_end.perf_counter", return_value=40):
                 menu.activate("controls")
             assert not backend.active_channels()
@@ -138,7 +154,7 @@ def main():
                 duration = round((step + 1) * 1000 / 24) - round(step * 1000 / 24)
                 frames.append({"file": filename, "duration_ms": duration})
             (args.animation_dir / "frames.json").write_text(json.dumps(frames), encoding="utf-8")
-        print("Menu media smoke OK: dummy video/audio, five PCM files, real mixer playback/pause/resume/stop, "
+        print("Menu media smoke OK: dummy video/audio, six PCM files, panel-two collapse pause/resume/skip, real mixer playback/pause/resume/stop, "
               "single timed cues, skip cleanup, silent device fallback, animated title layers, visible hand/eye poses, "
               "fixed buttons, replay reset.")
     finally:

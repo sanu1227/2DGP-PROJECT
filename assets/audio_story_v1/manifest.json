@@ -10,6 +10,13 @@
       "rms": 0.14157584605525242,
       "sha256": "ac891b2012ed22d5d8910707384dc9d5561827b576443f3072ea2056f389c75c"
     },
+    "dungeon_collapse": {
+      "file": "dungeon_collapse.wav",
+      "seconds": 1.95,
+      "peak": 0.56,
+      "rms": 0.06890446936530287,
+      "sha256": "2967f08247e8ae9042a4b72df996c7039fbce8d94064e537cb43f9d9ce5002a9"
+    },
     "boss_bark": {
       "file": "boss_bark.wav",
       "seconds": 0.82,
