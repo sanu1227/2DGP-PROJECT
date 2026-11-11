@@ -9,7 +9,8 @@ from unittest.mock import patch
 import pico2d.pico2d as p
 
 from game import view
-from game.front_end import FrontEnd, DIALOGUE_BOUNDS, DIALOGUE_SIZE
+from game.front_end import FrontEnd
+from game.comic import dialogue_bounds, DIALOGUE_SIZE
 from game.story import STORY
 from game.levels import load_levels
 from game.model import Game
@@ -40,14 +41,14 @@ def main():
     def initialize(display):
         original_initialize(display)
         displays.append(display)
-        # 세 줄 대사가 화면 안뿐 아니라 실제 말풍선의 여백 안에 들어가야 한다.
-        for page in STORY:
-            for bounds, words in zip(DIALOGUE_BOUNDS, page.dialogue):
+        # 두 줄 대사가 화면 안뿐 아니라 실제 말풍선의 여백 안에 들어가야 한다.
+        for index, page in enumerate(STORY):
+            for bounds, words in zip(dialogue_bounds(index), page.dialogue):
                 for value in words[1:]:
                     width = ctypes.c_int()
                     p.TTF_SizeUTF8(display.fonts[DIALOGUE_SIZE].font, value.encode("utf-8"),
                                    ctypes.byref(width), None)
-                    assert width.value <= bounds[2] - bounds[0] - 36, (value, width.value)
+                    assert width.value <= bounds[2] - bounds[0] - 24, (value, width.value)
 
     def checked_text(display, x, y, value, size=18, color=view.INK):
         for character in str(value):
@@ -85,17 +86,13 @@ def main():
         ([("left", 1390, 72)], "story:1", 0, None),
         ([p.SDLK_RETURN], "story:2", 0, "story-03"),
         ([p.SDLK_SPACE], "story:3", 0, "story-04"),
-        ([p.SDLK_RETURN], "story:4", 0, "story-05"),
-        ([p.SDLK_LEFT], "story:3", 0, None),
-        ([p.SDLK_RIGHT], "story:4", 0, None),
-        ([("left", 1390, 72)], "story:5", 0, "story-06"),
-        ([p.SDLK_SPACE], "story:6", 0, "story-07"),
-        ([p.SDLK_RIGHT], "story:7", 0, "story-08"),
+        ([p.SDLK_LEFT], "story:2", 0, None),
+        ([p.SDLK_RIGHT], "story:3", 0, None),
         ([p.SDLK_RETURN], "controls:0", 0, "repair-guide"),
         ([p.SDLK_d, p.SDLK_e, p.SDLK_r, p.SDLK_6, p.SDLK_F2], "controls:0", 0, None),
         ([("left", 1390, 72)], "controls:1", 0, "controls"),
         ([("left", 210, 72)], "controls:0", 0, None),
-        ([("left", 210, 72)], "story:7", 0, None),
+        ([("left", 210, 72)], "story:3", 0, None),
         ([p.SDLK_ESCAPE], "title", 0, None),
         ([p.SDLK_TAB, p.SDLK_UP, p.SDLK_RETURN, p.SDLK_RETURN], "story:0", 0, None),
         ([("left", 1460, 900)], "controls:0", 0, None),
@@ -159,7 +156,7 @@ def main():
         actual = menu.screen
         if actual == "story":
             actual += f":{menu.story_page}"
-            assert menu.buttons[0].label == ("작업 안내" if menu.story_page == len(STORY) - 1 else "다음 이야기")
+            assert menu.buttons[0].label == ("작업 안내" if menu.story_page == len(STORY) - 1 else "다음 컷")
         elif actual == "controls":
             actual += f":{menu.guide_page}"
         assert actual == screen, (actual, screen, current[0])
@@ -225,7 +222,7 @@ def main():
         view.run(load_levels()[:2])
         assert not steps
     assert all(not menu.images for menu in menus)
-    print("Native onboarding smoke OK: illustrated title, eight comic panels, two guides, back/skip/replay, glyphs and balloon bounds, "
+    print("Native onboarding smoke OK: illustrated title, four sequential comic panels, two guides, back/skip/replay, glyphs and balloon bounds, "
           "input isolation, all five tutorial steps, target picking, "
           "undo/restart, first clear, next room, title shortcuts 1-8, invalid shortcut isolation, Escape.")
 

@@ -1,47 +1,74 @@
-"""용사의 정복 뒤에 시작되는 수리공의 야근. 대사는 왼쪽, 오른쪽 순서다."""
-
+"""왼쪽 위부터 쌓이는 네 컷의 야근 코미디와 재생 상태."""
 from dataclasses import dataclass
-
 
 @dataclass(frozen=True)
 class StoryPage:
     atlas: str
     cell: int
     dialogue: tuple[tuple[str, ...], tuple[str, ...]]
-    effect: tuple[int, int, str]
-
+    effect: str
 
 STORY = (
     StoryPage("overtime_01", 0, (
-        ("용사", "마왕의 던전이여!", "이 용사가 왔다!", "정복을 시작하지!"),
-        ("해골 병사", "어? 용사요?", "저 이제 막", "출근했는데요?!"),
-    ), (580, 250, "두둥!")),
-    StoryPage("overtime_01", 1, (
-        ("용사", "성스러운 일격!", "함정도, 해골도", "한 번에 끝내주마!"),
-        ("해골 병사", "으아악!", "방어 시설이랑", "제 관절은 별개예요!"),
-    ), (1000, 250, "와장창!")),
+        ("용사", "마왕의 던전이여!", "이 용사가 왔다!"),
+        ("해골 병사", "저 오늘 첫", "출근인데요?!"),
+    ), "두둥!"),
     StoryPage("overtime_01", 2, (
-        ("용사", "던전 정복 완료!", "보물도 챙겼으니", "다음 모험으로!"),
-        ("해골 병사", "저기요!", "부수고 그냥 가면...", "수리팀! 수리티임!"),
-    ), (610, 390, "당당!")),
+        ("용사", "정복 끝! 보물도", "챙겼으니 퇴근!"),
+        ("해골 병사", "함정도 저도 박살!", "수리티이임!!"),
+    ), "정복 완료!"),
     StoryPage("overtime_01", 3, (
-        ("수리공 (당신)", "하... 오늘도 야근이네.", "용사는 정복하고,", "난 뒷정리하고..."),
-        ("해골 병사", "수리공님 오셨다!", "함정도 저도 박살났어요.", "일단 제 몸부터요!"),
-    ), (650, 260, "터덜...")),
+        ("수리공 (당신)", "하... 오늘도 야근.", "난 또 뒷정리네."),
+        ("해골 병사", "함정 말고 제 몸부터!", "허리가 없어요!"),
+    ), "터덜..."),
     StoryPage("overtime_02", 0, (
-        ("마왕 (상사)", "자네, 아직도 이 꼴인가!", "함정 고치고 병사 세워!", "내일 용사 오기 전까지!"),
-        ("수리공 (당신)", "마왕님...", "저 방금 왔는데요.", "야근 수당은 나오죠?"),
-    ), (1050, 270, "쭈글...")),
-    StoryPage("overtime_02", 1, (
-        ("수리공 (당신)", "부품 넣고 함정 수리!", "이젠 뼈 모아서 조립...", "잠깐, 그거 발이잖아!"),
-        ("해골 병사", "아, 어쩐지...", "손을 흔들었는데", "발 냄새가 나더라!"),
-    ), (1020, 420, "멈칫!")),
-    StoryPage("overtime_02", 2, (
-        ("마왕 (상사)", "좋아, 이 방은 합격!", "옆방도 자네만 믿겠네.", "빠릿빠릿하게 하자고!"),
-        ("수리공 (당신)", "끝난 줄 알았는데...", "또요?!", "제 퇴근도 수리해 주세요."),
-    ), (790, 245, "쿠궁!")),
-    StoryPage("overtime_02", 3, (
-        ("수리공 (당신)", "남은 방도 전부 고치고,", "돌아올 길도 챙겨야지.", "오늘은 꼭 퇴근한다!"),
-        ("해골 병사", "손이 모자라시죠?", "제 손 빌려드릴게요!", "진짜로요!"),
-    ), (620, 250, "파이팅...")),
+        ("마왕 (상사)", "함정이랑 병사들,", "내일까지 고쳐 놔!"),
+        ("수리공 (당신)", "네... 수리할게요.", "제 퇴근도 고쳐줘요."),
+    ), "야근 확정!"),
 )
+
+PANEL_SECONDS = 6.5
+BALLOON_DELAYS = (0.55, 1.8)
+REVEAL_SECONDS = 2.4
+
+@dataclass
+class ComicPlayback:
+    """시간 기반 재생. 마지막 컷은 자동으로 안내 화면을 넘기지 않는다."""
+    index: int = 0
+    elapsed: float = 0.0
+    paused: bool = False
+
+    @property
+    def finished(self):
+        return self.index == len(STORY) - 1 and self.elapsed >= PANEL_SECONDS
+
+    def reset(self):
+        self.index, self.elapsed, self.paused = 0, 0.0, False
+
+    def update(self, seconds):
+        if self.paused:
+            return
+        self.elapsed += max(0.0, seconds)
+        while self.elapsed >= PANEL_SECONDS and self.index < len(STORY) - 1:
+            self.elapsed -= PANEL_SECONDS
+            self.index += 1
+        self.elapsed = min(self.elapsed, PANEL_SECONDS)
+
+    def advance(self):
+        if self.index == len(STORY) - 1:
+            return False
+        self.index += 1
+        self.elapsed = 0.0
+        return True
+
+    def back(self):
+        if self.index == 0:
+            return False
+        self.index -= 1
+        self.elapsed, self.paused = REVEAL_SECONDS, True
+        return True
+
+    def age(self, index):
+        if index > self.index:
+            return None
+        return PANEL_SECONDS if index < self.index else self.elapsed

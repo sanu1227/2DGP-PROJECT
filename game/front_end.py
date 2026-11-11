@@ -8,7 +8,8 @@ from time import perf_counter
 import pico2d.pico2d as p
 
 from game.layout import WIDTH, HEIGHT
-from game.story import STORY
+from game.story import STORY, ComicPlayback, REVEAL_SECONDS
+from game.comic import PANEL_BOUNDS, draw_comic_page
 
 
 INK = (250, 239, 209)
@@ -19,8 +20,6 @@ ART_ROOT = Path(__file__).resolve().parents[1] / "assets" / "menu_v2"
 STORY_ROOT = ART_ROOT.parent / "story_overtime_v1"
 STORY_IMAGES = {"overtime_01": STORY_ROOT / "act_01.png",
                 "overtime_02": STORY_ROOT / "act_02.png"}
-DIALOGUE_BOUNDS = ((258, 750, 658, 900), (936, 750, 1336, 900))
-DIALOGUE_SIZE = 26
 
 
 def panel(bounds, color, filled=True):
@@ -58,12 +57,22 @@ class FrontEnd:
     def __init__(self, show_title=True):
         self.screen = "title" if show_title else "playing"
         self.selected = 0
-        self.story_page = 0
+        self.comic = ComicPlayback()
+        self.story_clock = None
         self.guide_page = 0
         self.images = {}
 
     def close(self):
         self.images.clear()
+
+    @property
+    def story_page(self):
+        return self.comic.index
+
+    def update(self, now):
+        if self.screen == "story" and self.story_clock is not None:
+            self.comic.update(now - self.story_clock)
+        self.story_clock = now if self.screen == "story" else None
 
     def image(self, name):
         if name not in self.images:
@@ -81,9 +90,11 @@ class FrontEnd:
             )
         if self.screen == "story":
             return (
-                Button("story_next", "작업 안내" if self.story_page == len(STORY) - 1 else "다음 이야기", (1260, 44, 1520, 100)),
-                Button("story_back", "타이틀로" if self.story_page == 0 else "이전 이야기", (80, 44, 340, 100)),
+                Button("story_next", "작업 안내" if self.story_page == len(STORY) - 1 else "다음 컷", (1260, 30, 1520, 78)),
+                Button("story_back", "타이틀로" if self.story_page == 0 else "이전 컷", (80, 30, 340, 78)),
                 Button("controls", "건너뛰기", (1370, 876, 1540, 924)),
+                Button("story_play", "다시 보기" if self.comic.finished else
+                       "자동재생" if self.comic.paused else "일시정지", (680, 34, 920, 76)),
             )
         if self.screen == "controls":
             return (
@@ -96,19 +107,22 @@ class FrontEnd:
         self.selected = 0
         if action == "title":
             self.screen = "title"
-            self.story_page = self.guide_page = 0
+            self.comic.reset()
+            self.guide_page = 0
         elif action == "story":
-            self.screen, self.story_page = "story", 0
+            self.screen = "story"
+            self.comic.reset()
         elif action == "story_next":
-            if self.story_page < len(STORY) - 1:
-                self.story_page += 1
-            else:
+            if not self.comic.advance():
                 self.screen, self.guide_page = "controls", 0
         elif action == "story_back":
-            if self.story_page:
-                self.story_page -= 1
-            else:
+            if not self.comic.back():
                 self.screen = "title"
+        elif action == "story_play":
+            if self.comic.finished:
+                self.comic.reset()
+            else:
+                self.comic.paused = not self.comic.paused
         elif action == "controls":
             self.screen, self.guide_page = "controls", 0
         elif action == "guide_next":
@@ -121,7 +135,10 @@ class FrontEnd:
             if self.guide_page:
                 self.guide_page -= 1
             else:
-                self.screen, self.story_page = "story", len(STORY) - 1
+                self.screen = "story"
+                self.comic.index = len(STORY) - 1
+                self.comic.elapsed, self.comic.paused = REVEAL_SECONDS, True
+        self.story_clock = perf_counter() if self.screen == "story" else None
         return action
 
     def handle(self, event):
@@ -133,11 +150,19 @@ class FrontEnd:
                     if event.type == p.SDL_MOUSEBUTTONDOWN and event.button == p.SDL_BUTTON_LEFT:
                         return self.activate(button.action)
                     break
+            else:
+                if (self.screen == "story" and event.type == p.SDL_MOUSEBUTTONDOWN
+                        and event.button == p.SDL_BUTTON_LEFT):
+                    left, bottom, right, top = PANEL_BOUNDS[self.story_page]
+                    if left <= point[0] <= right and bottom <= point[1] <= top:
+                        return self.activate("story_next")
         elif event.type == p.SDL_KEYDOWN:
             if event.key == p.SDLK_ESCAPE:
                 return self.activate("quit" if self.screen == "title" else "title")
             if self.screen == "story" and event.key in (p.SDLK_LEFT, p.SDLK_RIGHT):
                 return self.activate("story_back" if event.key == p.SDLK_LEFT else "story_next")
+            if self.screen == "story" and event.key == p.SDLK_SPACE:
+                return self.activate("story_next")
             if event.key in (p.SDLK_TAB, p.SDLK_DOWN, p.SDLK_RIGHT, p.SDLK_UP, p.SDLK_LEFT):
                 delta = -1 if event.key in (p.SDLK_UP, p.SDLK_LEFT) else 1
                 self.selected = (self.selected + delta) % len(self.buttons)
@@ -149,10 +174,7 @@ class FrontEnd:
         if self.screen == "title":
             self.draw_title(view)
         elif self.screen == "story":
-            page = STORY[self.story_page]
-            self.draw_comic(page.cell, page.atlas, footer_height=112)
-            self.draw_dialogue(view)
-            self.page_mark(view, "오늘도 야근", self.story_page + 1, len(STORY))
+            draw_comic_page(view, self.comic, self.image)
         else:
             self.draw_controls(view)
         for index, button in enumerate(self.buttons):
@@ -196,31 +218,6 @@ class FrontEnd:
         # 스토리는 버튼 높이만 남겨 그림을 키우고, 작업 안내는 설명 공간을 확보한다.
         panel((0, 0, WIDTH, footer_height), (14, 25, 28))
         p.draw_line(80, footer_height - 1, 1520, footer_height - 1, *GOLD)
-
-    def draw_dialogue(self, view):
-        # 자막은 그림에 굽지 않아 작은 글자도 선명하게 읽고 수정할 수 있다.
-        page = STORY[self.story_page]
-        for bounds, words in zip(DIALOGUE_BOUNDS, page.dialogue):
-            left, bottom, right, top = bounds
-            fill, outline = (255, 249, 225), (31, 37, 36)
-            bevel((left + 4, bottom - 4, right + 4, top - 4), outline, outline)
-            bevel(bounds, fill, outline)
-            anchor = left + 285 if left < WIDTH / 2 else left + 175
-            tip = anchor + 27
-            for row in range(29):
-                t = row / 28
-                x1 = anchor - 12 + (tip - anchor + 12) * t
-                x2 = anchor + 12 + (tip - anchor - 12) * t
-                p.draw_line(x1, bottom - row, x2, bottom - row, *fill)
-            p.draw_line(anchor - 12, bottom, tip, bottom - 28, *outline)
-            p.draw_line(anchor + 12, bottom, tip, bottom - 28, *outline)
-            view.text(left + 18, top - 18, words[0], 13, (109, 93, 61))
-            for index, value in enumerate(words[1:]):
-                view.centered((left + right) / 2, top - 50 - index * 33, value, DIALOGUE_SIZE, outline)
-        x, y, effect = page.effect
-        for dx, dy in ((-2, 0), (2, 0), (0, -2), (0, 2)):
-            view.centered(x + dx, y + dy, effect, 32, (22, 31, 31))
-        view.centered(x, y, effect, 32, GOLD)
 
     @staticmethod
     def caption(view, title, first, second):

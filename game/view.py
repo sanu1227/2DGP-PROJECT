@@ -988,6 +988,7 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True):
                             view.belt_animation.start(game, perf_counter())
             # 이미 보간 중인 한 칸이 끝난 뒤에만 다음 자동 이동을 실행한다.
             now = perf_counter()
+            front_end.update(now)
             if (running and front_end.screen == "playing" and not view.transporting(game, now)
                     and (view.motion is None or now >= view.motion[2] + 0.18)):
                 previous = game.state.player
