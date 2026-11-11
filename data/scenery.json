@@ -138,5 +138,69 @@
       {"sprite": "sewer_pipe_elbow", "cell": [0, 5], "scale": 0.8},
       {"sprite": "sewer_water_barrel", "cell": [9, 6], "scale": 0.7}
     ]
+  },
+  "stage_07": {
+    "name": "봉인된 보물창고",
+    "packs": ["treasury"],
+    "wall_pack": "archive",
+    "connected_low_walls": true,
+    "low_wall_variants": ["wall_low", "wall_low_patched", "wall_low_braced"],
+    "background": [18, 29, 31],
+    "accent": [228, 189, 90],
+    "floor_tint": [255, 255, 255],
+    "wall_tint": [159, 190, 178],
+    "floors": ["treasury_floor_plain", "treasury_floor_seal", "treasury_floor_cracked", "treasury_floor_runner"],
+    "floor_regions": [
+      {"rect": [5, 7, 7, 10], "floor": "treasury_floor_runner"}
+    ],
+    "wall_mounts": [
+      {"sprite": "archive_mount_sconce_nw", "cell": [0, 3]},
+      {"sprite": "archive_mount_banner_ne", "cell": [6, 0]},
+      {"sprite": "archive_mount_sconce_ne", "cell": [9, 0]}
+    ],
+    "decorations": [
+      {"sprite": "treasury_chest_open", "cell": [8, 2], "scale": 1.15},
+      {"sprite": "treasury_coin_hoard", "cell": [9, 4], "scale": 1.1},
+      {"sprite": "treasury_locked_coffer", "cell": [8, 9], "scale": 0.95},
+      {"sprite": "treasury_jewel_pedestal", "cell": [4, 6], "scale": 1.15},
+      {"sprite": "treasury_vault_seal", "cell": [4, 3], "scale": 1.05},
+      {"sprite": "treasury_treasure_banner", "cell": [7, 0], "scale": 1.0},
+      {"sprite": "treasury_goblet_crate", "cell": [10, 4], "scale": 1.05},
+      {"sprite": "treasury_scales", "cell": [4, 8], "scale": 0.9}
+    ]
+  },
+  "stage_08": {
+    "name": "마왕의 왕좌",
+    "packs": ["boss"],
+    "wall_pack": "forge",
+    "connected_low_walls": true,
+    "low_wall_variants": ["wall_low", "wall_low_braced", "wall_low_chipped"],
+    "background": [29, 17, 23],
+    "accent": [232, 154, 104],
+    "floor_tint": [255, 240, 240],
+    "wall_tint": [190, 155, 150],
+    "floors": ["boss_floor_plain", "boss_floor_sigil", "boss_floor_cracked", "boss_floor_runner"],
+    "floor_regions": [
+      {"rect": [5, 6, 6, 10], "floor": "boss_floor_runner"},
+      {"rect": [5, 2, 6, 4], "floor": "boss_floor_runner"}
+    ],
+    "wall_mounts": [
+      {"sprite": "forge_mount_lamp_nw", "cell": [0, 3]},
+      {"sprite": "forge_mount_lamp_ne", "cell": [5, 0]},
+      {"sprite": "forge_mount_lamp_ne", "cell": [9, 0]}
+    ],
+    "decorations": [
+      {"sprite": "boss_throne", "cell": [5, 1], "scale": 1.7},
+      {"sprite": "boss_boss_banner", "cell": [3, 1], "scale": 1.2},
+      {"sprite": "boss_boss_banner", "cell": [7, 1], "scale": 1.2},
+      {"sprite": "boss_brazier", "cell": [4, 5], "scale": 1.1},
+      {"sprite": "boss_brazier", "cell": [7, 5], "scale": 1.1},
+      {"sprite": "boss_fallen_crown", "cell": [4, 7], "scale": 1.0},
+      {"sprite": "boss_broken_pillar", "cell": [8, 10], "scale": 1.1},
+      {"sprite": "boss_war_trophy", "cell": [10, 5], "scale": 1.1},
+      {"sprite": "boss_sealed_altar", "cell": [5, 5], "scale": 1.1},
+      {"sprite": "boss_horned_statue", "cell": [1, 1], "scale": 1.2}
+    ],
+    "label_offsets": {"5,8": [0, -26]}
   }
 }

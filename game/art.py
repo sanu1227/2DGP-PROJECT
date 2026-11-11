@@ -52,7 +52,10 @@ class Art:
     def _load_pack(self, pack_root, theme, name):
         if name in self.atlases:
             return
-        if theme not in {"crypt", "sewer", "forge", "archive"}:
+        allowed = {"crypt", "sewer", "forge", "archive"}
+        if pack_root == MAP_ROOT:
+            allowed |= {"treasury", "boss"}
+        if theme not in allowed:
             raise ValueError(f"알 수 없는 맵 테마: {theme}")
         root = pack_root / theme
         manifest = json.loads((root / "manifest.json").read_text(encoding="utf-8"))

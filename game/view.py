@@ -378,7 +378,7 @@ class View:
         if scene:
             for pack in scene["packs"]:
                 self.art.load_theme(pack)
-            self.art.load_walls(scene["packs"][0])
+            self.art.load_walls(scene.get("wall_pack", scene["packs"][0]))
         # 기존 사선 비율로 바닥과 높은 외곽 벽을 함께 화면에 넣는다.
         projection = IsoBoard(level.width, level.height)
         half_width, half_height = projection.half_width, projection.half_height
@@ -573,6 +573,9 @@ class View:
         # 상태 문구를 바닥 아트와 함께 유지해 색이나 작은 그림에만 의존하지 않는다.
         for pos, label in labels:
             sx, sy = screen(pos)
+            # 큰 방의 인접 장치 이름표는 배치별 여백으로 분리한다.
+            dx, dy = scene.get("label_offsets", {}).get(f"{pos[0]},{pos[1]}", (0, 0)) if scene else (0, 0)
+            sx, sy = sx + dx, sy + dy
             width = len(label) * 16 + 10
             box(sx - width / 2, sy - 28, sx + width / 2, sy - 6, (24, 35, 40))
             color = TEAL if pos == level.exit and exit_ready else INK
@@ -759,7 +762,7 @@ class View:
             status = f"자동 이동 · {len(self.navigation.path)}칸 남음" if self.navigation.active else "모든 복구 후 빈손으로 출구 복귀"
             self.text(WIDTH - 362, 71, status, 16, MUTED)
 
-        self.text(34, 32, "좌클릭  이동    우클릭  취소    WASD / 방향키  이동    개발용 1~6 방 이동 · F2 좌표    (x,y): x 오른쪽 아래 / y 왼쪽 아래", 13, MUTED)
+        self.text(34, 32, f"좌클릭  이동    우클릭  취소    WASD / 방향키  이동    개발용 1~{total} 방 이동 · F2 좌표    (x,y): x 오른쪽 아래 / y 왼쪽 아래", 13, MUTED)
         self.text(34, 12, "E / Space  상호작용·내려놓기·다음 방(완료 후)    Z / Backspace  되돌리기    R  재시작    Esc  종료", 13, MUTED)
 
 
@@ -782,7 +785,7 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True):
         }
         stage_keys = {
             p.SDLK_1: 0, p.SDLK_2: 1, p.SDLK_3: 2,
-            p.SDLK_4: 3, p.SDLK_5: 4, p.SDLK_6: 5,
+            p.SDLK_4: 3, p.SDLK_5: 4, p.SDLK_6: 5, p.SDLK_7: 6, p.SDLK_8: 7,
         }
         running, frames = True, 0
         while running:

@@ -161,7 +161,7 @@ def main():
     parser.add_argument("--max-states", type=int, default=500_000)
     parser.add_argument("--output", type=Path)
     parser.add_argument("--check", action="store_true", help="최단 풀이와 최소+2회 제한 검증")
-    parser.add_argument("--check-mechanics", action="store_true", help="4~6번 핵심 장치를 생략하면 제한 내 완료 불가인지 검사")
+    parser.add_argument("--check-mechanics", action="store_true", help="4~8번 핵심 장치를 각각 생략하면 제한 내 완료 불가인지 검사")
     args = parser.parse_args()
     from tests.solutions import MINIMUM_ACTIONS, SOLUTIONS
     results = {}
@@ -177,20 +177,26 @@ def main():
             if (not valid or result is None or result["minimum"] != MINIMUM_ACTIONS[level.id]
                     or len(route) != result["minimum"] or level.action_limit != expected_limit):
                 raise ValueError(f"{level.id}: 기준 풀이·최소 행동·제한 규칙 불일치")
-        if args.check_mechanics and index in (4, 5, 6):
-            def forbidden(game, action):
-                if action not in {"interact", "drop"}:
-                    return False
-                operation = (game._drop_interaction(game.state) if action == "drop" else
-                             game._interaction(game.state))[0]
-                return ((index == 4 and operation == "drop" and game.state.player in level.plates)
-                        or (index == 5 and operation == "send_bone")
-                        or (index == 6 and operation == "drop" and game.state.player in level.belts))
+        if result is None:
+            raise ValueError(f"{level.id}: 완료 가능한 풀이가 없습니다.")
+        required = {4: ("plate",), 5: ("chute",), 6: ("belt",),
+                    7: ("chute", "plate"), 8: ("chute", "belt")}
+        if args.check_mechanics and index in required:
+            for mechanic in required[index]:
+                def forbidden(game, action):
+                    if action not in {"interact", "drop"}:
+                        return False
+                    operation = (game._drop_interaction(game.state) if action == "drop" else
+                                 game._interaction(game.state))[0]
+                    return ((mechanic == "plate" and operation == "drop" and game.state.player in level.plates)
+                            or (mechanic == "chute" and operation == "send_bone")
+                            or (mechanic == "belt" and operation == "drop" and game.state.player in level.belts))
 
-            bypass = solve(level, args.max_states, level.action_limit, forbidden)
-            if bypass is not None:
-                raise ValueError(f"{level.id}: 핵심 장치 없이 {bypass['minimum']}회에 완료 가능")
+                bypass = solve(level, args.max_states, level.action_limit, forbidden)
+                if bypass is not None:
+                    raise ValueError(f"{level.id}: {mechanic} 없이 {bypass['minimum']}회에 완료 가능")
             result["core_mechanic_required_within_limit"] = True
+            result["required_mechanics"] = list(required[index])
         result["action_limit"] = level.action_limit
         results[level.id] = result
         print(json.dumps({"stage": level.id, **{k: v for k, v in result.items() if k != "actions"}}), flush=True)

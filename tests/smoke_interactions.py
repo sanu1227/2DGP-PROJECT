@@ -6,7 +6,7 @@ from unittest.mock import patch
 import pico2d.pico2d as p
 
 from game.levels import load_levels
-from game.model import Game
+from game.model import Game, ITEM_NAMES
 from game.view import View, WIDTH, HEIGHT
 from tests.test_game import SOLUTIONS
 
@@ -78,9 +78,12 @@ def main():
         view.mouse_position = ((left + right) / 2, (bottom + top) / 2)
         with patch.object(view, "text", wraps=view.text) as text:
             view.draw(game, 0, len(levels))
-        assert any("상호작용 대상: 함정 부품" in call.args[2] for call in text.call_args_list)
+        expected_name = ITEM_NAMES[game.state.items[pos]]
+        expected_hover = (f"상호작용 대상: {expected_name} · 해당 칸에서 E"
+                          if level.id == "stage_01" else expected_name)
+        assert any(expected_hover == call.args[2] for call in text.call_args_list)
         assert view.pick_cell(game, *view.mouse_position) == pos
-        print(f"Interaction smoke OK: {checked} states across six rooms; marker clicks, "
+        print(f"Interaction smoke OK: {checked} states across {len(levels)} rooms; marker clicks, "
               "E availability, pickup/install/activation, undo, cleared state and hover.")
     finally:
         if view:

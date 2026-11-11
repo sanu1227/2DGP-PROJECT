@@ -35,15 +35,15 @@ class LevelTests(unittest.TestCase):
                 levels = load_levels()
             finally:
                 os.chdir(previous)
-        self.assertEqual(len(levels), 6)
-        self.assertEqual(len({level.id for level in levels}), 6)
-        for level in levels:
-            self.assertEqual((level.width, level.height), (10, 10))
+        self.assertEqual(len(levels), 8)
+        self.assertEqual(len({level.id for level in levels}), 8)
+        for index, level in enumerate(levels):
+            self.assertEqual((level.width, level.height), (10, 10) if index < 6 else (12, 12))
             self.assertTrue(level.title)
             self.assertTrue(level.hint)
 
     def test_shipped_rooms_have_connected_floor_and_expected_repair_targets(self):
-        targets = ((1, 0), (0, 1), (2, 1), (1, 1), (0, 1), (1, 1))
+        targets = ((1, 0), (0, 1), (2, 1), (1, 1), (0, 1), (1, 1), (1, 1), (2, 1))
         for level, (traps, posts) in zip(load_levels(), targets):
             with self.subTest(stage=level.id):
                 self.assertEqual(len(level.traps), traps)

@@ -80,7 +80,7 @@ def main():
         (p.SDLK_1, lambda: expect_room(0)),
         (p.SDLK_d, None),
     ])
-    for stage in (5, 4, 3, 2, 1, 0):
+    for stage in reversed(range(len(levels))):
         steps.append((p.SDLK_1 + stage, lambda stage=stage: expect_room(stage)))
     keys = {"up": p.SDLK_w, "down": p.SDLK_s, "left": p.SDLK_a,
             "right": p.SDLK_RIGHT, "interact": p.SDLK_SPACE}
@@ -123,8 +123,8 @@ def main():
             patch.object(view.View, "__init__", initialize):
         view.run(levels, show_title=False)
     assert not steps
-    assert len(games) == len(levels) + 8
-    print(f"Native SDL smoke OK: {len(levels)} clears, coordinates/F2, shortcuts 1-6, E/Space drop and next/replay, Q/B/Enter ignored, transition input isolation, undo, restart, Escape.")
+    assert len(games) == 2 * len(levels) + 2
+    print(f"Native SDL smoke OK: {len(levels)} clears, coordinates/F2, shortcuts 1-{len(levels)}, E/Space drop and next/replay, Q/B/Enter ignored, transition input isolation, undo, restart, Escape.")
 
 
 if __name__ == "__main__":

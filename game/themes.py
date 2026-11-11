@@ -35,6 +35,10 @@ def scene_for(level):
 
 def themed_floor(scene, pos, near_trap=False):
     """기본 바닥을 넓게 남기고, 고정된 일부 칸에만 장식 문양을 배치한다."""
+    for region in scene.get("floor_regions", ()):
+        x0, y0, x1, y1 = region["rect"]
+        if x0 <= pos[0] <= x1 and y0 <= pos[1] <= y1:
+            return region["floor"], tuple(scene["floor_tint"])
     floors = scene["floors"]
     choice = _pattern(pos) % 100
     index = 0 if choice < 68 or near_trap else 1 if choice < 82 else 2 if choice < 94 else 3
@@ -78,7 +82,7 @@ def low_wall_sprite(scene, pos, level=None):
 def boundary_walls(scene, pos, level):
     """뒤쪽 두 변을 연결한다. 모서리는 두 면, 양 끝은 낮은 벽으로 마감한다."""
     x, y = pos
-    theme = scene["packs"][0]
+    theme = scene.get("wall_pack", scene["packs"][0])
     faces = []
     for at_edge, along, length, direction in ((x == 0, y, level.height, "nw"),
                                               (y == 0, x, level.width, "ne")):
