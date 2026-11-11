@@ -2,6 +2,7 @@
 
 import argparse
 from array import array
+from dataclasses import replace
 import ctypes
 import json
 import os
@@ -19,6 +20,7 @@ import pico2d.pico2d as p
 from game.front_end import FrontEnd
 from game.layout import WIDTH, HEIGHT
 from game.story_audio import AUDIO_ROOT, CUES, SDLStorySounds
+from game.title_motion import sample_title
 from game.view import View
 from tests.smoke_comic import interior, pixels
 from tests.smoke_onboarding import capture
@@ -88,7 +90,7 @@ def main():
             menu.activate("title")
         rendered = []
         button_bounds = [button.bounds for button in menu.buttons]
-        for age in (0, .6, 2.0, 3.75, 4.2):
+        for age in (0, .6, .9, 1.6, 2.1, 3.9, 4.6):
             menu.update(age)
             menu.draw(display)
             frame = pixels()
@@ -109,6 +111,22 @@ def main():
         assert all(button.contains(((button.bounds[0] + button.bounds[2]) / 2,
                                     (button.bounds[1] + button.bounds[3]) / 2)) for button in menu.buttons)
 
+        # 배경·로고·호흡을 고정하고 실제 손과 눈 포즈만 바꿔 비교한다.
+        menu.title_elapsed = .9
+        still = replace(sample_title(.9), skeleton=0, worker=0, worker_dip=0)
+        with patch("game.title_motion.sample_title", return_value=still):
+            menu.draw(display)
+            relaxed = pixels()
+        with patch("game.title_motion.sample_title", return_value=replace(still, skeleton=3, worker=2)):
+            menu.draw(display)
+            greeting = pixels()
+        for region, minimum in (((275, 245, 425, 440), 2500), ((1268, 290, 1410, 390), 120)):
+            before, after = interior(relaxed, region), interior(greeting, region)
+            changed = sum(before[i:i + 3] != after[i:i + 3] for i in range(0, len(before), 4))
+            assert changed >= minimum, ("Hand/eyes did not visibly change", region, changed)
+        for bounds in button_bounds:
+            assert interior(relaxed, bounds) == interior(greeting, bounds)
+
         if args.animation_dir:
             args.animation_dir.mkdir(parents=True, exist_ok=True)
             frames = []
@@ -121,7 +139,8 @@ def main():
                 frames.append({"file": filename, "duration_ms": duration})
             (args.animation_dir / "frames.json").write_text(json.dumps(frames), encoding="utf-8")
         print("Menu media smoke OK: dummy video/audio, five PCM files, real mixer playback/pause/resume/stop, "
-              "single timed cues, skip cleanup, silent device fallback, animated title layers, fixed buttons, replay reset.")
+              "single timed cues, skip cleanup, silent device fallback, animated title layers, visible hand/eye poses, "
+              "fixed buttons, replay reset.")
     finally:
         if menu:
             menu.close()

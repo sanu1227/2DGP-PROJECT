@@ -12,8 +12,14 @@ from game.layout import WIDTH, HEIGHT
 
 TITLE_ROOT = Path(__file__).resolve().parents[1] / "assets/title_motion_v1"
 MANIFEST = json.loads((TITLE_ROOT / "manifest.json").read_text(encoding="utf-8"))
+GESTURE_ROOT = TITLE_ROOT.parent / "title_gestures_v2"
+GESTURES = json.loads((GESTURE_ROOT / "manifest.json").read_text(encoding="utf-8"))
+SPRITES = {**MANIFEST["sprites"], **GESTURES["sprites"]}
 TITLE_IMAGES = {"title_background": TITLE_ROOT / "sources/background.png",
-                **{f"title_{name}": TITLE_ROOT / sprite["file"] for name, sprite in MANIFEST["sprites"].items()}}
+                **{f"title_{name}": TITLE_ROOT / sprite["file"] for name, sprite in MANIFEST["sprites"].items()},
+                **{f"title_{name}": GESTURE_ROOT / sprite["file"] for name, sprite in GESTURES["sprites"].items()}}
+WAVE_PERIOD = 3.2
+BLINK_PERIOD = 3.0
 
 
 @dataclass(frozen=True)
@@ -24,6 +30,7 @@ class TitleMotion:
     logo_y: float
     skeleton: int
     worker: int
+    worker_dip: float
     flame: int
 
 
@@ -31,13 +38,19 @@ def sample_title(age):
     t = max(0, age)
     q = clamp(t / 1.1) - 1
     arrival = 1 + 2.70158 * q ** 3 + 1.70158 * q ** 2
-    wave = (t % 3.8) - 1.0
-    skeleton = (0, 1, 2, 3, 2, 1, 0)[min(6, int(wave / .18))] if 0 <= wave < 1.26 else 0
-    blink = t % 4.6
-    worker = 1 if 3.60 <= blink < 3.70 else 2 if 3.70 <= blink < 3.82 else 3 if 3.82 <= blink < 3.94 else 0
+    wave = (t % WAVE_PERIOD) - .25
+    skeleton = (0, 1, 2, 3, 4, 3, 4, 5, 6, 7)[min(9, int(wave / .18))] if 0 <= wave < 1.8 else 0
+    blink = t % BLINK_PERIOD
+    worker, dip = 0, 0.0
+    # 첫 인사부터 보이는 느린 깜박임과 짧은 두 번째 깜박임.
+    for close, shut, opening, end in ((.65, .78, 1.13, 1.26), (1.40, 1.52, 1.72, 1.84)):
+        if close <= blink < end:
+            worker = 1 if blink < shut else 2 if blink < opening else 3
+            dip = smooth((blink - close) / (shut - close)) * (1 - smooth((blink - opening) / (end - opening)))
+            break
     return TitleMotion(sin(t * .24) * 6, sin(t * .19) * 3, .88 + .12 * arrival,
                        600 + 45 * (1 - arrival) + sin(t * 1.05) * 4 * smooth((t - 1.1) / 1),
-                       skeleton, worker, int(t * 12) % 8)
+                       skeleton, worker, dip, int(t * 12) % 8)
 
 
 def draw_title(load_image, age):
@@ -48,7 +61,7 @@ def draw_title(load_image, age):
     load_image("title_background").draw(WIDTH / 2 + bgx, HEIGHT / 2 + bgy, WIDTH + 24, HEIGHT + 24)
 
     def sprite(name, x, floor, scale, stretch=1):
-        entry = MANIFEST["sprites"][name]
+        entry = SPRITES[name]
         image = load_image(f"title_{name}")
         ax, ay = entry["anchor"]
         image.draw(x + (image.w / 2 - ax) * scale,
@@ -74,8 +87,9 @@ def draw_title(load_image, age):
                 p.draw_circle(px, py, 1 + mote % 2, 255, 206, 91, round(170 * (1 - phase)), filled=True)
 
         # 손짓·깜박임은 포즈를 바꾸고, 호흡은 발을 고정한 작은 상체 높이 변화로 표현한다.
-        sprite(f"skeleton_{motion.skeleton}", 250, 72, 1.02)
-        sprite(f"worker_{motion.worker}", 1350, 72, 1.10, 1 + sin(age * 1.8) * .006)
+        sprite(f"wave_{motion.skeleton}", 250, 72, .96)
+        sprite(f"worker_{motion.worker}", 1350, 72, 1.10,
+               1 + sin(age * 1.8) * .006 - .018 * motion.worker_dip)
         logo = load_image("title_logo")
         logo.draw(800, motion.logo_y, 1050 * motion.logo_scale,
                   1050 * logo.h / logo.w * motion.logo_scale)
