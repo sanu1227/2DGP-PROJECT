@@ -29,10 +29,10 @@
       ]
     },
     "post_empty_replacement": {
-      "file": "sources/monster-post.png",
-      "width": 1774,
-      "height": 887,
-      "sha256": "ede9a8bbda3293c2a39eb683b59b857095952450f7bb9de3fa57902d0c9fc9bc"
+      "file": "sources/monster-post-base-v2.png",
+      "width": 1328,
+      "height": 1184,
+      "sha256": "ea2a9d061cadd1759e1dc7c45838e0fd09f8d593f826bc87dd86c7e80d6b3dd8"
     },
     "props": {
       "file": "sources/props.png",
@@ -115,10 +115,10 @@
       "sha256": "78e5d7dacb9dc722c00609de1743d605eb20d27bf072dcee5ef8aa1131b15706"
     },
     "post_rack": {
-      "file": "sources/post-rack.png",
-      "width": 1254,
-      "height": 1254,
-      "sha256": "0759a9395d955b6d02c628e64735b0d68fa8df0dd8094a573bc048785034db0d"
+      "file": "sources/monster-post-integrated.png",
+      "width": 1328,
+      "height": 1184,
+      "sha256": "64da46e6e93e1a9b356efd320d081bbe8bf1800986320ea5908acfa39396f132"
     }
   },
   "atlases": {
@@ -131,7 +131,7 @@
         4,
         3
       ],
-      "sha256": "b4c75f9381110f9b55b5cdf7b7e876fdace7ca75acf2ccebe3a11b06af6ade89"
+      "sha256": "2bc8e70f91626fcaf359e6315c2ef3bf5f1bb95b0d381ad4fb5e753690e6183c"
     },
     "props": {
       "file": "atlases/props.png",
@@ -175,7 +175,7 @@
         1,
         1
       ],
-      "sha256": "76ced0b4c2fe217ba522b8c9f4b46648a31a8952346f16d4031af30c4092ebc0"
+      "sha256": "80f5f5614ba261d40088db18edc2b461600e05429bd87f2a1773f6681bb6d29a"
     }
   },
   "sprites": {
@@ -521,23 +521,23 @@
       "source_rect": {
         "left": 0,
         "top": 0,
-        "width": 1774,
-        "height": 887
+        "width": 1328,
+        "height": 1184
       },
       "source_content_rect": {
-        "left": 279,
-        "top": 69,
-        "width": 1214,
-        "height": 743
+        "left": 150,
+        "top": 537,
+        "width": 1028,
+        "height": 576
       },
-      "source_file": "sources/monster-post.png",
+      "source_file": "sources/monster-post-base-v2.png",
       "content_rect": {
         "left": 16,
         "top": 104,
         "width": 224,
         "height": 124
       },
-      "sha256": "bb3c0582488efde69f694525c770b49ca506f1d8aa0a08f789b098b242d8b557",
+      "sha256": "144db41497886a900d677e30ac31ca9bcc8a2485a82068d0d25a978f41e108da",
       "intended_use": "prototype-art"
     },
     "exit_closed": {
@@ -2104,7 +2104,7 @@
       "height": 256,
       "anchor": {
         "x": 128,
-        "y": 212
+        "y": 160
       },
       "atlas": "post_rack",
       "clip_rect_pico2d": [
@@ -2113,27 +2113,27 @@
         256,
         256
       ],
-      "source_file": "sources/post-rack.png",
+      "source_file": "sources/monster-post-integrated.png",
       "source_rect": {
         "left": 0,
         "top": 0,
-        "width": 1254,
-        "height": 1254
+        "width": 1328,
+        "height": 1184
       },
       "source_content_rect": {
-        "left": 288,
-        "top": 155,
-        "width": 669,
-        "height": 943
+        "left": 152,
+        "top": 77,
+        "width": 1024,
+        "height": 1036
       },
       "content_rect": {
-        "left": 74,
-        "top": 68,
-        "width": 108,
-        "height": 152
+        "left": 16,
+        "top": 5,
+        "width": 224,
+        "height": 223
       },
-      "sha256": "76ced0b4c2fe217ba522b8c9f4b46648a31a8952346f16d4031af30c4092ebc0",
-      "intended_use": "vacant-monster-post"
+      "sha256": "80f5f5614ba261d40088db18edc2b461600e05429bd87f2a1773f6681bb6d29a",
+      "intended_use": "integrated-vacant-monster-post"
     }
   },
   "animations": {

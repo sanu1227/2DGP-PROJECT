@@ -41,7 +41,7 @@ const dimensions = {
 // Standalone replacements retain the original atlas slot and runtime anchor.
 const replacements = {
   part: 'sources/part-fragment.png',
-  post_empty: 'sources/monster-post.png',
+  post_empty: 'sources/monster-post-base-v2.png',
 };
 const manifest = {
   version: 1, created: '2026-11-08', status: 'first-production-art-pass',
@@ -225,9 +225,9 @@ await fs.writeFile(path.join(root, 'atlases/low_walls.png'), lowWalls);
 manifest.atlases.low_walls = { file: 'atlases/low_walls.png', width: 4 * size, height: lowWallRows * size,
   cell_size: size, grid: [4, lowWallRows], sha256: hash(lowWalls) };
 
-// The vacant post's rack is a separate object so deployment can replace it with a guard.
+// One painted fixture includes the rack and plinth; align its base with the occupied tile.
 {
-  const id = 'post_rack', file = 'sources/post-rack.png';
+  const id = 'post_rack', file = 'sources/monster-post-integrated.png';
   const source = await fs.readFile(path.join(root, file));
   const meta = await sharp(source).metadata();
   if (!meta.hasAlpha) throw new Error(`${id}: source has no alpha`);
@@ -235,9 +235,13 @@ manifest.atlases.low_walls = { file: 'atlases/low_walls.png', width: 4 * size, h
   for (let p = 3; p < data.length; p += 4) if (data[p] <= alphaCutoff) data[p] = 0;
   const box = bounds(data, info.width, info.height);
   if (box.edge) throw new Error(`${id}: source touches image edge`);
-  const height = 152, width = Math.round(box.width * height / box.height);
-  const rect = { left: Math.round(128 - width / 2), top: 220 - height, width, height };
-  if (rect.left < 2 || rect.left + width > size - 2) throw new Error(`${id}: output would clip`);
+  const base = manifest.sprites.post_empty;
+  const width = base.content_rect.width;
+  const height = Math.round(box.height * base.content_rect.height / base.source_content_rect.height);
+  const rect = { left: base.content_rect.left, top: base.content_rect.top + base.content_rect.height - height,
+    width, height };
+  if (rect.left < 2 || rect.top < 2 || rect.left + width > size - 2 || rect.top + height > size - 2)
+    throw new Error(`${id}: output would clip`);
   const crop = await sharp(data, { raw: { width: info.width, height: info.height, channels: 4 } })
     .extract({ left: box.left, top: box.top, width: box.width, height: box.height })
     .resize(width, height).png().toBuffer();
@@ -249,11 +253,11 @@ manifest.atlases.low_walls = { file: 'atlases/low_walls.png', width: 4 * size, h
   manifest.atlases[id] = { file: `atlases/${id}.png`, width: size, height: size,
     cell_size: size, grid: [1, 1], sha256: hash(bytes) };
   manifest.sprites[id] = {
-    file: `objects/${id}.png`, width: size, height: size, anchor: { x: 128, y: 212 },
+    file: `objects/${id}.png`, width: size, height: size, anchor: base.anchor,
     atlas: id, clip_rect_pico2d: [0, 0, size, size], source_file: file,
     source_rect: { left: 0, top: 0, width: info.width, height: info.height },
     source_content_rect: { left: box.left, top: box.top, width: box.width, height: box.height },
-    content_rect: rect, sha256: hash(bytes), intended_use: 'vacant-monster-post',
+    content_rect: rect, sha256: hash(bytes), intended_use: 'integrated-vacant-monster-post',
   };
   groupIds.monster_post = [id];
 }
@@ -308,10 +312,9 @@ for (let depth = 0; depth < map.length + map[0].length - 1; depth++) {
     const char = map[row][col];
     const sx = 520 + (col - row) * 55, sy = 200 + depth * 27.5;
     let tile = char === '#' ? 'wall_low' : char === 'T' ? 'trap_broken'
-      : char === 'S' ? 'post_empty' : char === 'E' ? 'exit_closed'
+      : char === 'S' ? 'post_rack' : char === 'E' ? 'exit_closed'
         : ['floor_plain', 'floor_cracked', 'floor_plain', 'floor_moss'][(col + row * 3) % 4];
     await place(tile, sx, sy);
-    if (char === 'S') await place('post_rack', sx, sy - 12 * scale);
     const object = { '@': 'worker_se_idle', P: 'part', B: 'bone_bundle', A: 'bench_empty', L: 'lever_off' }[char];
     if (object) await place(object, sx, sy);
   }
