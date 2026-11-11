@@ -1,0 +1,14 @@
+{
+  "installed_on": "2026-11-11",
+  "comfyui_directory": "C:\\Users\\rlato\\AI\\ComfyUI",
+  "comfyui_commit": "4d64a8bc072b81c9b47321789b4d83fb7348ae2a",
+  "python": "3.13",
+  "torch": "2.14.1+cu130",
+  "gpu": "NVIDIA GeForce RTX 4060 8GB",
+  "driver": "621.14",
+  "port": 8189,
+  "listen": "127.0.0.1",
+  "auto_launch": false,
+  "custom_nodes": false,
+  "model_manifest": "models.json"
+}
