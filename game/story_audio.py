@@ -8,7 +8,7 @@ from game.character_motion import ACCEL_SECONDS, EXHALE_START, INHALE_START, WAL
 from game.comic_effects import IMPACTS
 
 
-AUDIO_ROOT = Path(__file__).resolve().parents[1] / "assets/audio_story_v1"
+AUDIO_ROOT = Path(__file__).resolve().parents[1] / "assets/audio_story_v2"
 STEP_TIMES = (WALK_START, *(WALK_START + ACCEL_SECONDS / 2
               + n * (WALK_END - WALK_START - ACCEL_SECONDS / 2) / 4 for n in range(1, 5)),
               WALK_END + (INHALE_START - WALK_END) * .53)
