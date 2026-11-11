@@ -8,6 +8,7 @@ import pico2d.pico2d as p
 from game.layout import HEIGHT, WIDTH
 from game.story import BALLOON_DELAYS, PANEL_SECONDS, STORY
 from game.comic_motion import draw_actors
+from game.character_motion import EXHALE_START
 
 
 PANEL_BOUNDS = ((254, 516, 790, 918), (810, 516, 1346, 918),
@@ -98,7 +99,7 @@ def draw_comic_page(view, playback, load_image):
             if age >= delay:
                 bubble(view, bounds, words, (age - delay) / 0.3, side)
         if age >= 0.2:
-            effect = "하아..." if index == 2 and age >= 3.5 else page.effect
+            effect = "하아..." if index == 2 and age >= EXHALE_START else page.effect
             pop = ease((age - 0.2) / 0.35)
             x = left + (right - left) * 0.58
             y = bottom + 54 + (1 - pop) * 14

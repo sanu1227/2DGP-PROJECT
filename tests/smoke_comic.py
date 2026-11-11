@@ -149,12 +149,15 @@ def main():
             args.worker_dir.mkdir(parents=True, exist_ok=True)
             frames = []
             menu.comic.paused = False
-            for step in range(43):
-                menu.comic.elapsed = step * .125
+            # 24Hz로 실제 게임을 샘플링해 이동 보간과 새 연결 포즈를 함께 검토한다.
+            fps = 24
+            for step in range(round(PANEL_SECONDS * fps)):
+                menu.comic.elapsed = step / fps
                 menu.draw(display)
                 filename = f"worker-{step:03d}.png"
                 capture_worker(args.worker_dir / filename)
-                frames.append({"file": filename, "duration_ms": 125 if step < 42 else 1250})
+                duration = round((step + 1) * 1000 / fps) - round(step * 1000 / fps)
+                frames.append({"file": filename, "duration_ms": duration})
             (args.worker_dir / "frames.json").write_text(json.dumps(frames), encoding="utf-8")
 
         if args.animation_dir:

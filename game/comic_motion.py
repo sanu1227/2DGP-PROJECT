@@ -9,18 +9,25 @@ from game.character_motion import MOTION_END, smooth, worker_motion
 
 MOTION_ROOT = Path(__file__).resolve().parents[1] / "assets/comic_motion_v1"
 MANIFEST = json.loads((MOTION_ROOT / "manifest.json").read_text(encoding="utf-8"))
+WORKER_ROOT = MOTION_ROOT.parent / "worker_motion_v2"
+WORKER_MANIFEST = json.loads((WORKER_ROOT / "manifest.json").read_text(encoding="utf-8"))
+SPRITES = {**MANIFEST["sprites"], **WORKER_MANIFEST["sprites"]}
 MOTION_IMAGES = {"motion_backgrounds": MOTION_ROOT / "sources/backgrounds.png",
                  **{f"motion_{name}": MOTION_ROOT / sprite["file"]
-                    for name, sprite in MANIFEST["sprites"].items()}}
+                    for name, sprite in MANIFEST["sprites"].items()},
+                 **{f"motion_{name}": WORKER_ROOT / sprite["file"]
+                    for name, sprite in WORKER_MANIFEST["sprites"].items()}}
 
 
 def draw_sprite(load_image, name, x, y, *, height=None, scale=None,
                 rotation=0, stretch=1, opacity=1, center=False):
     image = load_image(f"motion_{name}")
-    bounds = MANIFEST["sprites"][name]["bounds"]
+    sprite = SPRITES[name]
+    bounds = sprite["bounds"]
     if scale is None:
         scale = height / bounds["height"]
-    anchor = MANIFEST["worker_anchor"] if name.removeprefix("worker_").isdigit() else MANIFEST["cast_anchor"]
+    anchor = sprite.get("anchor") or (MANIFEST["worker_anchor"]
+             if name.removeprefix("worker_").isdigit() else MANIFEST["cast_anchor"])
     if center:
         anchor = (bounds["left"] + bounds["width"] / 2, bounds["top"] + bounds["height"] / 2)
     sy = scale * stretch
@@ -59,7 +66,7 @@ def draw_actors(load_image, bounds, age, index, opacity):
         reaction = sin(t * 12) * max(0, 1 - t / 2.6)
         actor("skeleton_broken", .79, 36, height=157, rotation=reaction * .02)
         motion = worker_motion(t)
-        actor(f"worker_{motion.frame:02d}", motion.x, 46 + motion.bob,
+        actor(f"worker_smooth_{motion.frame:02d}", motion.x, 46 + motion.bob,
               scale=.75, stretch=motion.stretch)
         if motion.breath is not None:
             progress = motion.breath
