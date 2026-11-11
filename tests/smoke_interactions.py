@@ -27,6 +27,8 @@ def main():
                 with patch.object(view, "text", wraps=view.text) as text:
                     view.draw(game, index, len(levels))
                 assert game.state == before
+                racks = {region[0] for region, mask in view.hit_masks.items() if mask[0] == "post_rack"}
+                assert racks == level.posts - game.state.soldiers
                 prompts = [call for call in text.call_args_list if call.args[2] == "E"]
                 # Empty-floor dropping uses the bottom prompt, without an object marker.
                 marked_action = game.can_interact() and game.state.player in view.interaction_regions

@@ -522,6 +522,8 @@ class View:
                 elif pos in level.posts:
                     tile = "post_empty"
                     tint = None
+                    if pos not in state.soldiers:
+                        objects.append((depth, 1, "post_rack", sx, sy))
                     labels.append((pos, "배치 완료" if pos in state.soldiers else "몬스터 배치"))
                 elif pos == level.exit:
                     tile = "exit_ready" if exit_ready else "exit_closed"
@@ -614,6 +616,9 @@ class View:
             # 논리 칸은 높이를 더하기 전에 결정해야 클릭 대상이 옆 칸으로 밀리지 않는다.
             if sprite == "player":
                 sy += self.player_support_height(game, player) * scale
+            elif sprite == "post_rack":
+                # 빈 초소의 거치대는 발판 뒤에 세워 앞쪽 발자국을 남긴다.
+                sy += 12 * scale
             elif sprite in ITEM_SPRITES.values():
                 sy += (self.player_support_height(game, moving[0]) if moving
                        else self.support_height(game, pos)) * scale
@@ -663,6 +668,9 @@ class View:
             sx, sy = screen(pos)
             # 큰 방의 인접 장치 이름표는 배치별 여백으로 분리한다.
             dx, dy = scene.get("label_offsets", {}).get(f"{pos[0]},{pos[1]}", (0, 0)) if scene else (0, 0)
+            if pos in level.posts:
+                # 발판의 해골·발자국 문양을 이름표가 덮지 않게 한다.
+                dy -= 18
             sx, sy = sx + dx, sy + dy
             width = len(label) * 16 + 10
             box(sx - width / 2, sy - 28, sx + width / 2, sy - 6, (24, 35, 40))

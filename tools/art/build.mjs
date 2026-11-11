@@ -225,6 +225,39 @@ await fs.writeFile(path.join(root, 'atlases/low_walls.png'), lowWalls);
 manifest.atlases.low_walls = { file: 'atlases/low_walls.png', width: 4 * size, height: lowWallRows * size,
   cell_size: size, grid: [4, lowWallRows], sha256: hash(lowWalls) };
 
+// The vacant post's rack is a separate object so deployment can replace it with a guard.
+{
+  const id = 'post_rack', file = 'sources/post-rack.png';
+  const source = await fs.readFile(path.join(root, file));
+  const meta = await sharp(source).metadata();
+  if (!meta.hasAlpha) throw new Error(`${id}: source has no alpha`);
+  const { data, info } = await sharp(source).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  for (let p = 3; p < data.length; p += 4) if (data[p] <= alphaCutoff) data[p] = 0;
+  const box = bounds(data, info.width, info.height);
+  if (box.edge) throw new Error(`${id}: source touches image edge`);
+  const height = 152, width = Math.round(box.width * height / box.height);
+  const rect = { left: Math.round(128 - width / 2), top: 220 - height, width, height };
+  if (rect.left < 2 || rect.left + width > size - 2) throw new Error(`${id}: output would clip`);
+  const crop = await sharp(data, { raw: { width: info.width, height: info.height, channels: 4 } })
+    .extract({ left: box.left, top: box.top, width: box.width, height: box.height })
+    .resize(width, height).png().toBuffer();
+  const bytes = await sharp({ create: { width: size, height: size, channels: 4, background: '#00000000' } })
+    .composite([{ input: crop, left: rect.left, top: rect.top }]).png().toBuffer();
+  await fs.writeFile(path.join(root, `objects/${id}.png`), bytes);
+  await fs.writeFile(path.join(root, `atlases/${id}.png`), bytes);
+  manifest.sources[id] = { file, width: info.width, height: info.height, sha256: hash(source) };
+  manifest.atlases[id] = { file: `atlases/${id}.png`, width: size, height: size,
+    cell_size: size, grid: [1, 1], sha256: hash(bytes) };
+  manifest.sprites[id] = {
+    file: `objects/${id}.png`, width: size, height: size, anchor: { x: 128, y: 212 },
+    atlas: id, clip_rect_pico2d: [0, 0, size, size], source_file: file,
+    source_rect: { left: 0, top: 0, width: info.width, height: info.height },
+    source_content_rect: { left: box.left, top: box.top, width: box.width, height: box.height },
+    content_rect: rect, sha256: hash(bytes), intended_use: 'vacant-monster-post',
+  };
+  groupIds.monster_post = [id];
+}
+
 for (const direction of ['ne', 'se', 'sw', 'nw']) {
   manifest.animations.worker[direction] = {
     idle: [`worker_${direction}_idle`],
@@ -278,6 +311,7 @@ for (let depth = 0; depth < map.length + map[0].length - 1; depth++) {
       : char === 'S' ? 'post_empty' : char === 'E' ? 'exit_closed'
         : ['floor_plain', 'floor_cracked', 'floor_plain', 'floor_moss'][(col + row * 3) % 4];
     await place(tile, sx, sy);
+    if (char === 'S') await place('post_rack', sx, sy - 12 * scale);
     const object = { '@': 'worker_se_idle', P: 'part', B: 'bone_bundle', A: 'bench_empty', L: 'lever_off' }[char];
     if (object) await place(object, sx, sy);
   }

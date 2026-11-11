@@ -1,6 +1,6 @@
 {
-  "sprite_count": 53,
-  "atlas_count": 4,
+  "sprite_count": 54,
+  "atlas_count": 5,
   "checks": {
     "source_has_alpha": true,
     "source_cell_edges_clear": true,
@@ -802,6 +802,21 @@
         "top": 81,
         "width": 224,
         "height": 147
+      },
+      "edge_pixels": 0
+    },
+    {
+      "id": "post_rack",
+      "size": [
+        256,
+        256
+      ],
+      "transparent_fraction": 0.8523,
+      "content_bounds": {
+        "left": 74,
+        "top": 68,
+        "width": 108,
+        "height": 152
       },
       "edge_pixels": 0
     }

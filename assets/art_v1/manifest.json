@@ -113,6 +113,12 @@
       "width": 1254,
       "height": 1254,
       "sha256": "78e5d7dacb9dc722c00609de1743d605eb20d27bf072dcee5ef8aa1131b15706"
+    },
+    "post_rack": {
+      "file": "sources/post-rack.png",
+      "width": 1254,
+      "height": 1254,
+      "sha256": "0759a9395d955b6d02c628e64735b0d68fa8df0dd8094a573bc048785034db0d"
     }
   },
   "atlases": {
@@ -159,6 +165,17 @@
         3
       ],
       "sha256": "28882c6b6e37d767a9b1763ff344420ffcc3ae9e9b0cf0b312ec641d8cf80ffd"
+    },
+    "post_rack": {
+      "file": "atlases/post_rack.png",
+      "width": 256,
+      "height": 256,
+      "cell_size": 256,
+      "grid": [
+        1,
+        1
+      ],
+      "sha256": "76ced0b4c2fe217ba522b8c9f4b46648a31a8952346f16d4031af30c4092ebc0"
     }
   },
   "sprites": {
@@ -2080,6 +2097,43 @@
       },
       "sha256": "ca7f09ed7bb0c3b781e6b1b2d5c168c5364070a14ed53e05b95bd3cf17b73b7a",
       "intended_use": "prototype-art"
+    },
+    "post_rack": {
+      "file": "objects/post_rack.png",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 212
+      },
+      "atlas": "post_rack",
+      "clip_rect_pico2d": [
+        0,
+        0,
+        256,
+        256
+      ],
+      "source_file": "sources/post-rack.png",
+      "source_rect": {
+        "left": 0,
+        "top": 0,
+        "width": 1254,
+        "height": 1254
+      },
+      "source_content_rect": {
+        "left": 288,
+        "top": 155,
+        "width": 669,
+        "height": 943
+      },
+      "content_rect": {
+        "left": 74,
+        "top": 68,
+        "width": 108,
+        "height": 152
+      },
+      "sha256": "76ced0b4c2fe217ba522b8c9f4b46648a31a8952346f16d4031af30c4092ebc0",
+      "intended_use": "vacant-monster-post"
     }
   },
   "animations": {
