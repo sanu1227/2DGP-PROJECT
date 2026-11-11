@@ -175,7 +175,6 @@ class FrontEnd:
             x = 120 + index * 103 + sin(t) * 13
             y = 310 + (index * 79) % 520 + sin(t * 0.8) * 19
             panel((x, y, x + 2, y + 2), GOLD)
-        view.centered(WIDTH / 2, 54, "1~6  원하는 방 바로 시작", 16, GOLD)
 
     def draw_comic(self, page, image_name="story", *, footer_height=238):
         atlas = self.image(image_name)
