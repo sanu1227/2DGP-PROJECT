@@ -239,14 +239,17 @@ class View:
         self.hit_masks[region] = (sprite, sx, sy, scale, flip)
 
     def navigation_overlay(self, game, projection):
-        if game.failed:
+        if game.failed or game.state.cleared:
             return
         target, path = self.navigation.target, self.navigation.path
         color = GOLD
-        if not self.navigation.active:
-            target = self.pick_cell(game, *self.mouse_position) if self.mouse_position else None
-            path = find_path(game, target) if target is not None else None
+        hovered = self.pick_cell(game, *self.mouse_position) if self.mouse_position else None
+        if hovered is not None:
+            target = hovered
+            path = find_path(game, target)
             color = TEAL if path is not None else RED
+            if path is not None and game.remaining_actions is not None and len(path) > game.remaining_actions:
+                color = RED
         if target is None:
             return
         previous = projection.screen(game.state.player)
@@ -257,6 +260,40 @@ class View:
             previous = point
         diamond(*projection.screen(target), projection.half_width - 5,
                 int(projection.half_height) - 3, None, color)
+        if hovered is not None:
+            self.movement_cost_hint(game, path, color)
+
+    def movement_cost_hint(self, game, path, color):
+        """마우스를 올린 경로의 예상 행동 비용을 클릭 전에 보여준다."""
+        import ctypes
+
+        if path is None:
+            labels = [("이동 불가", 18)]
+        elif not path:
+            labels = [("현재 칸 · 차감 0회", 18)]
+        else:
+            cost, remaining = len(path), game.remaining_actions
+            labels = [(f"예상 차감 -{cost}회", 18)]
+            if remaining is None:
+                labels.append(("현재 경로 기준 · 행동 제한 없음", 13))
+            elif cost > remaining:
+                labels.append((f"남은 행동 {remaining}회 · {cost - remaining}회 부족", 13))
+            else:
+                labels.append((f"남은 행동 {remaining}회 · 이동 후 {remaining - cost}회 예상", 13))
+        widths = []
+        for label, size in labels:
+            measured = ctypes.c_int()
+            p.TTF_SizeUTF8(self.fonts[size].font, label.encode("utf-8"), ctypes.byref(measured), None)
+            widths.append(measured.value)
+        width, height = max(widths) + 24, 34 if len(labels) == 1 else 56
+        x, y = self.mouse_position
+        left = max(32, min(x + 18, WIDTH - 32 - width))
+        bottom = max(BOARD_BOTTOM + 4, min(y + 22, BOARD_TOP - height - 4))
+        box(left, bottom, left + width, bottom + height, (20, 32, 36))
+        box(left, bottom, left + width, bottom + height, color, filled=False)
+        self.text(left + 12, bottom + height - 18, labels[0][0], 18, color)
+        if len(labels) == 2:
+            self.text(left + 12, bottom + 12, labels[1][0], 13, color if color == RED else MUTED)
 
     def interaction_markers(self, game, projection):
         """작업 대상은 금색 표식, 현재 실행 가능한 행동은 E로 표시한다."""
@@ -549,9 +586,10 @@ class View:
             self.interaction_hint = None
         else:
             self.interaction_markers(game, projection)
-            self.navigation_overlay(game, projection)
         if self.show_coordinates:
             self.coordinate_overlay(level, projection)
+        if not transport:
+            self.navigation_overlay(game, projection)
 
     def coordinate_overlay(self, level, projection):
         """벽과 물체 위에도 데이터의 (열, 행) 좌표를 표시한다."""

@@ -28,7 +28,11 @@ def main():
                     view.draw(game, index, len(levels))
                 assert game.state == before
                 prompts = [call for call in text.call_args_list if call.args[2] == "E"]
-                assert bool(prompts) == game.can_interact()
+                # Empty-floor dropping uses the bottom prompt, without an object marker.
+                marked_action = game.can_interact() and game.state.player in view.interaction_regions
+                assert bool(prompts) == marked_action
+                if game.can_interact() and not marked_action:
+                    assert any("내려놓기" in call.args[2] for call in text.call_args_list)
                 for pos, (left, bottom, right, top) in view.interaction_regions.items():
                     picked = view.pick_cell(game, (left + right) / 2, (bottom + top) / 2)
                     assert picked == pos, (level.id, game.state.moves, pos, picked)
