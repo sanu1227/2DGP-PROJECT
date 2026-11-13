@@ -16,6 +16,7 @@ from game.play_menu import PlayMenu
 from game.tutorial import device_lessons
 from tests.smoke_onboarding import capture
 from tests.smoke_play_menu import key, click, pixels
+from tests.solutions import SOLUTIONS
 
 
 def render_checks(levels):
@@ -42,8 +43,9 @@ def render_checks(levels):
             game = Game(level)
             initial = deepcopy(game.state)
             menu.offer(game, display)
+            display.tutorial_hidden = menu.mode == "device"
             offered = [lesson.kind for lesson in menu.pages] if menu.active else []
-            assert offered == {1: ["assembly"], 3: ["plate"], 4: ["chute"], 5: ["belt"]}.get(index, []), (index, offered)
+            assert offered == {0: ["trap"], 1: ["assembly"], 3: ["plate"], 4: ["chute"], 5: ["belt"]}.get(index, []), (index, offered)
             if menu.active:
                 with patch.object(view.View, "text", checked_text):
                     display.draw(game, index, len(levels))
@@ -73,7 +75,7 @@ def render_checks(levels):
             game.restart()
             menu.offer(game, display)
             assert not menu.active, "재시작에 안내가 반복됨"
-        assert seen == ["assembly", "plate", "chute", "belt"]
+        assert seen == ["trap", "assembly", "plate", "chute", "belt"]
 
         # 후반 방에서 바로 시작할 때도 실제 좌표를 사용하고 모든 안내를 읽을 수 있다.
         game = Game(levels[-1])
@@ -100,6 +102,7 @@ def input_checks(levels):
     original_update = p.update_canvas
     batches = [
         ([key(p.SDLK_d), key(p.SDLK_e), key(p.SDLK_r), key(p.SDLK_6)], "device", "stage_04"),
+        ([key(p.SDLK_RETURN), key(p.SDLK_d)], "device", "stage_04"),
         ([key(p.SDLK_RETURN), key(p.SDLK_d)], "device", "stage_04"),
         ([key(p.SDLK_ESCAPE), key(p.SDLK_d)], None, "stage_04"),
         ([key(p.SDLK_r)], None, "stage_04"),
@@ -130,7 +133,7 @@ def input_checks(levels):
         nonlocal frame
         frame += 1
         assert frame < len(batches)
-        if frame == 5:
+        if frame == 6:
             button = menus[-1].buttons[1]
             l, b, r, t = button.bounds
             return [click((l + r) / 2, (b + t) / 2), key(p.SDLK_d)]
@@ -143,8 +146,10 @@ def input_checks(levels):
             assert games[-1].level.id == stage
             assert games[-1].state.moves == 0 and not games[-1].history
             if frame == 1:
+                assert menus[-1].pages[menus[-1].page_index].kind == "assembly"
+            if frame == 2:
                 assert menus[-1].pages[menus[-1].page_index].kind == "plate"
-            if frame == 4:
+            if frame == 5:
                 assert [p.kind for p in menus[-1].pages] == ["chute"]
         original_update()
 
@@ -154,11 +159,76 @@ def input_checks(levels):
     assert frame == len(batches) - 1
 
 
+def first_room_checks(levels):
+    games, menus, displays = [], [], []
+    frame = -1
+    original_update = p.update_canvas
+    original_initialize = view.View.__init__
+
+    def initialize(display):
+        original_initialize(display)
+        displays.append(display)
+    batches = [
+        ([key(p.SDLK_d), key(p.SDLK_e), key(p.SDLK_r), key(p.SDLK_2)], "device", 0),
+        ([key(p.SDLK_RETURN), key(p.SDLK_d)], None, 0),
+        ([key(p.SDLK_d)], None, 1),
+        ([key(p.SDLK_z)], None, 0),
+        ([key(p.SDLK_r)], None, 0),
+        ([key(p.SDLK_ESCAPE)], "pause", 0),
+        ([click(800, 445)], "controls", 0),
+        ([click(600, 253)], "device", 0),
+        ([key(p.SDLK_ESCAPE), key(p.SDLK_d)], "controls", 0),
+        ([key(p.SDLK_ESCAPE)], "pause", 0),
+        ([key(p.SDLK_ESCAPE)], None, 0),
+    ]
+    keys = {"up": p.SDLK_w, "down": p.SDLK_s, "left": p.SDLK_a,
+            "right": p.SDLK_d, "interact": p.SDLK_e}
+    batches.extend(([key(keys[action])], None, moves)
+                   for moves, action in enumerate(SOLUTIONS[levels[0].id], 1))
+    batches.append(([SimpleNamespace(type=p.SDL_QUIT)], None, len(SOLUTIONS[levels[0].id])))
+
+    class ObservedGame(Game):
+        def __init__(self, level):
+            super().__init__(level)
+            games.append(self)
+
+    class ObservedMenu(PlayMenu):
+        def __init__(self):
+            super().__init__()
+            menus.append(self)
+
+    def events():
+        nonlocal frame
+        frame += 1
+        assert frame < len(batches)
+        return batches[frame][0]
+
+    def update():
+        if frame >= 0:
+            _, mode, moves = batches[frame]
+            assert menus[-1].mode == mode, (frame, menus[-1].mode)
+            assert games[-1].state.moves == moves, frame
+            assert games[-1].level is levels[0]
+            assert displays[-1].tutorial_hidden == (mode == "device")
+            if mode == "device":
+                assert [page.kind for page in menus[-1].pages] == ["trap"]
+            if frame == len(batches) - 1:
+                assert games[-1].state.cleared
+        original_update()
+
+    with patch.object(view, "Game", ObservedGame), patch.object(view, "PlayMenu", ObservedMenu), \
+            patch.object(view.View, "__init__", initialize), \
+            patch.object(p, "get_events", events), patch.object(p, "update_canvas", update):
+        view.run(levels, show_title=False)
+    assert frame == len(batches) - 1
+
+
 def main():
     levels = load_levels()
     render_checks(levels)
     input_checks(levels)
-    print("Device guide smoke OK: four first encounters, linked spotlight pixels, glyphs/layout, late-room direct entry, skip/replay, no repeated restart guide, blocked actions and same-batch inputs.")
+    first_room_checks(levels)
+    print("Device guide smoke OK: five first encounters including room 1 traps/levers, spotlight pixels, glyphs/layout, skip/replay, undo/restart, full first-room clear, late-room entry and input isolation.")
 
 
 if __name__ == "__main__":

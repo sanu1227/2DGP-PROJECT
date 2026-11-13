@@ -93,6 +93,7 @@ def input_checks(levels):
     final_key = {"left": p.SDLK_a, "right": p.SDLK_d, "up": p.SDLK_w, "down": p.SDLK_s,
                  "interact": p.SDLK_e}[SOLUTIONS[levels[0].id][-1]]
     batches = [
+        ([key(p.SDLK_ESCAPE)], 0, False),  # 첫 장치 안내를 닫는다.
         ([key(final_key), key(p.SDLK_SPACE)], 0, True),
         ([key(p.SDLK_z)], 0, False),
         ([key(final_key)], 0, True),
@@ -126,7 +127,7 @@ def input_checks(levels):
             _, index, cleared = batches[frame]
             assert games[-1].level.id == levels[index].id, frame
             assert games[-1].state.cleared == cleared, frame
-            if frame in (5, 6, 9, 10):
+            if frame in (6, 7, 10, 11):
                 assert games[-1].state.moves == 0, frame
         update()
 

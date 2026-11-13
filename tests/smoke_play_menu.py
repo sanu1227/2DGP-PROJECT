@@ -132,6 +132,8 @@ def input_checks(levels):
     class ObservedMenu(PlayMenu):
         def __init__(self):
             super().__init__()
+            # 첫 장치 안내를 읽은 플레이어의 메뉴 조작을 검사한다.
+            self.seen_devices.add("trap")
             menus.append(self)
 
     class ObservedFront(FrontEnd):

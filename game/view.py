@@ -91,6 +91,7 @@ class View:
         self.mouse_position = None
         self.show_coordinates = False
         self.tutorial = None
+        self.tutorial_hidden = False
         self.hit_regions = []
         self.hit_masks = {}
         self.gate_hit_masks = {}
@@ -743,7 +744,7 @@ class View:
 
     def tutorial_overlay(self, game):
         hint = self.tutorial
-        if hint is None:
+        if hint is None or self.tutorial_hidden:
             return
         if hint.target is not None:
             projection = IsoBoard(game.level.width, game.level.height)
@@ -1049,6 +1050,7 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True):
                     view.belt_animation.start(game, now)
             if front_end.screen == "playing":
                 feedback.update(game, now)
+                view.tutorial_hidden = play_menu.mode == "device"
                 view.draw(game, index, len(levels))
                 if play_menu.active:
                     play_menu.draw(view, game)

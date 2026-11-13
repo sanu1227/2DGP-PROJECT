@@ -136,7 +136,9 @@ def main():
         assert views[-1].navigation.active == current, (now, views[-1].navigation.path)
         assert len(games[-1].history) == games[-1].state.moves
 
-    with patch.object(view, "Game", ObservedGame), patch.object(view.View, "__init__", initialize), \
+    # 자동 장치 안내는 smoke_device_guide에서 별도로 검사한다.
+    with patch.object(view.PlayMenu, "offer"), \
+            patch.object(view, "Game", ObservedGame), patch.object(view.View, "__init__", initialize), \
             patch.object(view, "perf_counter", lambda: now), patch.object(p, "get_events", events), \
             patch.object(p, "update_canvas", update):
         view.run([level], show_title=False)

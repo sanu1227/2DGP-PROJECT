@@ -29,6 +29,12 @@ class DeviceLesson:
 def device_lessons(level: Level) -> tuple[DeviceLesson, ...]:
     """지도에 실제로 있는 장치와 연결만 설명한다. 정답 경로는 제공하지 않는다."""
     lessons = []
+    if level.traps and level.levers:
+        lessons.append(DeviceLesson(
+            "trap", "함정 설치와 가동", "부품을 들고 함정 위에서 E로 설치하세요. "
+            "모든 함정을 설치한 뒤, 빈손으로 레버 위에서 E를 눌러 가동하세요.",
+            "설치한 함정은 지나갈 수 있지만, 가동한 함정은 지나갈 수 없어요.",
+            ((min(level.traps), "복구할 함정"), (min(level.levers), "가동 레버"))))
     if level.benches and level.posts:
         bench, post = min(level.benches), min(level.posts)
         lessons.append(DeviceLesson(

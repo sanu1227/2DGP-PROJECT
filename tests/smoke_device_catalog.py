@@ -71,6 +71,7 @@ def input_checks(levels):
     frame = -1
     update = p.update_canvas
     batches = [
+        ([key(p.SDLK_ESCAPE)], None, 0, 0),  # 첫 장치 안내를 닫는다.
         ([key(p.SDLK_ESCAPE)], "pause", 0, 0),
         ([click(800, 365), key(p.SDLK_d)], "catalog", 0, 0),
         ([key(p.SDLK_RIGHT)], "catalog", 1, 0),

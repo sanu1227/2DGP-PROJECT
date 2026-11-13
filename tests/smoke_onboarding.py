@@ -106,6 +106,7 @@ def main():
         ([("left", 1460, 900)], "controls:0", 0, None),
         ([p.SDLK_RETURN], "controls:1", 0, None),
         ([("left", 1390, 72), p.SDLK_d], "playing", 0, None),
+        ([p.SDLK_ESCAPE, p.SDLK_d], "playing", 0, None),
         ([p.SDLK_d], "playing", 1, None),
         ([p.SDLK_r], "playing", 0, None),
         ([("left", 100, 700)], "playing", 0, None),
@@ -179,7 +180,7 @@ def main():
                 assert display.tutorial.step == expected_step, (moves, display.tutorial)
                 assert display.tutorial.complete == (moves == 19)
                 assert display.pick_cell(games[-1], 100, 700) is None
-                if display.tutorial.target is not None:
+                if display.tutorial.target is not None and not display.tutorial_hidden:
                     sx, sy = view.IsoBoard(10, 10).screen(display.tutorial.target)
                     assert display.pick_cell(games[-1], sx, sy - 46) == display.tutorial.target
         if args.capture_dir and filename:
