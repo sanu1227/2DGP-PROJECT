@@ -25,6 +25,10 @@
 **복구 순서가 이동 경로를 바꿉니다.**
 남은 작업과 돌아갈 길을 생각하며 레버를 가동하는 시점을 결정해야 합니다.
 
+## 배경음악
+
+타이틀·시작 전 조작 안내에는 `Dungeon Title Theme`, 모든 플레이 방에는 `Interlocking Gears`를 반복 재생합니다. 방 이동·재시작에는 음악을 이어서 재생하고, 일시정지·장치 안내에서는 음량을 낮춥니다. 사용자가 제공한 Suno MP3와 음량·재생 규칙은 [bgm 안내](bgm/README.md)에 있습니다.
+
 ## 2026-11-13 방 크기와 행동 제한 조정
 
 **새 기믹을 유지하고 방 크기를 6×6~10×10으로 줄였습니다.** [현재 배치·크기·최단 행동](docs/방크기조정.md), [실제 여덟 방 화면](docs/screenshots/compact-rooms/overview.png)을 확인하세요. 1번은 무제한, 2~8번은 최단 행동+2회입니다. 아래 이전 스크린샷은 제작 당시 기록입니다.
@@ -142,6 +146,7 @@ python -m tests.smoke_action_limits # 실제 횟수 소진·입력 정지·되�
 python -m tests.smoke_comic       # 창 없는 네 컷·캐릭터 동작·고정 배경·일시정지 검사
 python -m tests.smoke_stage_feedback # 시작·완료·결과 수치·다음 방·되돌리기 검사
 python -m tests.smoke_play_menu   # 플레이 메뉴·시간 정지·재개·입력 격리 검사
+python -m tests.smoke_music       # 실제 MP3 디코딩·반복·화면별 BGM·메뉴 음량·종료 정리 검사
 python -m tests.smoke_device_catalog # 장치 그림·카드 여백·페이지 이동·입력 격리 검사
 python -m tests.smoke_device_guide # 새 장치 강조·연결·첫 안내·건너뛰기·다시 보기 검사
 python -m tests.smoke_onboarding  # 타이틀·카툰 4컷·안내 2장·튜토리얼·첫 방 클리어 검사

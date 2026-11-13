@@ -18,6 +18,7 @@ from game.tutorial import first_room_hint
 from game.mechanics import trace_magic, fixed_devices
 from game.play_menu import PlayClock, PlayMenu
 from game.stage_feedback import StageFeedback
+from game.music import BackgroundMusic
 
 INK = (226, 230, 219)
 MUTED = (158, 169, 166)
@@ -890,11 +891,13 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True):
     p.open_canvas(WIDTH, HEIGHT, sync=True)
     view = None
     front_end = None
+    music = None
     try:
         if not p.window or not p.renderer:
             raise RuntimeError("SDL 게임 창 또는 렌더러를 만들 수 없습니다.")
         view = View()
         front_end = FrontEnd(show_title)
+        music = BackgroundMusic()
         play_menu = PlayMenu()
         feedback = StageFeedback()
         game = Game(levels[index])
@@ -1030,6 +1033,8 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True):
                 play_menu.offer(game, view)
             now = view.now()
             front_end.update(perf_counter())
+            if running:
+                music.update(front_end.screen, quiet=play_menu.active)
             if (running and front_end.screen == "playing" and not play_menu.active
                     and (view.motion is None or now >= view.motion[2] + 0.18)):
                 previous = game.state.player
@@ -1052,6 +1057,8 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True):
             if smoke_frames is not None and frames >= smoke_frames:
                 running = False
     finally:
+        if music:
+            music.close()
         if front_end:
             front_end.close()
         if view:
