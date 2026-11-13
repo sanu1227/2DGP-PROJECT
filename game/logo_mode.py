@@ -9,10 +9,10 @@ from game.layout import WIDTH, HEIGHT
 
 
 ROOT = Path(__file__).resolve().parents[1] / "assets/splash_v1"
-MOTION_ROOT = ROOT.parent / "splash_motion_v1"
+MOTION_ROOT = ROOT.parent / "splash_identity_v2"
 SPRITES = json.loads((MOTION_ROOT / "manifest.json").read_text(encoding="utf-8"))["sprites"]
 LOGO_IMAGES = {"logo_university": ROOT / "tukorea.png",
-               "logo_workshop": MOTION_ROOT / "sources/background.png",
+               "logo_background": MOTION_ROOT / "sources/background.png",
                **{f"logo_{name}": MOTION_ROOT / entry["file"] for name, entry in SPRITES.items()}}
 LOGO_DURATIONS = (2.2, 2.6)
 FADE_SECONDS = .35
@@ -97,7 +97,7 @@ def draw_logos(load_image, playback):
         logo = load_image("logo_university")
         logo.draw(WIDTH / 2, HEIGHT / 2, 620, 620 * logo.h / logo.w)
     else:
-        illustration = load_image("logo_workshop")
+        illustration = load_image("logo_background")
         # 일러스트 전체가 조금씩 가까워지고 공식 학교 시그니처는 고정한다.
         zoom = 1 + .025 * smooth(playback.age / LOGO_DURATIONS[1])
         scale = max(WIDTH / illustration.w, HEIGHT / illustration.h) * zoom
