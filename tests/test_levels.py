@@ -72,6 +72,20 @@ class LevelTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     self.load_document(document)
 
+    def test_compact_room_dimensions_and_bounds(self):
+        for width, height in ((6, 6), (7, 7), (6, 12), (12, 6), (5, 6), (6, 5), (13, 6), (6, 13)):
+            rows = ["#" * width] + ["#" + "." * (width - 2) + "#" for _ in range(height - 2)] + ["#" * width]
+            rows[1] = "#@PT" + "." * (width - 5) + "#"
+            rows[2] = "#LE" + "." * (width - 4) + "#"
+            document = {"stages": [dict(VALID_STAGE, map=rows)]}
+            with self.subTest(width=width, height=height):
+                if 6 <= width <= 12 and 6 <= height <= 12:
+                    level = self.load_document(document)[0]
+                    self.assertEqual((level.width, level.height), (width, height))
+                else:
+                    with self.assertRaises(ValueError):
+                        self.load_document(document)
+
     def test_rejects_invalid_geometry_and_missing_resources(self):
         maps = []
         for row_index, row in (

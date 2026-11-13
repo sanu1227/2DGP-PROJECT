@@ -98,11 +98,11 @@ def load_levels(path: Path | str | None = None) -> list[Level]:
             raise ValueError(prefix + "id가 중복되었습니다.")
         identifiers.add(raw["id"])
         rows = raw["map"]
-        if not isinstance(rows, list) or not 8 <= len(rows) <= 12 or any(not isinstance(row, str) for row in rows):
-            raise ValueError(prefix + "map에는 8~12개의 문자열 행이 필요합니다.")
+        if not isinstance(rows, list) or not 6 <= len(rows) <= 12 or any(not isinstance(row, str) for row in rows):
+            raise ValueError(prefix + "map에는 6~12개의 문자열 행이 필요합니다.")
         width, height = len(rows[0]), len(rows)
-        if not 8 <= width <= 12 or any(len(row) != width for row in rows):
-            raise ValueError(prefix + "지도는 너비 8~12칸의 직사각형이어야 합니다.")
+        if not 6 <= width <= 12 or any(len(row) != width for row in rows):
+            raise ValueError(prefix + "지도는 너비 6~12칸의 직사각형이어야 합니다.")
         if any(char not in glyphs for row in rows for char in row):
             raise ValueError(prefix + "지도에 알 수 없는 기호가 있습니다.")
         if any(char != "#" for char in rows[0] + rows[-1]) or any(row[0] != "#" or row[-1] != "#" for row in rows):
