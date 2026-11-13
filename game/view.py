@@ -30,6 +30,7 @@ ITEM_SPRITES = {"part": "part", "bone": "bone_bundle", "soldier": "soldier_carri
 FACING = {"up": "ne", "right": "se", "down": "sw", "left": "nw"}
 GATE_SECONDS = 0.36
 PLATE_SECONDS = 0.24
+PUSH_SECONDS = 0.28
 TUTORIAL_PANEL = (32, 600, 420, 810)
 
 
@@ -152,6 +153,9 @@ class View:
     def reset_player(self):
         self.facing = "se"
         self.motion = None
+        self.move_seconds = 0.18
+        self.rubble_motions = {}
+        self.plate_delays = {}
         self.action_badge_bounds = None
 
     @staticmethod
@@ -225,18 +229,68 @@ class View:
         if self.motion is None:
             return fallback
         start, target, began = self.motion
-        progress = min(1.0, (now - began) / 0.18)
+        progress = min(1.0, max(0, (now - began) / self.move_seconds))
         if progress >= 1:
             self.motion = None
             return fallback
+        if self.move_seconds == PUSH_SECONDS:
+            progress = progress * progress * (3 - 2 * progress)
         return tuple(a + (b - a) * progress for a, b in zip(start, target))
 
-    def move_player(self, previous, destination, action):
+    def move_player(self, previous, destination, action, seconds=0.18):
         """논리 이동은 즉시 완료하고 표시 위치만 짧게 보간한다."""
         now = self.now()
         start = self.player_position(previous, now)
         self.facing = FACING[action]
+        self.move_seconds = seconds
         self.motion = (start, destination, now)
+
+    def rubble_pose(self, game, destination, now):
+        """논리 칸과 별개인 잔해의 위치·밑면 높이. 발판 턱을 타고 올라간다."""
+        target_height = self.support_height(game, destination)
+        motion = self.rubble_motions.get(destination)
+        if motion is None:
+            return destination, target_height
+        start, height, began = motion
+        t = min(1, max(0, (now - began) / PUSH_SECONDS))
+        if t >= 1:
+            self.rubble_motions.pop(destination)
+            return destination, target_height
+        travel = t * t * (3 - 2 * t)
+        position = tuple(a + (b - a) * travel for a, b in zip(start, destination))
+        # 이동의 마지막 부분은 상판에 얹힌 채 함께 내려온다. 공중으로 튀지 않는다.
+        climb = min(1, travel / .65)
+        climb = climb * climb * (3 - 2 * climb)
+        return position, height + (target_height - height) * climb
+
+    def animate_move(self, game, previous, action):
+        """성공한 이동 이벤트에서만 표시 동작을 시작한다. 연속 입력은 현 위치에서 잇는다."""
+        removed = previous.rubble - game.state.rubble
+        added = game.state.rubble - previous.rubble
+        pushing = len(removed) == len(added) == 1
+        if pushing:
+            source, destination = next(iter(removed)), next(iter(added))
+            now = self.now()
+            position, height = self.rubble_pose(game, source, now)
+            self.rubble_motions.pop(source, None)
+            self.rubble_motions[destination] = (position, height, now)
+            if destination in game.level.plates:
+                was_pressed = float(game.plate_pressed(destination, previous))
+                self.plate_motions.setdefault(destination, (was_pressed, was_pressed, now, 0))
+                self.plate_delays[destination] = (now + PUSH_SECONDS * .65, was_pressed)
+        self.move_player(previous.player, game.state.player, action, PUSH_SECONDS if pushing else .18)
+
+    def plate_pressure(self, game, pos, now):
+        target = float(game.plate_pressed(pos))
+        delayed = self.plate_delays.get(pos)
+        if delayed:
+            until, previous = delayed
+            if now < until:
+                target = previous
+            else:
+                self.plate_delays.pop(pos)
+                self.device_progress(self.plate_motions, pos, target, until, PLATE_SECONDS)
+        return self.device_progress(self.plate_motions, pos, target, now, PLATE_SECONDS)
 
     def text(self, x, y, value, size=18, color=INK):
         self.fonts[size].draw(x, y, str(value), color)
@@ -484,8 +538,8 @@ class View:
             self.gate_game = game
         gate_openings = {pos: self.gate_opening(pos, 0 if game.gate_status(pos, state) == "closed" else 1, now)
                          for pos in level.gates}
-        self.plate_depths = {pos: self.device_progress(self.plate_motions, pos, float(game.plate_pressed(pos, state)), now, PLATE_SECONDS)
-                             for pos in level.plates}
+        self.plate_depths = {pos: self.plate_pressure(game, pos, now) for pos in level.plates}
+        rubble_draws = {}
         if level.gates:
             self.art.load_gates()
         scene = scene_for(level)
@@ -591,7 +645,14 @@ class View:
                         (level.jobs, "helper_work" if pos in state.workers else "winch", level.device_labels.get(pos, "") + (" 인부 회수" if pos in state.workers else " 인부 배치"))):
                     if pos in cells:
                         # 잔해는 발판 상판을 그린 다음 얹는다. 같은 깊이의 장치보다 앞이다.
-                        objects.append((depth, 2 if sprite == "push_rubble" else 1, sprite, sx, sy))
+                        if sprite == "push_rubble":
+                            position, height = self.rubble_pose(game, pos, now)
+                            rx, ry = screen(position)
+                            rubble_draws[(rx, ry)] = (pos, height)
+                            draw_depth = max(sum(position), depth) if pos in level.plates else sum(position)
+                            objects.append((draw_depth, 2, sprite, rx, ry))
+                        else:
+                            objects.append((depth, 1, sprite, sx, sy))
                         if sprite != "push_rubble" or pos not in level.plates:
                             labels.append((pos, label))
                 if pos in level.chutes:
@@ -652,6 +713,8 @@ class View:
         objects.append((sum(player), 3, "player", px, py))
         for _, _, sprite, sx, sy in sorted(objects, key=lambda obj: obj[:2]):
             pos = state.player if sprite == "player" else projection.pick(sx, sy)
+            if sprite == "push_rubble":
+                pos, height = rubble_draws[(sx, sy)]
             decor_scale = decor_draws.get((sprite, sx, sy))
             if decor_scale is not None:
                 self.art.draw(sprite, sx, sy, decor_scale)
@@ -660,7 +723,9 @@ class View:
             # 논리 칸은 높이를 더하기 전에 결정해야 클릭 대상이 옆 칸으로 밀리지 않는다.
             if sprite == "player":
                 sy += self.player_support_height(game, player) * scale
-            elif sprite in ITEM_SPRITES.values() or sprite == "push_rubble":
+            elif sprite == "push_rubble":
+                sy += height * scale
+            elif sprite in ITEM_SPRITES.values():
                 sy += self.support_height(game, pos) * scale
             if sprite in ("plate_up", "plate_down"):
                 pressed = self.plate_depths[pos]
@@ -991,7 +1056,7 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True):
                             target = view.pick_cell(game, *view.mouse_position)
                             if target is not None:
                                 now = view.now()
-                                ready_at = view.motion[2] + 0.18 if view.motion else now
+                                ready_at = view.motion[2] + view.move_seconds if view.motion else now
                                 view.navigation.start(game, target, now, ready_at=ready_at)
                 elif event.type == p.SDL_KEYDOWN:
                     if event.key in (p.SDLK_b, p.SDLK_q):
@@ -1021,10 +1086,10 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True):
                         screen_changed = True
                     elif event.key in actions:
                         action = actions[event.key]
-                        previous = game.state.player
+                        previous = game.state
                         changed = game.act(action)
                         if action in FACING and changed:
-                            view.move_player(previous, game.state.player, action)
+                            view.animate_move(game, previous, action)
                         elif changed:
                             # 도착 직후 상호작용하면 그 칸에 바로 정렬한다.
                             view.motion = None
@@ -1039,11 +1104,11 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True):
             if running:
                 music.update(front_end.screen, quiet=play_menu.active)
             if (running and front_end.screen == "playing" and not play_menu.active
-                    and (view.motion is None or now >= view.motion[2] + 0.18)):
-                previous = game.state.player
+                    and (view.motion is None or now >= view.motion[2] + view.move_seconds)):
+                previous = game.state
                 action = view.navigation.tick(game, now)
                 if action is not None:
-                    view.move_player(previous, game.state.player, action)
+                    view.animate_move(game, previous, action)
             if front_end.screen == "playing":
                 feedback.update(game, now)
                 view.tutorial_hidden = play_menu.mode == "device"

@@ -129,7 +129,7 @@ def input_checks(levels):
         frame += 1
         assert frame < len(batches), "창 닫기 입력을 처리하지 못함"
         if frame == 0:
-            assert displays[-1].navigation.start(games[-1], (4, 2), times[0])
+            assert displays[-1].navigation.start(games[-1], games[-1].level.exit, times[0])
         return batches[frame]
 
     def checked_text(display, x, y, value, size=18, color=view.INK):
