@@ -18,6 +18,7 @@ from game.tutorial import first_room_hint
 from game.mechanics import trace_magic, fixed_devices
 from game.play_menu import PlayClock, PlayMenu
 from game.stage_feedback import StageFeedback
+from game.receiver_feedback import ReceiverFeedback
 from game.music import BackgroundMusic
 
 INK = (226, 230, 219)
@@ -97,6 +98,7 @@ class View:
         self.hit_masks = {}
         self.gate_hit_masks = {}
         self.plate_hit_masks = {}
+        self.receiver_feedback = ReceiverFeedback()
         self.reset_gates()
         self.reset_plates()
         self.reset_player()
@@ -151,6 +153,7 @@ class View:
         return self.device_progress(self.gate_motions, pos, target, now, GATE_SECONDS)
 
     def reset_player(self):
+        self.receiver_feedback.reset()
         self.facing = "se"
         self.motion = None
         self.move_seconds = 0.18
@@ -625,7 +628,7 @@ class View:
                 for cells, sprite, label in (
                         (level.mirrors, "mirror", "거울 회전"),
                         (level.sources, "mana_source", "광원"),
-                        (level.receivers, "mana_receiver", level.device_labels.get(pos, "") + (" 수신 중" if pos in powered_receivers else " 수신 대기")),
+                        (level.receivers, "mana_receiver", level.device_labels.get(pos, "") + (" 수신 완료" if pos in powered_receivers else " 수신 대기")),
                         (state.rubble, "push_rubble", "밀기 · 방향키"),
                         (level.jobs, "helper_work" if pos in state.workers else "winch", level.device_labels.get(pos, "") + (" 인부 회수" if pos in state.workers else " 인부 배치"))):
                     if pos in cells:
@@ -731,6 +734,8 @@ class View:
                     draw_tinted(self.art, sprite, sx, sy, scale, wall_tints[(sx, sy)])
                 else:
                     self.art.draw(sprite, sx, sy, scale)
+                if sprite == "mana_receiver" and pos in powered_receivers:
+                    self.receiver_feedback.draw(game, pos, sx, sy, scale, now)
                 self.sprite_hit_region(pos, sprite, sx, sy, scale)
                 continue
             pose = "idle"
@@ -775,6 +780,10 @@ class View:
                 color = {"open": TEAL, "held": GOLD, "closed": RED}[game.gate_status(pos, state)]
             elif pos in level.plates:
                 color = TEAL if game.plate_pressed(pos, state) else GOLD
+            elif pos in level.receivers:
+                color = TEAL if pos in powered_receivers else MUTED
+                if pos in powered_receivers:
+                    box(sx - width / 2, sy - 28, sx + width / 2, sy - 6, TEAL, filled=False)
             self.text(sx - width / 2 + 5, sy - 17, label, 16, color)
             self.hit_regions.append((pos, (sx - width / 2, sy - 28, sx + width / 2, sy - 6)))
         self.interaction_markers(game, projection)
@@ -1080,6 +1089,7 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True):
                             # 도착 직후 상호작용하면 그 칸에 바로 정렬한다.
                             view.motion = None
                         if changed:
+                            view.receiver_feedback.changed(game, previous, view.now())
                             if game.state.cleared:
                                 screen_changed = True
             # 이미 보간 중인 한 칸이 끝난 뒤에만 다음 자동 이동을 실행한다.
@@ -1095,6 +1105,7 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True):
                 action = view.navigation.tick(game, now)
                 if action is not None:
                     view.animate_move(game, previous, action)
+                    view.receiver_feedback.changed(game, previous, now)
             if front_end.screen == "playing":
                 feedback.update(game, now)
                 view.tutorial_hidden = play_menu.mode == "device"
