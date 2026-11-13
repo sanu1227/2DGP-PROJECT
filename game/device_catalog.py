@@ -68,6 +68,11 @@ def catalog_buttons():
 
 
 def picture(view, name, x, y, width=160, height=126):
+    if name == "mirror":
+        left, bottom, right, top = view.art.bounds(name, 0, 0, 1)
+        scale = min(width / (right - left), height / (top - bottom))
+        view.art.draw(name, x - (left + right) * scale / 2, y - (bottom + top) * scale / 2, scale)
+        return
     entry = view.art.manifest["sprites"][name]
     rect = entry["content_rect"]
     scale = min(width / rect["width"], height / rect["height"])

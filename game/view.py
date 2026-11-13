@@ -8,7 +8,7 @@ from math import floor, sin, sqrt
 import pico2d.pico2d as p
 
 from game.model import Game
-from game.art import Art
+from game.art import Art, MAGIC_BEAM_HEIGHT
 from game.scenery import draw_scars, draw_tinted, floor_style, wall_style
 from game.navigation import ClickNavigator, IsoBoard, find_path
 from game.themes import boundary_walls, low_wall_sprite, scene_for, themed_floor
@@ -756,7 +756,7 @@ class View:
             x1,y1=screen(start); x2,y2=screen(end)
             edge, core = (157, 72, 216), (244, 185, 255)
             for offset,color in ((-1,edge),(0,core),(1,edge)):
-                line(x1,y1+45*scale+offset,x2,y2+45*scale+offset,color)
+                line(x1,y1+MAGIC_BEAM_HEIGHT*scale+offset,x2,y2+MAGIC_BEAM_HEIGHT*scale+offset,color)
         # 상태 문구를 바닥 아트와 함께 유지해 색이나 작은 그림에만 의존하지 않는다.
         for pos, label in labels:
             sx, sy = screen(pos)

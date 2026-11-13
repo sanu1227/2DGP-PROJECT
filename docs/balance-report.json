@@ -3,7 +3,7 @@
     "data/stages.json": "3a9c7328419fc2a08064fa87e5065e3448e3217fdf67178c9a03678a07500901",
     "game/levels.py": "25f44ef3b8907a1ff81b0ac1e42ba24c796e2345696788ecfd5cd3d1fdf59a3d",
     "game/model.py": "576c09d9fc29a25502e4a77d9a4a7e2aa66cfde1222f3be67b9f58117204c21c",
-    "game/mechanics.py": "7ef3b5b1464184f53a9eeeec4fcf6274dca5b4e78f2f32e7b0929dbea61466ac",
+    "game/mechanics.py": "ec217bb39974d722e78187c3db42e07a058f70c8431401d6bd2cb4d1eef4ac02",
     "tools/solve_levels.py": "62ea0d69f7c4c57c4c479b0718b8a82192d66737435c49ebaa86a73acbf10dc5",
     "tests/solutions.py": "ea265db763088e9923678bb1acc693a006e93cc364a5471e5616dd5f553a8585"
   },

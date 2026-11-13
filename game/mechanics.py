@@ -3,6 +3,11 @@
 from game.levels import DIRECTIONS
 
 
+def mirror_axis(turned):
+    """지도 좌표의 거울 면 방향. 반사 판정과 화면이 같은 축을 사용한다."""
+    return (1, 1) if turned else (1, -1)
+
+
 def trace_magic(level, state):
     """반사 광선의 선분과 작동 수신기. 순환 경로도 유한하게 끝낸다.
 
@@ -26,7 +31,9 @@ def trace_magic(level, state):
                 break
             if target in level.mirrors:
                 dx, dy = delta
-                delta = (dy, dx) if target in state.turned_mirrors else (-dy, -dx)
+                tx, ty = mirror_axis(target in state.turned_mirrors)
+                along = dx * tx + dy * ty
+                delta = along * tx - dx, along * ty - dy
             pos = target
     return segments, powered
 
