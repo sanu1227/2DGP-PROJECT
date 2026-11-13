@@ -134,7 +134,7 @@ class GimmickTests(unittest.TestCase):
         self.assertIsNone(find_path(game,(3,4)))
 
     def test_helper_assignment_recall_progress_and_gate(self):
-        game=Game(self.levels[6]);game.state.player=(5,4);game.state.carrying='soldier'
+        game=Game(self.levels[6]);game.state.player=(3,5);game.state.carrying='soldier'
         game.state.items={p:k for p,k in game.state.items.items() if k!='bone'}
         progress=game.repair_percent;before=deepcopy(game.state)
         self.assertTrue(game.act('interact'))
@@ -146,10 +146,10 @@ class GimmickTests(unittest.TestCase):
         game.undo();game.undo();self.assertEqual(game.state,before)
 
     def test_helper_rejects_wrong_item_and_full_hands(self):
-        game=Game(self.levels[6]);game.state.player=(5,4)
+        game=Game(self.levels[6]);game.state.player=(3,5)
         for item in (None,'bone','part'):
             game.state.carrying=item;self.assert_rejected(game,'interact')
-        game.state.workers.add((5,4));game.state.carrying='part'
+        game.state.workers.add((3,5));game.state.carrying='part'
         self.assert_rejected(game,'interact')
 
     def test_schema_rejects_retired_belt_and_unlinked_new_devices(self):

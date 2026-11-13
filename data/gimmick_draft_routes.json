@@ -299,7 +299,7 @@
     ]
   },
   "stage_07": {
-    "verified_actions": 46,
+    "verified_actions": 48,
     "minimum_proven": false,
     "waypoints": [
       [
@@ -323,8 +323,8 @@
       ],
       "E",
       [
-        5,
-        4
+        3,
+        5
       ],
       "E",
       [
@@ -338,8 +338,8 @@
       ],
       "E",
       [
-        5,
-        4
+        3,
+        5
       ],
       "E",
       [
@@ -371,9 +371,11 @@
       "left",
       "interact",
       "down",
-      "right",
-      "right",
+      "down",
       "interact",
+      "up",
+      "right",
+      "right",
       "right",
       "right",
       "up",
@@ -390,12 +392,12 @@
       "interact",
       "up",
       "up",
-      "up",
-      "right",
+      "left",
       "interact",
       "down",
       "down",
-      "down",
+      "right",
+      "right",
       "interact",
       "down",
       "left",

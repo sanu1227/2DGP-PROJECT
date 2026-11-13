@@ -44,11 +44,13 @@ def main():
                 for name, changed in (
                         ('mirror', game.state.turned_mirrors != before.turned_mirrors),
                         ('water', game.state.water_high != before.water_high),
-                        ('rubble', game.state.rubble != before.rubble),
-                        ('helper', game.state.workers != before.workers)):
+                        ('rubble', game.state.rubble != before.rubble)):
                     if changed and name not in captured:
                         capture('-' + name)
                         captured.add(name)
+                if game.state.workers and all(abs(game.state.player[0]-x)+abs(game.state.player[1]-y)>=2 for x,y in game.state.workers) and 'helper' not in captured:
+                    capture('-helper')
+                    captured.add('helper')
             assert game.state.cleared
             expected = {name for name, cells in (('mirror', level.mirrors), ('water', level.valves),
                         ('rubble', level.rubble), ('helper', level.jobs)) if cells}
