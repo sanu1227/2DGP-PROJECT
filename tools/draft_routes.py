@@ -1,4 +1,4 @@
-"""초안의 실제 행동열을 재생한다. 최단 풀이를 주장하지 않는다."""
+"""검증된 기믹 방의 풀이를 재생하고 이전 초안 파일 형식으로 내보낸다."""
 from pathlib import Path
 import json
 import sys
@@ -7,21 +7,10 @@ from game.levels import load_levels, DIRECTIONS
 from game.model import Game
 from game.navigation import find_path
 
-# (x,y)는 이동, 'E'는 상호작용, 다른 문자열은 직접 방향 입력이다.
-WAYPOINTS = {
-    'stage_04': [(3,3),'down',(7,2),'E',(6,8),'E',(5,6),'E',(7,6),'E',
-                 (5,8),'E',(7,6),'E',(7,7),'E',(7,8),'E',(8,8)],
-    'stage_05': [(3,2),'E',(7,2),'E',(7,4),'E',(4,6),'E',(3,7),'E',
-                 (2,6),'E',(3,7),'E',(4,7),'E',(1,8)],
-    'stage_06': [(7,2),'E',(3,6),'E',(3,4),'E',(7,5),'E',(7,6),'E',
-                 (8,7),'E',(7,6),'E',(7,8),'E',(3,7),'E',(1,8)],
-    'stage_07': [(2,2),'E',(3,3),'E',(4,2),'E',(3,3),'E',(3,5),'E',
-                 (8,3),'E',(4,7),'E',(3,5),'E',(5,7),'E',(3,8),'E',(2,10)],
-    'stage_08': [(4,2),'E',(8,5),'E',(8,6),'E',(4,6),'E',(3,7),'E',
-                 (2,7),'E',(3,7),'E',(7,2),'E',(10,2),'E',(4,8),'E',
-                 (2,5),'E',(7,9),'right','right',(10,8),'E',(4,9),'E',
-                 (7,2),'E',(3,9),'E',(2,9),'E',(1,10)],
-}
+# 기존 초안 도구의 진입점을 유지하되 검증한 행동열을 단일 기준으로 사용한다.
+from tests.solutions import MINIMUM_ACTIONS, SOLUTIONS
+WAYPOINTS = {name: actions for name, actions in SOLUTIONS.items() if int(name[-2:]) >= 4}
+
 
 def replay(level, route):
     game, actions = Game(level), []
@@ -48,7 +37,8 @@ def main():
     results={}
     for level in load_levels()[3:]:
         game,actions=replay(level,WAYPOINTS[level.id])
-        results[level.id]={'verified_actions':len(actions),'minimum_proven':False,
+        assert len(actions) == MINIMUM_ACTIONS[level.id]
+        results[level.id]={'verified_actions':len(actions),'minimum_proven':True, 'minimum':MINIMUM_ACTIONS[level.id],
                            'waypoints':WAYPOINTS[level.id],'actions':actions}
         while game.history: game.undo()
         assert game.state == Game(level).state

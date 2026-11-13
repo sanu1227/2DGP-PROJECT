@@ -16,7 +16,7 @@ from tests.smoke_gate_animation import save_frame
 
 def main():
     levels = load_levels()
-    folder = Path(__file__).resolve().parents[1] / 'docs/screenshots/gimmicks-v1'
+    folder = Path(__file__).resolve().parents[1] / 'docs/screenshots/compact-rooms'
     folder.mkdir(parents=True, exist_ok=True)
     p.open_canvas(WIDTH, HEIGHT, sync=True)
     view = None

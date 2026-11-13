@@ -11,7 +11,7 @@ from tests.solutions import MINIMUM_ACTIONS, SOLUTIONS
 
 class BalanceTests(unittest.TestCase):
     def test_reference_routes_finish_on_exact_budget_and_have_two_spare_actions(self):
-        for index, level in enumerate(load_levels()[:3]):
+        for index, level in enumerate(load_levels()):
             minimum = MINIMUM_ACTIONS[level.id]
             with self.subTest(stage=level.id):
                 self.assertEqual(level.action_limit, None if index == 0 else minimum + 2)
@@ -44,8 +44,14 @@ class BalanceTests(unittest.TestCase):
 
         # Open doors isolate the effect of the repaired obstacle itself.
         checks = [
-            (levels[1], levels[1].start, (7, 2), {(5, 5)}),
-            (levels[2], levels[2].start, (7, 2), {(3, 3)}),
+            (levels[0], levels[0].start, levels[0].exit, levels[0].traps),
+            (levels[1], levels[1].start, (5, 1), levels[1].posts),
+            (levels[2], levels[2].start, (6, 2), levels[2].posts),
+            (levels[2], levels[2].start, (6, 5), {(4, 5)}),
+            (levels[5], levels[5].start, (5, 4), levels[5].traps),
+            (levels[6], levels[6].start, (6, 2), levels[6].posts),
+            (levels[6], levels[6].start, levels[6].exit, levels[6].traps),
+            (levels[7], levels[7].start, (7, 8), {(4, 7)}),
         ]
         for level, start, target, blocked in checks:
             with self.subTest(stage=level.id, blocked=blocked):

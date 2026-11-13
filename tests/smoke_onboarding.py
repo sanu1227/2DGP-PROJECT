@@ -119,8 +119,8 @@ def main():
             steps.append(([p.SDLK_z], "playing", moves - 1, None))
             steps.append(([keys[action]], "playing", moves, None))
     steps.extend([
-        ([p.SDLK_BACKSPACE], "playing", 18, None),
-        ([p.SDLK_a], "playing", 19, None),
+        ([p.SDLK_BACKSPACE], "playing", len(SOLUTIONS["stage_01"]) - 1, None),
+        ([p.SDLK_a], "playing", len(SOLUTIONS["stage_01"]), None),
         ([p.SDLK_SPACE], "playing", 0, None, "stage_02"),
         ([p.SDLK_ESCAPE], "playing", 0, None, "stage_02"),
         ([p.SDLK_1], "playing", 0, None),
@@ -176,12 +176,12 @@ def main():
             if room and room[0] != "stage_01":
                 assert display.tutorial is None
             else:
-                expected_step = 1 if moves < 2 else 2 if moves == 2 else 3 if moves < 10 else 4 if moves < 17 else 5
+                expected_step = 1 if moves == 0 else 2 if moves == 1 else 3 if moves < 5 else 4 if moves < 9 else 5
                 assert display.tutorial.step == expected_step, (moves, display.tutorial)
-                assert display.tutorial.complete == (moves == 19)
+                assert display.tutorial.complete == (moves == len(SOLUTIONS["stage_01"]))
                 assert display.pick_cell(games[-1], 100, 700) is None
                 if display.tutorial.target is not None and not display.tutorial_hidden:
-                    sx, sy = view.IsoBoard(10, 10).screen(display.tutorial.target)
+                    sx, sy = view.IsoBoard(games[-1].level.width, games[-1].level.height).screen(display.tutorial.target)
                     assert display.pick_cell(games[-1], sx, sy - 46) == display.tutorial.target
         if args.capture_dir and filename:
             if screen == "playing":

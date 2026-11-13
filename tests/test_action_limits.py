@@ -18,7 +18,7 @@ class ActionLimitTests(unittest.TestCase):
         self.levels = load_levels()
 
     def test_unlimited_tutorial_and_authored_budgets(self):
-        self.assertEqual([l.action_limit for l in self.levels], [None, 52, 69, None, None, None, None, None])
+        self.assertEqual([l.action_limit for l in self.levels], [None, 35, 47, 34, 37, 42, 43, 85])
         game = Game(self.levels[0])
         for index in range(200):
             self.assertTrue(game.act("right" if index % 2 == 0 else "left"))
@@ -80,9 +80,9 @@ class ActionLimitTests(unittest.TestCase):
         self.assertFalse(game.history)
 
     def test_auto_movement_stops_at_budget_and_can_resume_after_undo(self):
-        game = Game(replace(self.levels[1], action_limit=2))
+        game = Game(replace(self.levels[0], action_limit=2))
         nav = ClickNavigator()
-        self.assertTrue(nav.start(game, (4, 1), 0))
+        self.assertTrue(nav.start(game, (3, 1), 0))
         self.assertEqual(nav.tick(game, 0), "right")
         self.assertEqual(nav.tick(game, .2), "right")
         self.assertTrue(game.failed)
@@ -91,7 +91,7 @@ class ActionLimitTests(unittest.TestCase):
         message = game.message
         self.assertIsNone(nav.tick(game, 1))
         self.assertIsNone(find_path(game, (3, 1)))
-        self.assertFalse(nav.start(game, (4, 1), 1))
+        self.assertFalse(nav.start(game, (3, 1), 1))
         self.assertEqual(game.message, message)
         self.assertTrue(game.undo())
         self.assertTrue(nav.start(game, (3, 1), 2))

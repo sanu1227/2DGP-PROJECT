@@ -65,18 +65,17 @@ def main():
         (p.SDLK_F2, lambda: expect_coordinates(True)),
         (p.SDLK_F2, lambda: expect_coordinates(False)),
         (p.SDLK_d, lambda: expect(1)),
-        (p.SDLK_DOWN, lambda: expect(2)),
-        (p.SDLK_e, lambda: expect(3, "part")),
-        (p.SDLK_q, lambda: expect(3, "part")),  # Removed key must not drop or consume a turn.
-        (p.SDLK_b, lambda: expect(3, "part")),
-        (p.SDLK_e, lambda: expect(4)),
-        (p.SDLK_BACKSPACE, lambda: expect(3, "part")),
-        (p.SDLK_z, lambda: expect(2)),
+        (p.SDLK_e, lambda: expect(2, "part")),
+        (p.SDLK_q, lambda: expect(2, "part")),  # Removed key must not drop or consume a turn.
+        (p.SDLK_b, lambda: expect(2, "part")),
+        (p.SDLK_e, lambda: expect(3)),
+        (p.SDLK_BACKSPACE, lambda: expect(2, "part")),
+        (p.SDLK_z, lambda: expect(1)),
         (p.SDLK_r, lambda: expect(0)),
     ])
     # A same-room shortcut resets carried items, history, and unfinished walking.
     steps.extend([
-        (p.SDLK_d, None), (p.SDLK_DOWN, None), (p.SDLK_e, None),
+        (p.SDLK_d, None), (p.SDLK_e, None),
         (p.SDLK_1, lambda: expect_room(0)),
         (p.SDLK_d, None),
     ])

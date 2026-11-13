@@ -12,8 +12,8 @@ from tests.test_game import make_level
 
 class NavigationTests(unittest.TestCase):
     def test_isometric_pick_roundtrip_and_outer_boundaries_for_supported_sizes(self):
-        for width in range(8, 13):
-            for height in range(8, 13):
+        for width in range(6, 13):
+            for height in range(6, 13):
                 with self.subTest(size=(width, height)):
                     board = IsoBoard(width, height)
                     for y in range(height):

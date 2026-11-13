@@ -7,7 +7,7 @@ from game.levels import DIRECTIONS, load_levels
 from game.model import Game
 from game.mechanics import trace_magic
 from game.navigation import find_path
-from tools.draft_routes import WAYPOINTS, replay
+from tests.solutions import SOLUTIONS
 from tools.solve_levels import key
 from tests.test_devices import load_stage, plate_stage
 
@@ -22,10 +22,12 @@ class GimmickTests(unittest.TestCase):
         self.assertEqual(game.state, before)
         self.assertEqual(game.history, history)
 
-    def test_all_draft_routes_complete_and_reverse_every_new_state(self):
+    def test_all_routes_complete_and_reverse_every_new_state(self):
         for level in self.levels[3:]:
             with self.subTest(stage=level.id):
-                game, actions = replay(level, WAYPOINTS[level.id])
+                game, actions = Game(level), SOLUTIONS[level.id]
+                for action in actions:
+                    self.assertTrue(game.act(action), game.message)
                 self.assertTrue(game.state.cleared)
                 self.assertEqual(game.repair_percent, 100)
                 expected = Game(level)
@@ -45,9 +47,9 @@ class GimmickTests(unittest.TestCase):
     def test_mirror_rotation_opens_gate_and_undo_restores_beam(self):
         game=Game(self.levels[4]); game.state.player=(3,2)
         before=deepcopy(game.state)
-        self.assertEqual(game.gate_status((5,5)), 'closed')
+        self.assertEqual(game.gate_status(next(iter(game.level.gates))), 'closed')
         self.assertTrue(game.act('interact'))
-        self.assertEqual(game.gate_status((5,5)), 'open')
+        self.assertEqual(game.gate_status(next(iter(game.level.gates))), 'open')
         self.assertEqual(trace_magic(game.level,game.state)[1], {(3,4)})
         self.assertNotEqual(key(before), key(game.state))
         game.undo(); self.assertEqual(game.state,before)
@@ -84,72 +86,72 @@ class GimmickTests(unittest.TestCase):
         self.assertFalse(powered)
 
     def test_water_changes_routes_and_undo_in_one_action(self):
-        game=Game(self.levels[5]);game.state.player=(3,4)
-        self.assertTrue(game.walkable((5,3)))
-        self.assertFalse(game.walkable((5,6)))
+        game=Game(self.levels[5]);game.state.player=next(iter(game.level.valves))
+        self.assertTrue(game.walkable(next(iter(game.level.channels))))
+        self.assertFalse(game.walkable(next(iter(game.level.bridges))))
         before=deepcopy(game.state);game.act('interact')
-        self.assertFalse(game.walkable((5,3)))
-        self.assertTrue(game.walkable((5,6)))
-        self.assertIsNone(find_path(game,(7,2)))
-        self.assertIsNotNone(find_path(game,(7,5)))
+        self.assertFalse(game.walkable(next(iter(game.level.channels))))
+        self.assertTrue(game.walkable(next(iter(game.level.bridges))))
+        self.assertIsNone(find_path(game,next(p for p,k in game.level.initial_items.items() if k=="part")))
+        self.assertIsNotNone(find_path(game,next(p for p,k in game.level.initial_items.items() if k=="bone")))
         game.undo();self.assertEqual(game.state,before)
 
     def test_water_rejects_submerging_occupants_without_consuming_action(self):
-        for high,cell in ((False,(5,3)),(True,(5,6))):
+        for high,cell in ((False,next(iter(self.levels[5].channels))),(True,next(iter(self.levels[5].bridges)))):
             for field in ('items','rubble','soldiers','workers'):
-                game=Game(self.levels[5]);game.state.player=(3,4);game.state.water_high=high
+                game=Game(self.levels[5]);game.state.player=next(iter(game.level.valves));game.state.water_high=high
                 if field=='items':game.state.items[cell]='bone'
                 else:getattr(game.state,field).add(cell)
                 self.assert_rejected(game,'interact')
 
     def test_water_collision_is_enforced_for_direct_keys_too(self):
-        game=Game(self.levels[5]);game.state.player=(4,6)
+        game=Game(self.levels[5]);game.state.player=(3,5)
         self.assert_rejected(game,'right')
         game.state.water_high=True;self.assertTrue(game.act('right'))
-        game.state.player=(4,3);self.assert_rejected(game,'right')
+        game.state.player=(3,2);self.assert_rejected(game,'right')
 
     def test_rubble_push_presses_plate_and_undo_restores_gate(self):
-        game=Game(self.levels[3]);game.state.player=(3,3)
+        game=Game(self.levels[3]);game.state.player=(2,2)
         before=deepcopy(game.state)
-        self.assertEqual(game.gate_status((5,4)),'closed')
+        self.assertEqual(game.gate_status(next(iter(game.level.gates))),'closed')
         self.assertTrue(game.act('down'))
-        self.assertEqual(game.state.player,(3,4))
-        self.assertEqual(game.state.rubble,{(3,5)})
-        self.assertEqual(game.gate_status((5,4)),'open')
+        self.assertEqual(game.state.player,(2,3))
+        self.assertEqual(game.state.rubble,{(2,4)})
+        self.assertEqual(game.gate_status(next(iter(game.level.gates))),'open')
         game.undo();self.assertEqual(game.state,before)
 
     def test_rubble_rejects_carrying_walls_items_and_devices(self):
         for mode in ('carrying','wall','item','device','rubble'):
-            game=Game(self.levels[3]);game.state.player=(3,3)
+            game=Game(self.levels[3]);game.state.player=(2,2)
             if mode=='carrying':game.state.carrying='part'
-            elif mode=='wall':game.level=replace(game.level,walls=game.level.walls|{(3,5)})
-            elif mode=='item':game.state.items[(3,5)]='bone'
-            elif mode=='device':game.level=replace(game.level,mirrors=frozenset({(3,5)}))
-            else:game.state.rubble.add((3,5))
+            elif mode=='wall':game.level=replace(game.level,walls=game.level.walls|{(2,4)})
+            elif mode=='item':game.state.items[(2,4)]='bone'
+            elif mode=='device':game.level=replace(game.level,mirrors=frozenset({(2,4)}))
+            else:game.state.rubble.add((2,4))
             self.assert_rejected(game,'down')
 
     def test_click_navigation_never_silently_pushes_rubble(self):
         game=Game(self.levels[3])
-        self.assertIsNone(find_path(game,(7,2)))
-        self.assertIsNone(find_path(game,(3,4)))
+        self.assertIsNone(find_path(game,next(p for p,k in game.level.initial_items.items() if k=="part")))
+        self.assertIsNone(find_path(game,(2,3)))
 
     def test_helper_assignment_recall_progress_and_gate(self):
-        game=Game(self.levels[6]);game.state.player=(3,5);game.state.carrying='soldier'
+        game=Game(self.levels[6]);game.state.player=next(iter(game.level.jobs));game.state.carrying='soldier'
         game.state.items={p:k for p,k in game.state.items.items() if k!='bone'}
         progress=game.repair_percent;before=deepcopy(game.state)
         self.assertTrue(game.act('interact'))
-        self.assertEqual(game.gate_status((6,4)),'open')
+        self.assertEqual(game.gate_status(next(iter(game.level.gates))),'open')
         self.assertEqual(game.repair_percent,progress)
         self.assertTrue(game.act('interact'))
-        self.assertEqual(game.gate_status((6,4)),'closed')
+        self.assertEqual(game.gate_status(next(iter(game.level.gates))),'closed')
         self.assertEqual(game.state.carrying,'soldier')
         game.undo();game.undo();self.assertEqual(game.state,before)
 
     def test_helper_rejects_wrong_item_and_full_hands(self):
-        game=Game(self.levels[6]);game.state.player=(3,5)
+        game=Game(self.levels[6]);game.state.player=next(iter(game.level.jobs))
         for item in (None,'bone','part'):
             game.state.carrying=item;self.assert_rejected(game,'interact')
-        game.state.workers.add((3,5));game.state.carrying='part'
+        game.state.workers.add(next(iter(game.level.jobs)));game.state.carrying='part'
         self.assert_rejected(game,'interact')
 
     def test_schema_rejects_retired_belt_and_unlinked_new_devices(self):
@@ -163,6 +165,21 @@ class GimmickTests(unittest.TestCase):
             state=deepcopy(game.state);getattr(state,field).add((1,1))
             self.assertNotEqual(base,key(state))
         game.state.water_high=True;self.assertNotEqual(base,key(game.state))
+
+    def test_boss_mirror_gate_cannot_be_bypassed_through_the_water_room(self):
+        game = Game(self.levels[7])
+        job = next(iter(game.level.jobs))
+        vault_part = min((p for p, kind in game.level.initial_items.items() if kind == 'part'), key=lambda p: p[1])
+        self.assertIsNone(find_path(game, job))
+        self.assertIsNone(find_path(game, vault_part))
+        game.state.player = next(iter(game.level.mirrors))
+        self.assertTrue(game.act('interact'))
+        self.assertIsNotNone(find_path(game, job))
+        self.assertIsNone(find_path(game, vault_part))
+        game.state.player = job
+        game.state.carrying = 'soldier'
+        self.assertTrue(game.act('interact'))
+        self.assertIsNotNone(find_path(game, vault_part))
 
 
 if __name__=='__main__':unittest.main()
