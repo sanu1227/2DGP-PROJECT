@@ -5,7 +5,8 @@ import crypto from 'node:crypto';
 import {fileURLToPath} from 'node:url';
 import sharp from 'sharp';
 
-const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../assets/splash_motion_v1');
+const projectRoot=path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
+const root=path.resolve(projectRoot, process.argv[2] || 'assets/splash_motion_v1');
 const hash=data=>crypto.createHash('sha256').update(data).digest('hex');
 const source=await fs.readFile(path.join(root,'sources/letters.png'));
 const meta=await sharp(source).metadata();
@@ -26,7 +27,7 @@ for (const [index,name] of ['2d','gp'].entries()) {
     if(alpha===0)empty++;
     if(alpha>24){x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x);y1=Math.max(y1,y);}
   }
-  if(empty<info.width*info.height*.20 || x0<8 || y0<8 || x1>=info.width-8 || y1>=info.height-8)
+  if(x1<x0 || y1<y0 || empty<info.width*info.height*.20 || x0<8 || y0<8 || x1>=info.width-8 || y1>=info.height-8)
     throw Error(`Invalid alpha/margin: ${name} ${JSON.stringify({x0,y0,x1,y1,empty})}`);
   const file=`sprites/${name}.png`,output=await sharp(data,{raw:info}).png().toBuffer();
   await fs.writeFile(path.join(root,file),output);

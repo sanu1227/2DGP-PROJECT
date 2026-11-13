@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "sources": {
+    "letters": {
+      "file": "sources/letters.png",
+      "width": 1774,
+      "height": 887,
+      "sha256": "d45d0c468e60f282a1192ba88c88bb56e508c085f49bfb37d81a0a9b120f1512"
+    },
+    "background": {
+      "file": "sources/background.png",
+      "width": 1619,
+      "height": 971,
+      "sha256": "7331189802a37d52267840821375fa711a758483532a5e69926ecaa5da3d5603"
+    }
+  },
+  "sprites": {
+    "2d": {
+      "file": "sprites/2d.png",
+      "width": 887,
+      "height": 887,
+      "sha256": "d84a018548317a258d97911fc4f56c86c5090938428790b846aa0897a4b58342",
+      "crop": {
+        "left": 0,
+        "top": 0,
+        "width": 887,
+        "height": 887
+      },
+      "bounds": {
+        "left": 53,
+        "top": 238,
+        "width": 797,
+        "height": 493
+      }
+    },
+    "gp": {
+      "file": "sprites/gp.png",
+      "width": 887,
+      "height": 887,
+      "sha256": "06d14190e651ffa78af7b59baf26e1729722b609de3ddd346a363c69ff7f17a7",
+      "crop": {
+        "left": 887,
+        "top": 0,
+        "width": 887,
+        "height": 887
+      },
+      "bounds": {
+        "left": 37,
+        "top": 238,
+        "width": 805,
+        "height": 500
+      }
+    }
+  }
+}
