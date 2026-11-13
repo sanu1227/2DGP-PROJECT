@@ -1,0 +1,51 @@
+{
+  "tool": "built-in image_gen",
+  "date": "2026-11-13",
+  "assets": [
+    {
+      "id": "mirror",
+      "prompt": "Use case: stylized-concept. Asset type: one production game sprite for an existing 2.5D isometric dungeon repair puzzle. Orthographic 2:1 isometric camera, see top and two sides, hand-painted polished cartoon 3D look, crisp dark brown outlines, soft upper-left light, weathered brass fittings, desaturated teal details, blue-grey stone, warm ivory bone. Match small readable fantasy dungeon props. Single isolated object centered with generous transparent padding, whole object visible, no ground plane, no cast shadow beyond compact contact shadow, no environment, no letters, no labels, no watermark. True transparent RGBA background. Square canvas. Primary request: A waist-high ROTATABLE MAGIC MIRROR on a compact heavy circular brass swivel base. One square blue silver mirror face, chunky brass frame, two teal support arms, visible turning handle on side, diagonal mirror plane aligned to an isometric grid axis. Large clear reflective pale cyan face. No beams; game renders beam lines separately. Clearly mechanical, low enough not to obscure adjacent tiles.",
+      "source": "C:\\Users\\rlato\\.codex\\generated_images\\01a1d3af-16ea-7252-b7cd-be3f73828c3a\\exec-f8ea5a81-fcf3-4017-891b-ca978a385333.png"
+    },
+    {
+      "id": "valve",
+      "prompt": "Use case: stylized-concept. Asset type: one production game sprite for an existing 2.5D isometric dungeon repair puzzle. Orthographic 2:1 isometric camera, see top and two sides, hand-painted polished cartoon 3D look, crisp dark brown outlines, soft upper-left light, weathered brass fittings, desaturated teal details, blue-grey stone, warm ivory bone. Match small readable fantasy dungeon props. Single isolated object centered with generous transparent padding, whole object visible, no ground plane, no cast shadow beyond compact contact shadow, no environment, no letters, no labels, no watermark. True transparent RGBA background. Square canvas. Primary request: A waist-high WATER SLUICE CONTROL: large brass six-spoke valve wheel on a short teal pipe elbow, heavy stone square mounting base, small water-blue glass level gauge, worn brass fasteners. No flowing water, no gate, no extra loose objects.",
+      "source": "C:\\Users\\rlato\\.codex\\generated_images\\01a1d3af-16ea-7252-b7cd-be3f73828c3a\\exec-0d69ad32-74fd-42ca-afd5-ff0ce03a6e21.png"
+    },
+    {
+      "id": "push_rubble",
+      "prompt": "Use case: stylized-concept. Asset type: one production game sprite for an existing 2.5D isometric dungeon repair puzzle. Orthographic 2:1 isometric camera, see top and two sides, hand-painted polished cartoon 3D look, crisp dark brown outlines, soft upper-left light, weathered brass fittings, desaturated teal details, blue-grey stone, warm ivory bone. Match small readable fantasy dungeon props. Single isolated object centered with generous transparent padding, whole object visible, no ground plane, no cast shadow beyond compact contact shadow, no environment, no letters, no labels, no watermark. True transparent RGBA background. Square canvas. Primary request: A PUSHABLE RUIN BLOCK: a single squat broken blue-grey stone statue base with a chipped fragment of a helmeted face, secured tightly by two brass lifting bands, broad flat bottom. Compact cube-like silhouette approximately as tall as wide, low enough to see the next tile. Clearly one solid movable mass, no scattered pebbles beyond its footprint. Brass strips distinguish it from static walls.",
+      "source": "C:\\Users\\rlato\\.codex\\generated_images\\01a1d3af-16ea-7252-b7cd-be3f73828c3a\\exec-267b5504-aacc-45dd-a0c7-907ff46ac60f.png"
+    },
+    {
+      "id": "helper_work",
+      "prompt": "Use case: stylized-concept. Asset type: one production game sprite for an existing 2.5D isometric dungeon repair puzzle. Orthographic 2:1 isometric camera, see top and two sides, hand-painted polished cartoon 3D look, crisp dark brown outlines, soft upper-left light, weathered brass fittings, desaturated teal details, blue-grey stone, warm ivory bone. Match small readable fantasy dungeon props. Single isolated object centered with generous transparent padding, whole object visible, no ground plane, no cast shadow beyond compact contact shadow, no environment, no letters, no labels, no watermark. True transparent RGBA background. Square canvas. Primary request: A friendly adult-proportioned SMALL SKELETON DUNGEON LABORER operating a waist-high brass winch. Full body visible including feet. Ivory skull and bones, large black eye sockets, short muted purple scarf, worn brown belt, teal work gloves, no helmet or weapon. Both hands gripping a horizontal winch crank, leaned forward with effort, bent knees. The compact winch is on a dark wood and brass stand beside him; rope leads down into stand, no rope extending outside canvas. Clear humorous hardworking pose, matching an existing small ivory skeleton soldier in purple cloth.",
+      "source": "C:\\Users\\rlato\\.codex\\generated_images\\01a1d3af-16ea-7252-b7cd-be3f73828c3a\\exec-4d8e7641-4657-44d7-a09e-c402f0cdd322.png"
+    },
+    {
+      "id": "mana_source",
+      "prompt": "Use case: stylized-concept. Production sprite for hand-painted cartoon 2.5D isometric fantasy dungeon repair game. Orthographic 2:1 isometric view, same size of both visible sides, weathered brass, blue-grey stone, muted teal details, clean dark outlines, soft upper-left light. Single whole object centered with generous padding, transparent RGBA background, no letters, no scene, no watermark. Primary request: A low brass mechanical MAGIC LIGHT EMITTER on a round blue-grey stone foot. A bright cyan crystal protrudes horizontally from a short brass tube pointing right-down along the isometric grid x axis. Small turning knobs and teal housing. No beam, no floating particles outside footprint.",
+      "source": "C:\\Users\\rlato\\.codex\\generated_images\\01a1d3af-16ea-7252-b7cd-be3f73828c3a\\exec-9c3b13e7-721f-4283-90ae-b17c3ffc04a6.png"
+    },
+    {
+      "id": "mana_receiver",
+      "prompt": "Use case: stylized-concept. Production sprite for hand-painted cartoon 2.5D isometric fantasy dungeon repair game. Orthographic 2:1 isometric view, same size of both visible sides, weathered brass, blue-grey stone, muted teal details, clean dark outlines, soft upper-left light. Single whole object centered with generous padding, transparent RGBA background, no letters, no scene, no watermark. Primary request: A low brass MAGIC LIGHT RECEIVER on a round blue-grey stone foot. Large circular dark blue glass lens angled toward viewer, brass concentric rings, small cyan central gem, weathered teal housing. No beam. Distinct circular opening to distinguish from the flat square mirror.",
+      "source": "C:\\Users\\rlato\\.codex\\generated_images\\01a1d3af-16ea-7252-b7cd-be3f73828c3a\\exec-f9fc171a-1fe3-4180-b3af-2a7239fe5037.png"
+    },
+    {
+      "id": "water",
+      "prompt": "Use case: stylized-concept. Production sprite for hand-painted cartoon 2.5D isometric fantasy dungeon repair game. Orthographic 2:1 isometric view, same size of both visible sides, weathered brass, blue-grey stone, muted teal details, clean dark outlines, soft upper-left light. Single whole object centered with generous padding, transparent RGBA background, no letters, no scene, no watermark. Primary request: A single seamless diamond-shaped patch of deep turquoise WATER viewed in exact 2:1 isometric projection. Diamond surface has four straight edges and width exactly twice height, subtle blue ripples and sparse pale teal highlights, no rocks, no shoreline, no border, no basin, no frame. Only water diamond; outside diamond fully transparent. Compact tile.",
+      "source": "C:\\Users\\rlato\\.codex\\generated_images\\01a1d3af-16ea-7252-b7cd-be3f73828c3a\\exec-76aebd71-829a-4e4a-a44c-63c1487a3af6.png"
+    },
+    {
+      "id": "float_bridge",
+      "prompt": "Use case: stylized-concept. Production sprite for hand-painted cartoon 2.5D isometric fantasy dungeon repair game. Orthographic 2:1 isometric view, same size of both visible sides, weathered brass, blue-grey stone, muted teal details, clean dark outlines, soft upper-left light. Single whole object centered with generous padding, transparent RGBA background, no letters, no scene, no watermark. Primary request: A single square wooden FLOATING PONTOON PLATFORM viewed in exact 2:1 isometric projection. Top surface is a diamond twice as wide as tall, five thick dark brown wooden planks tightly bound with worn brass strips, small barrel flotation under the front two edges. No railings, no ropes outside tile, no water, no scenery. Short low height.",
+      "source": "C:\\Users\\rlato\\.codex\\generated_images\\01a1d3af-16ea-7252-b7cd-be3f73828c3a\\exec-d4d3df02-d926-4968-bb7c-fc8ab52cf36a.png"
+    },
+    {
+      "id": "winch",
+      "prompt": "Use case: stylized-concept. Production sprite for hand-painted cartoon 2.5D isometric fantasy dungeon repair game. Orthographic 2:1 isometric view, same size of both visible sides, weathered brass, blue-grey stone, muted teal details, clean dark outlines, soft upper-left light. Single whole object centered with generous padding, transparent RGBA background, no letters, no scene, no watermark. Primary request: A compact waist-high EMPTY WINCH WORKSTATION: worn brass crank and rope spool on squat dark wooden and brass stand, two teal panels, rope descending inside stand, no loose rope outside footprint, no character, no skeleton, no weapons. This is where a skeleton laborer will stand to hold a gate open.",
+      "source": "C:\\Users\\rlato\\.codex\\generated_images\\01a1d3af-16ea-7252-b7cd-be3f73828c3a\\exec-6cd08051-c588-4d92-9d77-fe40dc5f77cc.png"
+    }
+  ]
+}

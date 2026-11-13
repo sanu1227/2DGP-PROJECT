@@ -1,0 +1,218 @@
+{
+  "atlases": {
+    "gimmicks": {
+      "file": "atlas.png",
+      "width": 768,
+      "height": 768
+    }
+  },
+  "sprites": {
+    "mirror": {
+      "file": "sprites/mirror.png",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 210
+      },
+      "atlas": "gimmicks",
+      "clip_rect_pico2d": [
+        0,
+        512,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 53,
+        "top": 49,
+        "width": 150,
+        "height": 171
+      },
+      "sha256": "be8de2678a3c937b0bbdc6cf4befda391a09f9fa587e2d3b34410eb99b4de7ac"
+    },
+    "valve": {
+      "file": "sprites/valve.png",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 210
+      },
+      "atlas": "gimmicks",
+      "clip_rect_pico2d": [
+        256,
+        512,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 86,
+        "top": 62,
+        "width": 85,
+        "height": 158
+      },
+      "sha256": "721fb5a1fffc33b8becf36c256bd8dd816e0e5a55513eea2f61478b8f914e847"
+    },
+    "push_rubble": {
+      "file": "sprites/push_rubble.png",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 210
+      },
+      "atlas": "gimmicks",
+      "clip_rect_pico2d": [
+        512,
+        512,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 52,
+        "top": 62,
+        "width": 152,
+        "height": 158
+      },
+      "sha256": "08fb1682936aa6979c13f1471187256b11db5bd446fa7a2441dd5d72471078ff"
+    },
+    "helper_work": {
+      "file": "sprites/helper_work.png",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 210
+      },
+      "atlas": "gimmicks",
+      "clip_rect_pico2d": [
+        0,
+        256,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 45,
+        "top": 42,
+        "width": 166,
+        "height": 178
+      },
+      "sha256": "95ba59c5ce2e79ac4f42bd12223372dec0c6377eaca959caa74fc80629d69fb5"
+    },
+    "mana_source": {
+      "file": "sprites/mana_source.png",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 210
+      },
+      "atlas": "gimmicks",
+      "clip_rect_pico2d": [
+        256,
+        256,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 68,
+        "top": 108,
+        "width": 120,
+        "height": 112
+      },
+      "sha256": "c6b68926ce84c19acfb83ed4f74ee88152a8362052cc7eecd31f19a2df6cddd7"
+    },
+    "mana_receiver": {
+      "file": "sprites/mana_receiver.png",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 210
+      },
+      "atlas": "gimmicks",
+      "clip_rect_pico2d": [
+        512,
+        256,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 75,
+        "top": 78,
+        "width": 106,
+        "height": 142
+      },
+      "sha256": "7b7e210d11691b3e0a82a6af447af28d206b7377ea3c80246c15e3c50bf58cd0"
+    },
+    "water": {
+      "file": "sprites/water.png",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 160
+      },
+      "atlas": "gimmicks",
+      "clip_rect_pico2d": [
+        0,
+        0,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 16,
+        "top": 104,
+        "width": 224,
+        "height": 112
+      },
+      "sha256": "f3b1293eb97dd1358b064767ccaceb1967ece5e770f2402ffc2f5383e149d9ba"
+    },
+    "float_bridge": {
+      "file": "sprites/float_bridge.png",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 160
+      },
+      "atlas": "gimmicks",
+      "clip_rect_pico2d": [
+        256,
+        0,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 16,
+        "top": 104,
+        "width": 224,
+        "height": 126
+      },
+      "sha256": "28670247dcee985c3fc6094132b50896117cb3f04157df0db880167376573bce"
+    },
+    "winch": {
+      "file": "sprites/winch.png",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 210
+      },
+      "atlas": "gimmicks",
+      "clip_rect_pico2d": [
+        512,
+        0,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 67,
+        "top": 104,
+        "width": 122,
+        "height": 116
+      },
+      "sha256": "bb7799fc3146bc787e77d305f3661fa0d175b740360f1cae5f0bd1e9ed0c595b"
+    }
+  }
+}
