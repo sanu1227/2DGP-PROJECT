@@ -118,9 +118,12 @@ class LowerBound:
             travel += min(sum(soldier_distance(p, t)
                               for p, t in zip(soldiers, targets)) for targets in permutations(posts))
         # Walking to the first pickup and from the final repair to the exit is unloaded.
-        if not state.carrying and state.items:
-            travel += min(self.distance(None, state.player, q)
-                          for p, kind in state.items.items() for q in self.free_endpoints[kind][p])
+        if not state.carrying and (state.items or state.workers):
+            pickups = [q for p, kind in state.items.items() for q in self.free_endpoints[kind][p]]
+            # 인부 회수도 줍기다. 가까운 인부보다 먼 부품을 첫 목적지로
+            # 강제하면 실제 최단 비용을 초과해 유효한 풀이를 가지치기한다.
+            pickups.extend(state.workers)
+            travel += min(self.distance(None, state.player, q) for q in pickups)
         last = set(traps) | set(posts)
         if level.traps and not state.active:
             last |= level.levers
@@ -196,7 +199,7 @@ def main():
         if args.stage and index not in args.stage:
             continue
         if args.check and level.id not in MINIMUM_ACTIONS:
-            raise ValueError("새 배치는 최단성 미검증 초안입니다. tools/draft_routes.py로 완주를 검사하세요.")
+            raise ValueError("최단 행동 기준이 없습니다. 먼저 제한 없이 탐색해 기준 풀이를 등록하세요.")
         route = SOLUTIONS.get(level.id, [])
         check = Game(replace(level, action_limit=None))
         valid = all(check.act(a) for a in route) and check.state.cleared
@@ -205,17 +208,22 @@ def main():
             expected_limit = None if index == 1 else MINIMUM_ACTIONS[level.id] + 2
             if (not valid or result is None or result["minimum"] != MINIMUM_ACTIONS[level.id]
                     or len(route) != result["minimum"] or level.action_limit != expected_limit):
-                raise ValueError(f"{level.id}: 기준 풀이·최소 행동·제한 규칙 불일치")
+                raise ValueError(f"{level.id}: 기준 풀이·최소 행동·제한 규칙 불일치 "
+                                 f"(재생={valid}, 탐색={None if result is None else result['minimum']}, "
+                                 f"기준={MINIMUM_ACTIONS[level.id]}, 제한={level.action_limit})")
         if result is None:
             raise ValueError(f"{level.id}: 완료 가능한 풀이가 없습니다.")
-        required = {4: ("rubble",), 5: ("mirror",), 6: ("water",),
-                    7: ("helper",), 8: ("rubble", "mirror", "water", "helper")}
+        required = {4: ("rubble", "plate"), 5: ("mirror", "chute"), 6: ("water",),
+                    7: ("helper",), 8: ("rubble", "mirror", "water", "helper", "chute")}
         if args.check_mechanics and index in required:
             for mechanic in required[index]:
                 def forbidden(game, action):
                     if action in DIRECTIONS:
-                        return (mechanic == "rubble" and
-                                (game.state.player[0] + DIRECTIONS[action][0], game.state.player[1] + DIRECTIONS[action][1]) in game.state.rubble)
+                        dx, dy = DIRECTIONS[action]
+                        target = game.state.player[0] + dx, game.state.player[1] + dy
+                        return ((mechanic == "rubble" and target in game.state.rubble)
+                                or (mechanic == "plate" and (target in level.plates or
+                                    (target in game.state.rubble and (target[0] + dx, target[1] + dy) in level.plates))))
                     operation = (game._drop_interaction(game.state) if action == "drop" else
                                  game._interaction(game.state))[0]
                     return ((mechanic == "plate" and operation == "drop" and game.state.player in level.plates)
@@ -227,15 +235,19 @@ def main():
                 bypass = solve(level, args.max_states, level.action_limit, forbidden)
                 if bypass is not None:
                     raise ValueError(f"{level.id}: {mechanic} 없이 {bypass['minimum']}회에 완료 가능")
+                print(f"{level.id}: {mechanic} 생략 시 제한 내 완료 불가", flush=True)
             result["core_mechanic_required_within_limit"] = True
             result["required_mechanics"] = list(required[index])
         result["action_limit"] = level.action_limit
+        result["size"] = [level.width, level.height]
+        result["floor_cells"] = level.width * level.height - len(level.walls)
         results[level.id] = result
         print(json.dumps({"stage": level.id, **{k: v for k, v in result.items() if k != "actions"}}), flush=True)
     if args.output:
         root = Path(__file__).resolve().parents[1]
         fingerprints = {name: hashlib.sha256((root / name).read_bytes()).hexdigest()
-                        for name in ("data/stages.json", "game/model.py", "tools/solve_levels.py")}
+                        for name in ("data/stages.json", "game/levels.py", "game/model.py",
+                                     "game/mechanics.py", "tools/solve_levels.py", "tests/solutions.py")}
         report = {"sha256": fingerprints, "stages": results}
         args.output.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 

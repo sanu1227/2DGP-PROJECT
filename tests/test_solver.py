@@ -17,7 +17,7 @@ class SolverTests(unittest.TestCase):
             {"map": ["########", "#@BC####", "#..GFAE#", "####BS##"],
              "plate_links": [{"id": "P1", "plate": [4, 2], "gate": [3, 2]}],
              "chute_links": [{"id": "C1", "inlet": [3, 1], "outlet": [4, 2]}]},
-            {"map": ["########", "#@BBAJ##", "#ELTSGP#"],
+            {"map": ["########", "#@BBAJ##", "#ELTSGP#", "##PT####"],
              "worker_links": [{"id": "J1", "station": [5, 1], "gate": [5, 2]}]},
         ]
         for index, room in enumerate(rooms):
@@ -66,6 +66,17 @@ class SolverTests(unittest.TestCase):
                 self.assertIsNone(solve(level, upper_bound=result["minimum"] - 1))
                 with self.assertRaisesRegex(RuntimeError, "최단성 미검증"):
                     solve(level, max_states=0)
+
+    def test_bound_never_exceeds_remaining_reference_route_cost(self):
+        from game.levels import load_levels
+        from tests.solutions import SOLUTIONS
+        for level in load_levels():
+            game, bound = Game(level), LowerBound(level)
+            actions = SOLUTIONS[level.id]
+            for index, action in enumerate(actions):
+                with self.subTest(stage=level.id, step=index):
+                    self.assertLessEqual(bound(game.state), len(actions) - index)
+                    self.assertTrue(game.act(action))
 
 
 if __name__ == "__main__":
