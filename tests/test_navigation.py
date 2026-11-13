@@ -6,7 +6,7 @@ import unittest
 
 from game.model import Game
 from game.navigation import ClickNavigator, IsoBoard, find_path
-from tests.test_devices import belt_stage, load_stage, plate_stage
+from tests.test_devices import load_stage, plate_stage
 from tests.test_game import make_level
 
 
@@ -78,31 +78,8 @@ class NavigationTests(unittest.TestCase):
         self.assertEqual(game.state, stopped)
         self.assertEqual(game.history, history)
 
-    def test_each_path_step_settles_belts_and_has_one_undo_snapshot(self):
-        game = Game(load_stage(belt_stage()))
-        original_items = deepcopy(game.level.initial_items)
-        game.state.items[(3, 3)] = game.state.items.pop((2, 1))
-        before = deepcopy(game.state)
-        navigation = ClickNavigator()
-        self.assertTrue(navigation.start(game, (1, 3), 0))
-        self.assertEqual(navigation.tick(game, 0), "down")
-        first = deepcopy(game.state)
-        self.assertEqual(game.state.items[(5, 3)], "part")
-        self.assertEqual((game.state.moves, len(game.history)), (1, 1))
-        self.assertIsNone(navigation.tick(game, 0.10))
-        self.assertEqual(game.state, first)
-        self.assertEqual(navigation.tick(game, 0.18), "down")
-        self.assertEqual(game.state.items[(5, 3)], "part")
-        self.assertEqual((game.state.moves, len(game.history)), (2, 2))
-        self.assertFalse(navigation.active)
-        self.assertTrue(game.undo())
-        self.assertEqual(game.state, first)
-        self.assertTrue(game.undo())
-        self.assertEqual(game.state, before)
-        self.assertEqual(game.level.initial_items, original_items)
-
     def test_current_cell_cancel_and_invalid_retarget_do_not_consume_turns(self):
-        game = Game(load_stage(belt_stage()))
+        game = Game(make_level(["########", "#@P.TLE#", "#......#", "#......#", "#......#", "#......#", "#......#", "########"]))
         initial = deepcopy(game.state)
         navigation = ClickNavigator()
         self.assertTrue(navigation.start(game, (4, 1), 0))
@@ -122,7 +99,7 @@ class NavigationTests(unittest.TestCase):
         self.assertEqual(game.history, [])
 
     def test_ready_time_and_late_frames_never_batch_multiple_actions(self):
-        game = Game(load_stage(belt_stage()))
+        game = Game(make_level(["########", "#@P.TLE#", "#......#", "#......#", "#......#", "#......#", "#......#", "########"]))
         navigation = ClickNavigator()
         self.assertTrue(navigation.start(game, (4, 1), now=1, ready_at=2))
         self.assertIsNone(navigation.tick(game, 1.99))

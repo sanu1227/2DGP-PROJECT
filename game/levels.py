@@ -7,22 +7,7 @@ import re
 
 
 Pos = tuple[int, int]
-BELT_DIRECTIONS = {"up": (0, -1), "down": (0, 1), "left": (-1, 0), "right": (1, 0)}
-
-
-def validate_belts(belts: dict[Pos, str], prefix: str = "") -> None:
-    """자동 운반이 끝나지 않는 방향 순환을 지도 로딩 때 거부한다."""
-    checked = set()
-    for start in belts:
-        path = set()
-        pos = start
-        while pos in belts and pos not in checked:
-            if pos in path:
-                raise ValueError(prefix + "순환 벨트는 사용할 수 없습니다.")
-            path.add(pos)
-            dx, dy = BELT_DIRECTIONS[belts[pos]]
-            pos = pos[0] + dx, pos[1] + dy
-        checked.update(path)
+DIRECTIONS = {"up": (0, -1), "down": (0, 1), "left": (-1, 0), "right": (1, 0)}
 
 
 @dataclass(frozen=True)
@@ -45,7 +30,14 @@ class Level:
     gates: dict[Pos, Pos] = field(default_factory=dict)
     device_labels: dict[Pos, str] = field(default_factory=dict)
     chutes: dict[Pos, Pos] = field(default_factory=dict)
-    belts: dict[Pos, str] = field(default_factory=dict)
+    mirrors: frozenset[Pos] = frozenset()
+    sources: dict[Pos, str] = field(default_factory=dict)
+    receivers: frozenset[Pos] = frozenset()
+    valves: frozenset[Pos] = frozenset()
+    channels: frozenset[Pos] = frozenset()
+    bridges: frozenset[Pos] = frozenset()
+    rubble: frozenset[Pos] = frozenset()
+    jobs: frozenset[Pos] = frozenset()
     action_limit: int | None = None
 
 
@@ -91,11 +83,11 @@ def load_levels(path: Path | str | None = None) -> list[Level]:
 
     levels = []
     identifiers = set()
-    glyphs = "#.@EPBTLASFGCO^v<>"
+    glyphs = "#.@EPBTLASFGCOMQYVWHRJ"
     for index, raw in enumerate(stages, start=1):
         prefix = f"스테이지 {index}: "
         required = {"id", "title", "hint", "map"}
-        if not isinstance(raw, dict) or not required <= set(raw) or set(raw) - required - {"plate_links", "chute_links", "action_limit"}:
+        if not isinstance(raw, dict) or not required <= set(raw) or set(raw) - required - {"plate_links", "chute_links", "action_limit", "power_links", "worker_links", "magic_sources"}:
             raise ValueError(prefix + "id, title, hint, map 필드가 필요합니다.")
         action_limit = raw.get("action_limit")
         if action_limit is not None and (type(action_limit) is not int or action_limit <= 0):
@@ -131,8 +123,15 @@ def load_levels(path: Path | str | None = None) -> list[Level]:
             raise ValueError(prefix + "초소가 있는 방에는 작업대가 필요합니다.")
         used_ids = set()
         plate_links, labels = read_links(raw, "plate_links", "plate", "gate", positions["F"], positions["G"], prefix, used_ids)
-        if set(plate_links) != positions["F"] or set(plate_links.values()) != positions["G"]:
-            raise ValueError(prefix + "모든 발판과 문을 한 번씩 연결해야 합니다.")
+        power_links, power_labels = read_links(raw, "power_links", "receiver", "gate", positions["Y"], positions["G"], prefix, used_ids)
+        worker_links, worker_labels = read_links(raw, "worker_links", "station", "gate", positions["J"], positions["G"], prefix, used_ids)
+        links = {**plate_links, **power_links, **worker_links}
+        if (set(plate_links) != positions["F"] or set(power_links) != positions["Y"]
+                or set(worker_links) != positions["J"] or set(links.values()) != positions["G"]
+                or len(links) != len(positions["G"])):
+            raise ValueError(prefix + "모든 발판·수신기·작업대와 문을 한 번씩 연결해야 합니다.")
+        labels.update(power_labels)
+        labels.update(worker_labels)
         chutes, chute_labels = read_links(raw, "chute_links", "inlet", "outlet", positions["C"],
                                          positions["O"] | positions["."] | positions["F"], prefix, used_ids)
         if set(chutes) != positions["C"] or not positions["O"] <= set(chutes.values()):
@@ -141,16 +140,33 @@ def load_levels(path: Path | str | None = None) -> list[Level]:
             labels[pos] = labels[pos] + "/" + identifier if pos in labels else identifier
         items = {pos: "part" for pos in positions["P"]}
         items.update({pos: "bone" for pos in positions["B"]})
-        belts = {pos: direction for glyph, direction in (("^", "up"), ("v", "down"), ("<", "left"), (">", "right"))
-                 for pos in positions[glyph]}
-        validate_belts(belts, prefix)
+        sources = {}
+        raw_sources = raw.get("magic_sources", [])
+        if not isinstance(raw_sources, list):
+            raise ValueError(prefix + "magic_sources는 목록이어야 합니다.")
+        for source in raw_sources:
+            if not isinstance(source, dict) or set(source) != {"cell", "direction"}:
+                raise ValueError(prefix + "마력 광원 필드가 잘못되었습니다.")
+            cell = source["cell"]
+            if (not isinstance(cell, list) or len(cell) != 2 or any(type(n) is not int for n in cell)
+                    or tuple(cell) not in positions["Q"] or tuple(cell) in sources
+                    or not isinstance(source["direction"], str) or source["direction"] not in DIRECTIONS):
+                raise ValueError(prefix + "마력 광원 좌표나 방향이 잘못되었습니다.")
+            sources[tuple(cell)] = source["direction"]
+        if set(sources) != positions["Q"] or (positions["M"] | positions["Y"] and not sources):
+            raise ValueError(prefix + "거울·수신기에는 방향이 지정된 광원이 필요합니다.")
+        if bool(positions["V"]) != bool(positions["W"] | positions["H"]):
+            raise ValueError(prefix + "수로·부교와 수위 밸브를 함께 배치해야 합니다.")
+        if positions["J"] and not positions["S"]:
+            raise ValueError(prefix + "해골 인부는 병사 복구 목표와 함께 배치해야 합니다.")
         levels.append(Level(
             id=raw["id"], title=raw["title"], hint=raw["hint"], rows=tuple(rows),
             width=width, height=height, start=next(iter(positions["@"])), exit=next(iter(positions["E"])),
             walls=positions["#"], traps=positions["T"], levers=positions["L"],
             benches=positions["A"], posts=positions["S"], initial_items=items,
-            plates=positions["F"], gates={gate: plate for plate, gate in plate_links.items()}, device_labels=labels,
+            plates=positions["F"], gates={gate: control for control, gate in links.items()}, device_labels=labels,
             chutes=chutes, action_limit=action_limit,
-            belts=belts,
+            mirrors=positions["M"], sources=sources, receivers=positions["Y"], valves=positions["V"],
+            channels=positions["W"], bridges=positions["H"], rubble=positions["R"], jobs=positions["J"],
         ))
     return levels

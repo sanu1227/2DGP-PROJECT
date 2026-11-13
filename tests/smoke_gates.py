@@ -23,7 +23,7 @@ def main():
     try:
         view = View()
         clock = 100.0
-        for index in range(3, 6):
+        for index in (3, 4, 6):
             game = Game(levels[index])
             gate, plate = next(iter(game.level.gates.items()))
             statuses = set()
@@ -57,8 +57,7 @@ def main():
                 alpha = ctypes.c_ubyte()
                 assert p.SDL_GetTextureAlphaMod(view.art.atlases["gates"].texture, ctypes.byref(alpha)) == 0
                 assert alpha.value == 255  # Transparency must not leak into the next gate draw.
-                if index == 4:
-                    assert view.gate_inlets
+                if view.gate_inlets:
                     inlet_region = next(iter(view.gate_inlets.values()))[0]
                     inlet = view.hit_masks[inlet_region]
                     ix1, iy1, ix2, iy2 = inlet_region[1]
@@ -112,7 +111,7 @@ def main():
             view.gate(rotated, gate, sx, sy, scale, "open")
         assert draw.call_args.kwargs["flip"]
         assert any(mask[0] == "gate_open" and mask[4] for mask in view.hit_masks.values())
-        print(f"Gate smoke OK: {checked} states; rooms 4–6 solved, transitions/undo, "
+        print(f"Gate smoke OK: {checked} states; rooms 4, 5, 7 solved, transitions/undo, "
               f"held exit, alpha picking, {len(aperture)} clear aperture pixels and both axes.")
     finally:
         if view:

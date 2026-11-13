@@ -15,7 +15,7 @@ from game.themes import boundary_walls, low_wall_sprite, scene_for, themed_floor
 from game.layout import WIDTH, HEIGHT, BOARD_BOTTOM, BOARD_TOP
 from game.front_end import FrontEnd
 from game.tutorial import first_room_hint
-from game.transport import BeltAnimation
+from game.mechanics import trace_magic, fixed_devices
 from game.play_menu import PlayClock, PlayMenu
 from game.stage_feedback import StageFeedback
 
@@ -87,7 +87,6 @@ class View:
         self.fonts = {}
         self.art = None
         self.navigation = ClickNavigator()
-        self.belt_animation = BeltAnimation()
         self.mouse_position = None
         self.show_coordinates = False
         self.tutorial = None
@@ -238,9 +237,6 @@ class View:
         self.facing = FACING[action]
         self.motion = (start, destination, now)
 
-    def transporting(self, game, now=None):
-        return self.belt_animation.sample(game, self.now() if now is None else now) is not None
-
     def text(self, x, y, value, size=18, color=INK):
         self.fonts[size].draw(x, y, str(value), color)
 
@@ -275,14 +271,11 @@ class View:
         self.art.draw(sprite, x, y, scale, anchor=entry.get("display_anchor", entry["anchor"]))
 
     def support_height(self, game, pos):
-        """벨트·발판 위 물건과 캐릭터의 접점을 지지면에 맞춘다."""
+        """발판 위 물건과 캐릭터의 접점을 지지면에 맞춘다."""
         if pos in game.level.plates:
             pressed = self.plate_depths.get(pos, float(game.plate_pressed(pos))) if self.gate_game is game else float(game.plate_pressed(pos))
             up, down = self.art.surface_height("plate_up"), self.art.surface_height("plate_down")
             return up + (down - up) * pressed
-        if pos in game.level.belts:
-            direction = game.level.belts[pos]
-            return self.art.surface_height("conveyor_ne" if direction in ("up", "left") else "conveyor_se")
         return 0
 
     def player_support_height(self, game, position):
@@ -412,6 +405,9 @@ class View:
         targets.update({pos: "병사 배치" for pos in level.posts - state.soldiers})
         targets.update({pos: "병사 조립" for pos in level.benches})
         targets.update({pos: "뼈 투입구" for pos in level.chutes})
+        targets.update({pos: "거울 회전" for pos in level.mirrors})
+        targets.update({pos: "수위 변경" for pos in level.valves})
+        targets.update({pos: "인부 회수" if pos in state.workers else "인부 배치" for pos in level.jobs})
         if not state.active:
             targets.update({pos: "레버 가동" for pos in level.levers})
         targets.update({pos: ITEM_NAMES[kind] for pos, kind in state.items.items()})
@@ -481,12 +477,6 @@ class View:
     def board(self, game):
         level, state = game.level, game.state
         now = self.now()
-        transport = self.belt_animation.sample(game, now)
-        moving_items = {}
-        moving_sources = set()
-        if transport:
-            state, moves, fraction = transport
-            moving_sources = {source for source, _, _ in moves}
         if self.gate_game is not game:
             self.reset_gates()
             self.reset_plates()
@@ -515,11 +505,12 @@ class View:
 
         exit_ready = (state.installed == level.traps and (not level.traps or state.active)
                       and state.soldiers == level.posts and state.carrying is None)
+        beam_segments, powered_receivers = trace_magic(level, state)
         objects, labels, wall_tints = [], [], {}
         decor_draws = {}
         decoration_cells = {tuple(entry["cell"]) for entry in scene["decorations"]} if scene else set()
         device_floor = (level.traps | level.posts | level.plates | level.gates.keys()
-                        | level.chutes.keys() | set(level.chutes.values()) | level.belts.keys()
+                        | fixed_devices(level) | set(level.chutes.values()) | level.channels | level.bridges
                         | level.benches | level.levers | {level.exit})
         for depth in range(level.width + level.height - 1):
             for y in range(level.height):
@@ -577,10 +568,29 @@ class View:
                 if pos not in level.walls and pos not in device_floor and (not scene or near_trap):
                     draw_scars(pos, sx, sy, scale, near_trap)
 
-                if pos in level.belts:
-                    direction = level.belts[pos]
-                    objects.append((depth, 0.5, f"belt_{direction}", sx, sy))
-                    labels.append((pos, "벨트 " + {"up": "↗", "right": "↘", "down": "↙", "left": "↖"}[direction]))
+                if pos in level.channels:
+                    if state.water_high:
+                        self.art.draw("water", sx, sy, scale)
+                    else:
+                        diamond(sx, sy, half_width-3, int(half_height)-2, None, (72, 134, 147))
+                    labels.append((pos, "수로 잠김" if state.water_high else "낮은 수로"))
+                if pos in level.bridges:
+                    self.art.draw("water", sx, sy, scale)
+                    if state.water_high:
+                        self.art.draw("float_bridge", sx, sy, scale)
+                    else:
+                        draw_tinted(self.art, "float_bridge", sx, sy-10*scale, scale*.8, (74, 104, 111))
+                    labels.append((pos, "부교 연결" if state.water_high else "부교 내려감"))
+                for cells, sprite, label in (
+                        (level.mirrors, "mirror", "거울 회전"),
+                        (level.sources, "mana_source", "광원"),
+                        (level.receivers, "mana_receiver", level.device_labels.get(pos, "") + (" 수신 중" if pos in powered_receivers else " 수신 대기")),
+                        (level.valves, "valve", "수위 높음" if state.water_high else "수위 낮음"),
+                        (state.rubble, "push_rubble", "밀기 · 방향키"),
+                        (level.jobs, "helper_work" if pos in state.workers else "winch", level.device_labels.get(pos, "") + (" 인부 회수" if pos in state.workers else " 인부 배치"))):
+                    if pos in cells:
+                        objects.append((depth, 1, sprite, sx, sy))
+                        labels.append((pos, label))
                 if pos in level.chutes:
                     objects.append((depth, 1, "chute_inlet", sx, sy))
                     labels.append((pos, "뼈 투입구"))
@@ -603,18 +613,10 @@ class View:
                     stored = state.bench_bones.get(pos, 0)
                     objects.append((depth, 1, "bench_one_bone" if stored else "bench_empty", sx, sy))
                     labels.append((pos, f"조립 {stored}/2"))
-                if pos in state.items and pos not in moving_sources:
+                if pos in state.items:
                     objects.append((depth, 2, ITEM_SPRITES[state.items[pos]], sx, sy))
                 if pos in state.soldiers:
                     objects.append((depth, 2, "soldier_deployed", sx, sy))
-
-        if transport:
-            for source, destination, kind in moves:
-                position = tuple(a + (b - a) * fraction for a, b in zip(source, destination))
-                sx, sy = screen(position)
-                sprite = ITEM_SPRITES[kind]
-                objects.append((sum(position), 2, sprite, sx, sy))
-                moving_items[(sprite, sx, sy)] = (position, source)
 
         if scene:
             for mount in scene.get("wall_mounts", ()):
@@ -640,15 +642,12 @@ class View:
         player = self.player_position(state.player, now)
         px, py = screen(player)
         # 같은 칸의 작업대나 배치한 병사와 구별되도록 약간 앞쪽에 선다.
-        if state.player in level.benches | level.levers | state.soldiers | level.plates | level.gates.keys() | level.chutes.keys():
+        if state.player in level.benches | level.levers | state.soldiers | level.plates | level.gates.keys() | level.chutes.keys() | fixed_devices(level):
             px -= 9
             py -= 7
         objects.append((sum(player), 3, "player", px, py))
         for _, _, sprite, sx, sy in sorted(objects, key=lambda obj: obj[:2]):
             pos = state.player if sprite == "player" else projection.pick(sx, sy)
-            moving = moving_items.get((sprite, sx, sy))
-            if moving:
-                pos = moving[1]
             decor_scale = decor_draws.get((sprite, sx, sy))
             if decor_scale is not None:
                 self.art.draw(sprite, sx, sy, decor_scale)
@@ -657,21 +656,18 @@ class View:
             # 논리 칸은 높이를 더하기 전에 결정해야 클릭 대상이 옆 칸으로 밀리지 않는다.
             if sprite == "player":
                 sy += self.player_support_height(game, player) * scale
-            elif sprite in ITEM_SPRITES.values():
-                sy += (self.player_support_height(game, moving[0]) if moving
-                       else self.support_height(game, pos)) * scale
+            elif sprite in ITEM_SPRITES.values() or sprite == "push_rubble":
+                sy += self.support_height(game, pos) * scale
             if sprite in ("plate_up", "plate_down"):
                 pressed = self.plate_depths[pos]
                 self.art.draw_plate(sx, sy, scale, pressed)
                 self.sprite_hit_region(pos, "plate_up", sx, sy, scale)
                 self.plate_hit_masks[self.hit_regions[-1]] = (sx, sy, scale, pressed)
                 continue
-            if sprite.startswith("belt_"):
-                direction = sprite.removeprefix("belt_")
-                name = "conveyor_ne" if direction in ("up", "left") else "conveyor_se"
-                flip = direction in ("left", "down")
-                self.art.draw(name, sx, sy, scale, flip=flip)
-                self.sprite_hit_region(pos, name, sx, sy, scale, flip)
+            if sprite == "mirror":
+                flip = pos in state.turned_mirrors
+                self.art.draw(sprite, sx, sy, scale, flip=flip)
+                self.sprite_hit_region(pos, sprite, sx, sy, scale, flip)
                 continue
             if sprite.startswith("gate_"):
                 self.gate(level, pos, sx, sy, scale, sprite.removeprefix("gate_"), gate_openings[pos])
@@ -701,6 +697,11 @@ class View:
             if state.carrying and self.facing in ("se", "sw"):
                 self.item(state.carrying, sx + offset_x, sy + 24 * height_scale, scale * 0.65)
 
+        # 광선은 물체와 구별되는 높은 선으로 그리고 끝점도 현재 상태에서 계산한다.
+        for start, end in beam_segments:
+            x1,y1=screen(start); x2,y2=screen(end)
+            for offset,color in ((-1,(30,129,165)),(0,(150,245,255)),(1,(30,129,165))):
+                line(x1,y1+45*scale+offset,x2,y2+45*scale+offset,color)
         # 상태 문구를 바닥 아트와 함께 유지해 색이나 작은 그림에만 의존하지 않는다.
         for pos, label in labels:
             sx, sy = screen(pos)
@@ -721,15 +722,10 @@ class View:
                 color = TEAL if game.plate_pressed(pos, state) else GOLD
             self.text(sx - width / 2 + 5, sy - 17, label, 16, color)
             self.hit_regions.append((pos, (sx - width / 2, sy - 28, sx + width / 2, sy - 6)))
-        if transport:
-            self.interaction_regions = {}
-            self.interaction_hint = None
-        else:
-            self.interaction_markers(game, projection)
+        self.interaction_markers(game, projection)
         if self.show_coordinates:
             self.coordinate_overlay(level, projection)
-        if not transport:
-            self.navigation_overlay(game, projection)
+        self.navigation_overlay(game, projection)
         self.action_badge(game)
 
     def coordinate_overlay(self, level, projection):
@@ -777,8 +773,6 @@ class View:
             return game.context_action(), RED
         if game.state.cleared:
             return "복구 완료", TEAL
-        if self.transporting(game):
-            return "벨트 자동 운반 중", TEAL
         if game.repair_percent == 100:
             return "복구 완료 · 출구로 돌아가세요", TEAL
         if self.interaction_hint:
@@ -872,10 +866,9 @@ class View:
         self.repair_progress(game, 1120, 110)
 
         box(32, 48, WIDTH - 32, BOARD_BOTTOM, (41, 55, 58))
-        transporting = self.transporting(game)
-        context = "벨트 자동 운반 중 · Z 되돌리기 / R 재시작" if transporting else self.interaction_hint or game.context_action()
+        context = self.interaction_hint or game.context_action()
         self.text(48, 80, context, 18, RED if game.failed else TEAL)
-        self.text(48, 59, "운반이 끝나면 다음 행동을 할 수 있습니다." if transporting else game.message, 16, INK)
+        self.text(48, 59, game.message, 16, INK)
         if state.cleared:
             box(WIDTH - 340, 53, WIDTH - 44, 89, (46, 96, 81))
             label = "E / Space  다음 방" if index + 1 < total else "E / Space  처음부터 다시"
@@ -983,7 +976,7 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True):
                         if view.navigation.active:
                             game.message = "자동 이동을 취소했습니다."
                         view.navigation.cancel()
-                    elif event.button == p.SDL_BUTTON_LEFT and not view.transporting(game):
+                    elif event.button == p.SDL_BUTTON_LEFT:
                         if game.state.cleared:
                             if feedback.next_button(index, len(levels)).contains(view.mouse_position):
                                 next_room()
@@ -996,9 +989,6 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True):
                                 view.navigation.start(game, target, now, ready_at=ready_at)
                 elif event.type == p.SDL_KEYDOWN:
                     if event.key in (p.SDLK_b, p.SDLK_q):
-                        continue
-                    if view.transporting(game) and event.key not in (
-                            p.SDLK_ESCAPE, p.SDLK_F2, p.SDLK_z, p.SDLK_BACKSPACE, p.SDLK_r, *stage_keys):
                         continue
                     view.navigation.cancel()
                     if event.key == p.SDLK_F2:
@@ -1033,7 +1023,6 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True):
                             # 도착 직후 상호작용하면 그 칸에 바로 정렬한다.
                             view.motion = None
                         if changed:
-                            view.belt_animation.start(game, view.now())
                             if game.state.cleared:
                                 screen_changed = True
             # 이미 보간 중인 한 칸이 끝난 뒤에만 다음 자동 이동을 실행한다.
@@ -1041,13 +1030,12 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True):
                 play_menu.offer(game, view)
             now = view.now()
             front_end.update(perf_counter())
-            if (running and front_end.screen == "playing" and not play_menu.active and not view.transporting(game, now)
+            if (running and front_end.screen == "playing" and not play_menu.active
                     and (view.motion is None or now >= view.motion[2] + 0.18)):
                 previous = game.state.player
                 action = view.navigation.tick(game, now)
                 if action is not None:
                     view.move_player(previous, game.state.player, action)
-                    view.belt_animation.start(game, now)
             if front_end.screen == "playing":
                 feedback.update(game, now)
                 view.tutorial_hidden = play_menu.mode == "device"

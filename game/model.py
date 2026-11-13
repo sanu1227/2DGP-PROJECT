@@ -1,13 +1,12 @@
 """화면이나 실시간 프레임에 의존하지 않는 한 칸 단위 퍼즐."""
 
 from copy import deepcopy
-from collections import Counter
 from dataclasses import dataclass, field
 
-from game.levels import BELT_DIRECTIONS, Level, Pos
+from game.levels import DIRECTIONS, Level, Pos
+from game.mechanics import trace_magic, dry_at, changing_water_occupied, fixed_devices
 
 
-DIRECTIONS = BELT_DIRECTIONS
 ITEM_NAMES = {"part": "함정 부품", "bone": "뼈 묶음", "soldier": "해골 병사"}
 
 
@@ -22,12 +21,10 @@ class State:
     bench_bones: dict[Pos, int] = field(default_factory=dict)
     moves: int = 0
     cleared: bool = False
-
-
-@dataclass
-class BeltStep:
-    state: State
-    moves: tuple[tuple[Pos, Pos, str], ...]
+    turned_mirrors: set[Pos] = field(default_factory=set)
+    water_high: bool = False
+    rubble: set[Pos] = field(default_factory=set)
+    workers: set[Pos] = field(default_factory=set)
 
 
 class Game:
@@ -36,9 +33,8 @@ class Game:
         self.restart()
 
     def restart(self) -> None:
-        self.state = State(player=self.level.start, items=dict(self.level.initial_items))
+        self.state = State(player=self.level.start, items=dict(self.level.initial_items), rubble=set(self.level.rubble))
         self.history: list[State] = []
-        self.belt_steps: list[BeltStep] = []
         self.message = "물건이나 장치 위에서 E를 누르세요."
 
     @property
@@ -53,7 +49,7 @@ class Game:
         if not total:
             return 100
         state = self.state
-        assembled = sum(kind == "soldier" for kind in state.items.values()) + int(state.carrying == "soldier")
+        assembled = sum(kind == "soldier" for kind in state.items.values()) + int(state.carrying == "soldier") + len(state.workers)
         done = (len(state.installed) + (len(self.level.traps) if state.active else 0)
                 + sum(state.bench_bones.values()) + 2 * assembled + 3 * len(state.soldiers))
         return min(100, done * 100 // total)
@@ -65,7 +61,6 @@ class Game:
 
     def act(self, action: str) -> bool:
         """성공한 상태 변경만 한 행동으로 기록한다. 실패는 안내만 바꾼다."""
-        self.belt_steps = []
         if action not in {*DIRECTIONS, "interact", "drop"}:
             raise ValueError(f"알 수 없는 행동: {action}")
         if self.state.cleared:
@@ -80,9 +75,6 @@ class Game:
         self.message = message
         if not changed:
             return False
-        self._settle_belts(candidate)
-        if self.belt_steps:
-            self.message += " 벨트 자동 운반을 마쳤습니다."
         # ponytail: 최대 12×12칸에서는 전체 복사가 충분하다. 대형 맵이 필요해지면 행동별 차이를 기록한다.
         self.history.append(deepcopy(self.state))
         candidate.moves += 1
@@ -101,7 +93,6 @@ class Game:
         return True
 
     def undo(self) -> bool:
-        self.belt_steps = []
         if not self.history:
             self.message = "되돌릴 행동이 없습니다."
             return False
@@ -122,11 +113,15 @@ class Game:
 
     def plate_pressed(self, pos: Pos, state: State | None = None) -> bool:
         state = self.state if state is None else state
-        return pos == state.player or pos in state.items
+        return pos == state.player or pos in state.items or pos in state.rubble
 
     def gate_status(self, pos: Pos, state: State | None = None) -> str:
         state = self.state if state is None else state
-        if self.plate_pressed(self.level.gates[pos], state):
+        control = self.level.gates[pos]
+        powered = (control in trace_magic(self.level, state)[1] if control in self.level.receivers
+                   else control in state.workers if control in self.level.jobs
+                   else self.plate_pressed(control, state))
+        if powered:
             return "open"
         if state.player == pos or pos in state.items:
             return "held"
@@ -137,40 +132,9 @@ class Game:
         state = self.state if state is None else state
         return (0 <= pos[0] < self.level.width and 0 <= pos[1] < self.level.height
                 and pos not in self.level.walls and pos not in state.soldiers
+                and pos not in state.rubble and dry_at(self.level, state, pos)
                 and not (state.active and pos in self.level.traps)
                 and (pos not in self.level.gates or self.gate_status(pos, state) == "open"))
-
-    def _settle_belts(self, state: State) -> None:
-        """막히거나 벨트가 끝날 때까지 운반하고 표시용 한 칸 기록을 남긴다."""
-        # 각 물건은 순환 없는 벨트 칸을 최대 한 번씩 지난다.
-        # 잘못 생성한 Level도 게임을 멈추지 않도록 상한을 둔다.
-        for _ in range(len(self.level.belts) * len(state.items) + 1):
-            moves = self._belt_moves(state)
-            if not moves:
-                return
-            self.belt_steps.append(BeltStep(deepcopy(state), tuple(moves)))
-            for source, _, _ in moves:
-                del state.items[source]
-            for _, destination, kind in moves:
-                state.items[destination] = kind
-        raise ValueError("순환 벨트는 사용할 수 없습니다.")
-
-    def _belt_moves(self, state: State) -> list[tuple[Pos, Pos, str]]:
-        """한 구간의 점유·충돌을 같은 배치에서 판정한다."""
-        fixed = self.level.traps | self.level.posts | self.level.benches | self.level.levers | self.level.chutes.keys() | {self.level.exit}
-        candidates = {}
-        for source, direction in self.level.belts.items():
-            if state.items.get(source) not in {"part", "soldier"}:
-                continue
-            dx, dy = DIRECTIONS[direction]
-            destination = source[0] + dx, source[1] + dy
-            if (destination == state.player or destination in state.items or destination in fixed
-                    or not self.walkable(destination, state)):
-                continue
-            candidates[source] = destination
-        counts = Counter(candidates.values())
-        return [(source, destination, state.items[source]) for source, destination in candidates.items()
-                if counts[destination] == 1]
 
     def _interaction(self, state: State) -> tuple[str | None, str]:
         """현재 칸에서 가능한 행동과 안내를 함께 결정한다."""
@@ -179,11 +143,26 @@ class Game:
             if state.carrying is not None:
                 return None, "손이 찼습니다. 먼저 내려놓으세요."
             return "pickup", f"E: {ITEM_NAMES[state.items[pos]]} 줍기"
+        if pos in self.level.mirrors:
+            return (None, "거울은 빈손으로 돌리세요.") if state.carrying else ("rotate", "E / Space: 거울 90도 회전")
+        if pos in self.level.valves:
+            if state.carrying:
+                return None, "수위 밸브는 빈손으로 돌리세요."
+            if changing_water_occupied(self.level, state):
+                return None, "잠길 수로나 내려갈 부교의 물건을 먼저 치우세요."
+            return "water", "E / Space: " + ("배수 · 낮은 수로 열기" if state.water_high else "급수 · 부교 띄우기")
+        if pos in self.level.jobs:
+            if pos in state.workers:
+                return (None, "인부를 회수하려면 손을 비우세요.") if state.carrying else ("recall", "E / Space: 해골 인부 회수")
+            if state.carrying != "soldier":
+                return None, "조립한 해골을 데려와 윈치 작업에 배치하세요."
+            return "assign", "E / Space: 해골 인부 작업 배치"
         if pos in self.level.chutes:
             outlet = self.level.chutes[pos]
             if state.carrying != "bone":
                 return None, f"{self.level.device_labels[pos]} 투입구: 뼈 묶음만 보낼 수 있습니다."
-            if outlet == state.player or outlet in state.items or outlet in state.soldiers:
+            if (outlet == state.player or outlet in state.items or outlet in state.soldiers
+                    or outlet in state.rubble or not dry_at(self.level, state, outlet)):
                 return None, "배출구가 막혔습니다. 물건이나 병사를 치우세요."
             return "send_bone", f"E: {self.level.device_labels[pos]} 배출구로 뼈 보내기"
         if pos in self.level.traps:
@@ -221,19 +200,15 @@ class Game:
             return None, f"{self.level.device_labels[pos]} 발판: 물건을 가져와 E / Space로 놓아 문을 유지하세요."
         if pos in self.level.gates:
             return None, "문이 닫혀도 현재 칸에서 나갈 수 있습니다."
-        if pos in self.level.belts:
-            return None, "벨트: E / Space로 부품·병사를 놓으면 끝이나 장애물까지 자동 운반합니다."
         return None, "물건이나 장치 위에서 E를 누르세요."
 
     def _drop_interaction(self, state: State) -> tuple[str | None, str]:
         """내려놓기 가능 여부를 입력 처리와 현재 칸 안내에 함께 사용한다."""
         if state.carrying is None:
             return None, "들고 있는 물건이 없습니다."
-        devices = self.level.traps | self.level.posts | self.level.benches | self.level.levers | self.level.chutes.keys() | {self.level.exit}
+        devices = fixed_devices(self.level)
         if state.player in devices or state.player in state.items:
             return None, "빈 일반 바닥에만 내려놓을 수 있습니다."
-        if state.player in self.level.belts and state.carrying == "bone":
-            return None, "벨트에는 부품이나 조립한 병사만 놓을 수 있습니다."
         return "drop", f"E / Space: {ITEM_NAMES[state.carrying]} 내려놓기"
 
     def _apply(self, state: State, action: str) -> tuple[bool, str]:
@@ -241,8 +216,20 @@ class Game:
             dx, dy = DIRECTIONS[action]
             x, y = state.player
             destination = x + dx, y + dy
+            if destination in state.rubble:
+                target = destination[0] + dx, destination[1] + dy
+                forbidden = fixed_devices(self.level) | self.level.gates.keys() | self.level.channels | self.level.bridges
+                if (state.carrying or not self.walkable(target, state) or target in forbidden
+                        or target in state.items or target in state.workers):
+                    return False, "잔해는 빈손으로, 비어 있는 바닥·발판 쪽으로만 밀 수 있습니다."
+                state.rubble.remove(destination)
+                state.rubble.add(target)
+                state.player = destination
+                return True, "잔해를 한 칸 밀었습니다. Z로 되돌릴 수 있습니다."
+            if not dry_at(self.level, state, destination):
+                return False, "수위 때문에 건널 수 없습니다. 밸브를 조작하세요."
             if destination in self.level.gates and not self.walkable(destination, state):
-                return False, "닫힌 문입니다. 연결 발판을 눌러 주세요."
+                return False, "닫힌 문입니다. 연결 장치의 상태를 확인하세요."
             if not (0 <= destination[0] < self.level.width and 0 <= destination[1] < self.level.height) or destination in self.level.walls:
                 return False, "벽이나 잔해로 막힌 칸입니다."
             if state.active and destination in self.level.traps:
@@ -256,6 +243,20 @@ class Game:
         if operation is None:
             return False, message
         pos = state.player
+        if operation == "rotate":
+            state.turned_mirrors.symmetric_difference_update({pos})
+            return True, "거울을 90도 돌렸습니다. 광선과 수신기를 확인하세요."
+        if operation == "water":
+            state.water_high = not state.water_high
+            return True, "급수: 수로 잠김 / 부교 연결" if state.water_high else "배수: 수로 열림 / 부교 내려감"
+        if operation == "assign":
+            state.workers.add(pos)
+            state.carrying = None
+            return True, "해골 인부가 윈치를 돌려 문을 유지합니다."
+        if operation == "recall":
+            state.workers.remove(pos)
+            state.carrying = "soldier"
+            return True, "인부를 회수했습니다. 문이 닫힙니다. 초소로 운반하세요."
         if operation == "drop":
             state.items[pos] = state.carrying
             state.carrying = None

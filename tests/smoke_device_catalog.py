@@ -21,7 +21,7 @@ def render_checks(levels):
     p.open_canvas(view.WIDTH, view.HEIGHT, sync=True)
     display = None
     original_text = view.View.text
-    folder = Path("docs/screenshots/device-catalog")
+    folder = Path("docs/screenshots/gimmicks-v1/device-catalog")
 
     def checked_text(display, x, y, value, size=18, color=view.INK):
         width = ctypes.c_int()
@@ -42,7 +42,7 @@ def render_checks(levels):
         initial = deepcopy(game.state)
         menu.open(display)
         menu.activate("catalog")
-        assert present_devices(game.level) == {card.kind for card in CARDS}
+        assert set().union(*(present_devices(level) for level in levels)) == {card.kind for card in CARDS}
         for page in range(PAGE_COUNT):
             menu.catalog_page = page
             display.draw(game, 7, len(levels))
@@ -77,11 +77,11 @@ def input_checks(levels):
         ([key(p.SDLK_RIGHT)], "catalog", 1, 0),
         ([key(p.SDLK_e), key(p.SDLK_r), key(p.SDLK_2)], "catalog", 1, 0),
         ([click(224, 234)], "catalog", 0, 0),
-        ([key(p.SDLK_LEFT)], "catalog", 1, 0),
-        ([click(800, 168)], "pause", 1, 0),
-        ([key(p.SDLK_ESCAPE), key(p.SDLK_d)], None, 1, 0),
-        ([key(p.SDLK_d)], None, 1, 1),
-        ([key(p.SDLK_ESCAPE)], "pause", 1, 1),
+        ([key(p.SDLK_LEFT)], "catalog", PAGE_COUNT - 1, 0),
+        ([click(800, 168)], "pause", PAGE_COUNT - 1, 0),
+        ([key(p.SDLK_ESCAPE), key(p.SDLK_d)], None, PAGE_COUNT - 1, 0),
+        ([key(p.SDLK_d)], None, PAGE_COUNT - 1, 1),
+        ([key(p.SDLK_ESCAPE)], "pause", PAGE_COUNT - 1, 1),
         ([key(p.SDLK_DOWN)] * 3 + [key(p.SDLK_RETURN)], "catalog", 0, 1),
         ([key(p.SDLK_ESCAPE)], "pause", 0, 1),
         ([key(p.SDLK_ESCAPE)], None, 0, 1),
@@ -122,7 +122,7 @@ def main():
     levels = load_levels()
     render_checks(levels)
     input_checks(levels)
-    print("Device catalog smoke OK: six illustrated cards, page wrap, room presence, glyphs/card bounds, frozen scene, keyboard/mouse, modal input isolation and resume.")
+    print("Device catalog smoke OK: nine illustrated cards, page wrap, room presence, glyphs/card bounds, frozen scene, keyboard/mouse, modal input isolation and resume.")
 
 
 if __name__ == "__main__":

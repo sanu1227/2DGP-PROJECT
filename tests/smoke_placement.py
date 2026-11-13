@@ -47,45 +47,17 @@ def main():
         assert pipe["anchor"] == {"x": 94, "y": 205}
         assert pipe["display_anchor"] == {"x": 128, "y": 220}
 
-        game = Game(levels[5])
-        projection = IsoBoard(game.level.width, game.level.height)
-        scale = projection.half_width * 2 / 224
-        checkpoints = {}
-        for step, action in enumerate(SOLUTIONS[game.level.id][:7], 1):
-            assert game.act(action), game.message
-            if step not in (3, 6, 7):
-                continue
-            # Compare settled anchors; automatic transport now reaches the animated plate immediately.
-            with patch("game.view.perf_counter", return_value=float(step)):
-                display.draw(game, 5, len(levels))
-            with patch("game.view.perf_counter", return_value=step + 1.1), \
-                    patch.object(display.art, "draw", wraps=display.art.draw) as draw:
-                display.draw(game, 5, len(levels))
-            if step == 3:
-                assert game.state.carrying == "part"
-                carried = [call for call in draw.call_args_list if call.args[0] == "part"]
-                assert carried and all(call.kwargs["anchor"] == {"x": 128, "y": 220}
-                                       for call in carried)
-                continue
-            pos = next(pos for pos, kind in game.state.items.items() if kind == "part")
-            assert pos in game.level.plates
-            visible_item_pixel(display, game, pos, "part")
-            sx, sy = projection.screen(pos)
-            calls = [call for call in draw.call_args_list if call.args[0] == "part"]
-            assert len(calls) == 1
-            assert calls[0].args[1] == sx
-            assert abs(calls[0].args[2] - sy - display.support_height(game, pos) * scale) < 1e-8
-            assert "anchor" not in calls[0].kwargs  # Ground anchor, not the carrying anchor.
-            checkpoints[step] = (deepcopy(game.state), [region for region, mask in display.hit_masks.items()
-                                                      if mask[0] == "part"])
-        assert game.undo()
-        with patch("game.view.perf_counter", return_value=8):
-            display.draw(game, 5, len(levels))
-        assert game.state == checkpoints[6][0]
-        assert [region for region, mask in display.hit_masks.items() if mask[0] == "part"] == checkpoints[6][1]
+        # 새 장치도 같은 기준점과 알파 클릭 판정을 사용한다.
+        for index, level in enumerate(levels[3:],3):
+            game=Game(level); display.draw(game,index,len(levels))
+            for cells,sprite in ((level.mirrors,"mirror"),(level.valves,"valve"),
+                                 (level.jobs,"winch"),(level.rubble,"push_rubble")):
+                for pos in cells:
+                    visible_item_pixel(display,game,pos,sprite)
+                    checked+=1
         p.update_canvas()
-        print(f"Placement smoke OK: {checked} ground items in six rooms; "
-              "belt/plate height and picking, carrying/HUD anchor, undo, theme grounding.")
+        print(f"Placement smoke OK: {checked} items and devices in eight rooms; "
+              "new-device alpha picking and theme grounding.")
     finally:
         if display:
             display.close()

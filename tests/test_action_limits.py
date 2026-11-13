@@ -18,7 +18,7 @@ class ActionLimitTests(unittest.TestCase):
         self.levels = load_levels()
 
     def test_unlimited_tutorial_and_authored_budgets(self):
-        self.assertEqual([l.action_limit for l in self.levels], [None, 52, 69, 63, 29, 65, 61, 77])
+        self.assertEqual([l.action_limit for l in self.levels], [None, 52, 69, None, None, None, None, None])
         game = Game(self.levels[0])
         for index in range(200):
             self.assertTrue(game.act("right" if index % 2 == 0 else "left"))
@@ -53,13 +53,13 @@ class ActionLimitTests(unittest.TestCase):
             self.assertEqual(game.failed, not cleared)
             self.assertFalse(game.act("right"))
 
-    def test_failure_freezes_belts_and_undo_restores_last_action(self):
+    def test_failure_freezes_devices_and_undo_restores_last_action(self):
         game = Game(replace(self.levels[5], action_limit=6))
         actions = SOLUTIONS[game.level.id][:6]
         for action in actions[:-1]:
             self.assertTrue(game.act(action))
         before = deepcopy(game.state)
-        self.assertTrue(game.act(actions[-1]))  # Drop also advances the conveyor.
+        self.assertTrue(game.act(actions[-1]))
         self.assertTrue(game.failed)
         frozen, history = deepcopy(game.state), deepcopy(game.history)
         for action in ("right", "interact", "drop"):

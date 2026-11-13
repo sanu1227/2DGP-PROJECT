@@ -77,27 +77,6 @@ def animation_checks(levels, folder):
             assert display.plate_depths[plate] == 1
             assert display.player_position(plate, display.now()) == plate
 
-        # 벨트 운반도 논리 결과와 재생 위치를 보존한다.
-        game = Game(levels[5])
-        for action in SOLUTIONS[game.level.id]:
-            assert game.act(action)
-            if game.belt_steps:
-                break
-        assert game.belt_steps
-        with patch.object(view, "perf_counter", return_value=120):
-            display.belt_animation.start(game, display.now())
-        with patch.object(view, "perf_counter", return_value=120.08):
-            menu.open(display)
-            sample = display.belt_animation.sample(game, display.now())
-            state = deepcopy(game.state)
-        with patch.object(view, "perf_counter", return_value=220):
-            assert display.belt_animation.sample(game, display.now()) == sample
-            assert game.state == state
-            menu.close(display)
-            resumed = display.belt_animation.sample(game, display.now())
-            assert resumed[:2] == sample[:2] and isclose(resumed[2], sample[2], abs_tol=1e-9)
-        with patch.object(view, "perf_counter", return_value=221):
-            assert display.belt_animation.sample(game, display.now()) != sample
     finally:
         if display:
             display.close()
@@ -203,10 +182,10 @@ def input_checks(levels):
 
 def main():
     levels = load_levels()
-    folder = Path("docs/screenshots/play-menu")
+    folder = Path("docs/screenshots/gimmicks-v1/play-menu")
     animation_checks(levels, folder)
     input_checks(levels)
-    print("Play menu smoke OK: frozen rendering, gates/plates/player/belts, resume, preserved click path, input isolation, controls, restart, title, close.")
+    print("Play menu smoke OK: frozen rendering, gates/plates/player, resume, preserved click path, input isolation, controls, restart, title, close.")
 
 
 if __name__ == "__main__":

@@ -20,14 +20,15 @@ from game.model import DIRECTIONS, Game
 def key(state):
     return (state.player, state.carrying, tuple(sorted(state.items.items())),
             frozenset(state.installed), state.active, frozenset(state.soldiers),
-            tuple(sorted(state.bench_bones.items())))
+            tuple(sorted(state.bench_bones.items())), frozenset(state.turned_mirrors),
+            state.water_high, frozenset(state.rubble), frozenset(state.workers))
 
 
 class LowerBound:
     """문·복구물의 차단을 무시하고 필요한 운반 거리와 상호작용만 센다.
 
-    물건별 벨트/투입구 이동 비용은 0으로 완화한다. 따라서 동시 자동 운반을
-    중복 과금하지 않으며 실제 최적 비용보다 큰 값을 반환하지 않는다.
+    뼈 투입구 이동 비용은 0으로 완화한다. 새 장치의 통행 제한과 조작 비용도
+    완화해 실제 최적 비용보다 큰 값을 반환하지 않는다.
     """
 
     def __init__(self, level):
@@ -37,9 +38,6 @@ class LowerBound:
         self.free_endpoints = {}
         for kind in (None, "part", "bone", "soldier"):
             extra = {}
-            if kind in {"part", "soldier"}:
-                extra = {p: (p[0] + DIRECTIONS[d][0], p[1] + DIRECTIONS[d][1])
-                         for p, d in level.belts.items()}
             if kind == "bone":
                 extra = level.chutes
             table = {}
@@ -69,7 +67,8 @@ class LowerBound:
         sources = {kind: [p for p, value in state.items.items() if value == kind]
                    for kind in ("part", "bone", "soldier")}
         # Every loose item must be picked up; a carried item already paid that cost.
-        actions = len(state.items)
+        sources["soldier"].extend(state.workers)
+        actions = len(state.items) + len(state.workers)
         if state.carrying:
             sources[state.carrying].append(state.player)
         traps = level.traps - state.installed
@@ -168,6 +167,8 @@ def main():
     for index, level in enumerate(load_levels(), 1):
         if args.stage and index not in args.stage:
             continue
+        if args.check and level.id not in MINIMUM_ACTIONS:
+            raise ValueError("새 배치는 최단성 미검증 초안입니다. tools/draft_routes.py로 완주를 검사하세요.")
         route = SOLUTIONS.get(level.id, [])
         check = Game(replace(level, action_limit=None))
         valid = all(check.act(a) for a in route) and check.state.cleared
@@ -179,18 +180,21 @@ def main():
                 raise ValueError(f"{level.id}: 기준 풀이·최소 행동·제한 규칙 불일치")
         if result is None:
             raise ValueError(f"{level.id}: 완료 가능한 풀이가 없습니다.")
-        required = {4: ("plate",), 5: ("chute",), 6: ("belt",),
-                    7: ("chute", "plate"), 8: ("chute", "belt")}
+        required = {4: ("rubble",), 5: ("mirror",), 6: ("water",),
+                    7: ("helper",), 8: ("rubble", "mirror", "water", "helper")}
         if args.check_mechanics and index in required:
             for mechanic in required[index]:
                 def forbidden(game, action):
-                    if action not in {"interact", "drop"}:
-                        return False
+                    if action in DIRECTIONS:
+                        return (mechanic == "rubble" and
+                                (game.state.player[0] + DIRECTIONS[action][0], game.state.player[1] + DIRECTIONS[action][1]) in game.state.rubble)
                     operation = (game._drop_interaction(game.state) if action == "drop" else
                                  game._interaction(game.state))[0]
                     return ((mechanic == "plate" and operation == "drop" and game.state.player in level.plates)
                             or (mechanic == "chute" and operation == "send_bone")
-                            or (mechanic == "belt" and operation == "drop" and game.state.player in level.belts))
+                            or (mechanic == "mirror" and operation == "rotate")
+                            or (mechanic == "water" and operation == "water")
+                            or (mechanic == "helper" and operation == "assign"))
 
                 bypass = solve(level, args.max_states, level.action_limit, forbidden)
                 if bypass is not None:

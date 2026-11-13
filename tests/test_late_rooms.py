@@ -21,45 +21,6 @@ class LateRoomTests(unittest.TestCase):
             x, y = game.state.player
             self.assertTrue(game.act(reverse[(cell[0] - x, cell[1] - y)]), game.message)
 
-    def test_two_gates_change_independently_and_every_action_is_reversible(self):
-        for level in load_levels()[6:]:
-            with self.subTest(stage=level.id):
-                game = Game(level)
-                snapshots = [deepcopy(game.state)]
-                observed = set()
-                for action in SOLUTIONS[level.id]:
-                    self.assertTrue(game.act(action), game.message)
-                    snapshots.append(deepcopy(game.state))
-                    observed.add(tuple(game.gate_status(gate) for gate in level.gates))
-                self.assertTrue(game.state.cleared)
-                self.assertEqual(game.remaining_actions, 2)
-                self.assertIn(("closed", "closed"), observed)
-                self.assertIn(("open", "closed"), observed)
-                self.assertTrue(any(second == "open" for _, second in observed))
-                for expected in reversed(snapshots[:-1]):
-                    self.assertTrue(game.undo())
-                    self.assertEqual(game.state, expected)
-                self.assertFalse(game.history)
-                self.assertEqual(game.state, Game(level).state)
-
-    def test_boss_guard_deployed_early_seals_away_the_unfinished_part(self):
-        game = Game(load_levels()[7])
-        for target in ((2, 9), (3, 9), (5, 8), (5, 7), (6, 7), (6, 3), (2, 3), (5, 7)):
-            self.go(game, target)
-            self.assertTrue(game.act("interact"), game.message)
-        self.assertEqual(game.state.carrying, "soldier")
-        self.assertEqual(game.state.items[(9, 2)], "part")
-        self.go(game, (6, 5))
-        self.assertTrue(game.act("interact"))
-        deployed = deepcopy(game.state)
-        self.assertTrue(game.act("down"))
-        self.assertIsNone(find_path(game, (9, 2)))
-        self.assertFalse(game.state.cleared)
-        self.assertTrue(game.undo())
-        self.assertEqual(game.state, deployed)
-        self.assertTrue(game.undo())
-        self.assertIsNotNone(find_path(game, (9, 2)))
-
     def test_new_themes_and_twelve_cell_boards_resolve_real_assets(self):
         root = Path(__file__).resolve().parents[1]
         for level in load_levels()[6:]:

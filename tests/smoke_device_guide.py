@@ -25,7 +25,7 @@ def render_checks(levels):
     original_text = view.View.text
     menu = PlayMenu()
     seen = []
-    folder = Path("docs/screenshots/device-guide")
+    folder = Path("docs/screenshots/gimmicks-v1/device-guide")
 
     def checked_text(display, x, y, value, size=18, color=view.INK):
         width = ctypes.c_int()
@@ -45,8 +45,8 @@ def render_checks(levels):
             menu.offer(game, display)
             display.tutorial_hidden = menu.mode == "device"
             offered = [lesson.kind for lesson in menu.pages] if menu.active else []
-            assert offered == {0: ["trap"], 1: ["assembly"], 3: ["plate"], 4: ["chute"], 5: ["belt"]}.get(index, []), (index, offered)
-            if menu.active:
+            assert offered == {0: ["trap"], 1: ["assembly"], 3: ["plate", "rubble"], 4: ["chute", "mirror"], 5: ["water"], 6: ["helper"]}.get(index, []), (index, offered)
+            while menu.active:
                 with patch.object(view.View, "text", checked_text):
                     display.draw(game, index, len(levels))
                     before = pixels()
@@ -68,14 +68,15 @@ def render_checks(levels):
                 left, bottom, right, top = menu.guide_card
                 assert all(min(right, r) <= max(left, l) or min(top, t) <= max(bottom, b)
                            for l, b, r, t in menu.guide_bounds.values()), "안내 카드가 장치를 가림"
-                assert menu.activate("guide_next") == "resume"
-                menu.close(display)
+                result = menu.activate("guide_next")
                 seen.append(lesson.kind)
+                if result == "resume":
+                    menu.close(display)
             assert game.state == initial and not game.history
             game.restart()
             menu.offer(game, display)
             assert not menu.active, "재시작에 안내가 반복됨"
-        assert seen == ["trap", "assembly", "plate", "chute", "belt"]
+        assert seen == ["trap", "assembly", "plate", "rubble", "chute", "mirror", "water", "helper"]
 
         # 후반 방에서 바로 시작할 때도 실제 좌표를 사용하고 모든 안내를 읽을 수 있다.
         game = Game(levels[-1])
@@ -150,7 +151,7 @@ def input_checks(levels):
             if frame == 2:
                 assert menus[-1].pages[menus[-1].page_index].kind == "plate"
             if frame == 5:
-                assert [p.kind for p in menus[-1].pages] == ["chute"]
+                assert [p.kind for p in menus[-1].pages] == ["chute", "mirror"]
         original_update()
 
     with patch.object(view, "Game", ObservedGame), patch.object(view, "PlayMenu", ObservedMenu), \
@@ -228,7 +229,7 @@ def main():
     render_checks(levels)
     input_checks(levels)
     first_room_checks(levels)
-    print("Device guide smoke OK: five first encounters including room 1 traps/levers, spotlight pixels, glyphs/layout, skip/replay, undo/restart, full first-room clear, late-room entry and input isolation.")
+    print("Device guide smoke OK: eight first encounters including room 1 traps/levers, spotlight pixels, glyphs/layout, skip/replay, undo/restart, full first-room clear, late-room entry and input isolation.")
 
 
 if __name__ == "__main__":

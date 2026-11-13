@@ -42,8 +42,8 @@ def device_lessons(level: Level) -> tuple[DeviceLesson, ...]:
             "완성된 병사는 손에 들립니다. 몬스터 배치대에서 E / Space로 배치하세요.",
             "병사를 배치한 칸은 다시 들어갈 수 없어요.",
             ((bench, "작업대"), (post, "몬스터 배치대"))))
-    if level.gates:
-        gate, plate = min(level.gates.items())
+    if level.plates:
+        gate, plate = min((g,p) for g,p in level.gates.items() if p in level.plates)
         lessons.append(DeviceLesson(
             "plate", "무게로 여는 문", "발판 위에 서거나 물건을 놓으면 연결된 문이 열립니다. "
             "발판에서 무게가 사라지면 문이 닫힙니다.",
@@ -56,12 +56,17 @@ def device_lessons(level: Level) -> tuple[DeviceLesson, ...]:
             "연결된 배출구로 보냅니다. 배출구가 물건이나 병사로 막혀 있으면 보낼 수 없어요.",
             "투입구에는 뼈만 넣을 수 있어요.",
             ((inlet, "뼈 투입구"), (outlet, "배출구")), ((inlet, outlet),)))
-    if level.belts:
-        lessons.append(DeviceLesson(
-            "belt", "운반은 벨트에게", "벨트 위에서 E / Space로 부품이나 조립한 병사를 내려놓으세요. "
-            "화살표 방향으로 자동 운반하며, 앞이 막히면 멈춥니다.",
-            "뼈와 수리공은 운반하지 않아요. 자동 운반은 추가 행동을 쓰지 않아요.",
-            tuple((pos, "운반 벨트" if i == 0 else "") for i, pos in enumerate(sorted(level.belts)))))
+    for kind, title, instruction, reminder, cells in (
+        ("rubble", "잔해를 밀어 길 만들기", "잔해 옆에서 빈손으로 잔해 쪽 방향키를 누르세요. 한 칸 밀며 이동합니다.",
+         "당길 수 없어요. 빈 바닥·발판으로만 밀 수 있고, Z로 되돌릴 수 있어요.", level.rubble),
+        ("mirror", "빛으로 장치 연결", "거울 위에서 빈손으로 E / Space를 눌러 90도 돌리세요. 수신기에 빛이 닿으면 연결문이 열립니다.",
+         "벽·잔해·초소의 병사는 빛을 막아요. 사람·운반물·문은 막지 않아요.", level.mirrors),
+        ("water", "수로와 부교 바꾸기", "밸브 위에서 빈손으로 E / Space를 누르세요. 낮은 수위에는 수로, 높은 수위에는 부교를 건널 수 있어요.",
+         "잠길 수로나 내려갈 부교 위의 물건부터 회수하세요.", level.valves),
+        ("helper", "함께 일하는 해골", "조립한 해골을 윈치로 가져와 E / Space로 배치하세요. 인부가 일하는 동안 문이 열립니다.",
+         "빈손으로 윈치에서 E를 누르면 회수해요. 최종 초소 배치는 되돌리기로만 취소해요.", level.jobs)):
+        if cells:
+            lessons.append(DeviceLesson(kind, title, instruction, reminder, ((min(cells), title),)))
     return tuple(lessons)
 
 

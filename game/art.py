@@ -26,9 +26,18 @@ class Art:
             for name, entry in self.manifest["atlases"].items():
                 self.atlas_paths[name] = ART_ROOT / entry["file"]
                 self.atlases[name] = p.load_image(str(self.atlas_paths[name]))
+            self.load_gimmicks()
         except Exception:
             self.close()
             raise
+
+    def load_gimmicks(self):
+        root = ART_ROOT.parent / "gimmicks_v1"
+        manifest = json.loads((root / "manifest.json").read_text(encoding="utf-8"))
+        self.atlas_paths["gimmicks"] = root / "atlas.png"
+        self.atlases["gimmicks"] = p.load_image(str(root / "atlas.png"))
+        self.manifest["atlases"].update(manifest["atlases"])
+        self.manifest["sprites"].update(manifest["sprites"])
 
     def load_gates(self):
         """발판 문은 열린 통로의 투명 영역까지 동일한 아틀라스로 처리한다."""

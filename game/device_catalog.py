@@ -40,9 +40,18 @@ CARDS = (
     DeviceCard("chute", "뼈 투입구", (("chute_inlet", "투입구"), ("chute_outlet", "배출구")),
                "뼈를 들고 투입구 위에서 E / Space를 누르면 연결된 배출구로 보내요.",
                "뼈만 전송 가능. 배출구가 물건이나 병사로 막히면 보낼 수 없어요."),
-    DeviceCard("belt", "운반 벨트", (("conveyor_se", "벨트"), ("part", "운반할 부품")),
-               "부품이나 조립한 병사를 내려놓으면 화살표 방향으로 자동 운반해요.",
-               "뼈와 수리공은 운반 불가. 막히면 정지하며 추가 행동은 쓰지 않아요."),
+    DeviceCard("rubble", "잔해 밀기", (("push_rubble", "밀 수 있는 잔해"),),
+               "빈손으로 잔해 쪽 방향키를 누르면 한 칸 밀며 이동해요.",
+               "당기기는 불가. 빈 바닥·발판으로 밀고 Z로 되돌릴 수 있어요."),
+    DeviceCard("mirror", "마력 반사 거울", (("mirror", "90도 회전"), ("mana_receiver", "수신기")),
+               "거울 위에서 빈손으로 E / Space를 눌러 빛을 수신기에 보내세요.",
+               "벽·잔해·초소 병사는 빛을 막아요. 광선 순환은 자동으로 끝내요."),
+    DeviceCard("water", "수문과 수위", (("valve", "수위 밸브"), ("float_bridge", "부교")),
+               "밸브에서 E / Space. 낮으면 수로, 높으면 부교가 열려요.",
+               "잠길 수로나 내려갈 부교의 물건을 먼저 회수하세요."),
+    DeviceCard("helper", "해골 인부", (("winch", "작업 자리"), ("helper_work", "작업 중")),
+               "조립한 해골을 윈치에 배치하면 연결문을 계속 열어 줘요.",
+               "빈손으로 E / Space를 눌러 회수한 뒤 최종 초소로 옮기세요."),
 )
 PAGE_COUNT = (len(CARDS) + CARDS_PER_PAGE - 1) // CARDS_PER_PAGE
 
@@ -50,8 +59,9 @@ PAGE_COUNT = (len(CARDS) + CARDS_PER_PAGE - 1) // CARDS_PER_PAGE
 def present_devices(level):
     return {kind for kind, exists in (
         ("trap", level.traps), ("lever", level.levers),
-        ("assembly", level.benches and level.posts), ("plate", level.gates),
-        ("chute", level.chutes), ("belt", level.belts)) if exists}
+        ("assembly", level.benches and level.posts), ("plate", level.plates),
+        ("chute", level.chutes), ("rubble", level.rubble), ("mirror", level.mirrors),
+        ("water", level.valves), ("helper", level.jobs)) if exists}
 
 
 def catalog_buttons():

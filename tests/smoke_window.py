@@ -105,8 +105,6 @@ def main():
         if pending_check:
             pending_check()
             pending_check = None
-        if displays[-1].transporting(games[-1]):
-            return original_events()
         key, pending_check = steps.popleft()
         for queued_key in key if isinstance(key, tuple) else (key,):
             event = p.SDL_Event()

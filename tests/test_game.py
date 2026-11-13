@@ -47,7 +47,7 @@ class GameTests(unittest.TestCase):
         objects = list(state.items.values()) + [state.carrying]
         self.assertEqual(objects.count("part") + len(state.installed), len(game.level.traps))
         bone_units = objects.count("bone") + sum(state.bench_bones.values())
-        bone_units += 2 * (objects.count("soldier") + len(state.soldiers))
+        bone_units += 2 * (objects.count("soldier") + len(state.soldiers) + len(state.workers))
         self.assertEqual(bone_units, 2 * len(game.level.posts))
 
     def act(self, action):

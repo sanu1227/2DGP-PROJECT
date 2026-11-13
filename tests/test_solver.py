@@ -12,7 +12,7 @@ class SolverTests(unittest.TestCase):
     def test_astar_and_lower_bound_match_exhaustive_graph_with_devices(self):
         rooms = [
             {"map": ["########", "#@PTLE##", "#.....##"]},
-            {"map": ["########", "#@P...E#", "#.>>FTL#", "#...G..#"],
+            {"map": ["########", "#@P...E#", "#...FTL#", "#...G..#"],
              "plate_links": [{"id": "P1", "plate": [4, 2], "gate": [4, 3]}]},
             {"map": ["########", "#@BC####", "#..GFAE#", "####BS##"],
              "plate_links": [{"id": "P1", "plate": [4, 2], "gate": [3, 2]}],

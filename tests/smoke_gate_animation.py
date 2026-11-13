@@ -35,7 +35,7 @@ def main():
     view = None
     try:
         view = View()
-        for index in range(3, 6):
+        for index in (3, 4, 6):
             game = Game(levels[index])
             gate = next(iter(game.level.gates))
 
@@ -108,7 +108,7 @@ def main():
             assert game.gate_status(gate) == "held"
             frame(16)
             assert frame(17)[0] == 1
-        print("Gate animation smoke OK: rooms 4–6; timed lift/lower, midpoint pixels, "
+        print("Gate animation smoke OK: rooms 4, 5, 7; timed lift/lower, midpoint pixels, "
               "continuous reversal, undo, restart, room switch, held and animated picking.")
     finally:
         if view:
