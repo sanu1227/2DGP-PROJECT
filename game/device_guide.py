@@ -29,6 +29,48 @@ def target_bounds(view, level, targets):
     return result
 
 
+def highlight_layout(view, targets, bounds):
+    """강조 창과 이름표가 겹치는 장치는 한 묶음으로 합쳐 배치한다."""
+    labels = dict(targets)
+    widths = {}
+    for pos, label in targets:
+        if label:
+            measured = ctypes.c_int()
+            p.TTF_SizeUTF8(view.fonts[18].font, label.encode("utf-8"), ctypes.byref(measured), None)
+            widths[pos] = measured.value + 28
+
+    def enclosing(rectangles):
+        return (min(r[0] for r in rectangles), min(r[1] for r in rectangles),
+                max(r[2] for r in rectangles), max(r[3] for r in rectangles))
+
+    def layout(group):
+        region = enclosing([bounds[pos] for pos in group])
+        named = sorted((pos for pos in group if labels[pos]),
+                       key=lambda pos: bounds[pos][0] + bounds[pos][2])
+        row_width = sum(widths[pos] for pos in named) + 8 * max(0, len(named) - 1)
+        left = round(max(12, min(WIDTH - 12 - row_width, (region[0] + region[2] - row_width) / 2)))
+        bottom = region[3] + 8
+        if bottom + 34 > HEIGHT - 12:
+            bottom = region[1] - 42
+        names = {}
+        for pos in named:
+            names[pos] = (left, bottom, left + widths[pos], bottom + 34)
+            left += widths[pos] + 8
+        return region, names, enclosing([region, *names.values()])
+
+    groups = [[pos] for pos, _ in targets]
+    # 합친 창이 다른 창에 닿는 경우까지 다시 검사한다.
+    while True:
+        layouts = [layout(group) for group in groups]
+        pair = next(((i, j) for i in range(len(groups)) for j in range(i + 1, len(groups))
+                     if min(layouts[i][2][2], layouts[j][2][2]) + 8 > max(layouts[i][2][0], layouts[j][2][0])
+                     and min(layouts[i][2][3], layouts[j][2][3]) + 8 > max(layouts[i][2][1], layouts[j][2][1])), None)
+        if pair is None:
+            return tuple(item[0] for item in layouts), {pos: rect for item in layouts for pos, rect in item[1].items()}
+        first, second = pair
+        groups[first].extend(groups.pop(second))
+
+
 def outside_rectangles(holes):
     """겹치는 강조 영역도 보존하도록 바깥 화면을 중복 없는 사각형으로 나눈다."""
     rectangles = [(0, 0, WIDTH, HEIGHT)]
@@ -71,8 +113,8 @@ def card_bounds(holes):
     return min(candidates, key=overlap)
 
 
-def draw_lesson(view, game, lesson, bounds, card, page, total):
-    dim_except(bounds.values())
+def draw_lesson(view, game, lesson, regions, labels, card, page, total):
+    dim_except(regions)
     projection = IsoBoard(game.level.width, game.level.height)
     for source, destination in lesson.links:
         x1, y1 = projection.screen(source)
@@ -81,14 +123,13 @@ def draw_lesson(view, game, lesson, bounds, card, page, total):
             a, b = i / 24, (i + 1) / 24
             p.draw_line(x1 + (x2 - x1) * a, y1 + (y2 - y1) * a,
                         x1 + (x2 - x1) * b, y1 + (y2 - y1) * b, *TEAL)
-    for pos, label in lesson.targets:
-        left, bottom, right, top = bounds[pos]
+    for left, bottom, right, top in regions:
         p.draw_rectangle(left, bottom, right, top, *TEAL)
+    for pos, label in lesson.targets:
         if label:
-            width = len(label) * 20 + 28
-            x = (left + right) / 2
-            bevel((round(x - width / 2), top + 4, round(x + width / 2), top + 38), (24, 45, 45), TEAL)
-            view.centered(x, top + 21, label, 18, INK)
+            left, bottom, right, top = labels[pos]
+            bevel(labels[pos], (24, 45, 45), TEAL)
+            view.centered((left + right) / 2, (bottom + top) / 2, label, 18, INK)
     left, bottom, right, top = card
     bevel(card, (24, 39, 43), (103, 148, 132))
     view.text(left + 26, top - 30, "새 장치 안내", 18, TEAL)

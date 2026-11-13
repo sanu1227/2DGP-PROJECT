@@ -6,7 +6,7 @@ from game.front_end import Button, bevel
 from game.layout import WIDTH, HEIGHT
 from game.logo_mode import fade_to_black
 from game.tutorial import device_lessons
-from game.device_guide import target_bounds, card_bounds, draw_lesson
+from game.device_guide import target_bounds, highlight_layout, card_bounds, draw_lesson
 from game.device_catalog import PAGE_COUNT, catalog_buttons, draw_catalog
 
 INK = (239, 237, 219)
@@ -46,6 +46,8 @@ class PlayMenu:
         self.page_index = 0
         self.return_mode = None
         self.guide_bounds = {}
+        self.guide_regions = ()
+        self.guide_labels = {}
         self.guide_card = (32, 360, 452, 790)
         self.catalog_page = 0
 
@@ -160,8 +162,10 @@ class PlayMenu:
         if self.mode == "device":
             lesson = self.pages[self.page_index]
             self.guide_bounds = target_bounds(view, game.level, lesson.targets)
-            self.guide_card = card_bounds(self.guide_bounds.values())
-            draw_lesson(view, game, lesson, self.guide_bounds, self.guide_card, self.page_index, len(self.pages))
+            self.guide_regions, self.guide_labels = highlight_layout(view, lesson.targets, self.guide_bounds)
+            self.guide_card = card_bounds((*self.guide_regions, *self.guide_labels.values()))
+            draw_lesson(view, game, lesson, self.guide_regions, self.guide_labels,
+                        self.guide_card, self.page_index, len(self.pages))
             self.draw_buttons(view)
             return
         fade_to_black(.72)

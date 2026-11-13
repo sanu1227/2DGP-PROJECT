@@ -1,6 +1,7 @@
 """장치 첫 안내·다시 보기·강조 영역과 실제 게임 루프의 입력 격리 검사."""
 
 from copy import deepcopy
+import argparse
 import ctypes
 from pathlib import Path
 from types import SimpleNamespace
@@ -19,13 +20,25 @@ from tests.smoke_play_menu import key, click, pixels
 from tests.solutions import SOLUTIONS
 
 
-def render_checks(levels):
+def check_layout(menu):
+    rectangles = [*menu.guide_regions, *menu.guide_labels.values(), menu.guide_card]
+    for i, (left, bottom, right, top) in enumerate(rectangles):
+        assert 0 <= left < right <= view.WIDTH and 0 <= bottom < top <= view.HEIGHT
+        for other in rectangles[i + 1:]:
+            l, b, r, t = other
+            assert min(right, r) <= max(left, l) or min(top, t) <= max(bottom, b), (
+                "강조 창·이름표·안내 카드가 겹침", rectangles[i], other)
+    for left, bottom, right, top in menu.guide_bounds.values():
+        assert any(l <= left and b <= bottom and r >= right and t >= top
+                   for l, b, r, t in menu.guide_regions), "강조 창에서 장치가 잘림"
+
+
+def render_checks(levels, folder=Path("docs/screenshots/gimmicks-v1/device-guide")):
     p.open_canvas(view.WIDTH, view.HEIGHT, sync=True)
     display = None
     original_text = view.View.text
     menu = PlayMenu()
     seen = []
-    folder = Path("docs/screenshots/gimmicks-v1/device-guide")
 
     def checked_text(display, x, y, value, size=18, color=view.INK):
         width = ctypes.c_int()
@@ -52,6 +65,7 @@ def render_checks(levels):
                     before = pixels()
                     menu.draw(display, game)
                     after = pixels()
+                check_layout(menu)
                 assert before != after
                 lesson = menu.pages[menu.page_index]
                 capture(folder / f"{level.id}-{lesson.kind}.png")
@@ -65,9 +79,6 @@ def render_checks(levels):
                                 colored += 1
                                 same += before[offset:offset + 3] == after[offset:offset + 3]
                     assert colored and same / colored > .75, (level.id, same, colored)
-                left, bottom, right, top = menu.guide_card
-                assert all(min(right, r) <= max(left, l) or min(top, t) <= max(bottom, b)
-                           for l, b, r, t in menu.guide_bounds.values()), "안내 카드가 장치를 가림"
                 result = menu.activate("guide_next")
                 seen.append(lesson.kind)
                 if result == "resume":
@@ -78,15 +89,18 @@ def render_checks(levels):
             assert not menu.active, "재시작에 안내가 반복됨"
         assert seen == ["trap", "assembly", "plate", "rubble", "chute", "mirror", "water", "helper"]
 
-        # 후반 방에서 바로 시작할 때도 실제 좌표를 사용하고 모든 안내를 읽을 수 있다.
-        game = Game(levels[-1])
-        for lesson in device_lessons(game.level):
-            menu.pages, menu.page_index, menu.mode = (lesson,), 0, "device"
-            with patch.object(view.View, "text", checked_text):
-                display.draw(game, 7, len(levels))
-                menu.draw(display, game)
-            for pos, _ in lesson.targets:
-                assert 0 <= pos[0] < game.level.width and 0 <= pos[1] < game.level.height
+        # 이미 본 장치도 모든 방에서 다시 열어, 가까운 배치와 긴 이름을 검사한다.
+        for index, level in enumerate(levels):
+            game = Game(level)
+            display.tutorial_hidden = True
+            for lesson in device_lessons(level):
+                menu.pages, menu.page_index, menu.mode = (lesson,), 0, "device"
+                with patch.object(view.View, "text", checked_text):
+                    display.draw(game, index, len(levels))
+                    menu.draw(display, game)
+                check_layout(menu)
+                for pos, _ in lesson.targets:
+                    assert 0 <= pos[0] < level.width and 0 <= pos[1] < level.height
         # 서로 겹친 강조 창도 배경이 중복해서 어두워지지 않아야 한다.
         rectangles = outside_rectangles(((10, 10, 100, 100), (50, 50, 200, 200)))
         area = sum((r - l) * (t - b) for l, b, r, t in rectangles)
@@ -225,11 +239,14 @@ def first_room_checks(levels):
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--capture-dir", type=Path, default=Path("docs/screenshots/gimmicks-v1/device-guide"))
+    args = parser.parse_args()
     levels = load_levels()
-    render_checks(levels)
+    render_checks(levels, args.capture_dir)
     input_checks(levels)
     first_room_checks(levels)
-    print("Device guide smoke OK: eight first encounters including room 1 traps/levers, spotlight pixels, glyphs/layout, skip/replay, undo/restart, full first-room clear, late-room entry and input isolation.")
+    print("Device guide smoke OK: eight first encounters, non-overlapping spotlights/labels/cards in every room, spotlight pixels, glyphs, skip/replay, undo/restart, full first-room clear and input isolation.")
 
 
 if __name__ == "__main__":
