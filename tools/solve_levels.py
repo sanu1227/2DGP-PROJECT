@@ -3,7 +3,8 @@
 from collections import deque
 from dataclasses import replace
 from heapq import heappop, heappush
-from itertools import count, permutations
+from itertools import count, permutations, product
+from functools import lru_cache
 import argparse
 import hashlib
 import json
@@ -15,13 +16,14 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from game.levels import load_levels
 from game.model import DIRECTIONS, Game
+from game.mechanics import trace_magic
 
 
 def key(state):
     return (state.player, state.carrying, tuple(sorted(state.items.items())),
             frozenset(state.installed), state.active, frozenset(state.soldiers),
             tuple(sorted(state.bench_bones.items())), frozenset(state.turned_mirrors),
-            state.water_high, frozenset(state.rubble), frozenset(state.workers))
+            frozenset(state.rubble), frozenset(state.workers))
 
 
 class LowerBound:
@@ -35,6 +37,39 @@ class LowerBound:
         self.level = level
         self.floor = {(x, y) for y in range(level.height) for x in range(level.width)} - level.walls
         self.worker_regions = {}
+        self.mirror_regions = []
+        self.monotone_mirrors = None
+        # 모든 함정이 문 바깥에 있으면 안쪽 부품은 반드시 이 문을 통과한다.
+        # 잔해·병사 차단을 없앤 광선의 가능한 방향만 열거해 회전 횟수 하한을 더한다.
+        for gate, control in level.gates.items():
+            if control not in level.receivers or not level.traps:
+                continue
+            region, queue = {level.start}, deque([level.start])
+            while queue:
+                x, y = queue.popleft()
+                for dx, dy in DIRECTIONS.values():
+                    target = x + dx, y + dy
+                    if target in self.floor and target != gate and target not in region:
+                        region.add(target)
+                        queue.append(target)
+            if not level.traps <= region:
+                continue
+            mirrors = sorted(level.mirrors)
+            if len(mirrors) > 8:
+                continue  # 큰 지도는 기존의 약한 하한으로 안전하게 돌아간다.
+            probe = Game(level).state
+            probe.rubble.clear()
+            patterns = []
+            for bits in product((False, True), repeat=len(mirrors)):
+                probe.turned_mirrors = {m for m, bit in zip(mirrors, bits) if bit}
+                if control in trace_magic(level, probe)[1]:
+                    patterns.append(frozenset(probe.turned_mirrors))
+            if patterns:
+                self.mirror_regions.append((self.floor - region - {gate}, patterns))
+                if len(level.receivers) == 1 and len(patterns) == 1:
+                    # 유일한 수신 경로에서 맞춘 거울을 다시 틀면 문을 닫을 뿐이다.
+                    # 광선에는 피해나 별도 목표가 없으므로 그 회전은 최단 풀이에 불필요하다.
+                    self.monotone_mirrors = patterns[0]
         # 하나의 초소와 인부로 작업하는 방: 모든 함정이 문 바깥에 있다면
         # 안쪽 부품을 꺼내려면 이 인부를 배치한 후 반드시 회수해야 한다.
         if len(level.posts) == 1 and len(level.jobs) == 1:
@@ -75,6 +110,25 @@ class LowerBound:
             self.distances[kind] = table
             self.free_endpoints[kind] = {p: [q for q, cost in distances.items() if cost == 0]
                                          for p, distances in table.items()}
+        self.visit_cells = sorted(level.traps | level.posts | level.benches | level.levers
+                                  | level.mirrors | level.jobs | level.initial_items.keys())
+        self.visit_bits = {pos: 1 << i for i, pos in enumerate(self.visit_cells)}
+
+        @lru_cache(maxsize=200_000)
+        def visit_tail(pos, mask):
+            # 운반 제약을 없애고 수리공도 뼈 투입구로 무료 이동한다고 완화한다.
+            # 필수 위치를 한 번씩 방문해 출구에 가는 거리이므로 임시 내려놓기도 허용한다.
+            if not mask:
+                return self.distance('bone', pos, level.exit)
+            best = 10**6
+            remaining = mask
+            while remaining:
+                bit = remaining & -remaining
+                target = self.visit_cells[bit.bit_length() - 1]
+                best = min(best, self.distance('bone', pos, target) + visit_tail(target, mask ^ bit))
+                remaining ^= bit
+            return best
+        self.visit_tail = visit_tail
 
     def distance(self, kind, start, end):
         return self.distances[kind][start].get(end, 10**6)
@@ -86,6 +140,19 @@ class LowerBound:
         # Every loose item must be picked up; a carried item already paid that cost.
         sources["soldier"].extend(state.workers)
         actions = len(state.items) + len(state.workers)
+        # 여러 수신기의 회전 작업이 겹칠 수 있으므로 합계가 아닌 최댓값이다.
+        rotations = [min(len(state.turned_mirrors ^ pattern) for pattern in patterns)
+                     for region, patterns in self.mirror_regions
+                     if any(state.items.get(pos) == 'part' for pos in region)]
+        actions += max(rotations, default=0)
+        must_visit = set(state.items) | state.workers | (level.traps - state.installed) | (level.posts - state.soldiers)
+        if len(level.benches) == 1 and (sources['bone'] or state.carrying == 'bone'):
+            must_visit |= level.benches
+        if len(level.levers) == 1 and level.traps and not state.active:
+            must_visit |= level.levers
+        for region, patterns in self.mirror_regions:
+            if any(state.items.get(pos) == 'part' for pos in region):
+                must_visit |= set.intersection(*(set(state.turned_mirrors ^ pattern) for pattern in patterns))
         if state.carrying:
             sources[state.carrying].append(state.player)
         traps = level.traps - state.installed
@@ -109,6 +176,7 @@ class LowerBound:
             if not posts:
                 return 10**6  # 유일한 병사를 이미 고정 배치해 문을 열 수 없다.
             actions += 2  # 작업 배치와 회수; 최종 초소 배치는 원래 하한에 포함.
+            must_visit.add(required_job)
         if posts:
             def soldier_distance(p, t):
                 starts = (p,) if p is not None else level.benches
@@ -131,11 +199,15 @@ class LowerBound:
             travel += min(self.distance(None, p, level.exit) for p in last)
         elif not state.items and not state.carrying:
             travel += self.distance(None, state.player, level.exit)
+        # 위치가 너무 많으면 지수 크기 방문표를 만들지 않고 기존 하한을 사용한다.
+        if len(self.visit_cells) <= 14:
+            mask = sum(self.visit_bits.get(pos, 0) for pos in must_visit)
+            travel = max(travel, self.visit_tail(state.player, mask))
         return actions + travel
 
 
 def solve(level, max_states=500_000, upper_bound=None, forbidden=None):
-    """모든 유효 입력을 탐색한다. 탐색 상한에 도달하면 미검증 예외를 반환한다."""
+    """유효 입력과 최단성을 보존하는 거울 가지치기로 탐색한다. 상한 도달은 미검증이다."""
     game = Game(replace(level, action_limit=None))
     lower_bound = LowerBound(level)
     initial = game.state
@@ -167,6 +239,11 @@ def solve(level, max_states=500_000, upper_bound=None, forbidden=None):
         for action in (*DIRECTIONS, "interact", "drop"):
             game.state = state
             game.history = []
+            if (action == 'interact' and state.player in level.mirrors
+                    and lower_bound.monotone_mirrors is not None
+                    and ((state.player in state.turned_mirrors) == (state.player in lower_bound.monotone_mirrors))
+                    and game._interaction(state)[0] == 'rotate'):
+                continue
             if forbidden and forbidden(game, action):
                 continue
             if not game.act(action):
@@ -213,8 +290,8 @@ def main():
                                  f"기준={MINIMUM_ACTIONS[level.id]}, 제한={level.action_limit})")
         if result is None:
             raise ValueError(f"{level.id}: 완료 가능한 풀이가 없습니다.")
-        required = {4: ("rubble", "plate"), 5: ("mirror", "chute"), 6: ("water",),
-                    7: ("helper",), 8: ("rubble", "mirror", "water", "helper", "chute")}
+        required = {4: ("rubble", "plate"), 5: ("mirror", "chute"), 6: ("mirror",),
+                    7: ("helper",), 8: ("rubble", "mirror", "helper", "chute")}
         if args.check_mechanics and index in required:
             for mechanic in required[index]:
                 def forbidden(game, action):
@@ -229,7 +306,6 @@ def main():
                     return ((mechanic == "plate" and operation == "drop" and game.state.player in level.plates)
                             or (mechanic == "chute" and operation == "send_bone")
                             or (mechanic == "mirror" and operation == "rotate")
-                            or (mechanic == "water" and operation == "water")
                             or (mechanic == "helper" and operation == "assign"))
 
                 bypass = solve(level, args.max_states, level.action_limit, forbidden)

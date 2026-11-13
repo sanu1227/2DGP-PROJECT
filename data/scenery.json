@@ -76,7 +76,7 @@
     ]
   },
   "stage_06": {
-    "name": "침수된 운반 공장", "packs": ["forge", "sewer"],
+    "name": "마력 중계 공방", "packs": ["forge", "sewer"],
     "low_wall_variants": ["wall_low", "wall_low", "wall_low_chipped", "wall_low_patched", "wall_low_braced"],
     "connected_low_walls": true,
     "background": [18, 26, 31], "accent": [135, 193, 201],

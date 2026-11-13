@@ -11,6 +11,7 @@ from game.levels import load_levels
 from game.model import Game
 from game.navigation import ClickNavigator, find_path
 from tests.test_game import SOLUTIONS
+from tests.solutions import MINIMUM_ACTIONS
 
 
 class ActionLimitTests(unittest.TestCase):
@@ -18,7 +19,7 @@ class ActionLimitTests(unittest.TestCase):
         self.levels = load_levels()
 
     def test_unlimited_tutorial_and_authored_budgets(self):
-        self.assertEqual([l.action_limit for l in self.levels], [None, 35, 47, 34, 37, 42, 43, 85])
+        self.assertEqual([l.action_limit for l in self.levels], [None] + [MINIMUM_ACTIONS[level.id] + 2 for level in self.levels[1:]])
         game = Game(self.levels[0])
         for index in range(200):
             self.assertTrue(game.act("right" if index % 2 == 0 else "left"))

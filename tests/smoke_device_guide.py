@@ -58,7 +58,7 @@ def render_checks(levels, folder=Path("docs/screenshots/gimmicks-v1/device-guide
             menu.offer(game, display)
             display.tutorial_hidden = menu.mode == "device"
             offered = [lesson.kind for lesson in menu.pages] if menu.active else []
-            assert offered == {0: ["trap"], 1: ["assembly"], 3: ["plate", "rubble"], 4: ["chute", "mirror"], 5: ["water"], 6: ["helper"]}.get(index, []), (index, offered)
+            assert offered == {0: ["trap"], 1: ["assembly"], 3: ["plate", "rubble"], 4: ["chute", "mirror"], 6: ["helper"]}.get(index, []), (index, offered)
             while menu.active:
                 with patch.object(view.View, "text", checked_text):
                     display.draw(game, index, len(levels))
@@ -87,7 +87,7 @@ def render_checks(levels, folder=Path("docs/screenshots/gimmicks-v1/device-guide
             game.restart()
             menu.offer(game, display)
             assert not menu.active, "재시작에 안내가 반복됨"
-        assert seen == ["trap", "assembly", "plate", "rubble", "chute", "mirror", "water", "helper"]
+        assert seen == ["trap", "assembly", "plate", "rubble", "chute", "mirror", "helper"]
 
         # 이미 본 장치도 모든 방에서 다시 열어, 가까운 배치와 긴 이름을 검사한다.
         for index, level in enumerate(levels):
@@ -246,7 +246,7 @@ def main():
     render_checks(levels, args.capture_dir)
     input_checks(levels)
     first_room_checks(levels)
-    print("Device guide smoke OK: eight first encounters, non-overlapping spotlights/labels/cards in every room, spotlight pixels, glyphs, skip/replay, undo/restart, full first-room clear and input isolation.")
+    print("Device guide smoke OK: seven first encounters, non-overlapping spotlights/labels/cards in every room, spotlight pixels, glyphs, skip/replay, undo/restart, full first-room clear and input isolation.")
 
 
 if __name__ == "__main__":

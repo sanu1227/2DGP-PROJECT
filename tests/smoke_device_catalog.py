@@ -122,7 +122,7 @@ def main():
     levels = load_levels()
     render_checks(levels)
     input_checks(levels)
-    print("Device catalog smoke OK: nine illustrated cards, page wrap, room presence, glyphs/card bounds, frozen scene, keyboard/mouse, modal input isolation and resume.")
+    print("Device catalog smoke OK: eight illustrated cards, page wrap, room presence, glyphs/card bounds, frozen scene, keyboard/mouse, modal input isolation and resume.")
 
 
 if __name__ == "__main__":

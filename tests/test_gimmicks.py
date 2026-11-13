@@ -1,6 +1,7 @@
 """새 장치의 실패 경계, 자원 보존, 되돌리기와 실제 배치 완주 검사."""
 from copy import deepcopy
 from dataclasses import replace
+from itertools import product
 import unittest
 
 from game.levels import DIRECTIONS, load_levels
@@ -85,30 +86,44 @@ class GimmickTests(unittest.TestCase):
         self.assertLessEqual(len(segments),10)
         self.assertFalse(powered)
 
-    def test_water_changes_routes_and_undo_in_one_action(self):
-        game=Game(self.levels[5]);game.state.player=next(iter(game.level.valves))
-        self.assertTrue(game.walkable(next(iter(game.level.channels))))
-        self.assertFalse(game.walkable(next(iter(game.level.bridges))))
-        before=deepcopy(game.state);game.act('interact')
-        self.assertFalse(game.walkable(next(iter(game.level.channels))))
-        self.assertTrue(game.walkable(next(iter(game.level.bridges))))
-        self.assertIsNone(find_path(game,next(p for p,k in game.level.initial_items.items() if k=="part")))
-        self.assertIsNotNone(find_path(game,next(p for p,k in game.level.initial_items.items() if k=="bone")))
-        game.undo();self.assertEqual(game.state,before)
+    def test_later_rooms_require_every_reflection_and_undo_each_rotation(self):
+        for index, count in ((4, 1), (5, 2), (7, 3)):
+            level = self.levels[index]
+            mirrors = sorted(level.mirrors)
+            self.assertEqual(len(mirrors), count)
+            winning = []
+            for bits in product((False, True), repeat=count):
+                game = Game(level)
+                game.state.turned_mirrors = {m for m, bit in zip(mirrors, bits) if bit}
+                segments, powered = trace_magic(level, game.state)
+                if powered:
+                    winning.append(bits)
+                    hits = [end for _, end in segments if end in level.mirrors]
+                    self.assertEqual(len(hits), count)
+                    self.assertEqual(set(hits), set(mirrors))
+            self.assertEqual(winning, [(True,) * count], level.id)
+            game = Game(level)
+            for mirror in mirrors:
+                game.state.player = mirror
+                before = deepcopy(game.state)
+                self.assertTrue(game.act('interact'))
+                game.undo()
+                self.assertEqual(game.state, before)
+                self.assertTrue(game.act('interact'))
+            self.assertEqual(trace_magic(level, game.state)[1], set(level.receivers))
+            # 도달 경로의 거울 하나를 빼면 수신기가 작동할 수 없다.
+            for mirror in mirrors:
+                broken = replace(level, mirrors=level.mirrors - {mirror})
+                self.assertFalse(trace_magic(broken, game.state)[1])
 
-    def test_water_rejects_submerging_occupants_without_consuming_action(self):
-        for high,cell in ((False,next(iter(self.levels[5].channels))),(True,next(iter(self.levels[5].bridges)))):
-            for field in ('items','rubble','soldiers','workers'):
-                game=Game(self.levels[5]);game.state.player=next(iter(game.level.valves));game.state.water_high=high
-                if field=='items':game.state.items[cell]='bone'
-                else:getattr(game.state,field).add(cell)
-                self.assert_rejected(game,'interact')
-
-    def test_water_collision_is_enforced_for_direct_keys_too(self):
-        game=Game(self.levels[5]);game.state.player=(3,5)
-        self.assert_rejected(game,'right')
-        game.state.water_high=True;self.assertTrue(game.act('right'))
-        game.state.player=(3,2);self.assert_rejected(game,'right')
+    def test_retired_water_is_absent_from_levels_state_and_catalog(self):
+        from game.device_catalog import CARDS
+        from game.tutorial import device_lessons
+        self.assertNotIn('water', {card.kind for card in CARDS})
+        for level in self.levels:
+            self.assertFalse(set(''.join(level.rows)) & set('VWH'))
+            self.assertFalse(hasattr(Game(level).state, 'water_high'))
+            self.assertNotIn('water', {lesson.kind for lesson in device_lessons(level)})
 
     def test_rubble_push_presses_plate_and_undo_restores_gate(self):
         game=Game(self.levels[3]);game.state.player=(2,2)
@@ -164,16 +179,16 @@ class GimmickTests(unittest.TestCase):
         for field in ('turned_mirrors','workers','rubble'):
             state=deepcopy(game.state);getattr(state,field).add((1,1))
             self.assertNotEqual(base,key(state))
-        game.state.water_high=True;self.assertNotEqual(base,key(game.state))
 
-    def test_boss_mirror_gate_cannot_be_bypassed_through_the_water_room(self):
+    def test_boss_mirror_gate_cannot_be_bypassed_through_the_material_room(self):
         game = Game(self.levels[7])
         job = next(iter(game.level.jobs))
         vault_part = min((p for p, kind in game.level.initial_items.items() if kind == 'part'), key=lambda p: p[1])
         self.assertIsNone(find_path(game, job))
         self.assertIsNone(find_path(game, vault_part))
-        game.state.player = next(iter(game.level.mirrors))
-        self.assertTrue(game.act('interact'))
+        for mirror in sorted(game.level.mirrors):
+            game.state.player = mirror
+            self.assertTrue(game.act('interact'))
         self.assertIsNotNone(find_path(game, job))
         self.assertIsNone(find_path(game, vault_part))
         game.state.player = job

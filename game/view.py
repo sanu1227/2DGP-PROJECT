@@ -461,7 +461,6 @@ class View:
         targets.update({pos: "병사 조립" for pos in level.benches})
         targets.update({pos: "뼈 투입구" for pos in level.chutes})
         targets.update({pos: "거울 회전" for pos in level.mirrors})
-        targets.update({pos: "수위 변경" for pos in level.valves})
         targets.update({pos: "인부 회수" if pos in state.workers else "인부 배치" for pos in level.jobs})
         if not state.active:
             targets.update({pos: "레버 가동" for pos in level.levers})
@@ -565,7 +564,7 @@ class View:
         decor_draws = {}
         decoration_cells = {tuple(entry["cell"]) for entry in scene["decorations"]} if scene else set()
         device_floor = (level.traps | level.posts | level.plates | level.gates.keys()
-                        | fixed_devices(level) | set(level.chutes.values()) | level.channels | level.bridges
+                        | fixed_devices(level) | set(level.chutes.values())
                         | level.benches | level.levers | {level.exit})
         for depth in range(level.width + level.height - 1):
             for y in range(level.height):
@@ -623,24 +622,10 @@ class View:
                 if pos not in level.walls and pos not in device_floor and (not scene or near_trap):
                     draw_scars(pos, sx, sy, scale, near_trap)
 
-                if pos in level.channels:
-                    if state.water_high:
-                        self.art.draw("water", sx, sy, scale)
-                    else:
-                        diamond(sx, sy, half_width-3, int(half_height)-2, None, (72, 134, 147))
-                    labels.append((pos, "수로 잠김" if state.water_high else "낮은 수로"))
-                if pos in level.bridges:
-                    self.art.draw("water", sx, sy, scale)
-                    if state.water_high:
-                        self.art.draw("float_bridge", sx, sy, scale)
-                    else:
-                        draw_tinted(self.art, "float_bridge", sx, sy-10*scale, scale*.8, (74, 104, 111))
-                    labels.append((pos, "부교 연결" if state.water_high else "부교 내려감"))
                 for cells, sprite, label in (
                         (level.mirrors, "mirror", "거울 회전"),
                         (level.sources, "mana_source", "광원"),
                         (level.receivers, "mana_receiver", level.device_labels.get(pos, "") + (" 수신 중" if pos in powered_receivers else " 수신 대기")),
-                        (level.valves, "valve", "수위 높음" if state.water_high else "수위 낮음"),
                         (state.rubble, "push_rubble", "밀기 · 방향키"),
                         (level.jobs, "helper_work" if pos in state.workers else "winch", level.device_labels.get(pos, "") + (" 인부 회수" if pos in state.workers else " 인부 배치"))):
                     if pos in cells:

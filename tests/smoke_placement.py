@@ -50,7 +50,7 @@ def main():
         # 새 장치도 같은 기준점과 알파 클릭 판정을 사용한다.
         for index, level in enumerate(levels[3:],3):
             game=Game(level); display.draw(game,index,len(levels))
-            for cells,sprite in ((level.mirrors,"mirror"),(level.valves,"valve"),
+            for cells,sprite in ((level.mirrors,"mirror"),
                                  (level.jobs,"winch"),(level.rubble,"push_rubble")):
                 for pos in cells:
                     visible_item_pixel(display,game,pos,sprite)

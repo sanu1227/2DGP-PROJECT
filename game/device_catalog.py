@@ -45,10 +45,7 @@ CARDS = (
                "당기기는 불가. 빈 바닥·발판으로 밀고 Z로 되돌릴 수 있어요."),
     DeviceCard("mirror", "마력 반사 거울", (("mirror", "90도 회전"), ("mana_receiver", "수신기")),
                "거울 위에서 빈손으로 E / Space를 눌러 빛을 수신기에 보내세요.",
-               "벽·잔해·초소 병사는 빛을 막아요. 광선 순환은 자동으로 끝내요."),
-    DeviceCard("water", "수문과 수위", (("valve", "수위 밸브"), ("float_bridge", "부교")),
-               "밸브에서 E / Space. 낮으면 수로, 높으면 부교가 열려요.",
-               "잠길 수로나 내려갈 부교의 물건을 먼저 회수하세요."),
+               "벽·잔해·초소 병사는 빛을 막아요. 여러 거울을 이어 수신기에 보내세요."),
     DeviceCard("helper", "해골 인부", (("winch", "작업 자리"), ("helper_work", "작업 중")),
                "조립한 해골을 윈치에 배치하면 연결문을 계속 열어 줘요.",
                "빈손으로 E / Space를 눌러 회수한 뒤 최종 초소로 옮기세요."),
@@ -61,7 +58,7 @@ def present_devices(level):
         ("trap", level.traps), ("lever", level.levers),
         ("assembly", level.benches and level.posts), ("plate", level.plates),
         ("chute", level.chutes), ("rubble", level.rubble), ("mirror", level.mirrors),
-        ("water", level.valves), ("helper", level.jobs)) if exists}
+        ("helper", level.jobs)) if exists}
 
 
 def catalog_buttons():

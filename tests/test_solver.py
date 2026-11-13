@@ -19,6 +19,9 @@ class SolverTests(unittest.TestCase):
              "chute_links": [{"id": "C1", "inlet": [3, 1], "outlet": [4, 2]}]},
             {"map": ["########", "#@BBAJ##", "#ELTSGP#", "##PT####"],
              "worker_links": [{"id": "J1", "station": [5, 1], "gate": [5, 2]}]},
+            {"map": ["########", "#@Q.M###", "#...GPE#", "#..YM###", "#..T.L##"],
+             "power_links": [{"id": "M1", "receiver": [3, 3], "gate": [4, 2]}],
+             "magic_sources": [{"cell": [2, 1], "direction": "right"}]},
         ]
         for index, room in enumerate(rooms):
             room.update(id=f"solver_{index}", title="탐색 검사", hint="복구 후 복귀")

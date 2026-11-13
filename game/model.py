@@ -4,7 +4,7 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 
 from game.levels import DIRECTIONS, Level, Pos
-from game.mechanics import trace_magic, dry_at, changing_water_occupied, fixed_devices
+from game.mechanics import trace_magic, fixed_devices
 
 
 ITEM_NAMES = {"part": "함정 부품", "bone": "뼈 묶음", "soldier": "해골 병사"}
@@ -22,7 +22,6 @@ class State:
     moves: int = 0
     cleared: bool = False
     turned_mirrors: set[Pos] = field(default_factory=set)
-    water_high: bool = False
     rubble: set[Pos] = field(default_factory=set)
     workers: set[Pos] = field(default_factory=set)
 
@@ -132,7 +131,7 @@ class Game:
         state = self.state if state is None else state
         return (0 <= pos[0] < self.level.width and 0 <= pos[1] < self.level.height
                 and pos not in self.level.walls and pos not in state.soldiers
-                and pos not in state.rubble and dry_at(self.level, state, pos)
+                and pos not in state.rubble
                 and not (state.active and pos in self.level.traps)
                 and (pos not in self.level.gates or self.gate_status(pos, state) == "open"))
 
@@ -145,12 +144,6 @@ class Game:
             return "pickup", f"E: {ITEM_NAMES[state.items[pos]]} 줍기"
         if pos in self.level.mirrors:
             return (None, "거울은 빈손으로 돌리세요.") if state.carrying else ("rotate", "E / Space: 거울 90도 회전")
-        if pos in self.level.valves:
-            if state.carrying:
-                return None, "수위 밸브는 빈손으로 돌리세요."
-            if changing_water_occupied(self.level, state):
-                return None, "잠길 수로나 내려갈 부교의 물건을 먼저 치우세요."
-            return "water", "E / Space: " + ("배수 · 낮은 수로 열기" if state.water_high else "급수 · 부교 띄우기")
         if pos in self.level.jobs:
             if pos in state.workers:
                 return (None, "인부를 회수하려면 손을 비우세요.") if state.carrying else ("recall", "E / Space: 해골 인부 회수")
@@ -162,7 +155,7 @@ class Game:
             if state.carrying != "bone":
                 return None, f"{self.level.device_labels[pos]} 투입구: 뼈 묶음만 보낼 수 있습니다."
             if (outlet == state.player or outlet in state.items or outlet in state.soldiers
-                    or outlet in state.rubble or not dry_at(self.level, state, outlet)):
+                    or outlet in state.rubble):
                 return None, "배출구가 막혔습니다. 물건이나 병사를 치우세요."
             return "send_bone", f"E: {self.level.device_labels[pos]} 배출구로 뼈 보내기"
         if pos in self.level.traps:
@@ -218,7 +211,7 @@ class Game:
             destination = x + dx, y + dy
             if destination in state.rubble:
                 target = destination[0] + dx, destination[1] + dy
-                forbidden = fixed_devices(self.level) | self.level.gates.keys() | self.level.channels | self.level.bridges
+                forbidden = fixed_devices(self.level) | self.level.gates.keys()
                 if (state.carrying or not self.walkable(target, state) or target in forbidden
                         or target in state.items or target in state.workers):
                     return False, "잔해는 빈손으로, 비어 있는 바닥·발판 쪽으로만 밀 수 있습니다."
@@ -226,8 +219,6 @@ class Game:
                 state.rubble.add(target)
                 state.player = destination
                 return True, "잔해를 한 칸 밀었습니다. Z로 되돌릴 수 있습니다."
-            if not dry_at(self.level, state, destination):
-                return False, "수위 때문에 건널 수 없습니다. 밸브를 조작하세요."
             if destination in self.level.gates and not self.walkable(destination, state):
                 return False, "닫힌 문입니다. 연결 장치의 상태를 확인하세요."
             if not (0 <= destination[0] < self.level.width and 0 <= destination[1] < self.level.height) or destination in self.level.walls:
@@ -246,9 +237,6 @@ class Game:
         if operation == "rotate":
             state.turned_mirrors.symmetric_difference_update({pos})
             return True, "거울을 90도 돌렸습니다. 광선과 수신기를 확인하세요."
-        if operation == "water":
-            state.water_high = not state.water_high
-            return True, "급수: 수로 잠김 / 부교 연결" if state.water_high else "배수: 수로 열림 / 부교 내려감"
         if operation == "assign":
             state.workers.add(pos)
             state.carrying = None

@@ -330,6 +330,6 @@ class FrontEnd:
             self.key_hint(view, 160, 418, "E / Space", "현재 칸에서 작업")
             view.centered(1440, 837, "차근차근 복구", 32, GOLD)
             self.key_hint(view, 1440, 745, "E / Space", "빈 바닥에 내려놓기")
-            self.key_hint(view, 1440, 636, "새 장치", "거울 · 수위 · 잔해 · 인부")
+            self.key_hint(view, 1440, 636, "새 장치", "연속 반사 · 잔해 · 인부")
             self.key_hint(view, 1440, 527, "Z / Backspace", "직전 행동 되돌리기")
             self.key_hint(view, 1440, 418, "R", "현재 방 다시 시작")

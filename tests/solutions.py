@@ -6,9 +6,9 @@ MINIMUM_ACTIONS = {
     "stage_03": 45,
     "stage_04": 32,
     "stage_05": 35,
-    "stage_06": 40,
+    "stage_06": 41,
     "stage_07": 41,
-    "stage_08": 83,
+    "stage_08": 95,
 }
 
 SOLUTIONS = {
@@ -37,10 +37,10 @@ SOLUTIONS = {
         "interact up right interact down left interact right interact left left"
     ).split(),
     "stage_06": (
-        "down right right right right up interact down left left down down "
-        "interact up interact down interact down interact right right down interact up "
-        "interact right interact left interact up right interact down left left left "
-        "down left interact left"
+        "down right right interact down down interact right right up up interact "
+        "down down down right interact left interact right interact down left interact "
+        "up up up up up interact down down down left left down "
+        "interact down left interact left"
     ).split(),
     "stage_07": (
         "right interact down down left interact right interact left interact up right "
@@ -49,12 +49,13 @@ SOLUTIONS = {
         "down right interact left left"
     ).split(),
     "stage_08": (
-        "down right right right interact down down down right right interact right "
-        "right interact left interact left left left down left left interact right "
-        "interact left interact up up up up right right right right down "
-        "interact up right right interact left left left left down left left "
-        "interact right right up right right down interact up left left down "
-        "down down left interact down right interact down right right right down "
+        "down left interact right right interact down down interact up up right "
+        "right right down down down right interact right interact left left interact "
+        "up up up left left down left left down down down interact "
+        "right interact left interact up up up up right right right right "
+        "down interact up right right interact left left left left down left "
+        "left interact up right right right right down interact up left left "
+        "down down down left interact down down right right right right down "
         "interact up left left left interact left left left interact down"
     ).split(),
 }

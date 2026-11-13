@@ -31,17 +31,6 @@ def trace_magic(level, state):
     return segments, powered
 
 
-def dry_at(level, state, pos):
-    return not ((state.water_high and pos in level.channels)
-                or (not state.water_high and pos in level.bridges))
-
-
-def changing_water_occupied(level, state):
-    closing = level.bridges if state.water_high else level.channels
-    occupied = set(state.items) | state.soldiers | state.rubble | state.workers | {state.player}
-    return bool(closing & occupied)
-
-
 def fixed_devices(level):
     return (level.traps | level.posts | level.benches | level.levers | level.chutes.keys()
-            | level.mirrors | level.sources.keys() | level.receivers | level.valves | level.jobs | {level.exit})
+            | level.mirrors | level.sources.keys() | level.receivers | level.jobs | {level.exit})

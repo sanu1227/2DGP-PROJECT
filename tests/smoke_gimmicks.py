@@ -9,6 +9,7 @@ from unittest.mock import patch
 import pico2d.pico2d as p
 from game.levels import load_levels
 from game.model import Game
+from game.mechanics import trace_magic
 from game.view import View, WIDTH, HEIGHT
 from tests.solutions import SOLUTIONS
 from tests.smoke_gate_animation import save_frame
@@ -23,7 +24,7 @@ def main():
     count = 0
     try:
         view = View()
-        for index, level in enumerate(levels[3:], 3):
+        for index, level in enumerate(levels):
             game = Game(level)
             captured = set()
             def capture(suffix):
@@ -42,8 +43,7 @@ def main():
                 before = deepcopy(game.state)
                 assert game.act(action), (level.id, game.message)
                 for name, changed in (
-                        ('mirror', game.state.turned_mirrors != before.turned_mirrors),
-                        ('water', game.state.water_high != before.water_high),
+                        ('mirror', bool(trace_magic(level, game.state)[1]) and not trace_magic(level, before)[1]),
                         ('rubble', game.state.rubble != before.rubble)):
                     if changed and name not in captured:
                         capture('-' + name)
@@ -52,10 +52,11 @@ def main():
                     capture('-helper')
                     captured.add('helper')
             assert game.state.cleared
-            expected = {name for name, cells in (('mirror', level.mirrors), ('water', level.valves),
+            capture('-cleared')
+            expected = {name for name, cells in (('mirror', level.mirrors),
                         ('rubble', level.rubble), ('helper', level.jobs)) if cells}
             assert captured == expected
-        print(f'Gimmick SDL smoke OK: {count} snapshots, all four mechanics and five complete routes.')
+        print(f'Gimmick SDL smoke OK: {count} snapshots, all three mechanics and eight complete routes.')
     finally:
         if view:
             view.close()

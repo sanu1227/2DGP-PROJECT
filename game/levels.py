@@ -33,9 +33,6 @@ class Level:
     mirrors: frozenset[Pos] = frozenset()
     sources: dict[Pos, str] = field(default_factory=dict)
     receivers: frozenset[Pos] = frozenset()
-    valves: frozenset[Pos] = frozenset()
-    channels: frozenset[Pos] = frozenset()
-    bridges: frozenset[Pos] = frozenset()
     rubble: frozenset[Pos] = frozenset()
     jobs: frozenset[Pos] = frozenset()
     action_limit: int | None = None
@@ -83,7 +80,7 @@ def load_levels(path: Path | str | None = None) -> list[Level]:
 
     levels = []
     identifiers = set()
-    glyphs = "#.@EPBTLASFGCOMQYVWHRJ"
+    glyphs = "#.@EPBTLASFGCOMQYRJ"
     for index, raw in enumerate(stages, start=1):
         prefix = f"스테이지 {index}: "
         required = {"id", "title", "hint", "map"}
@@ -155,8 +152,6 @@ def load_levels(path: Path | str | None = None) -> list[Level]:
             sources[tuple(cell)] = source["direction"]
         if set(sources) != positions["Q"] or (positions["M"] | positions["Y"] and not sources):
             raise ValueError(prefix + "거울·수신기에는 방향이 지정된 광원이 필요합니다.")
-        if bool(positions["V"]) != bool(positions["W"] | positions["H"]):
-            raise ValueError(prefix + "수로·부교와 수위 밸브를 함께 배치해야 합니다.")
         if positions["J"] and not positions["S"]:
             raise ValueError(prefix + "해골 인부는 병사 복구 목표와 함께 배치해야 합니다.")
         levels.append(Level(
@@ -166,7 +161,7 @@ def load_levels(path: Path | str | None = None) -> list[Level]:
             benches=positions["A"], posts=positions["S"], initial_items=items,
             plates=positions["F"], gates={gate: control for control, gate in links.items()}, device_labels=labels,
             chutes=chutes, action_limit=action_limit,
-            mirrors=positions["M"], sources=sources, receivers=positions["Y"], valves=positions["V"],
-            channels=positions["W"], bridges=positions["H"], rubble=positions["R"], jobs=positions["J"],
+            mirrors=positions["M"], sources=sources, receivers=positions["Y"],
+            rubble=positions["R"], jobs=positions["J"],
         ))
     return levels
