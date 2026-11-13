@@ -559,7 +559,7 @@ class View:
 
         exit_ready = (state.installed == level.traps and (not level.traps or state.active)
                       and state.soldiers == level.posts and state.carrying is None)
-        beam_segments, powered_receivers = trace_magic(level, state)
+        beam_segments, powered_receivers = trace_magic(level, state, with_reflections=True)
         objects, labels, wall_tints = [], [], {}
         decor_draws = {}
         decoration_cells = {tuple(entry["cell"]) for entry in scene["decorations"]} if scene else set()
@@ -752,9 +752,10 @@ class View:
                 self.item(state.carrying, sx + offset_x, sy + 24 * height_scale, scale * 0.65)
 
         # 광선은 물체와 구별되는 높은 선으로 그리고 끝점도 현재 상태에서 계산한다.
-        for start, end in beam_segments:
+        for start, end, reflected in beam_segments:
             x1,y1=screen(start); x2,y2=screen(end)
-            for offset,color in ((-1,(30,129,165)),(0,(150,245,255)),(1,(30,129,165))):
+            edge, core = ((157, 72, 216), (244, 185, 255)) if reflected else ((30, 129, 165), (150, 245, 255))
+            for offset,color in ((-1,edge),(0,core),(1,edge)):
                 line(x1,y1+45*scale+offset,x2,y2+45*scale+offset,color)
         # 상태 문구를 바닥 아트와 함께 유지해 색이나 작은 그림에만 의존하지 않는다.
         for pos, label in labels:
