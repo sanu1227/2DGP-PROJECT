@@ -24,8 +24,8 @@ class IsoBoard:
 
     @property
     def half_width(self) -> int:
-        # 2:1 시점은 유지하고 높은 뒤쪽 벽까지 상하단 UI 사이에 넣는다.
-        return min(64, int((WIDTH - 80) / (self.width + self.height)),
+        # 작은 방은 더 크게 표시하되 2:1 시점과 높은 뒤쪽 벽의 여백을 유지한다.
+        return min(int((WIDTH - 80) / (self.width + self.height)),
                    int((BOARD_TOP - BOARD_BOTTOM) / ((self.width + self.height) / 2 + 2.2)))
 
     @property
@@ -34,7 +34,9 @@ class IsoBoard:
 
     @property
     def origin(self) -> tuple[float, float]:
-        return (WIDTH / 2 - (self.width - self.height) * self.half_width / 2,
+        # 6×6 입문방은 한 칸 오른쪽에 두어 왼쪽 튜토리얼 패널과 벽을 분리한다.
+        tutorial_offset = self.half_width if (self.width, self.height) == (6, 6) else 0
+        return (WIDTH / 2 + tutorial_offset - (self.width - self.height) * self.half_width / 2,
                 (BOARD_BOTTOM + BOARD_TOP) / 2 + (self.width + self.height - 2) * self.half_height / 2
                 - 116 * self.half_width / 112)
 
