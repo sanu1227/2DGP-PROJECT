@@ -384,16 +384,16 @@ class View:
                         continue
                     return pos
                 if mask:
-                    sprite, sx, sy, scale, flip, height_scale = mask
-                    if not self.art.hit_test(sprite, sx, sy, scale, (x, y), flip, height_scale):
+                    sprite, sx, sy, scale, flip, height_scale, rotation = mask
+                    if not self.art.hit_test(sprite, sx, sy, scale, (x, y), flip, height_scale, rotation):
                         continue
                 return pos
         return IsoBoard(game.level.width, game.level.height).pick(x, y)
 
-    def sprite_hit_region(self, pos, sprite, sx, sy, scale, flip=False, height_scale=1.0):
-        region = (pos, self.art.bounds(sprite, sx, sy, scale, flip, height_scale))
+    def sprite_hit_region(self, pos, sprite, sx, sy, scale, flip=False, height_scale=1.0, rotation=0):
+        region = (pos, self.art.bounds(sprite, sx, sy, scale, flip, height_scale, rotation))
         self.hit_regions.append(region)
-        self.hit_masks[region] = (sprite, sx, sy, scale, flip, height_scale)
+        self.hit_masks[region] = (sprite, sx, sy, scale, flip, height_scale, rotation)
 
     def navigation_overlay(self, game, projection):
         if game.failed or game.state.cleared:
@@ -626,7 +626,7 @@ class View:
                     draw_scars(pos, sx, sy, scale, near_trap)
 
                 for cells, sprite, label in (
-                        (level.mirrors, "mirror", "거울 회전"),
+                        (level.mirrors, "mirror", f"거울 {state.mirror_rotations.get(pos, 0) + 1}/4"),
                         (level.sources, "mana_source", "광원"),
                         (level.receivers, "mana_receiver", level.device_labels.get(pos, "") + (" 수신 완료" if pos in powered_receivers else " 수신 대기")),
                         (state.rubble, "push_rubble", "밀기 · 방향키"),
@@ -722,9 +722,9 @@ class View:
                 self.plate_hit_masks[self.hit_regions[-1]] = (sx, sy, scale, pressed)
                 continue
             if sprite == "mirror":
-                flip = pos in state.turned_mirrors
-                self.art.draw(sprite, sx, sy, scale, flip=flip)
-                self.sprite_hit_region(pos, sprite, sx, sy, scale, flip)
+                rotation = state.mirror_rotations.get(pos, 0)
+                self.art.draw(sprite, sx, sy, scale, rotation=rotation)
+                self.sprite_hit_region(pos, sprite, sx, sy, scale, rotation=rotation)
                 continue
             if sprite.startswith("gate_"):
                 self.gate(level, pos, sx, sy, scale, sprite.removeprefix("gate_"), gate_openings[pos])

@@ -3,9 +3,15 @@
 from game.levels import DIRECTIONS
 
 
-def mirror_axis(turned):
+def mirror_axis(rotation):
     """지도 좌표의 거울 면 방향. 반사 판정과 화면이 같은 축을 사용한다."""
-    return (1, 1) if turned else (1, -1)
+    return ((1, -1), (1, 1), (-1, 1), (-1, -1))[rotation % 4]
+
+
+def mirror_normal(rotation):
+    """빛을 받는 앞면의 법선. 지도와 화면의 방향 화살표가 함께 사용한다."""
+    tx, ty = mirror_axis(rotation)
+    return -ty, tx
 
 
 def trace_magic(level, state):
@@ -31,7 +37,11 @@ def trace_magic(level, state):
                 break
             if target in level.mirrors:
                 dx, dy = delta
-                tx, ty = mirror_axis(target in state.turned_mirrors)
+                rotation = state.mirror_rotations.get(target, 0)
+                nx, ny = mirror_normal(rotation)
+                if dx * nx + dy * ny >= 0:
+                    break  # 뒷면은 빛을 반사하거나 통과시키지 않는다.
+                tx, ty = mirror_axis(rotation)
                 along = dx * tx + dy * ty
                 delta = along * tx - dx, along * ty - dy
             pos = target

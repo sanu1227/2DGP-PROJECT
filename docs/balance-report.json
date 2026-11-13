@@ -1,11 +1,11 @@
 {
   "sha256": {
-    "data/stages.json": "3a9c7328419fc2a08064fa87e5065e3448e3217fdf67178c9a03678a07500901",
+    "data/stages.json": "7cc9fcc96ef0fbe9c83537702a3692e4b830f1c3c77e6c7397041c4203b03e2c",
     "game/levels.py": "25f44ef3b8907a1ff81b0ac1e42ba24c796e2345696788ecfd5cd3d1fdf59a3d",
-    "game/model.py": "576c09d9fc29a25502e4a77d9a4a7e2aa66cfde1222f3be67b9f58117204c21c",
-    "game/mechanics.py": "ec217bb39974d722e78187c3db42e07a058f70c8431401d6bd2cb4d1eef4ac02",
-    "tools/solve_levels.py": "62ea0d69f7c4c57c4c479b0718b8a82192d66737435c49ebaa86a73acbf10dc5",
-    "tests/solutions.py": "ea265db763088e9923678bb1acc693a006e93cc364a5471e5616dd5f553a8585"
+    "game/model.py": "22094ef276491cce4f8e7fa9729e8186839001c53d4c0b44c0530a6e598ec94c",
+    "game/mechanics.py": "61f7c8da2510cebf762f168cb03eae0688622967759af28ccd9ecce9824fa1dd",
+    "tools/solve_levels.py": "45d01a99e2ac23f97a9c9b292a33c4f5151ab54f77ae8709d3c8dc9c157a8bd1",
+    "tests/solutions.py": "8bb5aa97366c1f25ecb4bdf57cba65ba0be102426a3077963c72840c9894ee4b"
   },
   "stages": {
     "stage_01": {
@@ -226,8 +226,8 @@
         "left"
       ],
       "minimum": 35,
-      "expanded": 355,
-      "seconds": 0.08,
+      "expanded": 390,
+      "seconds": 0.1,
       "core_mechanic_required_within_limit": true,
       "required_mechanics": [
         "mirror",
@@ -248,6 +248,8 @@
         "interact",
         "down",
         "down",
+        "interact",
+        "interact",
         "interact",
         "right",
         "right",
@@ -284,14 +286,14 @@
         "interact",
         "left"
       ],
-      "minimum": 41,
-      "expanded": 294,
-      "seconds": 0.08,
+      "minimum": 43,
+      "expanded": 316,
+      "seconds": 0.09,
       "core_mechanic_required_within_limit": true,
       "required_mechanics": [
         "mirror"
       ],
-      "action_limit": 43,
+      "action_limit": 45,
       "size": [
         8,
         8
@@ -361,11 +363,15 @@
         "down",
         "left",
         "interact",
+        "interact",
+        "interact",
         "right",
         "right",
         "interact",
         "down",
         "down",
+        "interact",
+        "interact",
         "interact",
         "up",
         "up",
@@ -454,9 +460,9 @@
         "interact",
         "down"
       ],
-      "minimum": 95,
-      "expanded": 63502,
-      "seconds": 19.27,
+      "minimum": 99,
+      "expanded": 88338,
+      "seconds": 26.94,
       "core_mechanic_required_within_limit": true,
       "required_mechanics": [
         "rubble",
@@ -464,7 +470,7 @@
         "helper",
         "chute"
       ],
-      "action_limit": 97,
+      "action_limit": 101,
       "size": [
         10,
         10

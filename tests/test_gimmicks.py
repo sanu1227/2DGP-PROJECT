@@ -6,7 +6,7 @@ import unittest
 
 from game.levels import DIRECTIONS, load_levels
 from game.model import Game
-from game.mechanics import trace_magic
+from game.mechanics import trace_magic, mirror_normal
 from game.navigation import find_path
 from tests.solutions import SOLUTIONS
 from tools.solve_levels import key
@@ -60,17 +60,41 @@ class GimmickTests(unittest.TestCase):
         base=self.levels[4]
         center=(3,3)
         for direction,(dx,dy) in DIRECTIONS.items():
-            for turned in (False,True):
-                outgoing=(dy,dx) if turned else (-dy,-dx)
+            for rotation in range(4):
+                outgoing=(dy,dx) if rotation % 2 else (-dy,-dx)
                 receiver=(3+outgoing[0],3+outgoing[1])
                 level=replace(base,walls=frozenset(),mirrors=frozenset({center}),
                               sources={(3-dx,3-dy):direction},receivers=frozenset({receiver}))
                 game=Game(level)
-                game.state.turned_mirrors={center} if turned else set()
-                self.assertIn(receiver,trace_magic(level,game.state)[1])
+                game.state.mirror_rotations={center: rotation}
+                nx, ny = mirror_normal(rotation)
+                segments, powered = trace_magic(level,game.state)
+                if dx * nx + dy * ny < 0:
+                    self.assertIn(receiver, powered)
+                else:
+                    self.assertFalse(powered)
+                    self.assertEqual(segments, [(next(iter(level.sources)), center)])
+
+    def test_four_rotations_wrap_and_each_undo_restores_orientation(self):
+        game = Game(self.levels[4])
+        mirror = next(iter(game.level.mirrors))
+        game.state.player = mirror
+        original = key(game.state)
+        states = []
+        for expected in (1, 2, 3, 0):
+            states.append(deepcopy(game.state))
+            self.assertTrue(game.act('interact'))
+            self.assertEqual(game.state.mirror_rotations.get(mirror, 0), expected)
+        self.assertEqual(game.state.moves, 4)
+        self.assertEqual(key(game.state), original)
+        for before in reversed(states):
+            self.assertTrue(game.undo())
+            self.assertEqual(game.state, before)
+        game.restart()
+        self.assertEqual(game.state.mirror_rotations, {})
 
     def test_beam_blockers_and_closed_gate_do_not_create_feedback(self):
-        game=Game(self.levels[4]); game.state.turned_mirrors={(3,2)}
+        game=Game(self.levels[4]); game.state.mirror_rotations={(3,2): 1}
         for field in ('rubble','soldiers'):
             getattr(game.state,field).add((3,3))
             self.assertFalse(trace_magic(game.level,game.state)[1])
@@ -81,35 +105,37 @@ class GimmickTests(unittest.TestCase):
     def test_closed_mirror_loop_terminates(self):
         level=replace(self.levels[4],walls=frozenset(),receivers=frozenset(),
                       sources={(2,2):'right'}, mirrors=frozenset({(2,2),(4,2),(4,4),(2,4)}))
-        game=Game(level);game.state.turned_mirrors={(4,2),(2,4)}
+        game=Game(level);game.state.mirror_rotations={(2,2): 0, (4,2): 1, (4,4): 2, (2,4): 3}
         segments,powered=trace_magic(level,game.state)
         self.assertLessEqual(len(segments),10)
         self.assertFalse(powered)
 
     def test_later_rooms_require_every_reflection_and_undo_each_rotation(self):
-        for index, count in ((4, 1), (5, 2), (7, 3)):
+        for index, expected in ((4, (1,)), (5, (1, 3)), (7, (3, 1, 3))):
+            count = len(expected)
             level = self.levels[index]
             mirrors = sorted(level.mirrors)
             self.assertEqual(len(mirrors), count)
             winning = []
-            for bits in product((False, True), repeat=count):
+            for rotations in product(range(4), repeat=count):
                 game = Game(level)
-                game.state.turned_mirrors = {m for m, bit in zip(mirrors, bits) if bit}
+                game.state.mirror_rotations = dict(zip(mirrors, rotations))
                 segments, powered = trace_magic(level, game.state)
                 if powered:
-                    winning.append(bits)
+                    winning.append(rotations)
                     hits = [end for _, end in segments if end in level.mirrors]
                     self.assertEqual(len(hits), count)
                     self.assertEqual(set(hits), set(mirrors))
-            self.assertEqual(winning, [(True,) * count], level.id)
+            self.assertEqual(winning, [expected], level.id)
             game = Game(level)
-            for mirror in mirrors:
+            for mirror, rotation in zip(mirrors, expected):
                 game.state.player = mirror
-                before = deepcopy(game.state)
-                self.assertTrue(game.act('interact'))
-                game.undo()
-                self.assertEqual(game.state, before)
-                self.assertTrue(game.act('interact'))
+                for _ in range(rotation):
+                    before = deepcopy(game.state)
+                    self.assertTrue(game.act('interact'))
+                    game.undo()
+                    self.assertEqual(game.state, before)
+                    self.assertTrue(game.act('interact'))
             self.assertEqual(trace_magic(level, game.state)[1], set(level.receivers))
             # 도달 경로의 거울 하나를 빼면 수신기가 작동할 수 없다.
             for mirror in mirrors:
@@ -176,7 +202,10 @@ class GimmickTests(unittest.TestCase):
 
     def test_new_state_fields_are_in_solver_key(self):
         game=Game(self.levels[7]);base=key(game.state)
-        for field in ('turned_mirrors','workers','rubble'):
+        for rotation in (1, 2, 3):
+            state=deepcopy(game.state);state.mirror_rotations[(1,1)]=rotation
+            self.assertNotEqual(base,key(state))
+        for field in ('workers','rubble'):
             state=deepcopy(game.state);getattr(state,field).add((1,1))
             self.assertNotEqual(base,key(state))
 
@@ -186,9 +215,10 @@ class GimmickTests(unittest.TestCase):
         vault_part = min((p for p, kind in game.level.initial_items.items() if kind == 'part'), key=lambda p: p[1])
         self.assertIsNone(find_path(game, job))
         self.assertIsNone(find_path(game, vault_part))
-        for mirror in sorted(game.level.mirrors):
+        for mirror, rotation in zip(sorted(game.level.mirrors), (3, 1, 3)):
             game.state.player = mirror
-            self.assertTrue(game.act('interact'))
+            for _ in range(rotation):
+                self.assertTrue(game.act('interact'))
         self.assertIsNotNone(find_path(game, job))
         self.assertIsNone(find_path(game, vault_part))
         game.state.player = job

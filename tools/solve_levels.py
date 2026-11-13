@@ -22,7 +22,7 @@ from game.mechanics import trace_magic
 def key(state):
     return (state.player, state.carrying, tuple(sorted(state.items.items())),
             frozenset(state.installed), state.active, frozenset(state.soldiers),
-            tuple(sorted(state.bench_bones.items())), frozenset(state.turned_mirrors),
+            tuple(sorted(state.bench_bones.items())), tuple(sorted(state.mirror_rotations.items())),
             frozenset(state.rubble), frozenset(state.workers))
 
 
@@ -55,15 +55,15 @@ class LowerBound:
             if not level.traps <= region:
                 continue
             mirrors = sorted(level.mirrors)
-            if len(mirrors) > 8:
+            if len(mirrors) > 6:
                 continue  # 큰 지도는 기존의 약한 하한으로 안전하게 돌아간다.
             probe = Game(level).state
             probe.rubble.clear()
             patterns = []
-            for bits in product((False, True), repeat=len(mirrors)):
-                probe.turned_mirrors = {m for m, bit in zip(mirrors, bits) if bit}
+            for rotations in product(range(4), repeat=len(mirrors)):
+                probe.mirror_rotations = dict(zip(mirrors, rotations))
                 if control in trace_magic(level, probe)[1]:
-                    patterns.append(frozenset(probe.turned_mirrors))
+                    patterns.append(dict(probe.mirror_rotations))
             if patterns:
                 self.mirror_regions.append((self.floor - region - {gate}, patterns))
                 if len(level.receivers) == 1 and len(patterns) == 1:
@@ -141,7 +141,8 @@ class LowerBound:
         sources["soldier"].extend(state.workers)
         actions = len(state.items) + len(state.workers)
         # 여러 수신기의 회전 작업이 겹칠 수 있으므로 합계가 아닌 최댓값이다.
-        rotations = [min(len(state.turned_mirrors ^ pattern) for pattern in patterns)
+        rotations = [min(sum((target - state.mirror_rotations.get(pos, 0)) % 4
+                             for pos, target in pattern.items()) for pattern in patterns)
                      for region, patterns in self.mirror_regions
                      if any(state.items.get(pos) == 'part' for pos in region)]
         actions += max(rotations, default=0)
@@ -152,7 +153,9 @@ class LowerBound:
             must_visit |= level.levers
         for region, patterns in self.mirror_regions:
             if any(state.items.get(pos) == 'part' for pos in region):
-                must_visit |= set.intersection(*(set(state.turned_mirrors ^ pattern) for pattern in patterns))
+                must_visit |= set.intersection(*({pos for pos, target in pattern.items()
+                                                  if state.mirror_rotations.get(pos, 0) != target}
+                                                 for pattern in patterns))
         if state.carrying:
             sources[state.carrying].append(state.player)
         traps = level.traps - state.installed
@@ -241,7 +244,7 @@ def solve(level, max_states=500_000, upper_bound=None, forbidden=None):
             game.history = []
             if (action == 'interact' and state.player in level.mirrors
                     and lower_bound.monotone_mirrors is not None
-                    and ((state.player in state.turned_mirrors) == (state.player in lower_bound.monotone_mirrors))
+                    and (state.mirror_rotations.get(state.player, 0) == lower_bound.monotone_mirrors[state.player])
                     and game._interaction(state)[0] == 'rotate'):
                 continue
             if forbidden and forbidden(game, action):

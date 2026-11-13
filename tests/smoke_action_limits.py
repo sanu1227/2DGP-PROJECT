@@ -58,7 +58,7 @@ def check_feedback(levels, capture):
                 with patch("game.view.perf_counter", return_value=10.2):
                     display.draw(game, index, len(levels))
                 second = next(m for m in display.hit_masks.values() if m[0].startswith("worker_"))
-                assert (mask[-1] != second[-1]) == bool(tired)
+                assert (mask[5] != second[5]) == bool(tired)  # 캐릭터의 높이 배율
                 assert game.state == before
                 if capture and index == 1 and (game.remaining_actions in (threshold, 5) or game.state.cleared):
                     name = "cleared" if game.state.cleared else "tired" if tired == 1 else "critical"

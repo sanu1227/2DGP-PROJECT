@@ -39,7 +39,7 @@ def input_checks(level):
         (11.2, None, True, .2 / RECEIVE_SECONDS),
         (11.2, p.SDLK_ESCAPE, True, .2 / RECEIVE_SECONDS),
         (11.3, None, True, .3 / RECEIVE_SECONDS), (12, None, True, 1),
-        (12.1, p.SDLK_e, False, 1), (12.13, p.SDLK_e, True, 0),
+        (12.1, p.SDLK_e, False, 1), (12.13, (p.SDLK_e,) * 3, True, 0),
         (12.2, p.SDLK_z, False, 1), (12.3, p.SDLK_e, True, 0),
         (12.4, p.SDLK_r, False, 1), (12.5, p.SDLK_e, True, 0),
         (12.6, p.SDLK_1, False, 1),
@@ -54,7 +54,7 @@ def input_checks(level):
         now, code, _, _ = steps[frame]
         drawn = 0
         labels.clear()
-        return [] if code is None else [key(code)]
+        return [] if code is None else [key(value) for value in (code if isinstance(code, tuple) else (code,))]
 
     def checked_draw(display, game, *args):
         state = deepcopy(game.state)

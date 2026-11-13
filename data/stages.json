@@ -138,7 +138,7 @@
         "#EL.#S.#",
         "########"
       ],
-      "action_limit": 43,
+      "action_limit": 45,
       "magic_sources": [
         {
           "cell": [
@@ -255,7 +255,7 @@
           ]
         }
       ],
-      "action_limit": 97
+      "action_limit": 101
     }
   ]
 }

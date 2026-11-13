@@ -21,7 +21,7 @@ class State:
     bench_bones: dict[Pos, int] = field(default_factory=dict)
     moves: int = 0
     cleared: bool = False
-    turned_mirrors: set[Pos] = field(default_factory=set)
+    mirror_rotations: dict[Pos, int] = field(default_factory=dict)
     rubble: set[Pos] = field(default_factory=set)
     workers: set[Pos] = field(default_factory=set)
 
@@ -143,7 +143,7 @@ class Game:
                 return None, "손이 찼습니다. 먼저 내려놓으세요."
             return "pickup", f"E: {ITEM_NAMES[state.items[pos]]} 줍기"
         if pos in self.level.mirrors:
-            return (None, "거울은 빈손으로 돌리세요.") if state.carrying else ("rotate", "E / Space: 거울 90도 회전")
+            return (None, "거울은 빈손으로 돌리세요.") if state.carrying else ("rotate", "E / Space: 거울 90도 회전 · 화살표 쪽 앞면만 반사")
         if pos in self.level.jobs:
             if pos in state.workers:
                 return (None, "인부를 회수하려면 손을 비우세요.") if state.carrying else ("recall", "E / Space: 해골 인부 회수")
@@ -235,8 +235,12 @@ class Game:
             return False, message
         pos = state.player
         if operation == "rotate":
-            state.turned_mirrors.symmetric_difference_update({pos})
-            return True, "거울을 90도 돌렸습니다. 광선과 수신기를 확인하세요."
+            rotation = (state.mirror_rotations.get(pos, 0) + 1) % 4
+            if rotation:
+                state.mirror_rotations[pos] = rotation
+            else:
+                state.mirror_rotations.pop(pos, None)
+            return True, f"거울 방향 {rotation + 1}/4. 화살표 쪽 앞면만 빛을 반사합니다."
         if operation == "assign":
             state.workers.add(pos)
             state.carrying = None

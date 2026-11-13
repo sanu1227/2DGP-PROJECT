@@ -6,7 +6,7 @@ from math import floor
 from pathlib import Path
 
 import pico2d.pico2d as p
-from game.mechanics import mirror_axis
+from game.mechanics import mirror_axis, mirror_normal
 
 
 ART_ROOT = Path(__file__).resolve().parents[1] / "assets" / "art_v1"
@@ -124,16 +124,22 @@ class Art:
                 p.SDL_FreeSurface(source)
         return self.alpha_masks[atlas_name]
 
-    def hit_test(self, name, sx, sy, scale, point, flip=False, height_scale=1.0):
+    def hit_test(self, name, sx, sy, scale, point, flip=False, height_scale=1.0, rotation=0):
         """그림의 투명한 모서리를 통과시켜 뒤의 바닥을 선택할 수 있게 한다."""
         entry = self.manifest["sprites"][name]
         offset = (point[0] - sx) / scale
         x = floor(entry["anchor"]["x"] + (-offset if flip else offset))
         y = floor(entry["anchor"]["y"] - (point[1] - sy) / (scale * height_scale))
         if name == "mirror":
-            left, bottom, right, top = self.mirror_panel(sx, sy, scale, flip)
+            left, bottom, right, top = self.mirror_panel(sx, sy, scale, rotation)
             if left <= point[0] <= right and bottom - 6 * scale <= point[1] <= top:
                 return True
+            arrow = self.mirror_arrow(sx, sy, scale, rotation)
+            for a, b in zip(arrow, arrow[1:]):
+                dx, dy = b[0] - a[0], b[1] - a[1]
+                t = max(0, min(1, ((point[0] - a[0]) * dx + (point[1] - a[1]) * dy) / (dx * dx + dy * dy)))
+                if (point[0] - a[0] - t * dx) ** 2 + (point[1] - a[1] - t * dy) ** 2 <= (4 * scale) ** 2:
+                    return True
             # 받침대는 회전하지 않는다. 잘라낸 옛 거울판은 클릭을 가로채지 않는다.
             x = floor(entry["anchor"]["x"] + offset)
             if y < MIRROR_BASE_TOP:
@@ -146,12 +152,15 @@ class Art:
         width, alpha = self._alpha(entry["atlas"])
         return alpha[(top + y) * width + left + x] >= 16
 
-    def bounds(self, name, sx, sy, scale, flip=False, height_scale=1.0):
+    def bounds(self, name, sx, sy, scale, flip=False, height_scale=1.0, rotation=0):
         """투명 여백을 제외한 표시 영역. 물체를 클릭하면 발이 놓인 칸을 고른다."""
         entry = self.manifest["sprites"][name]
         rect, anchor = entry["content_rect"], entry["anchor"]
         if name == "mirror":
-            left, bottom, right, top = self.mirror_panel(sx, sy, scale, flip)
+            left, bottom, right, top = self.mirror_panel(sx, sy, scale, rotation)
+            arrow = self.mirror_arrow(sx, sy, scale, rotation)
+            left, right = min(left, min(x for x, _ in arrow) - 4 * scale), max(right, max(x for x, _ in arrow) + 4 * scale)
+            bottom, top = min(bottom, min(y for _, y in arrow) - 4 * scale), max(top, max(y for _, y in arrow) + 4 * scale)
             return (min(left, sx + (rect["left"] - anchor["x"]) * scale),
                     min(bottom - 6 * scale, sy + (anchor["y"] - rect["top"] - rect["height"]) * scale),
                     max(right, sx + (rect["left"] + rect["width"] - anchor["x"]) * scale),
@@ -260,22 +269,33 @@ class Art:
                 and self.hit_test("gate_closed", sx, sy + lift * scale, scale, point, flip))
 
     @staticmethod
-    def mirror_segment(sx, sy, scale, turned):
+    def mirror_segment(sx, sy, scale, rotation):
         """거울의 실제 반사축을 2:1 등각 화면에 투영한다."""
-        tx, ty = mirror_axis(turned)
+        tx, ty = mirror_axis(rotation)
         dx, dy = (tx - ty) * 112 * .36 * scale, -(tx + ty) * 56 * .36 * scale
         cy = sy + MAGIC_BEAM_HEIGHT * scale
         return (sx - dx, cy - dy), (sx + dx, cy + dy)
 
     @classmethod
-    def mirror_panel(cls, sx, sy, scale, turned):
-        (ax, ay), (bx, by) = cls.mirror_segment(sx, sy, scale, turned)
-        # 세운 양면 거울의 높이와 옆면 두께. 회전한 면은 카메라에서 옆날로 보인다.
-        rx, ry = (6 * scale, 45 * scale) if turned else (0, 45 * scale)
+    def mirror_panel(cls, sx, sy, scale, rotation):
+        (ax, ay), (bx, by) = cls.mirror_segment(sx, sy, scale, rotation)
+        # 홀수 방향은 카메라에서 옆날로 보이고, 0번은 앞면, 2번은 뒷면이다.
+        rx, ry = (6 * scale, 45 * scale) if rotation % 2 else (0, 45 * scale)
         return min(ax, bx) - rx, min(ay, by) - ry, max(ax, bx) + rx, max(ay, by) + ry
 
-    def draw_mirror(self, sx, sy, scale, turned=False):
-        """황동 받침대 위에 반사축과 일치하는 낮은 양면 거울판을 그린다."""
+    @staticmethod
+    def mirror_arrow(sx, sy, scale, rotation):
+        nx, ny = mirror_normal(rotation)
+        dx, dy = nx - ny, -(nx + ny)
+        length = (dx * dx + dy * dy) ** .5
+        dx, dy = dx / length * scale, dy / length * scale
+        start = sx, sy + MAGIC_BEAM_HEIGHT * scale
+        tip = start[0] + dx * 40, start[1] + dy * 40
+        return (start, tip, (tip[0] - dx * 10 - dy * 7, tip[1] - dy * 10 + dx * 7),
+                tip, (tip[0] - dx * 10 + dy * 7, tip[1] - dy * 10 - dx * 7))
+
+    def draw_mirror(self, sx, sy, scale, rotation=0):
+        """반사축·앞면 화살표를 표시한다. 네 방향의 유리·뒤판·옆날을 구별한다."""
         entry = self.manifest["sprites"]["mirror"]
         anchor = entry["anchor"]
         left, bottom, width, height = entry["clip_rect_pico2d"]
@@ -285,12 +305,12 @@ class Art:
             sx + (width / 2 - anchor["x"]) * scale,
             sy + (anchor["y"] - MIRROR_BASE_TOP - base_height / 2) * scale,
             width * scale, base_height * scale)
-        left, bottom, right, top = self.mirror_panel(sx, sy, scale, turned)
+        left, bottom, right, top = self.mirror_panel(sx, sy, scale, rotation)
 
         p.draw_rectangle(left, bottom - 6 * scale, right, top - 6 * scale, 69, 46, 31, filled=True)
         p.draw_rectangle(left, bottom, right, top, 133, 89, 44, filled=True)
         # 원본의 황동 테두리·유리 면을 실제 투영 사각형에 매핑한다. PNG는 수정하지 않는다.
-        uv = ((163, 83), (170, 85), (141, 151), (134, 149)) if turned else (
+        uv = ((163, 83), (170, 85), (141, 151), (134, 149)) if rotation % 2 else (
             (92, 49), (177, 75), (137, 159), (53, 135))
         positions = ((left, top), (right, top), (right, bottom), (left, bottom))
         atlas = self.manifest["atlases"][entry["atlas"]]
@@ -299,25 +319,47 @@ class Art:
         vertices = (p.SDL_Vertex * 4)()
         for vertex, (x, y), (u, v) in zip(vertices, positions, uv):
             vertex.position = p.SDL_FPoint(x, p.get_canvas_height() - 1 - y)
-            vertex.color = p.SDL_Color(255, 255, 255, 255)
+            vertex.color = p.SDL_Color(*((115, 94, 73, 255) if rotation == 2 else (255, 255, 255, 255)))
             vertex.tex_coord = p.SDL_FPoint((clip_x + u) / atlas["width"], (texture_top + v) / atlas["height"])
         indices = (ctypes.c_int * 6)(0, 1, 2, 0, 2, 3)
-        if p.SDL_RenderGeometry(p.renderer, self.atlases[entry["atlas"]].texture, vertices, 4, indices, 6) < 0:
-            raise RuntimeError(f"거울 표시 실패: {p.SDL_GetError()}")
-        if not turned:
+        texture = self.atlases[entry["atlas"]].texture
+        previous = tuple(ctypes.c_ubyte() for _ in range(4))
+        p.SDL_GetTextureColorMod(texture, *(ctypes.byref(value) for value in previous[:3]))
+        p.SDL_GetTextureAlphaMod(texture, ctypes.byref(previous[3]))
+        try:
+            if p.SDL_RenderGeometry(p.renderer, texture, vertices, 4, indices, 6) < 0:
+                raise RuntimeError(f"거울 표시 실패: {p.SDL_GetError()}")
+        finally:
+            # SDL 소프트웨어 렌더러는 단색 꼭짓점의 색을 공유 텍스처에 남길 수 있다.
+            p.SDL_SetTextureColorMod(texture, *(value.value for value in previous[:3]))
+            p.SDL_SetTextureAlphaMod(texture, previous[3].value)
+        if not rotation % 2:
             # 사선 원본의 둥근 테두리 바깥에 생기는 투명 여백을 황동 측면으로 마감한다.
             for x in (left, right - 3 * scale):
                 p.draw_rectangle(x, bottom, x + 3 * scale, top, 154, 106, 51, filled=True)
                 p.draw_line(x + scale, bottom + scale, x + scale, top - scale, 232, 193, 116)
+        if rotation == 2:
+            for a, b in (((left, bottom), (right, top)), ((left, top), (right, bottom))):
+                p.draw_line(*a, *b, 170, 126, 69)
+        elif rotation % 2:
+            x = left if rotation == 1 else right
+            p.draw_line(x, bottom, x, top, 133, 225, 234)
+        arrow = self.mirror_arrow(sx, sy, scale, rotation)
+        for a, b in zip(arrow, arrow[1:]):
+            for offset in (-2, -1, 0, 1, 2):
+                p.draw_line(a[0] + offset, a[1], b[0] + offset, b[1], 26, 48, 51)
+                p.draw_line(a[0], a[1] + offset, b[0], b[1] + offset, 26, 48, 51)
+        for a, b in zip(arrow, arrow[1:]):
+            p.draw_line(*a, *b, 133, 225, 234)
 
-    def draw(self, name, sx, sy, scale, flip=False, anchor=None, height_scale=1.0):
+    def draw(self, name, sx, sy, scale, flip=False, anchor=None, height_scale=1.0, rotation=0):
         """PNG 좌상단 기준점을 pico2d의 위쪽 +y 화면 좌표로 변환한다."""
         entry = self.manifest["sprites"][name]
         if name == "mirror":
             if anchor is not None:
                 sx += (entry["anchor"]["x"] - anchor["x"]) * scale
                 sy += (anchor["y"] - entry["anchor"]["y"]) * scale
-            self.draw_mirror(sx, sy, scale, flip)
+            self.draw_mirror(sx, sy, scale, rotation)
             return
         width, height = entry["width"], entry["height"]
         anchor = entry["anchor"] if anchor is None else anchor
