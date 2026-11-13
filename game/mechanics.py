@@ -3,24 +3,22 @@
 from game.levels import DIRECTIONS
 
 
-def trace_magic(level, state, *, with_reflections=False):
+def trace_magic(level, state):
     """반사 광선의 선분과 작동 수신기. 순환 경로도 유한하게 끝낸다.
 
     광선은 머리 위로 지나가며 벽·잔해·최종 배치 병사만 막는다.
     문과 운반물은 막지 않으므로 문 전원 판정에 순환 의존성이 없다.
-    with_reflections를 켜면 선분에 거울을 이미 지났는지 표시하는 bool을 덧붙인다.
     """
     segments, powered = [], set()
     for start, direction in level.sources.items():
         pos, delta = start, DIRECTIONS[direction]
-        reflected = False
         seen = set()
         while (pos, delta) not in seen:
             seen.add((pos, delta))
             target = pos[0] + delta[0], pos[1] + delta[1]
             if not (0 <= target[0] < level.width and 0 <= target[1] < level.height):
                 break
-            segments.append((pos, target, reflected) if with_reflections else (pos, target))
+            segments.append((pos, target))
             if target in level.walls or target in state.rubble or target in state.soldiers:
                 break
             if target in level.receivers:
@@ -29,7 +27,6 @@ def trace_magic(level, state, *, with_reflections=False):
             if target in level.mirrors:
                 dx, dy = delta
                 delta = (dy, dx) if target in state.turned_mirrors else (-dy, -dx)
-                reflected = True
             pos = target
     return segments, powered
 
