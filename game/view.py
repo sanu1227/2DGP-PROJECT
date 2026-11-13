@@ -1,6 +1,7 @@
 """pico2d 화면과 키 입력. 퍼즐 판정은 model.Game이 전담한다."""
 
 import os
+from dataclasses import replace
 from pathlib import Path
 from time import perf_counter
 from math import floor, sin, sqrt
@@ -32,6 +33,7 @@ FACING = {"up": "ne", "right": "se", "down": "sw", "left": "nw"}
 GATE_SECONDS = 0.36
 PLATE_SECONDS = 0.24
 PUSH_SECONDS = 0.28
+MIRROR_SECONDS = 0.30
 TUTORIAL_PANEL = (32, 600, 420, 810)
 
 
@@ -154,12 +156,47 @@ class View:
 
     def reset_player(self):
         self.receiver_feedback.reset()
+        self.mirror_game = None
+        self.mirror_motions = {}
         self.facing = "se"
         self.motion = None
         self.move_seconds = 0.18
         self.rubble_motions = {}
         self.plate_delays = {}
         self.action_badge_bounds = None
+
+    def mirror_rotation(self, game, pos, now):
+        """정수 논리 방향과 별개인 표시 각도. 마지막 방향에서 첫 방향도 계속 같은 쪽으로 돈다."""
+        motion = self.mirror_motions.get(pos) if self.mirror_game is game else None
+        if motion is None:
+            return game.state.mirror_rotations.get(pos, 0)
+        start, target, began, duration = motion
+        t = max(0, min(1, (now - began) / duration))
+        if t >= 1:
+            self.mirror_motions.pop(pos)
+            return game.state.mirror_rotations.get(pos, 0)
+        return start + (target - start) * t * t * (3 - 2 * t)
+
+    def animate_devices(self, game, previous):
+        """성공한 행동 이벤트에만 연결한다. 연타는 현재 각도에서 이어지며 입력을 막지 않는다."""
+        now = self.now()
+        if self.mirror_game is not game:
+            self.mirror_game, self.mirror_motions = game, {}
+        for pos in game.level.mirrors:
+            old, new = previous.mirror_rotations.get(pos, 0), game.state.mirror_rotations.get(pos, 0)
+            if old == new:
+                continue
+            motion = self.mirror_motions.get(pos)
+            if motion and now < motion[2] + motion[3]:
+                start = self.mirror_rotation(game, pos, now)
+                target = motion[1] + (new - old) % 4
+            else:
+                start, target = old, old + (new - old) % 4
+            duration = min(.5, MIRROR_SECONDS * (target - start))
+            self.mirror_motions[pos] = (start, target, now, duration)
+        # 회전이 끝나 보이는 빛이 수신기에 닿을 때 수신 파동도 시작한다.
+        ready = max((began + duration for _, _, began, duration in self.mirror_motions.values()), default=now)
+        self.receiver_feedback.changed(game, previous, max(now, ready))
 
     @staticmethod
     def fatigue(game):
@@ -534,11 +571,17 @@ class View:
     def board(self, game):
         level, state = game.level, game.state
         now = self.now()
+        if self.mirror_game is not game:
+            self.mirror_game, self.mirror_motions = game, {}
+        mirror_rotations = {pos: self.mirror_rotation(game, pos, now) for pos in level.mirrors}
+        # 회전 중인 판에서는 표시용 광선만 멈춘다. 논리 상태와 행동 수는 그대로 둔다.
+        beam_state = replace(state, rubble=state.rubble | self.mirror_motions.keys()) if self.mirror_motions else state
+        gate_statuses = {pos: game.gate_status(pos, beam_state) for pos in level.gates}
         if self.gate_game is not game:
             self.reset_gates()
             self.reset_plates()
             self.gate_game = game
-        gate_openings = {pos: self.gate_opening(pos, 0 if game.gate_status(pos, state) == "closed" else 1, now)
+        gate_openings = {pos: self.gate_opening(pos, 0 if gate_statuses[pos] == "closed" else 1, now)
                          for pos in level.gates}
         self.plate_depths = {pos: self.plate_pressure(game, pos, now) for pos in level.plates}
         rubble_draws = {}
@@ -562,7 +605,7 @@ class View:
 
         exit_ready = (state.installed == level.traps and (not level.traps or state.active)
                       and state.soldiers == level.posts and state.carrying is None)
-        beam_segments, powered_receivers = trace_magic(level, state)
+        beam_segments, powered_receivers = trace_magic(level, beam_state)
         objects, labels, wall_tints = [], [], {}
         decor_draws = {}
         decoration_cells = {tuple(entry["cell"]) for entry in scene["decorations"]} if scene else set()
@@ -626,7 +669,7 @@ class View:
                     draw_scars(pos, sx, sy, scale, near_trap)
 
                 for cells, sprite, label in (
-                        (level.mirrors, "mirror", f"거울 {state.mirror_rotations.get(pos, 0) + 1}/4"),
+                        (level.mirrors, "mirror", "거울 회전 중" if pos in self.mirror_motions else f"거울 {state.mirror_rotations.get(pos, 0) + 1}/4"),
                         (level.sources, "mana_source", "광원"),
                         (level.receivers, "mana_receiver", level.device_labels.get(pos, "") + (" 수신 완료" if pos in powered_receivers else " 수신 대기")),
                         (state.rubble, "push_rubble", "밀기 · 방향키"),
@@ -656,7 +699,7 @@ class View:
                     plate_label = "잔해 적재" if pos in state.rubble else "눌림" if pressed else "발판"
                     labels.append((pos, f"{level.device_labels[pos]} {plate_label}"))
                 elif pos in level.gates:
-                    status = game.gate_status(pos, state)
+                    status = gate_statuses[pos]
                     objects.append((depth, 1, f"gate_{status}", sx, sy))
                     labels.append((pos, f"{level.device_labels[pos]} " + {"open": "열림", "held": "닫힘 대기", "closed": "닫힘"}[status]))
                 elif pos in level.levers:
@@ -722,7 +765,7 @@ class View:
                 self.plate_hit_masks[self.hit_regions[-1]] = (sx, sy, scale, pressed)
                 continue
             if sprite == "mirror":
-                rotation = state.mirror_rotations.get(pos, 0)
+                rotation = mirror_rotations[pos]
                 self.art.draw(sprite, sx, sy, scale, rotation=rotation)
                 self.sprite_hit_region(pos, sprite, sx, sy, scale, rotation=rotation)
                 continue
@@ -777,7 +820,7 @@ class View:
             if pos in level.posts:
                 color = TEAL if pos in state.soldiers else (218, 174, 255)
             elif pos in level.gates:
-                color = {"open": TEAL, "held": GOLD, "closed": RED}[game.gate_status(pos, state)]
+                color = {"open": TEAL, "held": GOLD, "closed": RED}[gate_statuses[pos]]
             elif pos in level.plates:
                 color = TEAL if game.plate_pressed(pos, state) else GOLD
             elif pos in level.receivers:
@@ -1089,7 +1132,7 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True):
                             # 도착 직후 상호작용하면 그 칸에 바로 정렬한다.
                             view.motion = None
                         if changed:
-                            view.receiver_feedback.changed(game, previous, view.now())
+                            view.animate_devices(game, previous)
                             if game.state.cleared:
                                 screen_changed = True
             # 이미 보간 중인 한 칸이 끝난 뒤에만 다음 자동 이동을 실행한다.
@@ -1105,7 +1148,7 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True):
                 action = view.navigation.tick(game, now)
                 if action is not None:
                     view.animate_move(game, previous, action)
-                    view.receiver_feedback.changed(game, previous, now)
+                    view.animate_devices(game, previous)
             if front_end.screen == "playing":
                 feedback.update(game, now)
                 view.tutorial_hidden = play_menu.mode == "device"

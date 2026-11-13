@@ -34,15 +34,16 @@ def input_checks(level):
                     device_labels={(3, 5): 'M1'})
     # 실제 run 입력 분기를 통과한다. 같은 연결은 다시 시작하지 않고, 30ms 재연결은 새 파동 하나만 만든다.
     steps = [
-        (0, None, False, 1), (1, p.SDLK_e, True, 0), (1.2, None, True, .2 / RECEIVE_SECONDS),
-        (1.2, p.SDLK_ESCAPE, True, .2 / RECEIVE_SECONDS),
-        (11.2, None, True, .2 / RECEIVE_SECONDS),
-        (11.2, p.SDLK_ESCAPE, True, .2 / RECEIVE_SECONDS),
-        (11.3, None, True, .3 / RECEIVE_SECONDS), (12, None, True, 1),
-        (12.1, p.SDLK_e, False, 1), (12.13, (p.SDLK_e,) * 3, True, 0),
-        (12.2, p.SDLK_z, False, 1), (12.3, p.SDLK_e, True, 0),
-        (12.4, p.SDLK_r, False, 1), (12.5, p.SDLK_e, True, 0),
-        (12.6, p.SDLK_1, False, 1),
+        # 시각, 입력, 논리 수신, 표시 수신, 수신 파동 진행률
+        (0, None, False, False, 1), (1, p.SDLK_e, True, False, 0), (1.2, None, True, False, 0),
+        (1.2, p.SDLK_ESCAPE, True, False, 0),
+        (11.2, None, True, False, 0),
+        (11.2, p.SDLK_ESCAPE, True, False, 0),
+        (11.31, None, True, True, .01 / RECEIVE_SECONDS), (12.01, None, True, True, 1),
+        (12.1, p.SDLK_e, False, False, 1), (12.13, (p.SDLK_e,) * 3, True, False, 0),
+        (12.2, p.SDLK_z, False, False, 1), (12.3, p.SDLK_e, True, False, 0),
+        (12.4, p.SDLK_r, False, False, 1), (12.5, p.SDLK_e, True, False, 0),
+        (12.6, p.SDLK_1, False, False, 1),
     ]
     frame, now, drawn = -1, 0, 0
     labels, current = [], []
@@ -51,7 +52,7 @@ def input_checks(level):
     def events():
         nonlocal frame, now, drawn
         frame += 1
-        now, code, _, _ = steps[frame]
+        now, code, *_ = steps[frame]
         drawn = 0
         labels.clear()
         return [] if code is None else [key(value) for value in (code if isinstance(code, tuple) else (code,))]
@@ -79,10 +80,10 @@ def input_checks(level):
         if frame < 0:
             return  # open_canvas도 첫 게임 프레임 전에 update_canvas를 호출한다.
         display, game = current
-        _, _, powered, expected_progress = steps[frame]
+        _, _, powered, visible_power, expected_progress = steps[frame]
         assert bool(trace_magic(game.level, game.state)[1]) == powered
-        assert drawn == int(powered), (frame, drawn)
-        label = 'M1 수신 완료' if powered else 'M1 수신 대기'
+        assert drawn == int(visible_power), (frame, drawn)
+        label = 'M1 수신 완료' if visible_power else 'M1 수신 대기'
         assert label in labels, (frame, labels)
         progress = display.receiver_feedback.progress(game, (3, 5), display.now())
         assert abs(progress - expected_progress) < 1e-8, (frame, progress)

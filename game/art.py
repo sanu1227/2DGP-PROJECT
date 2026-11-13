@@ -2,11 +2,11 @@
 
 import ctypes
 import json
-from math import floor
+from math import cos, floor, pi, sin
 from pathlib import Path
 
 import pico2d.pico2d as p
-from game.mechanics import mirror_axis, mirror_normal
+from game.mechanics import mirror_axis
 
 
 ART_ROOT = Path(__file__).resolve().parents[1] / "assets" / "art_v1"
@@ -131,9 +131,11 @@ class Art:
         x = floor(entry["anchor"]["x"] + (-offset if flip else offset))
         y = floor(entry["anchor"]["y"] - (point[1] - sy) / (scale * height_scale))
         if name == "mirror":
-            left, bottom, right, top = self.mirror_panel(sx, sy, scale, rotation)
-            if left <= point[0] <= right and bottom - 6 * scale <= point[1] <= top:
-                return True
+            for polygon, _, _ in self.mirror_faces(sx, sy, scale, rotation):
+                crosses = [(b[0] - a[0]) * (point[1] - a[1]) - (b[1] - a[1]) * (point[0] - a[0])
+                           for a, b in zip(polygon, polygon[1:] + polygon[:1])]
+                if all(value >= -1e-6 for value in crosses) or all(value <= 1e-6 for value in crosses):
+                    return True
             arrow = self.mirror_arrow(sx, sy, scale, rotation)
             for a, b in zip(arrow, arrow[1:]):
                 dx, dy = b[0] - a[0], b[1] - a[1]
@@ -269,23 +271,56 @@ class Art:
                 and self.hit_test("gate_closed", sx, sy + lift * scale, scale, point, flip))
 
     @staticmethod
-    def mirror_segment(sx, sy, scale, rotation):
+    def mirror_basis(rotation):
+        if rotation == int(rotation):
+            return mirror_axis(int(rotation))
+        angle = rotation * pi / 2
+        return cos(angle) + sin(angle), sin(angle) - cos(angle)
+
+    @classmethod
+    def mirror_segment(cls, sx, sy, scale, rotation):
         """거울의 실제 반사축을 2:1 등각 화면에 투영한다."""
-        tx, ty = mirror_axis(rotation)
+        tx, ty = cls.mirror_basis(rotation)
         dx, dy = (tx - ty) * 112 * .36 * scale, -(tx + ty) * 56 * .36 * scale
         cy = sy + MAGIC_BEAM_HEIGHT * scale
         return (sx - dx, cy - dy), (sx + dx, cy + dy)
 
     @classmethod
     def mirror_panel(cls, sx, sy, scale, rotation):
-        (ax, ay), (bx, by) = cls.mirror_segment(sx, sy, scale, rotation)
-        # 홀수 방향은 카메라에서 옆날로 보이고, 0번은 앞면, 2번은 뒷면이다.
-        rx, ry = (6 * scale, 45 * scale) if rotation % 2 else (0, 45 * scale)
-        return min(ax, bx) - rx, min(ay, by) - ry, max(ax, bx) + rx, max(ay, by) + ry
+        points = [point for polygon, _, _ in cls.mirror_faces(sx, sy, scale, rotation) for point in polygon]
+        return min(x for x, _ in points), min(y for _, y in points), max(x for x, _ in points), max(y for _, y in points)
 
-    @staticmethod
-    def mirror_arrow(sx, sy, scale, rotation):
-        nx, ny = mirror_normal(rotation)
+    @classmethod
+    def mirror_faces(cls, sx, sy, scale, rotation):
+        """얇은 입체 판의 보이는 세 면을 투영한다. 회전 중에도 두께와 기울기를 유지한다."""
+        tx, ty = cls.mirror_basis(rotation)
+        nx, ny = -ty, tx
+        def point(tangent, normal, height):
+            return (sx + ((tx - ty) * 112 * tangent + (nx - ny) * 112 * normal) * scale,
+                    sy + (MAGIC_BEAM_HEIGHT - (tx + ty) * 56 * tangent
+                          - (nx + ny) * 56 * normal + height) * scale)
+        faces = []
+        edge_uv = ((163, 83), (170, 85), (141, 151), (134, 149))
+        if abs(tx - ty) > 1e-8:
+            front = tx - ty > 0
+            side = 1 if front else -1
+            a, b, n = -.36 * side, .36 * side, .027 * side
+            faces.append(((point(a, n, 45), point(b, n, 45), point(b, n, -45), point(a, n, -45)),
+                          ((92, 49), (177, 75), (137, 159), (53, 135)),
+                          (255, 255, 255, 255) if front else (115, 94, 73, 255)))
+        # 윗면과 카메라에 가까운 옆날. 앞뒤 면은 모서리에서 면적이 0이 된 뒤 전환된다.
+        faces.append(((point(-.36, -.027, 45), point(.36, -.027, 45),
+                       point(.36, .027, 45), point(-.36, .027, 45)), edge_uv, (210, 181, 133, 255)))
+        if abs(tx + ty) > 1e-8:
+            t = .36 if tx + ty > 0 else -.36
+            faces.append(((point(t, -.027, 45), point(t, .027, 45),
+                           point(t, .027, -45), point(t, -.027, -45)), edge_uv, (255, 255, 255, 255)))
+        return faces
+
+    @classmethod
+    def mirror_arrow(cls, sx, sy, scale, rotation):
+        tx, ty = cls.mirror_basis(rotation)
+        nx, ny = -ty, tx
         dx, dy = nx - ny, -(nx + ny)
         length = (dx * dx + dy * dy) ** .5
         dx, dy = dx / length * scale, dy / length * scale
@@ -305,45 +340,36 @@ class Art:
             sx + (width / 2 - anchor["x"]) * scale,
             sy + (anchor["y"] - MIRROR_BASE_TOP - base_height / 2) * scale,
             width * scale, base_height * scale)
-        left, bottom, right, top = self.mirror_panel(sx, sy, scale, rotation)
-
-        p.draw_rectangle(left, bottom - 6 * scale, right, top - 6 * scale, 69, 46, 31, filled=True)
-        p.draw_rectangle(left, bottom, right, top, 133, 89, 44, filled=True)
-        # 원본의 황동 테두리·유리 면을 실제 투영 사각형에 매핑한다. PNG는 수정하지 않는다.
-        uv = ((163, 83), (170, 85), (141, 151), (134, 149)) if rotation % 2 else (
-            (92, 49), (177, 75), (137, 159), (53, 135))
-        positions = ((left, top), (right, top), (right, bottom), (left, bottom))
+        faces = self.mirror_faces(sx, sy, scale, rotation)
         atlas = self.manifest["atlases"][entry["atlas"]]
         clip_x, clip_y, _, clip_height = entry["clip_rect_pico2d"]
         texture_top = atlas["height"] - clip_y - clip_height
-        vertices = (p.SDL_Vertex * 4)()
-        for vertex, (x, y), (u, v) in zip(vertices, positions, uv):
-            vertex.position = p.SDL_FPoint(x, p.get_canvas_height() - 1 - y)
-            vertex.color = p.SDL_Color(*((115, 94, 73, 255) if rotation == 2 else (255, 255, 255, 255)))
-            vertex.tex_coord = p.SDL_FPoint((clip_x + u) / atlas["width"], (texture_top + v) / atlas["height"])
         indices = (ctypes.c_int * 6)(0, 1, 2, 0, 2, 3)
         texture = self.atlases[entry["atlas"]].texture
         previous = tuple(ctypes.c_ubyte() for _ in range(4))
         p.SDL_GetTextureColorMod(texture, *(ctypes.byref(value) for value in previous[:3]))
         p.SDL_GetTextureAlphaMod(texture, ctypes.byref(previous[3]))
         try:
-            if p.SDL_RenderGeometry(p.renderer, texture, vertices, 4, indices, 6) < 0:
-                raise RuntimeError(f"거울 표시 실패: {p.SDL_GetError()}")
+            for polygon, uv, tint in faces:
+                vertices = (p.SDL_Vertex * 4)()
+                for vertex, (x, y), (u, v) in zip(vertices, polygon, uv):
+                    vertex.position = p.SDL_FPoint(x, p.get_canvas_height() - 1 - y)
+                    vertex.color = p.SDL_Color(102, 74, 42, 255)
+                    vertex.tex_coord = p.SDL_FPoint((clip_x + u) / atlas["width"], (texture_top + v) / atlas["height"])
+                p.SDL_RenderGeometry(p.renderer, None, vertices, 4, indices, 6)
+                for vertex in vertices:
+                    vertex.color = p.SDL_Color(*tint)
+                if p.SDL_RenderGeometry(p.renderer, texture, vertices, 4, indices, 6) < 0:
+                    raise RuntimeError(f"거울 표시 실패: {p.SDL_GetError()}")
+                for a, b in zip(polygon, polygon[1:] + polygon[:1]):
+                    p.draw_line(*a, *b, 183, 138, 73)
+                if tint == (115, 94, 73, 255):
+                    p.draw_line(*polygon[0], *polygon[2], 170, 126, 69)
+                    p.draw_line(*polygon[1], *polygon[3], 170, 126, 69)
         finally:
             # SDL 소프트웨어 렌더러는 단색 꼭짓점의 색을 공유 텍스처에 남길 수 있다.
             p.SDL_SetTextureColorMod(texture, *(value.value for value in previous[:3]))
             p.SDL_SetTextureAlphaMod(texture, previous[3].value)
-        if not rotation % 2:
-            # 사선 원본의 둥근 테두리 바깥에 생기는 투명 여백을 황동 측면으로 마감한다.
-            for x in (left, right - 3 * scale):
-                p.draw_rectangle(x, bottom, x + 3 * scale, top, 154, 106, 51, filled=True)
-                p.draw_line(x + scale, bottom + scale, x + scale, top - scale, 232, 193, 116)
-        if rotation == 2:
-            for a, b in (((left, bottom), (right, top)), ((left, top), (right, bottom))):
-                p.draw_line(*a, *b, 170, 126, 69)
-        elif rotation % 2:
-            x = left if rotation == 1 else right
-            p.draw_line(x, bottom, x, top, 133, 225, 234)
         arrow = self.mirror_arrow(sx, sy, scale, rotation)
         for a, b in zip(arrow, arrow[1:]):
             for offset in (-2, -1, 0, 1, 2):
