@@ -17,6 +17,8 @@ class SolverTests(unittest.TestCase):
             {"map": ["########", "#@BC####", "#..GFAE#", "####BS##"],
              "plate_links": [{"id": "P1", "plate": [4, 2], "gate": [3, 2]}],
              "chute_links": [{"id": "C1", "inlet": [3, 1], "outlet": [4, 2]}]},
+            {"map": ["########", "#@BBAJ##", "#ELTSGP#"],
+             "worker_links": [{"id": "J1", "station": [5, 1], "gate": [5, 2]}]},
         ]
         for index, room in enumerate(rooms):
             room.update(id=f"solver_{index}", title="탐색 검사", hint="복구 후 복귀")

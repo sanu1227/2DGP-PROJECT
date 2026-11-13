@@ -34,6 +34,23 @@ class LowerBound:
     def __init__(self, level):
         self.level = level
         self.floor = {(x, y) for y in range(level.height) for x in range(level.width)} - level.walls
+        self.worker_regions = {}
+        # 하나의 초소와 인부로 작업하는 방: 모든 함정이 문 바깥에 있다면
+        # 안쪽 부품을 꺼내려면 이 인부를 배치한 후 반드시 회수해야 한다.
+        if len(level.posts) == 1 and len(level.jobs) == 1:
+            for gate, control in level.gates.items():
+                if control not in level.jobs:
+                    continue
+                region, queue = {control}, deque([control])
+                while queue:
+                    x, y = queue.popleft()
+                    for dx, dy in DIRECTIONS.values():
+                        target = x + dx, y + dy
+                        if target in self.floor and target != gate and target not in region:
+                            region.add(target)
+                            queue.append(target)
+                if level.traps <= region:
+                    self.worker_regions[control] = self.floor - region
         self.distances = {}
         self.free_endpoints = {}
         for kind in (None, "part", "bone", "soldier"):
@@ -85,9 +102,20 @@ class LowerBound:
         # Newly assembled soldiers start in hand at a bench. Relax the bench choice.
         soldiers = list(sources["soldier"])
         soldiers += [None] * (len(posts) - len(soldiers))
+        required_job = next((job for job, region in self.worker_regions.items()
+                             if job not in state.workers and
+                             any(state.items.get(pos) == "part" for pos in region)), None)
+        if required_job is not None:
+            if not posts:
+                return 10**6  # 유일한 병사를 이미 고정 배치해 문을 열 수 없다.
+            actions += 2  # 작업 배치와 회수; 최종 초소 배치는 원래 하한에 포함.
         if posts:
-            travel += min(sum(self.distance("soldier", p, t) if p is not None else
-                              min(self.distance("soldier", b, t) for b in level.benches)
+            def soldier_distance(p, t):
+                starts = (p,) if p is not None else level.benches
+                if required_job is not None:
+                    return min(self.distance("soldier", b, required_job) for b in starts) + self.distance("soldier", required_job, t)
+                return min(self.distance("soldier", b, t) for b in starts)
+            travel += min(sum(soldier_distance(p, t)
                               for p, t in zip(soldiers, targets)) for targets in permutations(posts))
         # Walking to the first pickup and from the final repair to the exit is unloaded.
         if not state.carrying and state.items:
