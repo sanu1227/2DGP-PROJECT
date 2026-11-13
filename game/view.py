@@ -590,8 +590,10 @@ class View:
                         (state.rubble, "push_rubble", "밀기 · 방향키"),
                         (level.jobs, "helper_work" if pos in state.workers else "winch", level.device_labels.get(pos, "") + (" 인부 회수" if pos in state.workers else " 인부 배치"))):
                     if pos in cells:
-                        objects.append((depth, 1, sprite, sx, sy))
-                        labels.append((pos, label))
+                        # 잔해는 발판 상판을 그린 다음 얹는다. 같은 깊이의 장치보다 앞이다.
+                        objects.append((depth, 2 if sprite == "push_rubble" else 1, sprite, sx, sy))
+                        if sprite != "push_rubble" or pos not in level.plates:
+                            labels.append((pos, label))
                 if pos in level.chutes:
                     objects.append((depth, 1, "chute_inlet", sx, sy))
                     labels.append((pos, "뼈 투입구"))
@@ -602,7 +604,8 @@ class View:
                 if pos in level.plates:
                     pressed = game.plate_pressed(pos, state)
                     objects.append((depth, 1, "plate_down" if pressed else "plate_up", sx, sy))
-                    labels.append((pos, f"{level.device_labels[pos]} " + ("눌림" if pressed else "발판")))
+                    plate_label = "잔해 적재" if pos in state.rubble else "눌림" if pressed else "발판"
+                    labels.append((pos, f"{level.device_labels[pos]} {plate_label}"))
                 elif pos in level.gates:
                     status = game.gate_status(pos, state)
                     objects.append((depth, 1, f"gate_{status}", sx, sy))

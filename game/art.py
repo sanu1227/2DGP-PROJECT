@@ -34,6 +34,7 @@ class Art:
     def load_gimmicks(self):
         root = ART_ROOT.parent / "gimmicks_v1"
         manifest = json.loads((root / "manifest.json").read_text(encoding="utf-8"))
+        self._ground_anchors(manifest)
         self.atlas_paths["gimmicks"] = root / "atlas.png"
         self.atlases["gimmicks"] = p.load_image(str(root / "atlas.png"))
         self.manifest["atlases"].update(manifest["atlases"])

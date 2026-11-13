@@ -1,5 +1,6 @@
 {
   "part": {"anchor": [128, 198]},
+  "push_rubble": {"anchor": [128, 182]},
   "bone_bundle": {"anchor": [128, 196]},
   "soldier_carried": {"anchor": [128, 206]},
   "soldier_deployed": {"anchor": [128, 212]},
