@@ -16,6 +16,7 @@ EXTERIOR_PADDING_SAMPLES = 3 * LIGHT_SAMPLES_PER_CELL
 EXTERIOR_LIGHT_STRENGTH = .58
 EXTERIOR_RANGE_SCALE = 1.18
 LIGHT_PULSE_SECONDS = 4.4
+INTERIOR_PULSE_STRENGTH = .65
 
 
 @dataclass(frozen=True)
@@ -147,9 +148,9 @@ def light_samples(x, y, lights, visibility, exterior):
             continue
         lx, ly = light.position
         distance = hypot((x - lx) / light.width, (y - ly) / light.height)
-        max_scale = 1 + light.range_variation
+        max_scale = 1 + light.range_variation * INTERIOR_PULSE_STRENGTH
         if spills_outside:
-            max_scale *= EXTERIOR_RANGE_SCALE
+            max_scale = (1 + light.range_variation) * EXTERIOR_RANGE_SCALE
         if distance < max_scale:
             samples.append((index, light, distance))
     return samples
@@ -161,16 +162,18 @@ def light_tint(samples, background, visibility, exterior, scales):
     reflected_light = 0.0
     red = green = blue = 0.0
     for light_index, light, distance in samples:
-        normalized_distance = distance / scales[light_index]
-        falloff = smoothstep(1 - normalized_distance)
-        if light.range_variation:
-            # 중심 밝기는 유지하고 바닥에 닿는 빛의 가장자리가 더 잘 보이게 한다.
-            falloff += .45 * falloff * (1 - falloff)
-        weight = light.alpha * falloff
-        total_light += weight
-        reflected = weight * visibility
+        interior_scale, exterior_scale = scales[light_index]
+        reflected = 0.0
+        if visibility:
+            falloff = smoothstep(1 - distance / interior_scale)
+            if light.range_variation:
+                # 중심 밝기는 유지하고 바닥에 닿는 빛의 가장자리가 더 잘 보이게 한다.
+                falloff += .45 * falloff * (1 - falloff)
+            weight = light.alpha * falloff
+            total_light += weight
+            reflected = weight * visibility
         if exterior and light.range_variation:
-            spill = smoothstep(1 - normalized_distance / EXTERIOR_RANGE_SCALE)
+            spill = smoothstep(1 - distance / exterior_scale / EXTERIOR_RANGE_SCALE)
             reflected += light.alpha * spill * exterior
         reflected_light += reflected
         r, g, b = light.color
@@ -220,7 +223,7 @@ def lighting_mesh(board, floors, lights, background):
     indices = []
     animated = []
     lit_or_terrain = []
-    base_scales = (1.0,) * len(lights)
+    base_scales = ((1.0, 1.0),) * len(lights)
     for row, row_sample in enumerate(vertical):
         y = row_sample / LIGHT_SAMPLES_PER_CELL - .5
         sy = board.screen((0, y))[1]
@@ -281,7 +284,10 @@ def draw_terrain(art, board, level, materials, lights, background, now):
                     wall_rim(art, board, pos, floors, materials)
         mesh, triangles, animated = lighting_mesh(board, floors, lights, background)
         pulse = sin(now * (2 * pi / LIGHT_PULSE_SECONDS))
-        scales = tuple(1 + light.range_variation * pulse for light in lights)
+        scales = []
+        for light in lights:
+            variation = light.range_variation * pulse
+            scales.append((1 + variation * INTERIOR_PULSE_STRENGTH, 1 + variation))
         for index, visibility, exterior, samples in animated:
             mesh[index].color = light_tint(samples, background, visibility, exterior, scales)
         p.SDL_RenderGeometry(p.renderer, None, mesh, len(mesh), triangles, len(triangles))
