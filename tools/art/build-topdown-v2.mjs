@@ -22,6 +22,12 @@ const sheets = {
   ],
   worker: ['down', 'left', 'up', 'right'].flatMap(direction =>
     ['idle', 'walk_a', 'walk_b', 'carry'].map(pose => `worker_${direction}_${pose}`)),
+  decor: [
+    'sarcophagus', 'candles', 'hand_pump', 'elbow_pipe',
+    'water_barrel', 'treasure_banner', 'brazier', 'lantern',
+    'tool_rack', 'candle_sconce', 'crypt_banner', 'crest',
+    'crystal_sconce', 'archive_banner', 'wall_pipes', 'air_vent',
+  ],
 };
 
 function cleanAlpha(data, width, height) {

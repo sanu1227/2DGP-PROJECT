@@ -3,7 +3,8 @@
     "terrain": "atlases/terrain.png",
     "devices": "atlases/devices.png",
     "objects": "atlases/objects.png",
-    "worker": "atlases/worker.png"
+    "worker": "atlases/worker.png",
+    "decor": "atlases/decor.png"
   },
   "sprites": {
     "floor_1": [
@@ -453,6 +454,118 @@
       772,
       178,
       248
+    ],
+    "sarcophagus": [
+      "decor",
+      26,
+      4,
+      203,
+      248
+    ],
+    "candles": [
+      "decor",
+      263,
+      4,
+      241,
+      248
+    ],
+    "hand_pump": [
+      "decor",
+      528,
+      4,
+      223,
+      248
+    ],
+    "elbow_pipe": [
+      "decor",
+      772,
+      4,
+      248,
+      248
+    ],
+    "water_barrel": [
+      "decor",
+      14,
+      260,
+      227,
+      248
+    ],
+    "treasure_banner": [
+      "decor",
+      311,
+      260,
+      145,
+      248
+    ],
+    "brazier": [
+      "decor",
+      517,
+      260,
+      246,
+      248
+    ],
+    "lantern": [
+      "decor",
+      830,
+      260,
+      131,
+      248
+    ],
+    "tool_rack": [
+      "decor",
+      4,
+      529,
+      248,
+      222
+    ],
+    "candle_sconce": [
+      "decor",
+      281,
+      516,
+      206,
+      248
+    ],
+    "crypt_banner": [
+      "decor",
+      529,
+      516,
+      221,
+      248
+    ],
+    "crest": [
+      "decor",
+      796,
+      516,
+      200,
+      248
+    ],
+    "crystal_sconce": [
+      "decor",
+      59,
+      772,
+      137,
+      248
+    ],
+    "archive_banner": [
+      "decor",
+      313,
+      772,
+      142,
+      248
+    ],
+    "wall_pipes": [
+      "decor",
+      516,
+      777,
+      248,
+      238
+    ],
+    "air_vent": [
+      "decor",
+      772,
+      773,
+      248,
+      246
     ]
   }
 }
