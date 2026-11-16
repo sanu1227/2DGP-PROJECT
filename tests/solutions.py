@@ -7,8 +7,8 @@ MINIMUM_ACTIONS = {
     "stage_04": 76,
     "stage_05": 60,
     "stage_06": 69,
-    "stage_07": 55,
-    "stage_08": 43,
+    "stage_07": 59,
+    "stage_08": 47,
 }
 
 SOLUTIONS = {
@@ -52,15 +52,15 @@ SOLUTIONS = {
     ).split(),
     "stage_07": (
         "down right right right interact up left right right up interact down left "
-        "left down down left left interact right right right right interact right up "
-        "right down right right interact left left up interact down right interact "
-        "left up left left left interact left left interact down right down interact "
-        "down left interact left"
+        "left down down left left interact right right right down interact up right "
+        "right up right up down right right right interact left left up interact down "
+        "right interact left up left left left interact left left interact down right "
+        "down interact down left interact left"
     ).split(),
     "stage_08": (
-        "right right right interact down right right right up interact down down "
-        "right down right interact left left left left interact up interact left left "
-        "up up up right right right right interact left left left left down interact "
-        "left left interact up"
+        "right right right interact down right right right up up interact down down "
+        "down right down down down right interact left left left left interact up "
+        "interact left left up up up right right right right interact left left left "
+        "left down interact left left interact up"
     ).split(),
 }

@@ -9,7 +9,7 @@ import pico2d.pico2d as p
 from game.levels import DIRECTIONS
 from game.themes import scene_for
 from game.topdown_terrain import Light, draw_shadows, draw_terrain, materials_for
-from game.worker_view import ECHO_COLOR, draw_echo_marks
+from game.worker_view import ECHO_COLOR, draw_echo_marks, recording_label
 
 
 ASSET_ROOT = Path(__file__).resolve().parents[1] / "assets" / "topdown_v2"
@@ -131,7 +131,7 @@ def device_entries(game, gate_statuses, powered, exit_ready, plate_depths):
         working = pos in state.workers
         label = level.device_labels[pos]
         if pos in level.echo_links:
-            entries[pos] = None, f"{label} 기록", ECHO_COLOR
+            entries[pos] = None, recording_label(level, pos), ECHO_COLOR
         else:
             entries[pos] = ("helper" if working else "winch"), label, TEAL if working else GOLD
     for origin, (seal, _) in level.echo_links.items():

@@ -19,6 +19,32 @@ class LateRoomTests(unittest.TestCase):
             x, y = game.state.player
             self.assertTrue(game.act(reverse[(cell[0] - x, cell[1] - y)]), game.message)
 
+    def test_second_treasury_gate_opens_after_four_recorded_steps(self):
+        level = load_levels()[6]
+        game = Game(level)
+        gate = next(pos for pos in level.gates if level.device_labels[pos] == "J2")
+        station = level.gates[gate]
+        seal, steps = level.echo_links[station]
+        self.assertEqual(steps, 4)
+        game.state.player = station
+
+        self.assertTrue(game.act("interact"))
+        for action in ("right", "up", "right"):
+            self.assertTrue(game.act(action))
+            self.assertIsNotNone(game.state.recording)
+        self.assertTrue(game.act("up"))
+        self.assertEqual(game.state.player, station)
+        self.assertEqual(len(game.state.echo.remaining), steps - 1)
+
+        for action in ("right", "up"):
+            self.assertTrue(game.act(action))
+            self.assertEqual(game.gate_status(gate), "closed")
+        self.assertTrue(game.act("right"))
+        self.assertEqual(game.state.echo.position, seal)
+        self.assertEqual(game.gate_status(gate), "open")
+        self.assertTrue(game.act("down"))
+        self.assertEqual(game.state.player, gate)
+
     def test_boss_echo_keeps_vault_open_after_east_wing_closes(self):
         level = load_levels()[7]
         game = Game(level)

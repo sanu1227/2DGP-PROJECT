@@ -8,6 +8,11 @@ from game.levels import DIRECTIONS
 ECHO_COLOR = (197, 137, 243)
 
 
+def recording_label(level, station):
+    _, steps = level.echo_links[station]
+    return f"{level.device_labels[station]} {steps}걸음"
+
+
 class EchoMotion:
     def __init__(self):
         self.game = None

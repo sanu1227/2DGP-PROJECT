@@ -77,8 +77,7 @@
 <text x="222" y="255" text-anchor="middle" font-size="22">S</text>
 <rect x="244" y="228" width="40" height="40" rx="3" fill="#326d68"/>
 <text x="264" y="255" text-anchor="middle" font-size="22">G</text>
-<rect x="286" y="228" width="40" height="40" rx="3" fill="#326d68"/>
-<text x="306" y="255" text-anchor="middle" font-size="22">J</text>
+<rect x="286" y="228" width="40" height="40" rx="3" fill="#46555e"/>
 <rect x="328" y="228" width="40" height="40" rx="3" fill="#326d68"/>
 <text x="348" y="255" text-anchor="middle" font-size="22">T</text>
 <rect x="370" y="228" width="40" height="40" rx="3" fill="#29333e"/>
@@ -90,8 +89,9 @@
 <rect x="118" y="270" width="40" height="40" rx="3" fill="#46555e"/>
 <rect x="160" y="270" width="40" height="40" rx="3" fill="#46555e"/>
 <rect x="202" y="270" width="40" height="40" rx="3" fill="#29333e"/>
-<rect x="244" y="270" width="40" height="40" rx="3" fill="#29333e"/>
-<rect x="286" y="270" width="40" height="40" rx="3" fill="#29333e"/>
+<rect x="244" y="270" width="40" height="40" rx="3" fill="#326d68"/>
+<text x="264" y="297" text-anchor="middle" font-size="22">J</text>
+<rect x="286" y="270" width="40" height="40" rx="3" fill="#46555e"/>
 <rect x="328" y="270" width="40" height="40" rx="3" fill="#326d68"/>
 <text x="348" y="297" text-anchor="middle" font-size="22">G</text>
 <rect x="370" y="270" width="40" height="40" rx="3" fill="#326d68"/>
@@ -141,6 +141,6 @@
 <path d="M138,248 L264,248" stroke="#ffd789" stroke-width="2" stroke-dasharray="4 4" opacity=".6"/>
 <path d="M222,164 L180,122" stroke="#dda5ff" stroke-width="2" stroke-dasharray="2 4"/>
 <path d="M180,122 L306,164" stroke="#ffd789" stroke-width="2" stroke-dasharray="4 4" opacity=".6"/>
-<path d="M306,248 L348,206" stroke="#dda5ff" stroke-width="2" stroke-dasharray="2 4"/>
+<path d="M264,290 L348,206" stroke="#dda5ff" stroke-width="2" stroke-dasharray="2 4"/>
 <path d="M348,206 L348,290" stroke="#ffd789" stroke-width="2" stroke-dasharray="4 4" opacity=".6"/>
 </g></svg>

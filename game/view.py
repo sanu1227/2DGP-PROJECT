@@ -21,7 +21,7 @@ from game.play_menu import PlayClock, PlayMenu
 from game.stage_feedback import StageFeedback
 from game.receiver_feedback import ReceiverFeedback
 from game.topdown import ITEMS as TOPDOWN_ITEMS, TopDownArt, draw_board as draw_topdown_board
-from game.worker_view import EchoMotion, draw_echo_marks
+from game.worker_view import EchoMotion, draw_echo_marks, recording_label
 from game.music import BackgroundMusic
 
 INK = (226, 230, 219)
@@ -757,7 +757,7 @@ class View:
 
         draw_echo_marks(level, state, projection)
         for station in level.echo_links:
-            labels.append((station, f"{level.device_labels[station]} 기록"))
+            labels.append((station, recording_label(level, station)))
         echo_pose = self.echo_motion.pose(game, now)
         if echo_pose:
             position, direction = echo_pose
