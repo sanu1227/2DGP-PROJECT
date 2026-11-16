@@ -2,9 +2,10 @@
 
 from ctypes import byref
 import os
+from dataclasses import replace
 from pathlib import Path
 from time import perf_counter
-from math import floor, pi, sin, sqrt
+from math import floor, hypot, pi, sin, sqrt
 
 import pico2d.pico2d as p
 
@@ -16,7 +17,7 @@ from game.themes import boundary_walls, low_wall_sprite, scene_for, themed_floor
 from game.layout import WIDTH, HEIGHT, BOARD_BOTTOM, BOARD_TOP
 from game.front_end import FrontEnd
 from game.tutorial import first_room_hint
-from game.mechanics import fixed_devices, mirror_cells, trace_magic
+from game.mechanics import fixed_devices, mirror_axis, mirror_cells, trace_magic
 from game.optics import TOPDOWN_SOURCE_REACH, trace_display_magic
 from game.play_menu import PlayClock, PlayMenu
 from game.stage_feedback import StageFeedback
@@ -26,7 +27,7 @@ from game.room_atmosphere import RoomAtmosphere, prop_kind
 from game.play_effects import ChuteFeedback, WorkFeedback, WORK_SECONDS, beam_contacts, dust, ring, rubble_scrape, trap_motion
 from game.topdown import ITEMS as TOPDOWN_ITEMS, TopDownArt, draw_board as draw_topdown_board
 from game.worker_view import EchoMotion, draw_echo_marks, draw_echo_turn, draw_worker_status, recording_label
-from game.worker_animation import GESTURES, WorkerAction, sample_pose
+from game.worker_animation import CarryHandoff, GESTURES, WorkerAction, sample_pose, smooth
 from game.music import BackgroundMusic
 
 INK = (226, 230, 219)
@@ -188,7 +189,7 @@ class View:
         self.move_seconds = 0.18
         self.rubble_motions = {}
         self.rubble_impulses = []
-        self.pushing = False
+        self.push_target = None
         self.board_offset = (0, 0)
         self.mirror_pushes = {}
         self.plate_delays = {}
@@ -196,6 +197,7 @@ class View:
         self.chute_feedback = ChuteFeedback()
         self.work_feedback = WorkFeedback()
         self.worker_action = None
+        self.carry_handoff = None
         self.action_badge_bounds = None
 
     def mirror_rotation(self, game, pos, now):
@@ -220,6 +222,8 @@ class View:
             if kind in GESTURES:
                 self.start_worker_action(game, previous, kind, target, now)
         outlet = self.chute_feedback.transferred(game, previous, now)
+        if outlet is not None:
+            self.start_worker_action(game, previous, "send_bone", previous.player, now)
         if outlet in game.level.plates and not game.plate_pressed(outlet, previous):
             self.plate_motions.setdefault(outlet, (0, 0, now, 0))
             self.plate_delays[outlet] = (now + self.chute_feedback.arrival, 0)
@@ -237,6 +241,10 @@ class View:
                 start, target = old, old + (new - old) % 4
             duration = min(.5, MIRROR_SECONDS * (target - start))
             self.mirror_motions[pos] = (start, target, now, duration)
+            axis = mirror_axis(start)
+            relative = tuple(a - b for a, b in zip(previous.player, pos))
+            side = 1 if sum(a * b for a, b in zip(axis, relative)) >= 0 else -1
+            self.start_worker_action(game, previous, "rotate", pos, now, seconds=duration, grip_side=side)
 
     def draw_mirror_stop(self, board, pos, point, now):
         motion = self.mirror_motions.get(pos)
@@ -330,6 +338,11 @@ class View:
         now = self.now()
         start = self.player_position(previous, now)
         self.facing = FACING[action]
+        gesture = self.worker_action
+        if gesture and gesture.kind in ("pickup", "assemble") and gesture.after_item:
+            mix = gesture.lift_from_floor(now)
+            if mix:
+                self.carry_handoff = CarryHandoff(gesture.after_item, gesture.target, mix, now)
         self.worker_action = None
         self.move_seconds = seconds
         self.motion = (start, destination, now)
@@ -369,6 +382,8 @@ class View:
         if (previous.recording and game.state.recording is None
                 and previous.recording.origin not in game.state.replay_workers):
             self.motion = None
+            self.push_target = None
+            self.worker_action = None
             self.facing = FACING[action]
             return
         removed = previous.rubble - game.state.rubble
@@ -395,13 +410,20 @@ class View:
             self.mirror_pushes[destination] = (position, now)
             if source in self.mirror_motions:
                 self.mirror_motions[destination] = self.mirror_motions.pop(source)
-        self.pushing = pushing or bool(moved_mirrors)
+        self.push_target = destination if pushing or moved_mirrors else None
         self.move_player(previous.player, game.state.player, action,
-                         PUSH_SECONDS if self.pushing else .18)
+                         PUSH_SECONDS if self.push_target else .18)
 
-    def start_worker_action(self, game, previous, kind, target, now):
+    def start_worker_action(self, game, previous, kind, target, now, *, seconds=None, grip_side=1):
+        old = self.worker_action
+        initial_scale = 0
+        if (old and old.target == target and old.kind in ("pickup", "assemble")
+                and old.after_item == previous.carrying):
+            initial_scale = old.lift_from_floor(now)
         action = WorkerAction(kind, previous.player, target, previous.carrying,
-                              game.state.carrying, now, WORK_SECONDS[kind])
+                              game.state.carrying, now, seconds if seconds is not None else WORK_SECONDS[kind],
+                              initial_scale, grip_side)
+        self.carry_handoff = None
         self.worker_action = action
         if action.direction:
             self.facing = FACING[action.direction]
@@ -417,29 +439,82 @@ class View:
             return action
         return None
 
+    def push_progress(self, now):
+        if self.motion and self.push_target is not None:
+            return min(1, max(0, (now - self.motion[2]) / self.move_seconds))
+        return None
+
+    def worker_foot_offset(self, board, now):
+        """몸을 싣는 동안 받침발을 진행 방향으로 반 걸음 당긴다."""
+        progress = self.push_progress(now)
+        if progress is None:
+            return 0, 0
+        dx, dy = DIRECTIONS[FACING_DIRECTION[self.facing]]
+        x, y = board.screen((dx, dy))
+        ox, oy = board.screen((0, 0))
+        reach = smooth(progress / .21) * (1 - smooth((progress - .72) / .28))
+        distance = (.19 if self.top_down else .10) * reach
+        return (x - ox) * distance, (y - oy) * distance
+
     def character_pose(self, game, board, feet, now, body_size):
         walk = "idle"
         if self.motion:
             walk = "walk_a" if now - self.motion[2] < self.move_seconds / 2 else "walk_b"
+        push = self.push_progress(now)
         action = self.current_worker_action(game, now)
         pose = sample_pose(FACING_DIRECTION[self.facing], body_size, self.worker_height(self.fatigue(game), now),
-                           walk, game.state.carrying, action, now, top_down=self.top_down,
-                           push=bool(self.pushing and self.motion))
+                           walk, game.state.carrying, action, now, top_down=self.top_down, push=push)
+        if push is not None and action is None:
+            target = self.push_target
+            mirror = target in game.state.movable_mirrors
+            position, height = ((self.mirror_position(target, now), 0) if mirror
+                                else self.rubble_pose(game, target, now))
+            sx, sy = board.screen(position)
+            map_x, map_y = DIRECTIONS[FACING_DIRECTION[self.facing]]
+            bx, by = board.screen((0, 0))
+            tx, ty = board.screen((map_x, map_y))
+            length = hypot(tx - bx, ty - by)
+            side = board.half_width * (.69 if self.top_down else .48)
+            contact = (sx - (tx - bx) / length * side, sy - (ty - by) / length * side)
+            if not self.top_down:
+                lift = .20 if mirror else .13
+                contact = (contact[0], contact[1] + body_size * (lift + height / 256))
+            return pose.reach_toward(feet, contact, 1 - smooth((push - .71) / .29), body_size)
         if action and action.kind == "lever":
             x, y = board.screen(action.target)
             _, reach = action.reaches(now)
-            progress = action.progress(now)
+            throw = smooth((action.progress(now) - .49) / .22)
             if self.top_down:
-                handle = (x, y + body_size * (.32 if progress >= action.contact else -.32))
+                handle = (x, y + body_size * .32 * (2 * throw - 1))
             else:
-                handle = (x + body_size * (.16 if progress >= action.contact else -.16), y + body_size * .42)
+                handle = (x + body_size * .16 * (2 * throw - 1), y + body_size * .42)
             pose = pose.reach_toward(feet, handle, reach, body_size)
         elif action and action.kind in ("deliver", "assemble"):
             edge = tuple(a + (b - a) * .57 for a, b in zip(action.origin, action.target))
             x, y = board.screen(edge)
             _, reach = action.reaches(now)
             pose = pose.reach_toward(feet, (x, y + body_size * (.03 if self.top_down else .28)), reach, body_size)
+        elif action and action.kind == "rotate":
+            axis = mirror_axis(self.mirror_rotation(game, action.target, now))
+            grip = tuple(a + b * action.grip_side * .30 for a, b in zip(action.target, axis))
+            x, y = board.screen(grip)
+            _, reach = action.reaches(now)
+            pose = pose.reach_toward(feet, (x, y + (0 if self.top_down else body_size * .27)), reach, body_size)
+        elif action and action.kind == "send_bone":
+            x, y = board.screen(action.target)
+            _, reach = action.reaches(now)
+            pose = pose.reach_toward(feet, (x, y + (0 if self.top_down else body_size * .24)), reach, body_size)
+        if action is None and self.carry_handoff and pose.item == self.carry_handoff.item:
+            pose = replace(pose, item_floor_scale=self.carry_handoff.remaining(now))
         return pose
+
+    def worker_item_target(self, game, now):
+        action = self.current_worker_action(game, now)
+        if action:
+            return action.target
+        if self.carry_handoff and self.carry_handoff.remaining(now):
+            return self.carry_handoff.target
+        return game.state.player
 
     def item_is_in_hands(self, game, pos, now):
         action = self.current_worker_action(game, now)
@@ -452,6 +527,8 @@ class View:
 
     def draw_iso_worker(self, game, board, sx, sy, scale, now):
         state = game.state
+        dx, dy = self.worker_foot_offset(board, now)
+        sx, sy = sx + dx, sy + dy
         pose = self.character_pose(game, board, (sx, sy), now, 256 * scale)
         action = self.current_worker_action(game, now)
 
@@ -463,13 +540,17 @@ class View:
             data = self.art.manifest["sprites"][sprite]
             rect = data["content_rect"]
             center = {"x": rect["left"] + rect["width"] / 2, "y": rect["top"] + rect["height"] / 2}
-            target = action.target if action else state.player
+            target = self.worker_item_target(game, now)
             x, y = board.screen(target)
             y += (self.support_height(game, target) + data["anchor"]["y"] - center["y"]) * scale
             if action and action.kind in ("deliver", "assemble"):
                 y += 64 * scale
+            elif action and action.kind == "send_bone":
+                y += 32 * scale
             x, y = pose.item_position((sx, sy), (x, y))
-            self.art.draw(sprite, x, y, scale * (.65 + .35 * pose.item_floor_scale), anchor=center)
+            swing = .08 if pose.boots == "walk_a" else -.08 if pose.boots == "walk_b" else 0
+            self.art.draw(sprite, x, y, scale * (.65 + .35 * pose.item_floor_scale), anchor=center,
+                          rotation=swing if kind == "bone" else 0)
 
         back = self.facing in ("ne", "nw")
         if back:
@@ -1120,8 +1201,7 @@ class View:
 
         self.room_debris.draw(projection, now)
         self.work_feedback.draw(projection, now)
-        self.chute_feedback.draw(projection, now, lambda x, y, ratio: self.item("bone", x, y, scale * ratio),
-                                 top_down=False)
+        self.chute_feedback.draw(projection, now, top_down=False)
         draw_echo_turn(game, projection, self.echo_motion, now)
         # 광선은 물체와 구별되는 높은 선으로 그리고 끝점도 현재 상태에서 계산한다.
         for start, end in beam_segments:

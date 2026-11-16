@@ -361,6 +361,8 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, mirror
 
     px, py = board.screen(player)
     p.draw_circle(px, py, round(size * .38), *TEAL)
+    dx, dy = view.worker_foot_offset(board, now)
+    px, py = px + dx, py + dy
     facing = FACINGS[view.facing]
     body_size = size * .75
     tired = view.fatigue(game)
@@ -372,7 +374,7 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, mirror
         if pose.item is None:
             return
         action = view.current_worker_action(game, now)
-        target = action.target if action else state.player
+        target = view.worker_item_target(game, now)
         x, y = board.screen(target)
         if view.work_feedback.progress(target, "pickup", now) < 1 and target in entries:
             x += .22 * size
@@ -402,8 +404,7 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, mirror
     view.place_action_badge(game, badge_x, head, now)
     view.worker_effort((px - size * .3, py - size * .27, px + size * .3, head), tired, now)
 
-    view.chute_feedback.draw(board, now, lambda x, y, ratio: art.draw(sprites["bone"], x, y, size * .32 * ratio),
-                             top_down=True)
+    view.chute_feedback.draw(board, now, top_down=True)
     view.work_feedback.draw(board, now)
     draw_echo_turn(game, board, view.echo_motion, now)
     for start, end in beam_segments:

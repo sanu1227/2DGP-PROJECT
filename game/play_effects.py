@@ -14,7 +14,7 @@ AMBER = (233, 174, 99)
 VIOLET = (235, 180, 255)
 WORK_SECONDS = {
     "pickup": .24, "drop": .26, "install": .44, "lever": .31,
-    "trap": .52, "deliver": .35, "assemble": .56, "deploy": .51,
+    "trap": .52, "deliver": .35, "assemble": .56, "deploy": .51, "send_bone": .24,
 }
 
 
@@ -89,7 +89,7 @@ class ChuteFeedback:
                     if pos == outlet and not blocked and .06 < now - began < .30),
                    default=0)
 
-    def draw(self, board, now, draw_bone, *, top_down):
+    def draw(self, board, now, *, top_down):
         self.events = {inlet: event for inlet, event in self.events.items()
                        if now - event[1] < self.seconds}
         size = board.half_width
@@ -109,7 +109,6 @@ class ChuteFeedback:
                 if age < self.arrival:
                     progress = age / self.arrival
                     self.shutter(sx, hatch_y, size, sin(pi * progress), 190)
-                    draw_bone(sx, sy + size * (.13 + .29 * (1 - progress)), 1 - .65 * progress)
                     ring(sx, sy + size * .17, size * (.25 + .14 * progress), TEAL, 190 * (1 - progress))
                 else:
                     progress = (age - self.arrival) / (self.seconds - self.arrival)
@@ -213,6 +212,8 @@ class WorkFeedback:
                        if now - began < WORK_SECONDS[kind]}
         for pos, kind in self.events:
             progress = self.progress(pos, kind, now)
+            if kind in ("install", "lever", "trap", "deploy", "drop") and not self.contacted(pos, kind, now):
+                continue
             x, y = board.screen(pos)
             size = board.half_width
             if kind in ("install", "lever", "trap", "deploy", "drop"):

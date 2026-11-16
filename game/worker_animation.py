@@ -20,6 +20,8 @@ GESTURES = {
     "deliver": Gesture(((0, 0, 0), (.29, .13, .62), (.54, .46, 1), (1, 0, 0)), .54),
     "assemble": Gesture(((0, 0, 0), (.31, .35, .70), (.56, .61, 1), (1, 0, 0)), .56),
     "deploy": Gesture(((0, 0, 0), (.25, .38, .54), (.57, .88, 1), (1, 0, 0)), .57),
+    "rotate": Gesture(((0, .07, .18), (.22, .23, 1), (.78, .25, 1), (1, 0, 0)), .50),
+    "send_bone": Gesture(((0, 0, 0), (.29, .15, .73), (.61, .36, 1), (1, 0, 0)), .61),
 }
 
 # 투명 여백을 포함한 아틀라스의 운반 자세에서 양 손 사이의 중심.
@@ -41,6 +43,8 @@ class WorkerAction:
     after_item: str | None
     began: float
     seconds: float
+    initial_floor_scale: float = 0
+    grip_side: int = 1
 
     def progress(self, now):
         return max(0, min(1, (now - self.began) / self.seconds))
@@ -63,6 +67,20 @@ class WorkerAction:
                 mix = smooth((phase - start) / (end - start))
                 return bend + (next_bend - bend) * mix, reach + (next_reach - reach) * mix
         return 0, 0
+
+    def lift_from_floor(self, now):
+        return 1 - smooth((self.progress(now) - self.contact) / (1 - self.contact))
+
+
+@dataclass(frozen=True)
+class CarryHandoff:
+    item: str
+    target: tuple
+    floor_scale: float
+    began: float
+
+    def remaining(self, now):
+        return self.floor_scale * (1 - smooth((now - self.began) / .10))
 
 
 @dataclass(frozen=True)
@@ -95,7 +113,7 @@ class WorkerPose:
                        grip=(self.grip[0] + dx, self.grip[1] + dy))
 
 
-def sample_pose(direction, body_size, rest_height, walk, carrying, action, now, *, top_down, push=False):
+def sample_pose(direction, body_size, rest_height, walk, carrying, action, now, *, top_down, push=None):
     """상체를 움직여도 발은 밟고 있던 자리에 둔다."""
     hands = TOPDOWN_HAND if top_down else ISO_HAND
     hand_x, hand_row = hands[direction]
@@ -111,9 +129,9 @@ def sample_pose(direction, body_size, rest_height, walk, carrying, action, now, 
         phase, contact = action.progress(now), action.contact
         upper, boots = "carry", "idle"
         if action.kind == "pickup":
-            floor_scale = 1 - smooth((phase - contact) / (1 - contact))
-        elif action.kind in ("drop", "install", "deliver", "deploy"):
-            floor_scale = smooth(phase / contact)
+            floor_scale = action.lift_from_floor(now)
+        elif action.kind in ("drop", "install", "deliver", "deploy", "send_bone"):
+            floor_scale = action.initial_floor_scale + (1 - action.initial_floor_scale) * smooth(phase / contact)
             item = action.before_item if phase < contact else None
         elif action.kind == "assemble":
             if phase < contact:
@@ -121,10 +139,12 @@ def sample_pose(direction, body_size, rest_height, walk, carrying, action, now, 
                 floor_scale = smooth(phase / contact)
             else:
                 item = action.after_item
-                floor_scale = 1 - smooth((phase - contact) / (1 - contact))
-    elif push:
+                floor_scale = action.lift_from_floor(now)
+    elif push is not None:
         upper = "carry"
-        bend, reach = .54, .76
+        load = (.45 + .55 * smooth(push / .2)) * (1 - smooth((push - .76) / .24))
+        bend, reach = .70 * load, .98 * load
+        boots = "walk_a" if push < .73 else "walk_b"
     elif carrying and walk != "idle":
         bend = .13 if walk == "walk_a" else .02
 

@@ -407,10 +407,10 @@ class Art:
         first, last = rows or (0, height)
         clip = (left, bottom + height - last, width, last - first)
         center_y = sy + (anchor["y"] - (first + last) / 2) * scale * height_scale
-        if flip:
+        if flip or rotation:
             self.atlases[entry["atlas"]].clip_composite_draw(
-                *clip, 0, "h",
-                sx - (width / 2 - anchor["x"]) * scale,
+                *clip, rotation, "h" if flip else "",
+                sx + (width / 2 - anchor["x"]) * scale * (-1 if flip else 1),
                 center_y, width * scale, (last - first) * scale * height_scale,
             )
             return
