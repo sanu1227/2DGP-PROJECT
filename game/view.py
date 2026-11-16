@@ -7,7 +7,7 @@ from math import floor, sin, sqrt
 
 import pico2d.pico2d as p
 
-from game.model import DIRECTIONS, Game
+from game.model import DIRECTIONS, PUSH_ACTIONS, Game
 from game.art import Art, MAGIC_BEAM_HEIGHT
 from game.scenery import draw_scars, draw_tinted, floor_style, wall_style
 from game.navigation import ClickNavigator, IsoBoard, TopDownBoard, find_path
@@ -15,7 +15,7 @@ from game.themes import boundary_walls, low_wall_sprite, scene_for, themed_floor
 from game.layout import WIDTH, HEIGHT, BOARD_BOTTOM, BOARD_TOP
 from game.front_end import FrontEnd
 from game.tutorial import first_room_hint
-from game.mechanics import fixed_devices
+from game.mechanics import fixed_devices, mirror_cells
 from game.optics import trace_display_magic
 from game.play_menu import PlayClock, PlayMenu
 from game.stage_feedback import StageFeedback
@@ -181,6 +181,7 @@ class View:
         self.motion = None
         self.move_seconds = 0.18
         self.rubble_motions = {}
+        self.mirror_pushes = {}
         self.plate_delays = {}
         self.echo_motion = EchoMotion()
         self.action_badge_bounds = None
@@ -203,7 +204,7 @@ class View:
         self.echo_motion.change(game, previous, now)
         if self.mirror_game is not game:
             self.mirror_game, self.mirror_motions = game, {}
-        for pos in game.level.mirrors:
+        for pos in mirror_cells(game.level, previous) & mirror_cells(game.level, game.state):
             old, new = previous.mirror_rotations.get(pos, 0), game.state.mirror_rotations.get(pos, 0)
             if old == new:
                 continue
@@ -321,6 +322,18 @@ class View:
         climb = climb * climb * (3 - 2 * climb)
         return position, height + (target_height - height) * climb
 
+    def mirror_position(self, destination, now):
+        motion = self.mirror_pushes.get(destination)
+        if motion is None:
+            return destination
+        start, began = motion
+        t = min(1, max(0, (now - began) / PUSH_SECONDS))
+        if t >= 1:
+            self.mirror_pushes.pop(destination)
+            return destination
+        travel = t * t * (3 - 2 * t)
+        return tuple(a + (b - a) * travel for a, b in zip(start, destination))
+
     def animate_move(self, game, previous, action):
         """성공한 이동 이벤트에서만 표시 동작을 시작한다. 연속 입력은 현 위치에서 잇는다."""
         if (previous.recording and game.state.recording is None
@@ -341,7 +354,18 @@ class View:
                 was_pressed = float(game.plate_pressed(destination, previous))
                 self.plate_motions.setdefault(destination, (was_pressed, was_pressed, now, 0))
                 self.plate_delays[destination] = (now + PUSH_SECONDS * .65, was_pressed)
-        self.move_player(previous.player, game.state.player, action, PUSH_SECONDS if pushing else .18)
+        moved_mirrors = game.state.movable_mirrors - previous.movable_mirrors
+        if moved_mirrors:
+            now = self.now()
+            source = game.state.player
+            destination = next(iter(moved_mirrors))
+            position = self.mirror_position(source, now)
+            self.mirror_pushes.pop(source, None)
+            self.mirror_pushes[destination] = (position, now)
+            if source in self.mirror_motions:
+                self.mirror_motions[destination] = self.mirror_motions.pop(source)
+        self.move_player(previous.player, game.state.player, action,
+                         PUSH_SECONDS if pushing or moved_mirrors else .18)
 
     def plate_pressure(self, game, pos, now):
         target = float(game.plate_pressed(pos))
@@ -529,7 +553,9 @@ class View:
         targets.update({pos: "병사 배치" for pos in level.posts - state.soldiers})
         targets.update({pos: "병사 조립" for pos in level.benches})
         targets.update({pos: "뼈 투입구" for pos in level.chutes})
-        targets.update({pos: "거울 회전" for pos in level.mirrors})
+        mirrors = mirror_cells(level, state)
+        targets.update({pos: "이동 거울 · Shift+방향키" if pos in state.movable_mirrors else "거울 회전"
+                        for pos in mirrors})
         targets.update({pos: "인부 회수" if pos in state.workers else "인부 배치"
                         for pos in level.jobs - level.echo_links.keys()})
         targets.update({pos: "발걸음 기록" for pos in level.echo_links})
@@ -544,7 +570,7 @@ class View:
             # 같은 칸 캐릭터까지 포함해 표식이 머리나 물건에 가려지지 않게 한다.
             top = max((rect[3] for cell, rect in self.hit_masks if cell == pos), default=sy + 8)
             y = min(top + 15, BOARD_TOP - 15)
-            if self.top_down and pos in level.mirrors:
+            if self.top_down and pos in mirrors:
                 sx += projection.half_width * .70
             if pos == state.player and self.action_badge_bounds:
                 sx = self.action_badge_bounds[2] + 18
@@ -609,8 +635,12 @@ class View:
         now = self.now()
         if self.mirror_game is not game:
             self.mirror_game, self.mirror_motions = game, {}
-        mirror_rotations = {pos: self.mirror_rotation(game, pos, now) for pos in level.mirrors}
-        beam_segments, powered_receivers = trace_display_magic(level, state, mirror_rotations)
+        mirrors = mirror_cells(level, state)
+        mirror_positions = {pos: self.mirror_position(pos, now) for pos in mirrors}
+        mirror_rotations = {pos: self.mirror_rotation(game, pos, now) for pos in mirrors}
+        rubble_positions = {self.rubble_pose(game, pos, now)[0] for pos in state.rubble}
+        beam_segments, powered_receivers = trace_display_magic(
+            level, state, mirror_rotations, mirrors=mirror_positions, rubble=rubble_positions)
         self.receiver_feedback.observe(game, powered_receivers, now)
         gate_statuses = {pos: (('open' if control in powered_receivers else 'held' if state.player == pos else 'closed')
                               if control in level.receivers else game.gate_status(pos, state))
@@ -629,9 +659,10 @@ class View:
             if self.topdown_art is None:
                 self.topdown_art = TopDownArt()
             draw_topdown_board(self, game, self.projection(level), now, beam_segments, powered_receivers,
-                               mirror_rotations, gate_statuses, gate_openings)
+                               mirror_rotations, mirror_positions, gate_statuses, gate_openings)
             return
         rubble_draws = {}
+        mirror_draws = {}
         if level.gates:
             self.art.load_gates()
         scene = scene_for(level)
@@ -658,7 +689,7 @@ class View:
         decor_draws = {}
         decoration_cells = {tuple(entry["cell"]) for entry in scene["decorations"]} if scene else set()
         device_floor = (level.traps | level.posts | level.plates | level.gates.keys()
-                        | fixed_devices(level) | set(level.chutes.values())
+                        | fixed_devices(level, state) | set(level.chutes.values())
                         | level.benches | level.levers | {level.exit})
         for depth in range(level.width + level.height - 1):
             for y in range(level.height):
@@ -717,7 +748,8 @@ class View:
                     draw_scars(pos, sx, sy, scale, near_trap)
 
                 for cells, sprite, label in (
-                        (level.mirrors, "mirror", "거울 회전 중" if pos in self.mirror_motions else f"거울 {state.mirror_rotations.get(pos, 0) + 1}/4"),
+                        (mirrors, "mirror", "이동 거울" if pos in state.movable_mirrors
+                         else f"거울 {state.mirror_rotations.get(pos, 0) + 1}/4"),
                         (level.sources, "mana_source", "광원"),
                         (level.receivers, "mana_receiver", level.device_labels.get(pos, "") + (" 수신 완료" if pos in powered_receivers else " 수신 대기")),
                         (state.rubble, "push_rubble", "밀기 · 방향키"),
@@ -730,6 +762,11 @@ class View:
                             rubble_draws[(rx, ry)] = (pos, height)
                             draw_depth = max(sum(position), depth) if pos in level.plates else sum(position)
                             objects.append((draw_depth, 2, sprite, rx, ry))
+                        elif sprite == "mirror":
+                            position = mirror_positions[pos]
+                            mx, my = screen(position)
+                            mirror_draws[(mx, my)] = pos
+                            objects.append((sum(position), 1, sprite, mx, my))
                         else:
                             objects.append((depth, 1, sprite, sx, sy))
                         if sprite != "push_rubble" or pos not in level.plates:
@@ -805,7 +842,7 @@ class View:
         player = self.player_position(state.player, now)
         px, py = screen(player)
         # 같은 칸의 작업대나 배치한 병사와 구별되도록 약간 앞쪽에 선다.
-        if state.player in level.benches | level.levers | state.soldiers | level.plates | level.gates.keys() | level.chutes.keys() | fixed_devices(level):
+        if state.player in state.soldiers | level.plates | level.gates.keys() | fixed_devices(level, state):
             px -= 9
             py -= 7
         objects.append((sum(player), 3, "player", px, py))
@@ -832,6 +869,7 @@ class View:
                 self.plate_hit_masks[self.hit_regions[-1]] = (sx, sy, scale, pressed)
                 continue
             if sprite == "mirror":
+                pos = mirror_draws[(sx, sy)]
                 rotation = mirror_rotations[pos]
                 self.art.draw(sprite, sx, sy, scale, rotation=rotation)
                 self.sprite_hit_region(pos, sprite, sx, sy, scale, rotation=rotation)
@@ -1202,10 +1240,13 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True, top_down=False):
                         screen_changed = True
                     elif event.key in actions:
                         action = actions[event.key]
+                        if action in DIRECTIONS and p.SDL_GetModState() & p.KMOD_SHIFT:
+                            action = f"push_{action}"
                         previous = game.state
                         changed = game.act(action)
-                        if action in FACING and changed:
-                            view.animate_move(game, previous, action)
+                        direction = PUSH_ACTIONS.get(action, action)
+                        if direction in FACING and changed:
+                            view.animate_move(game, previous, direction)
                         elif changed:
                             # 도착 직후 상호작용하면 그 칸에 바로 정렬한다.
                             view.motion = None

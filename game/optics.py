@@ -4,6 +4,7 @@ from math import sqrt
 
 from game.levels import DIRECTIONS
 from game.magic import mirror_output
+from game.mechanics import beam_obstacles, mirror_cells
 
 MAGIC_BEAM_HEIGHT = 70
 MIRROR_HALF_SPAN = .36
@@ -40,10 +41,12 @@ def device_hit(origin, direction, center):
     return distance if distance > 1e-6 else None
 
 
-def trace_display_magic(level, state, rotations):
+def trace_display_magic(level, state, rotations, *, mirrors=None, rubble=None):
     """발사구에서 광선을 쏴 가장 가까운 장치로 보낸다. 최대 64번 방향을 바꾼다."""
     segments, powered = [], set()
-    obstacles = level.walls | state.rubble | state.soldiers | level.sources.keys()
+    obstacles = beam_obstacles(level, state, rubble)
+    if mirrors is None:
+        mirrors = {pos: pos for pos in mirror_cells(level, state)}
     for source, name in level.sources.items():
         origin, direction = source_origin(source, name), DIRECTIONS[name]
         if not (-.5 <= origin[0] <= level.width - .5 and -.5 <= origin[1] <= level.height - .5):
@@ -67,12 +70,14 @@ def trace_display_magic(level, state, rotations):
                 distance = device_hit(origin, direction, pos)
                 if distance is not None:
                     candidates.append((distance, 'receiver', pos))
-            for pos in level.mirrors - obstacles:
+            for cell, pos in mirrors.items():
+                if pos in obstacles:
+                    continue
                 distance = device_hit(origin, direction, pos)
                 if distance is not None:
-                    candidates.append((distance, 'mirror', pos))
+                    candidates.append((distance, 'mirror', cell))
             distance, kind, target = min(candidates, key=lambda item: item[0])
-            end = target if kind == 'mirror' else tuple(origin[i] + direction[i] * distance for i in (0, 1))
+            end = mirrors[target] if kind == 'mirror' else tuple(origin[i] + direction[i] * distance for i in (0, 1))
             segments.append((origin, end))
             if kind == 'receiver':
                 powered.add(target)

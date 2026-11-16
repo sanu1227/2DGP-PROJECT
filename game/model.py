@@ -5,10 +5,11 @@ from dataclasses import dataclass, field
 
 from game.levels import DIRECTIONS, Level, Pos
 from game.magic import MIRROR_DIRECTIONS, MIRROR_LABELS
-from game.mechanics import trace_magic, fixed_devices
+from game.mechanics import trace_magic, fixed_devices, mirror_cells
 
 
 ITEM_NAMES = {"part": "함정 부품", "bone": "뼈 묶음", "soldier": "해골 병사"}
+PUSH_ACTIONS = {f"push_{direction}": direction for direction in DIRECTIONS}
 
 
 @dataclass(frozen=True)
@@ -37,6 +38,7 @@ class State:
     moves: int = 0
     cleared: bool = False
     mirror_rotations: dict[Pos, int] = field(default_factory=dict)
+    movable_mirrors: set[Pos] = field(default_factory=set)
     rubble: set[Pos] = field(default_factory=set)
     workers: set[Pos] = field(default_factory=set)
     recording: Recording | None = None
@@ -55,7 +57,8 @@ class Game:
                      if direction != MIRROR_DIRECTIONS[0]}
         self.state = State(player=self.level.start, items=dict(self.level.initial_items),
                            rubble=set(self.level.rubble), replay_workers=dict(self.level.replay_workers),
-                           mirror_rotations=rotations)
+                           mirror_rotations=rotations,
+                           movable_mirrors=set(self.level.movable_mirrors & self.level.mirrors))
         self.history: list[State] = []
         self.message = "물건이나 장치 위에서 E를 누르세요."
 
@@ -83,7 +86,7 @@ class Game:
 
     def act(self, action: str) -> bool:
         """성공한 상태 변경만 한 행동으로 기록한다. 실패는 안내만 바꾼다."""
-        if action not in {*DIRECTIONS, "interact", "drop"}:
+        if action not in {*DIRECTIONS, *PUSH_ACTIONS, "interact", "drop"}:
             raise ValueError(f"알 수 없는 행동: {action}")
         if self.state.cleared:
             self.message = "복구 완료! 다음 방으로 진행하세요."
@@ -193,7 +196,7 @@ class Game:
             if state.carrying is not None:
                 return None, "손이 찼습니다. 먼저 내려놓으세요."
             return "pickup", f"E: {ITEM_NAMES[state.items[pos]]} 줍기"
-        if pos in self.level.mirrors:
+        if pos in mirror_cells(self.level, state):
             return (None, "거울은 빈손으로 돌리세요.") if state.carrying else ("rotate", "E / Space: 거울 90도 회전 · 화살표 방향으로 빛 방출")
         if pos in self.level.jobs:
             if pos in state.replay_workers:
@@ -257,12 +260,35 @@ class Game:
         """내려놓기 가능 여부를 입력 처리와 현재 칸 안내에 함께 사용한다."""
         if state.carrying is None:
             return None, "들고 있는 물건이 없습니다."
-        devices = fixed_devices(self.level)
+        devices = fixed_devices(self.level, state)
         if state.player in devices or state.player in state.items:
             return None, "빈 일반 바닥에만 내려놓을 수 있습니다."
         return "drop", f"E / Space: {ITEM_NAMES[state.carrying]} 내려놓기"
 
+    def _push_mirror(self, state: State, direction: str) -> tuple[bool, str]:
+        dx, dy = DIRECTIONS[direction]
+        x, y = state.player
+        source, target = (x + dx, y + dy), (x + 2 * dx, y + 2 * dy)
+        if source not in state.movable_mirrors:
+            return False, "그쪽 칸에 밀 수 있는 거울이 없습니다."
+        if state.recording or state.carrying:
+            return False, "기록을 마치고 손을 비운 뒤 거울을 미세요."
+        level = self.level
+        forbidden = (fixed_devices(level, state) | level.plates | level.gates.keys()
+                     | set(level.chutes.values()) | state.items.keys() | set(state.replay_workers.values()))
+        if not self.walkable(target, state) or target in forbidden:
+            return False, "거울은 비어 있는 바닥으로만 밀 수 있습니다."
+        state.movable_mirrors.remove(source)
+        state.movable_mirrors.add(target)
+        rotation = state.mirror_rotations.pop(source, 0)
+        if rotation:
+            state.mirror_rotations[target] = rotation
+        state.player = source
+        return True, "거울을 한 칸 밀었습니다. Z로 되돌릴 수 있습니다."
+
     def _apply(self, state: State, action: str) -> tuple[bool, str]:
+        if action in PUSH_ACTIONS:
+            return self._push_mirror(state, PUSH_ACTIONS[action])
         if action in DIRECTIONS:
             dx, dy = DIRECTIONS[action]
             x, y = state.player
@@ -271,7 +297,7 @@ class Game:
                 if state.recording:
                     return False, "기록 중에는 발걸음만 남길 수 있습니다."
                 target = destination[0] + dx, destination[1] + dy
-                forbidden = fixed_devices(self.level) | self.level.gates.keys()
+                forbidden = fixed_devices(self.level, state) | self.level.gates.keys()
                 if (state.carrying or not self.walkable(target, state) or target in forbidden
                         or target in state.items or target in state.workers):
                     return False, "잔해는 빈손으로, 비어 있는 바닥·발판 쪽으로만 밀 수 있습니다."

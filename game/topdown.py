@@ -10,6 +10,7 @@ from game.device_outline import DeviceOutlines
 from game.layout import HEIGHT
 from game.levels import DIRECTIONS
 from game.magic import mirror_output
+from game.mechanics import mirror_cells
 from game.themes import scene_for
 from game.topdown_terrain import Light, draw_shadows, draw_terrain, materials_for
 from game.worker_view import ECHO_COLOR, draw_echo_trail, recording_label
@@ -133,9 +134,10 @@ def device_entries(game, gate_statuses, powered, exit_ready, plate_depths):
         entries[pos] = "gate_open", f"{level.device_labels[pos]} {label}", color
     for pos in level.sources:
         entries[pos] = "source", "광원", GOLD
-    for pos in level.mirrors:
+    for pos in mirror_cells(level, state):
         facing = state.mirror_rotations.get(pos, 0) + 1
-        entries[pos] = "mirror_base", f"거울 {facing}/4", GOLD
+        entries[pos] = ("mirror_base", "이동 거울", TEAL) if pos in state.movable_mirrors else (
+            "mirror_base", f"거울 {facing}/4", GOLD)
     for pos in level.receivers:
         label = level.device_labels[pos]
         entries[pos] = ("receiver_powered", f"{label} 수신", TEAL) if pos in powered else ("receiver", label, INK)
@@ -225,7 +227,8 @@ def room_lights(level, lights, powered, exit_ready):
     return tuple(lights)
 
 
-def draw_board(view, game, board, now, beam_segments, powered, rotations, gate_statuses, gate_openings):
+def draw_board(view, game, board, now, beam_segments, powered, rotations, mirror_positions,
+               gate_statuses, gate_openings):
     level, state = game.level, game.state
     art = view.topdown_art
     size, half = board.cell_size, board.half_width
@@ -250,7 +253,7 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, gate_s
     background = tuple(scene["background"]) if scene else (19, 27, 32)
     draw_terrain(art, board, level, materials_for(stage), lights, background, now, recesses)
     draw_echo_trail(game, board)
-    raised = [pos for pos, (sprite, _, _) in entries.items() if sprite in RAISED_DEVICES]
+    raised = [mirror_positions.get(pos, pos) for pos, (sprite, _, _) in entries.items() if sprite in RAISED_DEVICES]
     draw_shadows(board, player, [*raised, *state.items, *(pos for pos, _ in rubble)])
 
     for sprite, pos, scale in props:
@@ -262,7 +265,7 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, gate_s
         art.draw(sprites.get(sprite, sprite), x, y, size * scale)
 
     for pos, (sprite, _, color) in entries.items():
-        sx, sy = board.screen(pos)
+        sx, sy = board.screen(mirror_positions.get(pos, pos))
         asset = sprites.get(sprite, sprite)
         if pos in level.gates:
             x, y = pos
@@ -334,11 +337,11 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, gate_s
         nx, ny = (y1 - y2) / length, (x2 - x1) / length
         for offset, color in ((-1, VIOLET), (0, (247, 202, 255)), (1, VIOLET)):
             p.draw_line(x1 + nx * offset, y1 + ny * offset, x2 + nx * offset, y2 + ny * offset, *color)
-    for pos in level.mirrors:
-        draw_mirror(*board.screen(pos), size, rotations[pos])
+    for pos, position in mirror_positions.items():
+        draw_mirror(*board.screen(position), size, rotations[pos])
     for pos in powered:
         progress = view.receiver_feedback.progress(game, pos, now)
-        sx, sy = board.screen(pos)
+        sx, sy = board.screen(mirror_positions.get(pos, pos))
         if progress < 1:
             p.draw_circle(sx, sy, max(2, round(size * (.26 + progress * .16))), *VIOLET, filled=False)
 

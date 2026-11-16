@@ -15,7 +15,7 @@ import time
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from game.levels import load_levels
-from game.model import DIRECTIONS, Game
+from game.model import DIRECTIONS, PUSH_ACTIONS, Game
 from game.mechanics import trace_magic
 
 
@@ -24,7 +24,7 @@ def key(state):
             frozenset(state.installed), state.active, frozenset(state.soldiers),
             tuple(sorted(state.bench_bones.items())), tuple(sorted(state.mirror_rotations.items())),
             frozenset(state.rubble), frozenset(state.workers), state.recording, state.echo,
-            frozenset(state.replay_workers.items()))
+            frozenset(state.replay_workers.items()), frozenset(state.movable_mirrors))
 
 
 class LowerBound:
@@ -42,7 +42,8 @@ class LowerBound:
         mirrors = sorted(level.mirrors)
         patterns_by_receiver = {receiver: [] for receiver in level.receivers}
         used_rotations = {mirror: set() for mirror in mirrors}
-        if 0 < len(mirrors) <= 6:
+        # 위치가 바뀌는 거울은 초기 위치의 경로와 방향만으로 가지치기할 수 없다.
+        if 0 < len(mirrors) <= 6 and not level.movable_mirrors:
             probe = Game(level).state
             probe.rubble.clear()
             for rotations in product(range(4), repeat=len(mirrors)):
@@ -248,7 +249,10 @@ def solve(level, max_states=500_000, upper_bound=None, forbidden=None):
         expanded += 1
         if expanded > max_states:
             raise RuntimeError(f"{level.id}: 탐색 상한 {max_states}개 상태 도달. 최단성 미검증.")
-        for action in (*DIRECTIONS, "interact", "drop"):
+        x, y = state.player
+        pushes = (action for action, direction in PUSH_ACTIONS.items()
+                  if (x + DIRECTIONS[direction][0], y + DIRECTIONS[direction][1]) in state.movable_mirrors)
+        for action in (*DIRECTIONS, "interact", "drop", *pushes):
             game.state = state
             game.history = []
             if (action == 'interact' and state.player in lower_bound.monotone_mirrors
@@ -293,6 +297,8 @@ def mechanic_required_by_layout(level, mechanic):
     if mechanic == "rubble":
         blocked = level.rubble
     elif mechanic == "mirror":
+        if level.movable_mirrors:
+            return False
         state = Game(level).state
         state.rubble.clear()
         inactive = level.receivers - trace_magic(level, state)[1]
@@ -339,6 +345,8 @@ def main():
             raise ValueError(f"{level.id}: 완료 가능한 풀이가 없습니다.")
         required = {4: ("rubble", "plate"), 5: ("rubble", "mirror", "chute", "plate"), 6: ("mirror",),
                     7: ("helper", "plate"), 8: ("mirror", "helper")}
+        if level.movable_mirrors:
+            required[index] = (*required.get(index, ()), "mirror_push")
         if args.check_mechanics and index in required:
             layout_required = []
             for mechanic in required[index]:
@@ -348,6 +356,8 @@ def main():
                     continue
 
                 def forbidden(game, action):
+                    if mechanic == "mirror_push":
+                        return action in PUSH_ACTIONS
                     if action in DIRECTIONS:
                         dx, dy = DIRECTIONS[action]
                         target = game.state.player[0] + dx, game.state.player[1] + dy

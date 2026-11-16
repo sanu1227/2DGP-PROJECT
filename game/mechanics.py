@@ -10,6 +10,15 @@ def mirror_axis(rotation):
     return ny, -nx
 
 
+def mirror_cells(level, state):
+    return (level.mirrors - level.movable_mirrors) | state.movable_mirrors
+
+
+def beam_obstacles(level, state, rubble=None):
+    blocks = state.rubble if rubble is None else rubble
+    return level.walls | state.soldiers | level.sources.keys() | blocks
+
+
 def trace_magic(level, state):
     """마력 광선의 선분과 작동 수신기. 순환 경로도 유한하게 끝낸다.
 
@@ -17,6 +26,8 @@ def trace_magic(level, state):
     문과 운반물은 막지 않으므로 문 전원 판정에 순환 의존성이 없다.
     """
     segments, powered = [], set()
+    obstacles = beam_obstacles(level, state)
+    mirrors = mirror_cells(level, state)
     for start, direction in level.sources.items():
         pos, delta = start, DIRECTIONS[direction]
         seen = set()
@@ -26,17 +37,17 @@ def trace_magic(level, state):
             if not (0 <= target[0] < level.width and 0 <= target[1] < level.height):
                 break
             segments.append((pos, target))
-            if target in level.walls or target in state.rubble or target in state.soldiers or target in level.sources:
+            if target in obstacles:
                 break
             if target in level.receivers:
                 powered.add(target)
                 break
-            if target in level.mirrors:
+            if target in mirrors:
                 delta = mirror_output(state.mirror_rotations.get(target, 0))
             pos = target
     return segments, powered
 
 
-def fixed_devices(level):
+def fixed_devices(level, state):
     return (level.traps | level.posts | level.benches | level.levers | level.chutes.keys()
-            | level.mirrors | level.sources.keys() | level.receivers | level.jobs | {level.exit})
+            | mirror_cells(level, state) | level.sources.keys() | level.receivers | level.jobs | {level.exit})

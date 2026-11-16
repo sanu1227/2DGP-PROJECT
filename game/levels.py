@@ -40,6 +40,7 @@ class Level:
     timed_echoes: frozenset[Pos] = frozenset()
     replay_workers: dict[Pos, Pos] = field(default_factory=dict)
     mirror_directions: dict[Pos, str] = field(default_factory=dict)
+    movable_mirrors: frozenset[Pos] = frozenset()
 
 
 def read_directions(raw, field_name, cells, prefix):
@@ -148,7 +149,7 @@ def load_levels(path: Path | str | None = None) -> list[Level]:
 
     levels = []
     identifiers = set()
-    glyphs = "#.@EPBTLASFGCOMQYRJKU"
+    glyphs = "#.@EPBTLASFGCOMNQYRJKU"
     for index, raw in enumerate(stages, start=1):
         prefix = f"스테이지 {index}: "
         required = {"id", "title", "hint", "map"}
@@ -214,8 +215,9 @@ def load_levels(path: Path | str | None = None) -> list[Level]:
         items.update({pos: "bone" for pos in positions["B"]})
         items.update({pos: "soldier" for pos in soldiers})
         sources = read_directions(raw, "magic_sources", positions["Q"], prefix)
-        mirror_directions = read_directions(raw, "mirror_directions", positions["M"], prefix)
-        if set(sources) != positions["Q"] or (positions["M"] | positions["Y"] and not sources):
+        mirrors = positions["M"] | positions["N"]
+        mirror_directions = read_directions(raw, "mirror_directions", mirrors, prefix)
+        if set(sources) != positions["Q"] or (mirrors | positions["Y"] and not sources):
             raise ValueError(prefix + "거울·수신기에는 방향이 지정된 광원이 필요합니다.")
         if positions["J"] - echo_links.keys() and not positions["S"]:
             raise ValueError(prefix + "해골 인부는 병사 복구 목표와 함께 배치해야 합니다.")
@@ -226,7 +228,7 @@ def load_levels(path: Path | str | None = None) -> list[Level]:
             benches=positions["A"], posts=positions["S"], initial_items=items,
             plates=positions["F"], gates=gates, device_labels=labels,
             chutes=chutes, action_limit=action_limit,
-            mirrors=positions["M"], sources=sources, receivers=positions["Y"],
+            mirrors=mirrors, sources=sources, receivers=positions["Y"], movable_mirrors=positions["N"],
             rubble=positions["R"], jobs=positions["J"], echo_links=echo_links, timed_echoes=timed_echoes,
             replay_workers=replay_workers, mirror_directions=mirror_directions,
         ))
