@@ -8,7 +8,7 @@ import pico2d.pico2d as p
 
 from game.levels import DIRECTIONS
 from game.themes import scene_for
-from game import topdown_terrain
+from game.topdown_terrain import Light, draw_shadows, draw_terrain, materials_for
 
 
 ASSET_ROOT = Path(__file__).resolve().parents[1] / "assets" / "topdown_v2"
@@ -45,11 +45,11 @@ ROOM_SPRITES = WORKSHOP_SPRITES | {name: f"depth_{name}" for name in (
     "brazier", "treasure", "treasure_banner", "crypt_banner", "archive_banner",
 )}
 PROP_LIGHTS = {
-    "candle_sconce": (2.06, 1.78, (249, 169, 99), 119),
-    "candles": (1.75, 1.54, (250, 177, 104), 104),
-    "lantern": (2.42, 2.05, (248, 164, 80), 132),
-    "brazier": (2.56, 2.20, (253, 128, 73), 143),
-    "crystal_sconce": (2.26, 1.92, (115, 192, 247), 120),
+    "candle_sconce": (2.06, 1.78, (249, 169, 99), 119, .07),
+    "candles": (1.75, 1.54, (250, 177, 104), 104, .07),
+    "lantern": (2.42, 2.05, (248, 164, 80), 132, .07),
+    "brazier": (2.56, 2.20, (253, 128, 73), 143, .08),
+    "crystal_sconce": (2.26, 1.92, (115, 192, 247), 120, .045),
 }
 SIDE_LAMPS = {
     2: ("candle_sconce", (5.76, 2.96)),
@@ -200,8 +200,8 @@ def room_props(scene, level, stage):
 
 def room_lights(level, props, powered, exit_ready, workshop):
     if workshop:
-        lights = [((2.9, .72), 2.20, 1.86, (249, 169, 86), 124),
-                  ((.68, 1.94), 2.05, 1.85, (249, 153, 76), 120)]
+        lights = [Light((2.9, .72), 2.20, 1.86, (249, 169, 86), 124, .07),
+                  Light((.68, 1.94), 2.05, 1.85, (249, 153, 76), 120, .07)]
     else:
         lights = []
         for name, (x, y), _ in props:
@@ -209,11 +209,11 @@ def room_lights(level, props, powered, exit_ready, workshop):
                 # 벽에 달린 등불은 광원의 중심을 통로 쪽으로 옮긴다.
                 x = max(.70, min(level.width - 1.70, x))
                 y = max(.65, min(level.height - 1.65, y))
-                lights.append(((x, y), *PROP_LIGHTS[name]))
-        lights.extend((pos, 1.25, 1.12, (178, 94, 240), 60) for pos in level.sources)
-        lights.extend((pos, 1.48, 1.30, (192, 125, 250), 104) for pos in sorted(powered))
+                lights.append(Light((x, y), *PROP_LIGHTS[name]))
+        lights.extend(Light(pos, 1.25, 1.12, (178, 94, 240), 60) for pos in level.sources)
+        lights.extend(Light(pos, 1.48, 1.30, (192, 125, 250), 104) for pos in sorted(powered))
     if exit_ready:
-        lights.append((level.exit, 1.34, 1.15, (64, 202, 151), 103))
+        lights.append(Light(level.exit, 1.34, 1.15, (64, 202, 151), 103))
     return tuple(lights)
 
 
@@ -240,9 +240,9 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, gate_s
     view.action_badge_bounds = None
 
     background = tuple(scene["background"]) if scene else (19, 27, 32)
-    topdown_terrain.draw_terrain(art, board, level, topdown_terrain.materials_for(stage), lights, background)
+    draw_terrain(art, board, level, materials_for(stage), lights, background, now)
     raised = [pos for pos, (sprite, _, _) in entries.items() if sprite in RAISED_DEVICES]
-    topdown_terrain.draw_shadows(board, player, [*raised, *state.items, *(pos for pos, _ in rubble)])
+    draw_shadows(board, player, [*raised, *state.items, *(pos for pos, _ in rubble)])
 
     for sprite, pos, scale in props:
         x, y = board.screen(pos)

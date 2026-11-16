@@ -23,6 +23,22 @@ class Materials:
     rocks: tuple[str, str]
 
 
+@dataclass(frozen=True)
+class Light:
+    position: tuple[float, float]
+    width: float
+    height: float
+    color: tuple[int, int, int]
+    alpha: int
+    range_variation: float = 0.0
+
+    def radius_scale(self, now):
+        x, y = self.position
+        phase = x * 1.9 + y * 1.47
+        sway = .74 * sin(now * 1.7 + phase) + .26 * sin(now * 2.6 - phase)
+        return 1 + self.range_variation * sway
+
+
 WORKSHOP = Materials(
     ("workshop_floor_ashlar", "workshop_floor_slate", "workshop_floor_ashlar",
      "workshop_floor_slate", "workshop_floor_scorched"),
@@ -125,16 +141,27 @@ def smoothstep(fraction):
     return fraction * fraction * (3 - 2 * fraction)
 
 
-def light_tint(x, y, lights, background, visibility):
+def light_samples(x, y, lights):
+    samples = []
+    for index, light in enumerate(lights):
+        lx, ly = light.position
+        distance = hypot((x - lx) / light.width, (y - ly) / light.height)
+        if distance < 1 + light.range_variation:
+            samples.append((index, light, distance))
+    return samples
+
+
+def light_tint(samples, background, visibility, scales):
     """바닥 그림자와 겹치는 빛을 한 번에 합성한다."""
     total_light = 0.0
-    channels = [0.0, 0.0, 0.0]
-    for (lx, ly), width, height, color, alpha in lights:
-        distance = hypot((x - lx) / width, (y - ly) / height)
-        weight = alpha * smoothstep(1 - distance)
+    red = green = blue = 0.0
+    for light_index, light, distance in samples:
+        weight = light.alpha * smoothstep(1 - distance / scales[light_index])
         total_light += weight
-        for index, channel in enumerate(color):
-            channels[index] += channel * weight
+        r, g, b = light.color
+        red += r * weight
+        green += g * weight
+        blue += b * weight
 
     glow = min(.54, total_light / 255) * visibility
     ambient = .42 * (1 - min(1, total_light / 84))
@@ -142,18 +169,23 @@ def light_tint(x, y, lights, background, visibility):
     opacity = shade + glow
     if not glow:
         return p.SDL_Color(*background, round(255 * opacity))
-    color = [round((shade * base + glow * light / total_light) / opacity)
-             for base, light in zip(background, channels)]
-    return p.SDL_Color(*color, round(255 * opacity))
+    base_red, base_green, base_blue = background
+    base_weight = shade / opacity
+    light_weight = glow / (total_light * opacity)
+    return p.SDL_Color(round(base_red * base_weight + red * light_weight),
+                       round(base_green * base_weight + green * light_weight),
+                       round(base_blue * base_weight + blue * light_weight), round(255 * opacity))
 
 
 @lru_cache(maxsize=16)
 def lighting_mesh(board, floors, lights, background):
-    """이동과 무관한 조명 메시를 방과 전원 상태별로 재사용한다."""
+    """방과 전원 상태별로 화면 좌표와 광원까지의 거리를 재사용한다."""
     columns = board.width * LIGHT_SAMPLES_PER_CELL + 1
     rows = board.height * LIGHT_SAMPLES_PER_CELL + 1
     vertices = []
     indices = []
+    animated = []
+    base_scales = (1.0,) * len(lights)
     for row in range(rows):
         y = row / LIGHT_SAMPLES_PER_CELL - .5
         for column in range(columns):
@@ -164,17 +196,20 @@ def lighting_mesh(board, floors, lights, background):
             # 통로에서 멀어질수록 돌을 감춰 방 윤곽이 격자 외곽선으로 끊기지 않게 한다.
             visibility = smoothstep(edge / .58) * (1 - smoothstep((rock_depth - .32) / .93))
             sx, sy = board.screen((x, y))
-            tint = light_tint(x, y, lights, background, visibility)
+            samples = light_samples(x, y, lights) if visibility else ()
+            tint = light_tint(samples, background, visibility, base_scales)
+            if any(light.range_variation for _, light, _ in samples):
+                animated.append((len(vertices), visibility, samples))
             # 소프트웨어 렌더러에서 삼각형 경계 사이에 암석이 비치지 않게 맞춘다.
             vertices.append(p.SDL_Vertex(p.SDL_FPoint(round(sx), round(HEIGHT - sy)), tint, p.SDL_FPoint()))
             if row and column:
                 current = row * columns + column
                 indices.extend((current - columns - 1, current - columns, current,
                                 current - columns - 1, current, current - 1))
-    return (p.SDL_Vertex * len(vertices))(*vertices), (c_int * len(indices))(*indices)
+    return (p.SDL_Vertex * len(vertices))(*vertices), (c_int * len(indices))(*indices), animated
 
 
-def draw_terrain(art, board, level, materials, lights, background):
+def draw_terrain(art, board, level, materials, lights, background, now):
     size = board.cell_size
     floors = frozenset((x, y) for y in range(level.height) for x in range(level.width)
                        if (x, y) not in level.walls)
@@ -201,7 +236,10 @@ def draw_terrain(art, board, level, materials, lights, background):
                     art.draw(rock, *center, size, angle=((x * 3 + y) % 4) * pi / 2,
                              opacity=max(.14, .77 - .28 * (distance - 1)))
                     wall_rim(art, board, pos, floors, materials)
-        mesh, triangles = lighting_mesh(board, floors, lights, background)
+        mesh, triangles, animated = lighting_mesh(board, floors, lights, background)
+        scales = tuple(light.radius_scale(now) for light in lights)
+        for index, visibility, samples in animated:
+            mesh[index].color = light_tint(samples, background, visibility, scales)
         p.SDL_RenderGeometry(p.renderer, None, mesh, len(mesh), triangles, len(triangles))
     finally:
         p.SDL_SetRenderDrawBlendMode(p.renderer, previous.value)
