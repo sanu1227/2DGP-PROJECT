@@ -1,11 +1,11 @@
 {
   "sha256": {
-    "data/stages.json": "a43c1c6494842e83139704766a3f62c2af9213647064c607245ec577e63fe99c",
-    "game/levels.py": "f1bba655fe041f493c97ffbd3c37d9e0ba06eba0f3bb22a020c36fa73c48598d",
-    "game/model.py": "673606ccb3c176d015695f0df54472fe1a5307f48ef2a9abb92c18e78502582f",
+    "data/stages.json": "9a1d38d0d2f59388818136add901a39b290032642900ac7c49bd6987b3b215ca",
+    "game/levels.py": "2a91562813fde1dcfcbadf0bd3c64ebbf4b7d1b1e3d5253a44f980b5b268704d",
+    "game/model.py": "bf7651aa536fff6aaac589466f1eaa45e3d8dcd74c9462ab08c56cb0518dece6",
     "game/mechanics.py": "f599a54ecfb778a983ba93a52a6aaf9a1a2df6f198ecc91160c7f98c66b964d6",
     "tools/solve_levels.py": "98c2288a571bb5f9c172a405a2ba11b436cf94725bd2cc5b8eaa545ce80f94f8",
-    "tests/solutions.py": "3cdfac26ae778b7a42d75bcdcda1d61394f38e9d299a2e2197af9e24f3b3d433"
+    "tests/solutions.py": "c3b3b9bd56e15263a30f8d10df9d0d743fcb52bea707788f50c67dd4237fb480"
   },
   "stages": {
     "stage_01": {
@@ -485,50 +485,47 @@
       "actions": [
         "right",
         "right",
-        "right",
         "interact",
         "down",
         "right",
         "right",
         "right",
         "right",
+        "right",
         "interact",
         "left",
         "left",
         "left",
         "left",
-        "interact",
-        "up",
-        "interact",
-        "left",
-        "left",
-        "up",
-        "up",
-        "left",
         "left",
         "interact",
         "up",
-        "down",
-        "up",
-        "right",
-        "down",
-        "right",
-        "right",
-        "right",
-        "right",
-        "right",
-        "up",
         "interact",
-        "down",
+        "up",
+        "left",
+        "up",
+        "left",
+        "interact",
+        "up",
+        "up",
+        "right",
+        "right",
+        "left",
+        "right",
+        "right",
+        "right",
+        "right",
+        "right",
+        "interact",
         "right",
         "interact",
         "right",
         "interact",
         "right"
       ],
-      "minimum": 42,
-      "expanded": 753,
-      "seconds": 0.19,
+      "minimum": 39,
+      "expanded": 764,
+      "seconds": 0.18,
       "core_mechanic_required_within_limit": true,
       "required_mechanics": [
         "mirror",
@@ -538,12 +535,12 @@
         "mirror",
         "helper"
       ],
-      "action_limit": 53,
+      "action_limit": 50,
       "size": [
-        11,
-        8
+        12,
+        9
       ],
-      "floor_cells": 34
+      "floor_cells": 36
     }
   }
 }

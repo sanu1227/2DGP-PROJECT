@@ -28,7 +28,8 @@ class LateRoomTests(unittest.TestCase):
         level = load_levels()[6]
         gate = next(pos for pos in level.gates if level.device_labels[pos] == "J2")
         station = level.gates[gate]
-        seal, steps = level.echo_links[station]
+        seals, steps = level.echo_links[station]
+        seal = seals[gate]
         self.assertEqual(steps, 4)
 
         game = Game(level)
@@ -54,7 +55,7 @@ class LateRoomTests(unittest.TestCase):
         self.assertTrue(game.act("right"))
         self.assertEqual(game.gate_status(gate), "closed")
 
-    def test_boss_must_match_the_fourth_echo_step_to_cross(self):
+    def test_boss_crosses_both_gates_with_one_echo_recording(self):
         level = load_levels()[7]
         game = Game(level)
         mirror, = level.mirrors
@@ -65,7 +66,10 @@ class LateRoomTests(unittest.TestCase):
         worker = next(pos for pos, item in level.initial_items.items() if item == "soldier")
         part = next(pos for pos, item in level.initial_items.items() if item == "part")
         gates = {level.device_labels[gate]: gate for gate in level.gates}
-        gate = gates["J1"]
+        first, second = gates["J1"], gates["J2"]
+        seals, steps = level.echo_links[job]
+        self.assertEqual(steps, 5)
+        self.assertEqual(set(seals), {first, second})
 
         def use(target):
             self.go(game, target)
@@ -81,26 +85,26 @@ class LateRoomTests(unittest.TestCase):
         self.assertIsNone(find_path(game, part))
         before_recording = game.state.moves
 
-        self.record(game, "up", "right", "right", "down", "right")
-        self.assertTrue(game.act("right"))
-        self.assertEqual(game.gate_status(gate), "open")
-        for _ in range(2):
+        def doors():
+            return game.gate_status(first), game.gate_status(second)
+
+        self.record(game, "up", "up", "right", "left", "right")
+        for expected in (("open", "closed"), ("held", "closed"), ("open", "closed")):
             self.assertTrue(game.act("right"))
-            self.assertEqual(game.gate_status(gate), "closed")
+            self.assertEqual(doors(), expected)
         before_rejected_move = game.state
         self.assertFalse(game.act("right"))
         self.assertEqual(game.state, before_rejected_move)
         while game.state.moves > before_recording:
             self.assertTrue(game.undo())
 
-        self.record(game, "right", "right", "up", "left", "left")
-        for expected in ("closed", "closed", "open"):
+        self.record(game, "up", "up", "right", "right", "right")
+        self.assertEqual(doors(), ("closed", "closed"))
+        for expected in (("open", "closed"), ("held", "closed"),
+                         ("closed", "open"), ("closed", "held"), ("closed", "closed")):
             self.assertTrue(game.act("right"))
-            self.assertEqual(game.gate_status(gate), expected)
-        self.assertTrue(game.act("right"))
-        self.assertEqual(game.gate_status(gate), "held")
-        self.assertTrue(game.act("right"))
-        self.assertEqual(game.gate_status(gate), "closed")
+            self.assertEqual(doors(), expected)
+        self.assertIn(game.state.player, level.initial_items)
         self.assertIsNone(find_path(game, job))
 
         use(part)

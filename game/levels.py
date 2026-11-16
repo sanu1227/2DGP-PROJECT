@@ -36,11 +36,12 @@ class Level:
     rubble: frozenset[Pos] = frozenset()
     jobs: frozenset[Pos] = frozenset()
     action_limit: int | None = None
-    echo_links: dict[Pos, tuple[Pos, int]] = field(default_factory=dict)
+    echo_links: dict[Pos, tuple[dict[Pos, Pos], int]] = field(default_factory=dict)
     timed_echoes: frozenset[Pos] = frozenset()
 
 
-def read_links(raw, field_name, first_name, second_name, first_tiles, second_tiles, prefix, used_ids, optional=()):
+def read_links(raw, field_name, first_name, second_name, first_tiles, second_tiles, prefix, used_ids,
+               optional=(), share_destination=False):
     """지도에 표시한 장치를 명시적 ID와 두 좌표로 연결한다."""
     links = raw.get(field_name, [])
     if not isinstance(links, list):
@@ -60,21 +61,28 @@ def read_links(raw, field_name, first_name, second_name, first_tiles, second_til
                 raise ValueError(prefix + f"{identifier}의 {key} 좌표와 지도 기호가 맞지 않습니다.")
             points.append(tuple(point))
         first, second = points
-        if first in pairs or second in destinations or first == second:
+        if first in pairs or (second in destinations and not share_destination) or first == second:
             raise ValueError(prefix + "같은 장치를 중복 연결할 수 없습니다.")
         pairs[first] = second
         destinations.add(second)
-        labels.update({first: identifier, second: identifier})
+        labels[first] = identifier
+        labels.setdefault(second, identifier)
         used_ids.add(identifier)
     return pairs, labels
 
 
 def read_echo_links(links, tiles, prefix):
-    echoes, used, timed = {}, set(), set()
+    echoes, used, timed, winches = {}, set(), set(), set()
     for link in links:
+        origin = tuple(link["station"])
         echo_fields = {"seal", "steps", "timed"} & link.keys()
         if not echo_fields:
+            if origin in winches or origin in echoes:
+                raise ValueError(prefix + "윈치에는 문 하나만 연결할 수 있습니다.")
+            winches.add(origin)
             continue
+        if origin in winches:
+            raise ValueError(prefix + "윈치와 기록석은 같은 칸을 공유할 수 없습니다.")
         seal, steps = link.get("seal"), link.get("steps")
         if (not isinstance(seal, list) or len(seal) != 2
                 or any(type(value) is not int for value in seal)
@@ -84,11 +92,13 @@ def read_echo_links(links, tiles, prefix):
             raise ValueError(prefix + "분신이 기록할 걸음은 2~6회여야 합니다.")
         if type(link.get("timed", False)) is not bool:
             raise ValueError(prefix + "분신 문의 timed 값은 true 또는 false여야 합니다.")
-        cell = tuple(seal)
-        used.add(cell)
-        origin = tuple(link["station"])
-        echoes[origin] = (cell, steps)
-        if link.get("timed"):
+        is_timed = link.get("timed", False)
+        if origin in echoes and (echoes[origin][1] != steps or (origin in timed) != is_timed):
+            raise ValueError(prefix + "같은 기록석에 연결된 문은 걸음 수와 개방 방식이 같아야 합니다.")
+        seals, _ = echoes.setdefault(origin, ({}, steps))
+        seals[tuple(link["gate"])] = tuple(seal)
+        used.add(tuple(seal))
+        if is_timed:
             timed.add(origin)
     if used != tiles:
         raise ValueError(prefix + "모든 분신 문양을 기록석에 연결해야 합니다.")
@@ -149,13 +159,14 @@ def load_levels(path: Path | str | None = None) -> list[Level]:
         used_ids = set()
         plate_links, labels = read_links(raw, "plate_links", "plate", "gate", positions["F"], positions["G"], prefix, used_ids)
         power_links, power_labels = read_links(raw, "power_links", "receiver", "gate", positions["Y"], positions["G"], prefix, used_ids)
-        worker_links, worker_labels = read_links(raw, "worker_links", "station", "gate",
-                                                  positions["J"], positions["G"], prefix, used_ids, optional=("seal", "steps", "timed"))
+        worker_gates, worker_labels = read_links(raw, "worker_links", "gate", "station",
+                                                  positions["G"], positions["J"], prefix, used_ids,
+                                                  optional=("seal", "steps", "timed"), share_destination=True)
         echo_links, timed_echoes = read_echo_links(raw.get("worker_links", ()), positions["U"], prefix)
-        links = {**plate_links, **power_links, **worker_links}
+        gates = {gate: control for control, gate in (plate_links | power_links).items()} | worker_gates
         if (set(plate_links) != positions["F"] or set(power_links) != positions["Y"]
-                or set(worker_links) != positions["J"] or set(links.values()) != positions["G"]
-                or len(links) != len(positions["G"])):
+                or set(worker_gates.values()) != positions["J"] or gates.keys() != positions["G"]
+                or len(plate_links) + len(power_links) + len(worker_gates) != len(gates)):
             raise ValueError(prefix + "모든 발판·수신기·작업대와 문을 한 번씩 연결해야 합니다.")
         labels.update(power_labels)
         labels.update(worker_labels)
@@ -190,7 +201,7 @@ def load_levels(path: Path | str | None = None) -> list[Level]:
             width=width, height=height, start=next(iter(positions["@"])), exit=next(iter(positions["E"])),
             walls=positions["#"], traps=positions["T"], levers=positions["L"],
             benches=positions["A"], posts=positions["S"], initial_items=items,
-            plates=positions["F"], gates={gate: control for control, gate in links.items()}, device_labels=labels,
+            plates=positions["F"], gates=gates, device_labels=labels,
             chutes=chutes, action_limit=action_limit,
             mirrors=positions["M"], sources=sources, receivers=positions["Y"],
             rubble=positions["R"], jobs=positions["J"], echo_links=echo_links, timed_echoes=timed_echoes,

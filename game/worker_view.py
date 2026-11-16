@@ -9,7 +9,9 @@ ECHO_COLOR = (197, 137, 243)
 
 
 def recording_label(level, station):
-    _, steps = level.echo_links[station]
+    seals, steps = level.echo_links[station]
+    if len(seals) > 1:
+        return f"기록 {steps}걸음"
     return f"{level.device_labels[station]} {steps}걸음"
 
 
@@ -56,19 +58,18 @@ class EchoMotion:
 def draw_echo_marks(game, board):
     level, state = game.level, game.state
     radius = max(8, round(board.half_width * .34))
-    for origin, (seal, _) in level.echo_links.items():
-        for pos, shape in ((origin, 4), (seal, 0)):
-            x, y = board.screen(pos)
-            if shape:
-                points = ((x-radius, y), (x, y+radius), (x+radius, y), (x, y-radius))
-                for a, b in zip(points, points[1:] + points[:1]):
-                    p.draw_line(*a, *b, *ECHO_COLOR)
-                p.draw_circle(x, y, radius // 3, *ECHO_COLOR, filled=False)
-            else:
-                p.draw_circle(x, y, radius, *ECHO_COLOR, filled=False)
-                p.draw_circle(x, y, radius // 2, *ECHO_COLOR, filled=False)
-                if game.echo_pressed(origin):
-                    p.draw_circle(x, y, radius // 3, *ECHO_COLOR)
+    for origin, (seals, _) in level.echo_links.items():
+        x, y = board.screen(origin)
+        points = ((x-radius, y), (x, y+radius), (x+radius, y), (x, y-radius))
+        for a, b in zip(points, points[1:] + points[:1]):
+            p.draw_line(*a, *b, *ECHO_COLOR)
+        p.draw_circle(x, y, radius // 3, *ECHO_COLOR, filled=False)
+        for gate, seal in seals.items():
+            x, y = board.screen(seal)
+            p.draw_circle(x, y, radius, *ECHO_COLOR, filled=False)
+            p.draw_circle(x, y, radius // 2, *ECHO_COLOR, filled=False)
+            if game.echo_pressed(gate):
+                p.draw_circle(x, y, radius // 3, *ECHO_COLOR)
     if state.recording:
         x, y = state.recording.origin
         for action in state.recording.inputs:

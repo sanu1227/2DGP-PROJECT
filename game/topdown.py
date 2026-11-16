@@ -136,8 +136,9 @@ def device_entries(game, gate_statuses, powered, exit_ready, plate_depths):
             entries[pos] = None, recording_label(level, pos), ECHO_COLOR
         else:
             entries[pos] = ("helper" if working else "winch"), label, TEAL if working else GOLD
-    for origin, (seal, _) in level.echo_links.items():
-        entries[seal] = None, level.device_labels[origin], ECHO_COLOR
+    for seals, _ in level.echo_links.values():
+        for gate, seal in seals.items():
+            entries[seal] = None, level.device_labels[gate], ECHO_COLOR
     return entries
 
 

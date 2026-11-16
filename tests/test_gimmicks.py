@@ -261,8 +261,9 @@ class GimmickTests(unittest.TestCase):
     def test_first_echo_gate_has_one_turn_and_undo_restores_it(self):
         game = Game(self.levels[6])
         station = min(game.level.echo_links)
-        seal, _ = game.level.echo_links[station]
         gate = next(gate for gate, control in game.level.gates.items() if control == station)
+        seals, _ = game.level.echo_links[station]
+        seal = seals[gate]
         game.state.player = seal
         self.assertEqual(game.gate_status(gate), "closed")
         game.state.player = station

@@ -762,8 +762,10 @@ class View:
                     objects.append((depth, 2, "soldier_deployed", sx, sy))
 
         draw_echo_marks(game, projection)
-        for station in level.echo_links:
+        for station, (seals, _) in level.echo_links.items():
             labels.append((station, recording_label(level, station)))
+            if len(seals) > 1:
+                labels.extend((seal, level.device_labels[gate]) for gate, seal in seals.items())
         echo_pose = self.echo_motion.pose(game, now)
         if echo_pose:
             position, direction = echo_pose

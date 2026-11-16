@@ -148,14 +148,14 @@
     "floors": ["boss_floor_plain", "boss_floor_sigil", "boss_floor_cracked", "boss_floor_runner"],
     "wall_mounts": [
       {"sprite": "forge_mount_lamp_nw", "cell": [0, 5], "facing": "right"},
-      {"sprite": "forge_mount_lamp_ne", "cell": [1, 0], "facing": "down"},
-      {"sprite": "forge_mount_lamp_ne", "cell": [6, 0], "facing": "down"},
+      {"sprite": "forge_mount_lamp_ne", "cell": [2, 0], "facing": "down"},
+      {"sprite": "forge_mount_lamp_ne", "cell": [7, 2], "facing": "down"},
       {"sprite": "forge_mount_lamp_nw", "cell": [10, 6], "facing": "left"}
     ],
     "decorations": [
-      {"sprite": "boss_throne", "cell": [4, 3], "facing": "down", "scale": 0.84},
-      {"sprite": "boss_brazier", "cell": [2, 3], "facing": "down", "scale": 0.59},
-      {"sprite": "boss_brazier", "cell": [9, 4], "facing": "down", "scale": 0.59}
+      {"sprite": "boss_throne", "cell": [5, 4], "facing": "down", "scale": 0.84},
+      {"sprite": "boss_brazier", "cell": [1, 7], "facing": "up", "scale": 0.59},
+      {"sprite": "boss_brazier", "cell": [9, 5], "facing": "down", "scale": 0.59}
     ]
   }
 }

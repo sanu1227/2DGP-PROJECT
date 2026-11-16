@@ -16,7 +16,7 @@ NOTES = (
     "수문 광선을 막는 잔해를 옆으로 밀어 반사 경로를 비운다. 광선 방향으로 밀기만 하면 계속 막힌다. 상류에서 뼈를 보내 남쪽 집수실을 개방한다. 집수실의 뼈를 빼낸 뒤 발판의 뼈를 회수한다.",
     "남쪽 수신실에서 부품과 뼈를 빼낸다. 북쪽에만 작업대가 있어 남쪽 뼈는 두 전력 상태를 건너야 한다. 거울은 빈손으로 돌려야 하므로 뼈를 중앙 통로에 잠시 내려놓고 전환한다. 북쪽에 놓인 뼈와 합쳐 조립한 뒤 초소를 채운다.",
     "첫 기록석은 문양을 첫걸음에 밟고 두 번째에 벗어나도록 기록한다. 되감긴 자리에서 바로 문에 들어간다. 안쪽 부품을 P1 발판에 올려 해골을 회수하고, 발판의 부품으로 첫 함정을 복구한다. 두 번째 기록석은 네 걸음 중 두 번째에 문양을 밟는다. 재생이 시작되면 한 칸 접근한 뒤 바로 건넌다. 마지막 부품과 출구는 금고 안쪽에 있다.",
-    "M1을 열어 해골을 회수하고 초소에 배치한 뒤, M2를 열어 북쪽 기록석으로 간다. 다섯 걸음 안에서 문양은 두 번째나 네 번째에 밟을 수 있다. 문 앞까지 세 걸음이 필요하므로 네 번째에 밟아야 다음 턴에 건널 수 있다. 문을 건넌 뒤 안쪽에서 함정을 복구하고 출구로 나간다.",
+    "해골을 초소에 배치하고 M2를 열어 기록석으로 간다. 위쪽 길에서 2번째 걸음에 J1 문양, 4번째 걸음에 J2 문양을 밟는다. 재생이 시작되면 수리공은 아래쪽 복도를 따라 두 문을 순서대로 건넌다. 두 번째 문 바로 안쪽의 부품을 집어 함정을 복구하고 출구로 나간다.",
 )
 LEGEND = "@ 출발 · E 출구 · P 부품 · B 뼈 · K 조립된 해골 · T 함정 · L 레버 · A 조립대 · S 초소 · F 발판 · G 문 · C 투입구 · O 배출구 · Q 광원 · M 거울 · Y 수신기 · R 잔해 · J 기록석 · U 분신 문양"
 
@@ -63,8 +63,15 @@ def main():
         svg.append("</g></svg>")
         (folder / f"stage-{number:02}-plan.svg").write_text("\n".join(svg), encoding="utf-8")
         doc += [f"### {number}번 — {room['title']}", ""]
-        records = [f"`{link['id']}` {link['steps']}걸음" + (" · 한 턴 개방" if link.get("timed") else "")
-                   for link in room.get("worker_links", []) if "steps" in link]
+        recordings = {}
+        for link in room.get("worker_links", []):
+            if "steps" in link:
+                recordings.setdefault(tuple(link["station"]), []).append(link)
+        records = []
+        for links in recordings.values():
+            ids = "/".join(link["id"] for link in links)
+            mode = " · 한 턴 개방" if links[0].get("timed") else ""
+            records.append(f"`{ids}` {links[0]['steps']}걸음{mode}")
         if records:
             doc += ["기록석 " + " · ".join(records), ""]
         doc += [NOTES[number-1], "", f"![좌표 배치도](screenshots/compact-rooms/stage-{number:02}-plan.svg)", ""]

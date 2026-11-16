@@ -134,11 +134,12 @@ class Game:
         state = self.state if state is None else state
         return pos == state.player or pos in state.items or pos in state.rubble
 
-    def echo_pressed(self, origin: Pos, state: State | None = None) -> bool:
+    def echo_pressed(self, gate: Pos, state: State | None = None) -> bool:
         state = self.state if state is None else state
         echo = state.echo
-        seal, _ = self.level.echo_links[origin]
-        if echo is None or echo.origin != origin or echo.position != seal:
+        origin = self.level.gates[gate]
+        seals, _ = self.level.echo_links[origin]
+        if echo is None or echo.origin != origin or echo.position != seals[gate]:
             return False
         return origin not in self.level.timed_echoes or (echo.just_stepped and bool(echo.remaining))
 
@@ -148,7 +149,7 @@ class Game:
         if control in self.level.receivers:
             powered = control in trace_magic(self.level, state)[1]
         elif control in self.level.echo_links:
-            powered = self.echo_pressed(control, state)
+            powered = self.echo_pressed(pos, state)
         elif control in self.level.jobs:
             powered = control in state.workers
         else:
