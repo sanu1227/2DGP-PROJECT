@@ -29,7 +29,7 @@ FOLDER = Path('docs/screenshots/receiver-feedback')
 def input_checks(level):
     level = replace(level, id='receiver_probe', start=(3, 3), exit=(6, 6), action_limit=None,
                     sources={(1, 3): 'right'}, mirrors=frozenset({(3, 3)}), receivers=frozenset({(3, 5)}),
-                    walls=frozenset(), traps=frozenset(), posts=frozenset(), benches=frozenset(),
+                    width=8, height=8, walls=frozenset(), rubble=frozenset(), traps=frozenset(), posts=frozenset(), benches=frozenset(),
                     levers=frozenset(), gates={}, chutes={}, plates=frozenset(), initial_items={},
                     device_labels={(3, 5): 'M1'})
     # 실제 run 입력 분기를 통과한다. 같은 연결은 다시 시작하지 않고, 30ms 재연결은 새 파동 하나만 만든다.

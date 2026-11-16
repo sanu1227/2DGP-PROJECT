@@ -329,7 +329,7 @@ def main():
                                  f"기준={MINIMUM_ACTIONS[level.id]}, 제한={level.action_limit})")
         if result is None:
             raise ValueError(f"{level.id}: 완료 가능한 풀이가 없습니다.")
-        required = {4: ("rubble", "plate"), 5: ("mirror", "chute", "plate"), 6: ("mirror",),
+        required = {4: ("rubble", "plate"), 5: ("rubble", "mirror", "chute", "plate"), 6: ("mirror",),
                     7: ("helper",), 8: ("rubble", "mirror", "helper", "chute", "plate")}
         if args.check_mechanics and index in required:
             layout_required = []

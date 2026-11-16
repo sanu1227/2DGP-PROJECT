@@ -45,16 +45,23 @@ class GimmickTests(unittest.TestCase):
                     self.assertTrue(game.undo())
                     self.assertEqual(game.state, before)
 
-    def test_mirror_rotation_opens_gate_and_undo_restores_beam(self):
+    def test_sewer_rubble_needs_to_be_pushed_off_the_beam(self):
         game=Game(self.levels[4]); game.state.player=(3,2)
         gate = next(gate for gate, control in game.level.gates.items() if control in game.level.receivers)
-        before=deepcopy(game.state)
-        self.assertEqual(game.gate_status(gate), 'closed')
         self.assertTrue(game.act('interact'))
+        self.assertEqual(game.gate_status(gate), 'closed')
+        self.assertTrue(game.act('down'))  # Along the beam; the receiver stays blocked.
+        self.assertEqual(game.gate_status(gate), 'closed')
+        self.assertTrue(game.undo())
+        self.assertTrue(game.act('left'))
+        self.assertTrue(game.act('down'))
+        before=deepcopy(game.state)
+        self.assertTrue(game.act('right'))  # Park the rubble in the side recess.
         self.assertEqual(game.gate_status(gate), 'open')
-        self.assertEqual(trace_magic(game.level,game.state)[1], {(3,4)})
+        self.assertEqual(trace_magic(game.level,game.state)[1], game.level.receivers)
         self.assertNotEqual(key(before), key(game.state))
         game.undo(); self.assertEqual(game.state,before)
+        game.state.player=(3,2)
         game.state.carrying='part'; self.assert_rejected(game,'interact')
 
     def test_mirror_reflects_all_four_incident_directions(self):
@@ -64,7 +71,7 @@ class GimmickTests(unittest.TestCase):
             for rotation in range(4):
                 outgoing=(dy,dx) if rotation % 2 else (-dy,-dx)
                 receiver=(3+outgoing[0],3+outgoing[1])
-                level=replace(base,walls=frozenset(),mirrors=frozenset({center}),
+                level=replace(base,walls=frozenset(),rubble=frozenset(),mirrors=frozenset({center}),
                               sources={(3-dx,3-dy):direction},receivers=frozenset({receiver}))
                 game=Game(level)
                 game.state.mirror_rotations={center: rotation}
@@ -101,10 +108,10 @@ class GimmickTests(unittest.TestCase):
             self.assertFalse(trace_magic(game.level,game.state)[1])
             getattr(game.state,field).clear()
         game.state.player=(3,3);game.state.items[(3,3)]='bone'
-        self.assertEqual(trace_magic(game.level,game.state)[1],{(3,4)})
+        self.assertEqual(trace_magic(game.level,game.state)[1],game.level.receivers)
 
     def test_closed_mirror_loop_terminates(self):
-        level=replace(self.levels[4],walls=frozenset(),receivers=frozenset(),
+        level=replace(self.levels[4],walls=frozenset(),receivers=frozenset(),rubble=frozenset(),
                       sources={(2,2):'right'}, mirrors=frozenset({(2,2),(4,2),(4,4),(2,4)}))
         game=Game(level);game.state.mirror_rotations={(2,2): 0, (4,2): 1, (4,4): 2, (2,4): 3}
         segments,powered=trace_magic(level,game.state)
@@ -114,7 +121,7 @@ class GimmickTests(unittest.TestCase):
     def test_later_rooms_require_every_reflection_and_undo_each_rotation(self):
         for index, expected in ((4, (1,)), (7, (3, 1, 3))):
             count = len(expected)
-            level = self.levels[index]
+            level = replace(self.levels[index], rubble=frozenset())
             mirrors = sorted(level.mirrors)
             self.assertEqual(len(mirrors), count)
             winning = []
@@ -148,7 +155,7 @@ class GimmickTests(unittest.TestCase):
         game = Game(level)
         north, south = sorted(level.gates, key=lambda pos: pos[1])
         switch, relay = sorted(level.mirrors, key=lambda pos: pos[1])
-        part = next(pos for pos, item in level.initial_items.items() if item == 'part')
+        part = max((pos for pos, item in level.initial_items.items() if item == 'part'), key=lambda pos: pos[1])
         self.assertEqual([game.gate_status(gate) for gate in (north, south)], ['closed', 'closed'])
 
         game.state.player = relay
@@ -248,6 +255,19 @@ class GimmickTests(unittest.TestCase):
         game.state.workers.add(next(iter(game.level.jobs)));game.state.carrying='part'
         self.assert_rejected(game,'interact')
 
+    def test_vault_guard_seals_the_east_winch_and_can_trap_the_player(self):
+        game = Game(self.levels[6])
+        east_winch = max(game.level.jobs)
+        game.state.player = next(iter(game.level.posts))
+        game.state.carrying = 'soldier'
+        self.assertTrue(game.act('interact'))
+        self.assertTrue(game.act('left'))
+        self.assertIsNone(find_path(game, east_winch))
+        self.assertIsNotNone(find_path(game, game.level.exit))
+        self.assertTrue(game.undo())
+        self.assertTrue(game.act('right'))
+        self.assertIsNone(find_path(game, game.level.exit))
+
     def test_schema_rejects_retired_belt_and_unlinked_new_devices(self):
         for glyph in ('>','<','^','v','M','Q','Y','V','W','H','J'):
             raw=plate_stage();row=list(raw['map'][3]);row[3]=glyph;raw['map'][3]=''.join(row)
@@ -278,6 +298,13 @@ class GimmickTests(unittest.TestCase):
         game.state.carrying = 'soldier'
         self.assertTrue(game.act('interact'))
         self.assertIsNotNone(find_path(game, vault_part))
+        self.assertTrue(game.act('interact'))  # Recall the worker before stationing it in the hall.
+        game.state.player = next(iter(game.level.posts))
+        self.assertTrue(game.act('interact'))
+        self.assertFalse(trace_magic(game.level, game.state)[1])
+        self.assertIsNone(find_path(game, job))
+        self.assertTrue(game.undo())
+        self.assertIsNotNone(find_path(game, job))
 
 
 if __name__=='__main__':unittest.main()

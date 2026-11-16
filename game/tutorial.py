@@ -36,12 +36,13 @@ def device_lessons(level: Level) -> tuple[DeviceLesson, ...]:
             "설치한 함정은 지나갈 수 있지만, 가동한 함정은 지나갈 수 없어요.",
             ((min(level.traps), "복구할 함정"), (min(level.levers), "가동 레버"))))
     if level.benches and level.posts:
-        bench, post = min(level.benches), min(level.posts)
+        benches = sorted(level.benches)
+        delivery = "한 작업대에 두 묶음을 모으세요. " if len(benches) > 1 else ""
         lessons.append(DeviceLesson(
             "assembly", "해골 병사 조립", "뼈 묶음 2개를 작업대에 하나씩 가져와 E / Space로 납품하세요. "
-            "완성된 병사는 손에 들립니다. 몬스터 배치대에서 E / Space로 배치하세요.",
+            f"{delivery}완성된 병사는 손에 들립니다. 몬스터 배치대에서 E / Space로 배치하세요.",
             "병사를 배치한 칸은 다시 들어갈 수 없어요.",
-            ((bench, "작업대"), (post, "몬스터 배치대"))))
+            tuple((bench, "작업대") for bench in benches) + ((min(level.posts), "몬스터 배치대"),)))
     if level.plates:
         gate, plate = min((g,p) for g,p in level.gates.items() if p in level.plates)
         lessons.append(DeviceLesson(

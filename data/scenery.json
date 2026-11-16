@@ -155,7 +155,7 @@
     ],
     "decorations": [
       {"sprite": "boss_throne", "cell": [3, 1], "facing": "down", "scale": 0.84},
-      {"sprite": "boss_brazier", "cell": [6, 6], "facing": "left", "scale": 0.66},
+      {"sprite": "boss_brazier", "cell": [6, 7], "facing": "down", "scale": 0.66},
       {"sprite": "boss_brazier", "cell": [6, 4], "facing": "left", "scale": 0.59}
     ]
   }

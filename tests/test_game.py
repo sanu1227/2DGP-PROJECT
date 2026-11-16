@@ -308,7 +308,7 @@ class GameTests(unittest.TestCase):
             self.act("interact")
             self.go(trap)
             self.act("interact")
-        self.go((2, 6))
+        self.go((3, 6))
         before = deepcopy(self.game.state)
         self.act("interact")
         self.assertTrue(self.game.state.active)
@@ -338,7 +338,22 @@ class GameTests(unittest.TestCase):
         reachable = self.reachable()
         self.assertTrue(self.game.state.items.keys() <= reachable)
         self.assertTrue((self.game.level.posts - self.game.state.soldiers) <= reachable)
-        self.assertTrue(self.game.level.benches | self.game.level.levers | {self.game.level.exit} <= reachable)
+        self.assertTrue(self.game.level.benches | {self.game.level.exit} <= reachable)
+        self.assertEqual(self.game.level.levers & reachable, {(3, 6)})
+
+    def test_archive_sealing_from_the_inner_lever_cuts_off_the_exit(self):
+        self.game = Game(load_levels()[2])
+        for part, trap in (((6, 2), (4, 2)), ((6, 5), (4, 5))):
+            self.go(part)
+            self.act("interact")
+            self.go(trap)
+            self.act("interact")
+        self.go((5, 3))
+        self.assertIn(self.game.level.exit, self.reachable())
+        self.act("interact")
+        self.assertNotIn(self.game.level.exit, self.reachable())
+        self.assertTrue(self.game.undo())
+        self.assertIn(self.game.level.exit, self.reachable())
 
 
 if __name__ == "__main__":

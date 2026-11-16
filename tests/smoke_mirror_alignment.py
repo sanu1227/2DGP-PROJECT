@@ -24,9 +24,9 @@ from tests.smoke_placement import visible_item_pixel
 def main():
     levels = load_levels()
     level = replace(levels[4], id='mirror_alignment_probe', title='거울 방향 확인', hint='거울 면과 빛의 꺾임을 비교하세요.',
-                    action_limit=None, start=(1, 6), exit=(6, 6),
+                    action_limit=None, width=8, height=8, start=(1, 6), exit=(6, 6), rubble=frozenset(),
                     walls=frozenset((x, y) for x in range(8) for y in range(8) if x in (0, 7) or y in (0, 7)),
-                    mirrors=frozenset({(3, 3)}), gates={}, chutes={}, traps=frozenset(),
+                    mirrors=frozenset({(3, 3)}), gates={}, chutes={}, plates=frozenset(), traps=frozenset(),
                     levers=frozenset(), benches=frozenset(), posts=frozenset(), initial_items={})
     projection = IsoBoard(8, 8)
     sx, sy = projection.screen((3, 3))

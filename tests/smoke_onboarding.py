@@ -113,7 +113,9 @@ def main():
     ])
     keys = {"up": p.SDLK_w, "down": p.SDLK_s, "left": p.SDLK_a,
             "right": p.SDLK_d, "interact": p.SDLK_e}
-    for moves, action in enumerate(SOLUTIONS["stage_01"], 1):
+    first_route = SOLUTIONS["stage_01"]
+    pickup, install, activate = (step for step, action in enumerate(first_route, 1) if action == "interact")
+    for moves, action in enumerate(first_route, 1):
         steps.append(([keys[action]], "playing", moves, None))
         if action == "interact":
             steps.append(([p.SDLK_z], "playing", moves - 1, None))
@@ -176,7 +178,7 @@ def main():
             if room and room[0] != "stage_01":
                 assert display.tutorial is None
             else:
-                expected_step = 1 if moves == 0 else 2 if moves == 1 else 3 if moves < 5 else 4 if moves < 9 else 5
+                expected_step = 1 + sum(moves >= step for step in (1, pickup, install, activate))
                 assert display.tutorial.step == expected_step, (moves, display.tutorial)
                 assert display.tutorial.complete == (moves == len(SOLUTIONS["stage_01"]))
                 assert display.pick_cell(games[-1], 100, 700) is None

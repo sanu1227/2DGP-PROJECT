@@ -27,7 +27,7 @@ def main():
     parser.add_argument('--capture', type=Path)
     args = parser.parse_args()
     level = replace(load_levels()[4], id='mirror_motion_probe', start=(3, 3), exit=(6, 6), action_limit=None,
-                    walls=frozenset(), traps=frozenset(), posts=frozenset(), benches=frozenset(),
+                    width=8, height=8, walls=frozenset(), rubble=frozenset(), traps=frozenset(), posts=frozenset(), benches=frozenset(),
                     levers=frozenset(), gates={(5, 5): (3, 5)}, chutes={}, plates=frozenset(), initial_items={},
                     mirrors=frozenset({(3, 3)}), sources={(1, 3): 'right'}, receivers=frozenset({(3, 5)}),
                     device_labels={(3, 5): 'M1', (5, 5): 'M1'})
