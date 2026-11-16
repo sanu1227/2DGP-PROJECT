@@ -7,7 +7,7 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from game.levels import load_levels
+from game.levels import load_levels, neighbors
 from game.model import Game
 from tests.solutions import SOLUTIONS
 
@@ -62,9 +62,6 @@ class GameTests(unittest.TestCase):
     def go(self, target):
         """Find a walking route only; repair actions remain explicit in each test."""
         game = self.game
-        blocked = set(game.level.walls) | game.state.soldiers
-        if game.state.active:
-            blocked |= game.level.traps
         queue = deque([(game.state.player, [])])
         visited = {game.state.player}
         while queue:
@@ -75,9 +72,7 @@ class GameTests(unittest.TestCase):
                 return
             for action, (dx, dy) in DIRECTIONS.items():
                 neighbor = (position[0] + dx, position[1] + dy)
-                if (0 <= neighbor[0] < game.level.width
-                        and 0 <= neighbor[1] < game.level.height
-                        and neighbor not in blocked and neighbor not in visited):
+                if neighbor not in visited and game.walkable(neighbor):
                     visited.add(neighbor)
                     queue.append((neighbor, actions + [action]))
         self.fail(f"No route from {game.state.player} to {target}")
@@ -93,18 +88,13 @@ class GameTests(unittest.TestCase):
     def reachable(self):
         """Check room topology after a route-closing repair without solving it."""
         game = self.game
-        blocked = game.level.walls | game.state.soldiers
-        if game.state.active:
-            blocked |= game.level.traps
         reachable = {game.state.player}
         queue = deque(reachable)
         while queue:
             x, y = queue.popleft()
             for dx, dy in DIRECTIONS.values():
                 neighbor = x + dx, y + dy
-                if (0 <= neighbor[0] < game.level.width
-                        and 0 <= neighbor[1] < game.level.height
-                        and neighbor not in blocked and neighbor not in reachable):
+                if neighbor not in reachable and game.walkable(neighbor):
                     reachable.add(neighbor)
                     queue.append(neighbor)
         return reachable
@@ -132,7 +122,7 @@ class GameTests(unittest.TestCase):
         for index, bone in enumerate(((1, 3), (1, 4))):
             self.go(bone)
             self.act("interact")
-            self.go((3, 3))
+            self.go((2, 3))
             self.act("interact")
             if index == 0:
                 self.assertIsNone(self.game.state.carrying)
@@ -177,7 +167,7 @@ class GameTests(unittest.TestCase):
         for bone, expected in (((1, 3), 60), ((1, 4), 80)):
             self.go(bone)
             self.act("interact")
-            self.go((3, 3))
+            self.go((2, 3))
             self.act("interact")
             self.assertEqual(game.repair_percent, expected)
         self.go((3, 4))
@@ -220,7 +210,7 @@ class GameTests(unittest.TestCase):
         self.go((1, 3))
         self.assert_rejected("interact")
         self.assert_rejected("drop")
-        for target in ((4, 1), (5, 1), (6, 1), (3, 3), (5, 3)):
+        for target in ((4, 1), (5, 1), (6, 1), (5, 3)):
             self.go(target)
             self.assert_rejected("drop")
         self.go((5, 1))
@@ -231,7 +221,7 @@ class GameTests(unittest.TestCase):
         original_items = deepcopy(self.game.level.initial_items)
         self.go((1, 3))
         self.act("interact")
-        self.go((3, 3))
+        self.go((2, 3))
         self.act("interact")
         self.assertEqual(self.game.state.bench_bones[(3, 3)], 1)
         self.assertEqual(self.game.level.initial_items, original_items)
@@ -326,7 +316,7 @@ class GameTests(unittest.TestCase):
     def test_third_room_first_guard_requires_leaving_toward_remaining_work(self):
         self.game = Game(load_levels()[2])
         # Collect both rooms' bones before closing the upper entrance.
-        for target in ((6, 2), (4, 2), (5, 1), (2, 3), (5, 6), (2, 3), (3, 2)):
+        for target in ((6, 2), (4, 2), (5, 1), (1, 3), (5, 6), (1, 3), (3, 2)):
             self.go(target)
             self.act("interact")
         self.assertEqual(self.game.state.soldiers, {(3, 2)})
@@ -338,7 +328,9 @@ class GameTests(unittest.TestCase):
         reachable = self.reachable()
         self.assertTrue(self.game.state.items.keys() <= reachable)
         self.assertTrue((self.game.level.posts - self.game.state.soldiers) <= reachable)
-        self.assertTrue(self.game.level.benches | {self.game.level.exit} <= reachable)
+        self.assertIn(self.game.level.exit, reachable)
+        for bench in self.game.level.benches:
+            self.assertTrue(reachable.intersection(neighbors(bench)))
         self.assertEqual(self.game.level.levers & reachable, {(3, 6)})
 
     def test_archive_sealing_from_the_inner_lever_cuts_off_the_exit(self):

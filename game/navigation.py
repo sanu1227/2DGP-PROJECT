@@ -11,6 +11,7 @@ from math import floor
 
 from game.levels import Pos
 from game.layout import WIDTH, BOARD_BOTTOM, BOARD_TOP
+from game.levels import neighbors
 from game.model import DIRECTIONS, Game
 
 
@@ -96,14 +97,23 @@ class TopDownBoard:
         return (x, y) if 0 <= x < self.width and 0 <= y < self.height else None
 
 
-def find_path(game: Game, target: Pos | None) -> list[Pos] | None:
+def find_path(game: Game, target: Pos | None, *, approach_device: bool = False) -> list[Pos] | None:
     """현재 진입 가능한 최단 경로를 돌려준다. 시작칸은 결과에서 제외한다."""
     start = game.state.player
     if game.failed:
         return None
-    if target == start:
+    if target is None:
+        return None
+    if approach_device and target in game.level.solid_devices:
+        destinations = set(neighbors(target))
+    else:
+        destinations = {target}
+    if start in destinations:
         return []
-    if target is None or game.state.cleared or not game.walkable(target):
+    if game.state.cleared:
+        return None
+    destinations = {pos for pos in destinations if game.walkable(pos)}
+    if not destinations:
         return None
     # 닫힘 대기 문 위에서는 시작칸으로 다시 들어올 수 없어도 나갈 수 있다.
     previous: dict[Pos, Pos | None] = {start: None}
@@ -115,7 +125,7 @@ def find_path(game: Game, target: Pos | None) -> list[Pos] | None:
             if neighbor in previous or not game.walkable(neighbor):
                 continue
             previous[neighbor] = (x, y)
-            if neighbor == target:
+            if neighbor in destinations:
                 path = [neighbor]
                 while previous[path[-1]] != start:
                     path.append(previous[path[-1]])
@@ -144,7 +154,7 @@ class ClickNavigator:
               ready_at: float | None = None) -> bool:
         """새 목표로 경로를 교체한다. ready_at 이전에는 첫 칸을 실행하지 않는다."""
         self.cancel()
-        path = find_path(game, target)
+        path = find_path(game, target, approach_device=True)
         if path is None:
             if not game.state.cleared and not game.failed:
                 game.message = "이 칸까지 이동할 수 없습니다."
@@ -154,7 +164,7 @@ class ClickNavigator:
                 game.message = "현재 서 있는 칸입니다."
             return True
         self.path.extend(path)
-        self.target = target
+        self.target = path[-1]
         self.next_step_at = max(now, ready_at if ready_at is not None else now)
         game.message = "선택한 칸으로 이동합니다. 우클릭으로 취소할 수 있습니다."
         return True

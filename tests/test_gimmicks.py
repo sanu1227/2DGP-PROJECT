@@ -140,7 +140,7 @@ class GimmickTests(unittest.TestCase):
             self.assertEqual(winning, [expected], level.id)
             game = Game(level)
             for mirror, rotation in zip(mirrors, expected):
-                game.state.player = mirror
+                game.state.player = (mirror[0] - 1, mirror[1])
                 turns = (rotation - game.state.mirror_rotations.get(mirror, 0)) % 4
                 for _ in range(turns):
                     before = deepcopy(game.state)

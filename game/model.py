@@ -3,13 +3,14 @@
 from copy import deepcopy
 from dataclasses import dataclass, field
 
-from game.levels import DIRECTIONS, Level, Pos
+from game.levels import DIRECTIONS, Level, Pos, neighbors
 from game.magic import MIRROR_DIRECTIONS, MIRROR_LABELS
-from game.mechanics import trace_magic, fixed_devices, mirror_cells
+from game.mechanics import trace_magic, fixed_devices
 
 
 ITEM_NAMES = {"part": "함정 부품", "bone": "뼈 묶음", "soldier": "해골 병사"}
 PUSH_ACTIONS = {f"push_{direction}": direction for direction in DIRECTIONS}
+INTERACTION_HELP = "물건은 위에서, 작업대와 고정 거울은 옆에서 E를 누르세요."
 
 
 @dataclass(frozen=True)
@@ -60,7 +61,7 @@ class Game:
                            mirror_rotations=rotations,
                            movable_mirrors=set(self.level.movable_mirrors & self.level.mirrors))
         self.history: list[State] = []
-        self.message = "물건이나 장치 위에서 E를 누르세요."
+        self.message = INTERACTION_HELP
 
     @property
     def remaining_actions(self) -> int | None:
@@ -144,8 +145,14 @@ class Game:
         return self._interaction(self.state)[1]
 
     def can_interact(self) -> bool:
-        """현재 칸에서 E 입력으로 실제 행동을 수행할 수 있는지 반환한다."""
-        return not self.state.cleared and not self.failed and self._interaction(self.state)[0] is not None
+        return self.interaction_target() is not None
+
+    def interaction_target(self) -> Pos | None:
+        """E로 지금 조작할 수 있는 칸을 반환한다."""
+        if self.state.cleared or self.failed:
+            return None
+        operation, _, target = self._interaction(self.state)
+        return target if operation else None
 
     def plate_pressed(self, pos: Pos, state: State | None = None) -> bool:
         state = self.state if state is None else state
@@ -183,11 +190,41 @@ class Game:
         return (0 <= pos[0] < self.level.width and 0 <= pos[1] < self.level.height
                 and pos not in self.level.walls and pos not in state.soldiers
                 and pos not in state.rubble
+                and pos not in self.level.solid_devices
                 and not (state.active and pos in self.level.traps)
                 and (pos not in self.level.gates or self.gate_status(pos, state) == "open"))
 
-    def _interaction(self, state: State) -> tuple[str | None, str]:
-        """현재 칸에서 가능한 행동과 안내를 함께 결정한다."""
+    def _interaction(self, state: State) -> tuple[str | None, str, Pos]:
+        """현재 칸의 장치를 우선하고, 이어 옆 칸의 장치와 내려놓기를 확인한다."""
+        pos = state.player
+        standing = self._standing_interaction(state)
+        if standing is not None and (standing[0] or state.recording):
+            return *standing, pos
+        nearby_hint = None
+        solid_devices = self.level.solid_devices
+        for target in neighbors(pos):
+            if target in self.level.benches:
+                stored = state.bench_bones.get(target, 0)
+                if state.carrying == "bone":
+                    return "deliver", "E: 뼈 납품·병사 조립" if stored else "E: 뼈 납품 (1/2)", target
+                nearby_hint = nearby_hint or f"뼈 묶음을 가져오세요. ({stored}/2)"
+            elif target in solid_devices:
+                if state.carrying is None:
+                    return "rotate", "E / Space: 거울 90도 회전 · 화살표 방향으로 빛 방출", target
+                nearby_hint = nearby_hint or "거울은 빈손으로 돌리세요."
+        if standing is not None:
+            return *standing, pos
+        if state.carrying is not None:
+            return *self._drop_interaction(state), pos
+        if nearby_hint:
+            return None, nearby_hint, pos
+        if pos in self.level.plates:
+            return None, f"{self.level.device_labels[pos]} 발판: 물건을 가져와 E / Space로 놓아 문을 유지하세요.", pos
+        if pos in self.level.gates:
+            return None, "문이 닫혀도 현재 칸에서 나갈 수 있습니다.", pos
+        return None, INTERACTION_HELP, pos
+
+    def _standing_interaction(self, state: State) -> tuple[str | None, str] | None:
         pos = state.player
         if state.recording:
             _, steps = self.level.echo_links[state.recording.origin]
@@ -196,7 +233,7 @@ class Game:
             if state.carrying is not None:
                 return None, "손이 찼습니다. 먼저 내려놓으세요."
             return "pickup", f"E: {ITEM_NAMES[state.items[pos]]} 줍기"
-        if pos in mirror_cells(self.level, state):
+        if pos in state.movable_mirrors:
             return (None, "거울은 빈손으로 돌리세요.") if state.carrying else ("rotate", "E / Space: 거울 90도 회전 · 화살표 방향으로 빛 방출")
         if pos in self.level.jobs:
             if pos in state.replay_workers:
@@ -225,11 +262,6 @@ class Game:
             if state.carrying != "part":
                 return None, "함정 부품을 가져오세요."
             return "install", "E: 함정 부품 설치"
-        if pos in self.level.benches:
-            stored = state.bench_bones.get(pos, 0)
-            if state.carrying != "bone":
-                return None, f"뼈 묶음을 가져오세요. ({stored}/2)"
-            return "deliver", "E: 뼈 납품·병사 조립" if stored else "E: 뼈 납품 (1/2)"
         if pos in self.level.posts:
             if pos in state.soldiers:
                 return None, "병사가 이미 배치되어 있습니다."
@@ -248,13 +280,7 @@ class Game:
             return "activate", "E: 모든 함정 가동"
         if pos == self.level.exit:
             return None, "복구를 마친 뒤 빈손으로 돌아오세요."
-        if state.carrying is not None:
-            return self._drop_interaction(state)
-        if pos in self.level.plates:
-            return None, f"{self.level.device_labels[pos]} 발판: 물건을 가져와 E / Space로 놓아 문을 유지하세요."
-        if pos in self.level.gates:
-            return None, "문이 닫혀도 현재 칸에서 나갈 수 있습니다."
-        return None, "물건이나 장치 위에서 E를 누르세요."
+        return None
 
     def _drop_interaction(self, state: State) -> tuple[str | None, str]:
         """내려놓기 가능 여부를 입력 처리와 현재 칸 안내에 함께 사용한다."""
@@ -305,24 +331,30 @@ class Game:
                 state.rubble.add(target)
                 state.player = destination
                 return True, "잔해를 한 칸 밀었습니다. Z로 되돌릴 수 있습니다."
-            if destination in self.level.gates and not self.walkable(destination, state):
-                if self.level.gates[destination] in self.level.timed_echoes:
-                    actor = "해골 인부" if self.level.gates[destination] in state.replay_workers else "분신"
+            if self.walkable(destination, state):
+                state.player = destination
+                return True, "한 칸 이동했습니다."
+            if destination in self.level.gates:
+                control = self.level.gates[destination]
+                if control in self.level.timed_echoes:
+                    actor = "해골 인부" if control in state.replay_workers else "분신"
                     return False, f"{actor}가 문양을 밟은 직후 한 턴에만 들어갈 수 있습니다."
                 return False, "닫힌 문입니다. 연결 장치의 상태를 확인하세요."
-            if not (0 <= destination[0] < self.level.width and 0 <= destination[1] < self.level.height) or destination in self.level.walls:
-                return False, "벽이나 잔해로 막힌 칸입니다."
+            if destination in self.level.solid_devices:
+                return False, "장치가 길을 막고 있습니다. 옆 칸에서 E로 조작하세요."
             if state.active and destination in self.level.traps:
                 return False, "가동된 함정은 지나갈 수 없습니다."
             if destination in state.soldiers:
                 return False, "배치한 병사가 통로를 지키고 있습니다."
-            state.player = destination
-            return True, "한 칸 이동했습니다."
+            return False, "벽이나 잔해로 막힌 칸입니다."
 
-        operation, message = self._drop_interaction(state) if action == "drop" else self._interaction(state)
+        if action == "drop":
+            operation, message = self._drop_interaction(state)
+            pos = state.player
+        else:
+            operation, message, pos = self._interaction(state)
         if operation is None:
             return False, message
-        pos = state.player
         if operation == "record":
             state.echo = None
             state.recording = Recording(pos)

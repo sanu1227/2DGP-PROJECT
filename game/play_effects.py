@@ -164,17 +164,19 @@ class WorkFeedback:
             kind = "install"
         elif pos in state.soldiers - before.soldiers:
             kind = "deploy"
-        elif before.carrying == "bone" and pos in level.benches and not (pos in before.items):
+        elif state.bench_bones != before.bench_bones:
             if state.carrying == "soldier":
+                pos = next(iter(before.bench_bones.keys() - state.bench_bones.keys()))
                 kind = "assemble"
-            elif state.bench_bones.get(pos, 0) > before.bench_bones.get(pos, 0):
+            else:
+                pos = next(iter(state.bench_bones.keys() - before.bench_bones.keys()))
                 kind = "deliver"
         elif state.active and not before.active:
             kind = "lever"
             self.events.update(((trap, "trap"), now) for trap in level.traps)
         if kind:
             self.events[pos, kind] = now
-            self.actor = (pos, kind, now)
+            self.actor = (before.player, kind, now)
         elif state.player != before.player:
             self.actor = None
 

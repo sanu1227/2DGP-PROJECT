@@ -14,7 +14,7 @@ import time
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from game.levels import load_levels
+from game.levels import load_levels, neighbors
 from game.model import DIRECTIONS, PUSH_ACTIONS, Game
 from game.mechanics import trace_magic
 
@@ -36,7 +36,11 @@ class LowerBound:
 
     def __init__(self, level):
         self.level = level
-        self.floor = {(x, y) for y in range(level.height) for x in range(level.width)} - level.walls
+        self.floor = ({(x, y) for y in range(level.height) for x in range(level.width)}
+                      - level.walls - level.solid_devices)
+        self.device_approaches = {pos: tuple(cell for cell in neighbors(pos) if cell in self.floor)
+                                  for pos in level.solid_devices}
+        self.bench_approaches = {cell for bench in level.benches for cell in self.device_approaches[bench]}
         self.worker_regions = {}
         self.mirror_regions = []
         mirrors = sorted(level.mirrors)
@@ -132,7 +136,8 @@ class LowerBound:
             while remaining:
                 bit = remaining & -remaining
                 target = self.visit_cells[bit.bit_length() - 1]
-                best = min(best, self.distance('bone', pos, target) + visit_tail(target, mask ^ bit))
+                for cell in self.device_approaches.get(target, (target,)):
+                    best = min(best, self.distance('bone', pos, cell) + visit_tail(cell, mask ^ bit))
                 remaining ^= bit
             return best
         self.visit_tail = visit_tail
@@ -178,8 +183,8 @@ class LowerBound:
             travel += min(sum(self.distance("part", p, t) for p, t in zip(sources["part"], targets))
                           for targets in permutations(traps))
         for pos in sources["bone"]:
-            travel += min(self.distance("bone", pos, bench) for bench in level.benches)
-        # Newly assembled soldiers start in hand at a bench. Relax the bench choice.
+            travel += min((self.distance("bone", pos, cell) for cell in self.bench_approaches), default=10**6)
+        # 조립한 병사는 작업대 옆에서 운반을 시작한다.
         soldiers = list(sources["soldier"])
         soldiers += [None] * (len(posts) - len(soldiers))
         required_job = next((job for job, region in self.worker_regions.items()
@@ -192,10 +197,12 @@ class LowerBound:
             must_visit.add(required_job)
         if posts:
             def soldier_distance(p, t):
-                starts = (p,) if p is not None else level.benches
+                starts = (p,) if p is not None else self.bench_approaches
+                destination = required_job if required_job is not None else t
+                distance = min((self.distance("soldier", b, destination) for b in starts), default=10**6)
                 if required_job is not None:
-                    return min(self.distance("soldier", b, required_job) for b in starts) + self.distance("soldier", required_job, t)
-                return min(self.distance("soldier", b, t) for b in starts)
+                    distance += self.distance("soldier", required_job, t)
+                return distance
             travel += min(sum(soldier_distance(p, t)
                               for p, t in zip(soldiers, targets)) for targets in permutations(posts))
         # Walking to the first pickup and from the final repair to the exit is unloaded.
@@ -255,10 +262,11 @@ def solve(level, max_states=500_000, upper_bound=None, forbidden=None):
         for action in (*DIRECTIONS, "interact", "drop", *pushes):
             game.state = state
             game.history = []
-            if (action == 'interact' and state.player in lower_bound.monotone_mirrors
-                    and (state.mirror_rotations.get(state.player, 0) == lower_bound.monotone_mirrors[state.player])
-                    and game._interaction(state)[0] == 'rotate'):
-                continue
+            if action == 'interact' and lower_bound.monotone_mirrors:
+                operation, _, target = game._interaction(state)
+                if (operation == 'rotate' and target in lower_bound.monotone_mirrors
+                        and state.mirror_rotations.get(target, 0) == lower_bound.monotone_mirrors[target]):
+                    continue
             if forbidden and forbidden(game, action):
                 continue
             if not game.act(action):
@@ -281,7 +289,8 @@ def mechanic_required_by_layout(level, mechanic):
     """나머지 문과 장애물을 무시해도 필수 칸에 갈 수 없는 경우를 증명한다."""
     if mechanic == "mirror_push" or (mechanic == "mirror" and level.movable_mirrors):
         return False  # 이동 거울이 있는 경우 실제 행동을 금지한 탐색으로 검사한다.
-    floor = {(x, y) for y in range(level.height) for x in range(level.width)} - level.walls
+    floor = ({(x, y) for y in range(level.height) for x in range(level.width)}
+             - level.walls - level.solid_devices)
 
     def reachable(blocked):
         seen = {level.start}

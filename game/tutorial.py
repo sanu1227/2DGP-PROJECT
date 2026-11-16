@@ -40,7 +40,7 @@ def device_lessons(level: Level, state: State | None = None) -> tuple[DeviceLess
         benches = sorted(level.benches)
         delivery = "한 작업대에 두 묶음을 모으세요. " if len(benches) > 1 else ""
         lessons.append(DeviceLesson(
-            "assembly", "해골 병사 조립", "뼈 묶음 2개를 작업대에 하나씩 가져와 E / Space로 납품하세요. "
+            "assembly", "해골 병사 조립", "뼈 묶음을 하나씩 들고 작업대 옆 칸에서 E / Space로 납품하세요. "
             f"{delivery}완성된 병사는 손에 들립니다. 몬스터 배치대에서 E / Space로 배치하세요.",
             "병사를 배치한 칸은 다시 들어갈 수 없어요.",
             tuple((bench, "작업대") for bench in benches) + ((min(level.posts), "몬스터 배치대"),)))
@@ -63,7 +63,7 @@ def device_lessons(level: Level, state: State | None = None) -> tuple[DeviceLess
     for kind, title, instruction, reminder, cells in (
         ("rubble", "잔해를 밀어 길 만들기", "잔해 옆에서 빈손으로 잔해 쪽 방향키를 누르세요. 한 칸 밀며 이동합니다.",
          "당길 수 없어요. 빈 바닥·발판으로만 밀 수 있고, Z로 되돌릴 수 있어요.", rubble),
-        ("mirror", "빛으로 장치 연결", "빈손으로 E / Space를 눌러 돌리세요. 거울에 들어온 빛은 화살표가 가리키는 상하좌우로 나갑니다.",
+        ("mirror", "빛으로 장치 연결", "빈손으로 고정 거울 옆 칸에서 E / Space를 눌러 돌리세요. 빛은 화살표 방향으로 나갑니다.",
          "수신기에 닿으면 연결문이 열려요. 벽·잔해·초소의 병사·광원은 빛을 막아요.", mirrors),
         ("helper", "발걸음을 따라가는 해골 인부", "기록 발판을 밟고 표시된 칸 수만큼 자유롭게 이동하세요.",
          "기록이 끝나면 다음 행동부터 인부가 자기 자리에서 한 칸씩 따라 해요. 문양을 지날 때 문이 한 턴 열려요.", level.jobs)):

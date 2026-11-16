@@ -8,7 +8,7 @@ from math import floor, pi, sin, sqrt
 
 import pico2d.pico2d as p
 
-from game.model import DIRECTIONS, PUSH_ACTIONS, Game
+from game.model import DIRECTIONS, INTERACTION_HELP, PUSH_ACTIONS, Game
 from game.art import Art, MAGIC_BEAM_HEIGHT
 from game.scenery import draw_scars, draw_tinted, floor_style, wall_style
 from game.navigation import ClickNavigator, IsoBoard, TopDownBoard, find_path
@@ -554,7 +554,9 @@ class View:
         hovered = self.pick_cell(game, *self.mouse_position) if self.mouse_position else None
         if hovered is not None:
             target = hovered
-            path = find_path(game, target)
+            path = find_path(game, target, approach_device=True)
+            if path is not None and target in game.level.solid_devices:
+                target = path[-1] if path else game.state.player
             color = TEAL if path is not None else RED
             if path is not None and game.remaining_actions is not None and len(path) > game.remaining_actions:
                 color = RED
@@ -612,6 +614,8 @@ class View:
         self.interaction_hint = None
         if state.cleared or game.failed:
             return
+        ready_target = game.interaction_target()
+        solid_devices = level.solid_devices
         targets = {pos: "함정 설치" for pos in level.traps - state.installed}
         targets.update({pos: "병사 배치" for pos in level.posts - state.soldiers})
         targets.update({pos: "병사 조립" for pos in level.benches})
@@ -652,7 +656,7 @@ class View:
                     break
             if y != original_y:
                 line(sx, original_y, sx, y, GOLD)
-            ready = pos == state.player and game.can_interact()
+            ready = pos == ready_target
             if ready:
                 box(sx - 11, y - 11, sx + 11, y + 11, (24, 35, 40))
                 box(sx - 11, y - 11, sx + 11, y + 11, TEAL, filled=False)
@@ -665,8 +669,12 @@ class View:
             self.hit_regions.append((pos, rect))
         hovered = self.pick_cell(game, *self.mouse_position) if self.mouse_position else None
         if hovered in targets and hovered != state.player:
-            self.interaction_hint = (f"상호작용 대상: {targets[hovered]} · 해당 칸에서 E"
-                                     if level.id == "stage_01" else targets[hovered])
+            if hovered in solid_devices:
+                self.interaction_hint = f"{targets[hovered]} · 옆 칸에서 E"
+            elif level.id == "stage_01":
+                self.interaction_hint = f"상호작용 대상: {targets[hovered]} · 해당 칸에서 E"
+            else:
+                self.interaction_hint = targets[hovered]
 
     def gate(self, level, pos, sx, sy, scale, status, opening=None):
         """문틀의 사선 축을 양옆 벽에 맞추고 열린 중앙은 클릭을 통과시킨다."""
@@ -1142,7 +1150,7 @@ class View:
         if game.can_interact() or game.state.player in targets:
             return game.context_action(), TEAL if game.can_interact() else MUTED
         quiet = {
-            "물건이나 장치 위에서 E를 누르세요.", "현재 서 있는 칸입니다.",
+            INTERACTION_HELP, "현재 서 있는 칸입니다.",
             "선택한 칸으로 이동합니다. 우클릭으로 취소할 수 있습니다.",
             "자동 이동을 취소했습니다.", "직전 행동을 되돌렸습니다.",
         }

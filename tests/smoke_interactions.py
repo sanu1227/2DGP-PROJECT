@@ -31,7 +31,7 @@ def main():
                 assert racks == level.posts - game.state.soldiers
                 prompts = [call for call in text.call_args_list if call.args[2] == "E"]
                 # Empty-floor dropping uses the bottom prompt, without an object marker.
-                marked_action = game.can_interact() and game.state.player in view.interaction_regions
+                marked_action = game.interaction_target() in view.interaction_regions
                 assert bool(prompts) == marked_action
                 if game.can_interact() and not marked_action:
                     assert any("내려놓기" in call.args[2] for call in text.call_args_list)

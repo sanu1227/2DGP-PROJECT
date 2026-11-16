@@ -4,6 +4,7 @@ from copy import deepcopy
 from dataclasses import replace
 import unittest
 
+from game.levels import DIRECTIONS, neighbors
 from game.model import Game
 from game.navigation import ClickNavigator, IsoBoard, TopDownBoard, find_path
 from tests.test_devices import load_stage, plate_stage
@@ -62,6 +63,35 @@ class NavigationTests(unittest.TestCase):
         self.assertIsNone(find_path(game, (5, 1)))
         self.assertEqual(game.state, before)
         self.assertEqual(game.history, [])
+
+    def test_solid_devices_block_walking_and_can_be_clicked_to_approach(self):
+        bench, mirror = (3, 3), (4, 3)
+        level = replace(make_level(), mirrors=frozenset({mirror}))
+        for target, carrying, change in (
+            (bench, "bone", "bench_bones"),
+            (mirror, None, "mirror_rotations"),
+        ):
+            with self.subTest(target=target):
+                game = Game(level)
+                game.state.carrying = carrying
+                self.assertIsNone(find_path(game, target))
+                navigator = ClickNavigator()
+                self.assertTrue(navigator.start(game, target, now=0))
+                self.assertIn(navigator.target, neighbors(target))
+                self.assertTrue({bench, mirror}.isdisjoint(navigator.path))
+                for now in range(len(navigator.path)):
+                    self.assertIsNotNone(navigator.tick(game, now))
+                before = deepcopy(game.state)
+                x, y = before.player
+                step = (target[0] - x, target[1] - y)
+                action = next(action for action, delta in DIRECTIONS.items() if delta == step)
+                self.assertFalse(game.act(action))
+                self.assertEqual(game.state, before)
+                self.assertTrue(game.act("interact"))
+                self.assertEqual(game.state.player, before.player)
+                self.assertEqual(getattr(game.state, change), {target: 1})
+                self.assertTrue(game.undo())
+                self.assertEqual(game.state, before)
 
     def test_held_gate_allows_a_path_out_of_the_occupied_start(self):
         game = Game(load_stage(plate_stage(adjacent=True)))

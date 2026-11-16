@@ -269,9 +269,9 @@ class ChuteTests(unittest.TestCase):
         self.rejected("drop")
 
         self.game.restart()
-        self.act("down", "interact", "right", "right", "down", "interact",
-                 "left", "left", "interact", "right", "right", "interact",
-                 "up", "up", "left")
+        self.act("down", "interact", "right", "right", "interact",
+                 "left", "down", "left", "interact", "right", "interact",
+                 "up", "up")
         self.assertEqual(self.game.state.carrying, "soldier")
         self.rejected("interact")
 

@@ -10,6 +10,7 @@ from game.model import DIRECTIONS, Game
 from game.navigation import find_path, IsoBoard
 from game.themes import scene_for, themed_floor
 from game.worker_view import draw_worker_status
+from tests.solutions import SOLUTIONS
 
 
 class LateRoomTests(unittest.TestCase):
@@ -68,26 +69,15 @@ class LateRoomTests(unittest.TestCase):
     def test_boss_worker_follows_two_different_recordings_from_its_own_tile(self):
         level = load_levels()[7]
         game = Game(level)
-        mirror, = level.mirrors
         station, = level.jobs
-        trap, = level.traps
         lever, = level.levers
-        part = next(pos for pos, item in level.initial_items.items() if item == "part")
         gates = {level.device_labels[gate]: gate for gate in level.gates}
         first, second = gates["J1"], gates["J2"]
 
-        def use(target):
-            self.go(game, target)
-            self.play(game, "interact")
-
-        use(mirror)
-        self.go(game, (5, 6))
-        self.play(game, "left")
-        use(part)
-        use(trap)
-        use(mirror)
-        self.play(game, "interact")
-        self.go(game, station)
+        for action in SOLUTIONS[level.id]:
+            self.play(game, action)
+            if game.state.player == station:
+                break
         self.assertEqual(game.state.recording.inputs, ())
         start = game.state.moves
 
@@ -111,7 +101,8 @@ class LateRoomTests(unittest.TestCase):
             self.play(game, "right")
             self.assertEqual(game.state.replay_workers[station], worker)
             self.assertEqual((game.gate_status(first), game.gate_status(second)), statuses)
-        use(lever)
+        self.go(game, lever)
+        self.play(game, "interact")
         self.go(game, level.exit)
         self.assertTrue(game.state.cleared)
 

@@ -10,6 +10,11 @@ Pos = tuple[int, int]
 DIRECTIONS = {"up": (0, -1), "down": (0, 1), "left": (-1, 0), "right": (1, 0)}
 
 
+def neighbors(pos: Pos):
+    x, y = pos
+    return ((x + dx, y + dy) for dx, dy in DIRECTIONS.values())
+
+
 @dataclass(frozen=True)
 class Level:
     id: str
@@ -41,6 +46,10 @@ class Level:
     replay_workers: dict[Pos, Pos] = field(default_factory=dict)
     mirror_directions: dict[Pos, str] = field(default_factory=dict)
     movable_mirrors: frozenset[Pos] = frozenset()
+
+    @property
+    def solid_devices(self) -> frozenset[Pos]:
+        return self.benches | (self.mirrors - self.movable_mirrors)
 
 
 def read_directions(raw, field_name, cells, prefix):
