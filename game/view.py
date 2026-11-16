@@ -1042,7 +1042,8 @@ class View:
 
         self.room_debris.draw(projection, now)
         self.work_feedback.draw(projection, now)
-        self.chute_feedback.draw(projection, now, lambda x, y, ratio: self.item("bone", x, y, scale * ratio))
+        self.chute_feedback.draw(projection, now, lambda x, y, ratio: self.item("bone", x, y, scale * ratio),
+                                 top_down=False)
         draw_echo_turn(game, projection, self.echo_motion, now)
         # 광선은 물체와 구별되는 높은 선으로 그리고 끝점도 현재 상태에서 계산한다.
         for start, end in beam_segments:
@@ -1362,8 +1363,10 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True, top_down=False):
                         view.mouse_position = None
                         screen_changed = True
                     elif event.key in (p.SDLK_z, p.SDLK_BACKSPACE):
-                        game.undo()
-                        view.reset_player()
+                        if game.undo():
+                            view.reset_player()
+                            view.gate_motions.clear()
+                            view.reset_plates()
                     elif event.key == p.SDLK_r:
                         game.restart()
                         feedback.enter(game, view.now())

@@ -82,11 +82,12 @@ class ChuteFeedback:
             self.events[inlet] = (outlet, now, True)
 
     def item_lift(self, pos, now):
-        return max((sin(pi * min(1, max(0, (now - began) / (self.arrival * 2))))
-                    for outlet, began, blocked in self.events.values() if pos == outlet and not blocked),
+        return max((sin(pi * (now - began - .06) / .24)
+                    for outlet, began, blocked in self.events.values()
+                    if pos == outlet and not blocked and .06 < now - began < .30),
                    default=0)
 
-    def draw(self, board, now, draw_bone):
+    def draw(self, board, now, draw_bone, *, top_down):
         self.events = {inlet: event for inlet, event in self.events.items()
                        if now - event[1] < self.seconds}
         size = board.half_width
@@ -94,8 +95,10 @@ class ChuteFeedback:
             age = max(0, now - began)
             sx, sy = board.screen(inlet)
             tx, ty = board.screen(outlet)
+            hatch_y = sy if top_down else sy + size * .42
             if blocked:
                 opacity = 210 * (1 - age / self.seconds)
+                self.shutter(sx, hatch_y, size, .18 * sin(min(1, age / .16) * pi), opacity)
                 ring(sx, sy + size * .13, size * (.22 + min(age, .09)), AMBER, opacity)
                 with alpha_blend():
                     for side in (-1, 1):
@@ -103,11 +106,22 @@ class ChuteFeedback:
             else:
                 if age < self.arrival:
                     progress = age / self.arrival
+                    self.shutter(sx, hatch_y, size, sin(pi * progress), 190)
                     draw_bone(sx, sy + size * (.13 + .29 * (1 - progress)), 1 - .65 * progress)
                     ring(sx, sy + size * .17, size * (.25 + .14 * progress), TEAL, 190 * (1 - progress))
                 else:
                     progress = (age - self.arrival) / (self.seconds - self.arrival)
                     ring(tx, ty + size * .11, size * (.21 + .23 * progress), TEAL, 192 * (1 - progress))
+
+    @staticmethod
+    def shutter(x, y, size, opening, opacity):
+        width = size * .31
+        gap = width * (.09 + opening * .71)
+        with alpha_blend():
+            for side in (-1, 1):
+                left, right = sorted((x + side * gap, x + side * width))
+                p.draw_rectangle(left, y - 2, right, y + 2, 91, 79, 66, round(opacity), filled=True)
+                p.draw_line(left, y + 2, right, y + 2, 194, 173, 129, round(opacity))
 
 
 def beam_contacts(board, contacts, now, *, height=0):

@@ -359,7 +359,8 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, mirror
     view.place_action_badge(game, badge_x, head, now)
     view.worker_effort((px - size * .3, py - size * .27, px + size * .3, head), tired, now)
 
-    view.chute_feedback.draw(board, now, lambda x, y, ratio: art.draw(sprites["bone"], x, y, size * .32 * ratio))
+    view.chute_feedback.draw(board, now, lambda x, y, ratio: art.draw(sprites["bone"], x, y, size * .32 * ratio),
+                             top_down=True)
     view.work_feedback.draw(board, now)
     draw_echo_turn(game, board, view.echo_motion, now)
     for start, end in beam_segments:
