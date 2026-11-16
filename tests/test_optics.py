@@ -9,7 +9,7 @@ from game.levels import load_levels
 from game.magic import mirror_output
 from game.mechanics import trace_magic
 from game.model import Game
-from game.optics import trace_display_magic, source_origin
+from game.optics import TOPDOWN_SOURCE_REACH, trace_display_magic, source_origin
 from tests.solutions import SOLUTIONS
 
 
@@ -46,6 +46,24 @@ class OpticsTests(unittest.TestCase):
         rays, powered = trace_display_magic(game.level, game.state, {(3, 3): 2})
         self.assertEqual(rays[-1], ((3, 3), (1.5, 3)))
         self.assertFalse(powered)
+
+    def test_adjacent_block_cuts_visible_ray_at_surface_from_topdown_nozzle(self):
+        level = replace(self.fixture(), mirrors=frozenset(), rubble=frozenset({(2, 3)}))
+        rays, powered = trace_display_magic(level, Game(level).state, {}, source_reach=TOPDOWN_SOURCE_REACH)
+        self.assertEqual(rays, [((1.275, 3), (1.62, 3))])
+        self.assertFalse(powered)
+
+    def test_moving_block_never_leaves_parallel_beams_both_open(self):
+        left, right = (2, 1), (3, 5)
+        level = replace(self.fixture(), mirrors=frozenset(), sources={(2, 4): "up", (3, 2): "down"},
+                        receivers=frozenset({left, right}))
+        state = Game(level).state
+        for reach in (None, TOPDOWN_SOURCE_REACH):
+            for step in range(101):
+                x = 2 + step / 100
+                _, powered = trace_display_magic(level, state, {}, rubble={(x, 3)}, source_reach=reach)
+                expected = {right} if step < 50 else {left} if step > 50 else set()
+                self.assertEqual(powered, expected, (reach, x))
 
     def test_nearest_blocker_and_receiver_stop_the_ray(self):
         level = replace(self.fixture(), mirrors=frozenset(), sources={(1, 3): 'right'}, receivers=frozenset({(6, 3)}))

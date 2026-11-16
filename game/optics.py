@@ -11,11 +11,14 @@ MIRROR_HALF_SPAN = .36
 MIRROR_HALF_DEPTH = .027
 RUBBLE_HALF_WIDTH = .38
 SOURCE_REACH = {'right': 74 / 112, 'down': 74 / 112, 'up': 58 / 112, 'left': 58 / 112}
+TOPDOWN_SOURCE_REACH = .275
 
 
-def source_origin(pos, direction):
+def source_origin(pos, direction, reach=None):
     delta = DIRECTIONS[direction]
-    return tuple(pos[i] + delta[i] * SOURCE_REACH[direction] for i in (0, 1))
+    if reach is None:
+        reach = SOURCE_REACH[direction]
+    return tuple(pos[i] + delta[i] * reach for i in (0, 1))
 
 
 def box_hit(origin, direction, left, bottom, right, top):
@@ -42,7 +45,7 @@ def device_hit(origin, direction, center):
     return distance if distance > 1e-6 else None
 
 
-def trace_display_magic(level, state, rotations, *, mirrors=None, rubble=None):
+def trace_display_magic(level, state, rotations, *, mirrors=None, rubble=None, source_reach=None):
     """발사구에서 광선을 쏴 가장 가까운 장치로 보낸다. 최대 64번 방향을 바꾼다."""
     segments, powered = [], set()
     rubble = state.rubble if rubble is None else rubble
@@ -51,11 +54,11 @@ def trace_display_magic(level, state, rotations, *, mirrors=None, rubble=None):
     if mirrors is None:
         mirrors = {pos: pos for pos in mirror_cells(level, state)}
     for source, name in level.sources.items():
-        origin, direction = source_origin(source, name), DIRECTIONS[name]
+        origin, direction = source_origin(source, name, source_reach), DIRECTIONS[name]
         if not (-.5 <= origin[0] <= level.width - .5 and -.5 <= origin[1] <= level.height - .5):
             continue
         seen = set()
-        for _ in range(64):
+        for leg in range(64):
             token = tuple(round(value, 7) for value in (*origin, *direction))
             if token in seen:
                 break
@@ -66,8 +69,13 @@ def trace_display_magic(level, state, rotations, *, mirrors=None, rubble=None):
                           if abs(direction[i]) > 1e-10 for bound in bounds
                           if (bound - origin[i]) / direction[i] > 1e-6]
             for x, y in obstacles:
-                half = .5 if (x, y) in fixtures else RUBBLE_HALF_WIDTH
-                distance = box_hit(origin, direction, x - half, y - half, x + half, y + half)
+                if leg == 0 and (x, y) == source:
+                    continue
+                fixture = (x, y) in fixtures
+                # 미는 동안에는 이동 축의 차광 폭을 한 칸으로 유지한다.
+                half_x = .5 if fixture or x != int(x) else RUBBLE_HALF_WIDTH
+                half_y = .5 if fixture or y != int(y) else RUBBLE_HALF_WIDTH
+                distance = box_hit(origin, direction, x - half_x, y - half_y, x + half_x, y + half_y)
                 if distance is not None:
                     candidates.append((distance, 'stop', None))
             for pos in level.receivers:

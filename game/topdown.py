@@ -186,19 +186,6 @@ def draw_mirror(sx, sy, size, rotation):
           (-.04, .24), (.04, .10), (.04, .24)), (137, 252, 225))
 
 
-def source_nozzle(level, start, end):
-    """공유 광선의 첫 선분을 탑다운 광원 그림의 발사구에 맞춘다."""
-    for (x, y), facing in level.sources.items():
-        dx, dy = DIRECTIONS[facing]
-        offset_x, offset_y = start[0] - x, start[1] - y
-        parallel = abs(offset_x * dy - offset_y * dx) < 1e-6
-        distance = offset_x * dx + offset_y * dy
-        outgoing = (end[0] - start[0]) * dx + (end[1] - start[1]) * dy
-        if parallel and 0 <= distance < .7 and outgoing > 0:
-            return x + dx * .275, y + dy * .275
-    return start
-
-
 def room_props(scene):
     """실내 쪽 벽면을 기준으로 소품과 조명, 벽감의 위치를 맞춘다."""
     props, lights, recesses = [], [], {}
@@ -331,7 +318,7 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, mirror
     view.worker_effort((px - size * .3, py - size * .27, px + size * .3, head), tired, now)
 
     for start, end in beam_segments:
-        x1, y1 = board.screen(source_nozzle(level, start, end))
+        x1, y1 = board.screen(start)
         x2, y2 = board.screen(end)
         length = max(1, hypot(x2 - x1, y2 - y1))
         nx, ny = (y1 - y2) / length, (x2 - x1) / length

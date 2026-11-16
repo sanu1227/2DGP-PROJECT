@@ -16,7 +16,7 @@ from game.layout import WIDTH, HEIGHT, BOARD_BOTTOM, BOARD_TOP
 from game.front_end import FrontEnd
 from game.tutorial import first_room_hint
 from game.mechanics import fixed_devices, mirror_cells
-from game.optics import trace_display_magic
+from game.optics import TOPDOWN_SOURCE_REACH, trace_display_magic
 from game.play_menu import PlayClock, PlayMenu
 from game.stage_feedback import StageFeedback
 from game.receiver_feedback import ReceiverFeedback
@@ -640,7 +640,8 @@ class View:
         mirror_rotations = {pos: self.mirror_rotation(game, pos, now) for pos in mirrors}
         rubble_positions = {self.rubble_pose(game, pos, now)[0] for pos in state.rubble}
         beam_segments, powered_receivers = trace_display_magic(
-            level, state, mirror_rotations, mirrors=mirror_positions, rubble=rubble_positions)
+            level, state, mirror_rotations, mirrors=mirror_positions, rubble=rubble_positions,
+            source_reach=TOPDOWN_SOURCE_REACH if self.top_down else None)
         self.receiver_feedback.observe(game, powered_receivers, now)
         gate_statuses = {pos: (('open' if control in powered_receivers else 'held' if state.player == pos else 'closed')
                               if control in level.receivers else game.gate_status(pos, state))
