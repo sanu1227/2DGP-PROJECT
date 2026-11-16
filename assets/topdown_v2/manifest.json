@@ -5,7 +5,8 @@
     "objects": "atlases/objects.png",
     "worker": "atlases/worker.png",
     "decor": "atlases/decor.png",
-    "workshop": "atlases/workshop.png"
+    "workshop_finish_terrain": "atlases/workshop_finish_terrain.png",
+    "workshop_finish_props": "atlases/workshop_finish_props.png"
   },
   "sprites": {
     "floor_1": [
@@ -568,33 +569,152 @@
       248,
       246
     ],
+    "workshop_floor_ashlar": [
+      "workshop_finish_terrain",
+      0,
+      0,
+      256,
+      256
+    ],
+    "workshop_floor_slate": [
+      "workshop_finish_terrain",
+      256,
+      0,
+      256,
+      256
+    ],
+    "workshop_floor_scorched": [
+      "workshop_finish_terrain",
+      512,
+      0,
+      256,
+      256
+    ],
     "workshop_cap": [
-      "workshop",
+      "workshop_finish_terrain",
       0,
-      0,
+      256,
       256,
       256
     ],
     "workshop_face": [
-      "workshop",
+      "workshop_finish_terrain",
       256,
-      0,
+      256,
+      256,
+      256
+    ],
+    "workshop_corner": [
+      "workshop_finish_terrain",
+      512,
+      256,
       256,
       256
     ],
     "workshop_rock": [
-      "workshop",
+      "workshop_finish_terrain",
       0,
-      256,
+      512,
       256,
       256
     ],
-    "workshop_floor": [
-      "workshop",
+    "workshop_rock_chipped": [
+      "workshop_finish_terrain",
       256,
-      256,
+      512,
       256,
       256
+    ],
+    "workshop_plinth": [
+      "workshop_finish_terrain",
+      512,
+      512,
+      256,
+      256
+    ],
+    "workshop_trap_broken": [
+      "workshop_finish_props",
+      6,
+      4,
+      244,
+      248
+    ],
+    "workshop_trap_installed": [
+      "workshop_finish_props",
+      260,
+      6,
+      248,
+      244
+    ],
+    "workshop_trap_active": [
+      "workshop_finish_props",
+      516,
+      6,
+      248,
+      243
+    ],
+    "workshop_exit_closed": [
+      "workshop_finish_props",
+      772,
+      7,
+      248,
+      242
+    ],
+    "workshop_exit_ready": [
+      "workshop_finish_props",
+      33,
+      260,
+      190,
+      248
+    ],
+    "workshop_lever_off": [
+      "workshop_finish_props",
+      309,
+      260,
+      150,
+      248
+    ],
+    "workshop_lever_on": [
+      "workshop_finish_props",
+      550,
+      260,
+      180,
+      248
+    ],
+    "workshop_part": [
+      "workshop_finish_props",
+      772,
+      260,
+      248,
+      248
+    ],
+    "workshop_anvil": [
+      "workshop_finish_props",
+      4,
+      521,
+      248,
+      237
+    ],
+    "workshop_lantern": [
+      "workshop_finish_props",
+      328,
+      516,
+      112,
+      248
+    ],
+    "workshop_candle_sconce": [
+      "workshop_finish_props",
+      538,
+      516,
+      204,
+      248
+    ],
+    "workshop_tool_rack": [
+      "workshop_finish_props",
+      772,
+      521,
+      248,
+      237
     ]
   }
 }

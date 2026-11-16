@@ -151,6 +151,7 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, gate_s
              and state.soldiers == level.posts and state.carrying is None)
     entries = device_entries(game, gate_statuses, powered, ready, view.plate_depths)
     workshop = level.id == "stage_01"
+    sprites = topdown_workshop.SPRITES if workshop else {}
     player = view.player_position(state.player, now)
     view.hit_regions.clear()
     view.hit_masks.clear()
@@ -178,13 +179,19 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, gate_s
                 x, y = mount["cell"]
                 if workshop:
                     x, y = (x + .32, y + .04) if x == 0 else (x, y + .23)
-                art.draw(DECOR[key], *board.screen((x, y)), size * .46)
+                sprite = DECOR[key]
+                art.draw(sprites.get(sprite, sprite), *board.screen((x, y)), size * .46)
         for decoration in scene["decorations"]:
             key = decoration["sprite"]
             if key in DECOR:
-                art.draw(DECOR[key], *board.screen(tuple(decoration["cell"])), size * .72)
+                sprite = DECOR[key]
+                x, y = board.screen(tuple(decoration["cell"]))
+                if workshop and sprite == "anvil":
+                    art.draw("workshop_plinth", x, y, size * .83)
+                    y += size * .06
+                art.draw(sprites.get(sprite, sprite), x, y, size * .72)
     if workshop and (3, 0) in level.walls:
-        art.draw("candle_sconce", *board.screen((3, .24)), size * .38)
+        art.draw("workshop_candle_sconce", *board.screen((3, .24)), size * .42)
 
     for pos, (sprite, _, _) in entries.items():
         sx, sy = board.screen(pos)
@@ -202,11 +209,13 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, gate_s
             art.draw("post_empty", sx, sy, size * .79)
             art.draw(sprite, sx, sy, size * .64)
         else:
-            art.draw(sprite, sx, sy, size * .72)
+            art.draw(sprites.get(sprite, sprite), sx, sy, size * (.82 if workshop else .72))
 
     for pos, kind in state.items.items():
         sx, sy = board.screen(pos)
-        art.draw(ITEMS[kind], sx + (size * .22 if pos in entries else 0), sy + size * .04, size * .47)
+        sprite = ITEMS[kind]
+        art.draw(sprites.get(sprite, sprite), sx + (size * .22 if pos in entries else 0), sy + size * .04,
+                 size * (.54 if workshop else .47))
     for pos in state.rubble:
         position, height = view.rubble_pose(game, pos, now)
         sx, sy = board.screen(position)
@@ -222,7 +231,8 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, gate_s
              height_scale=view.worker_height(tired, now))
     if state.carrying:
         dx, dy = DIRECTIONS[facing]
-        art.draw(ITEMS[state.carrying], px + dx * size * .27, py - dy * size * .27, size * .32)
+        sprite = ITEMS[state.carrying]
+        art.draw(sprites.get(sprite, sprite), px + dx * size * .27, py - dy * size * .27, size * .32)
     head = py + size * (.35 if workshop else .29)
     view.place_action_badge(game, px, head, now)
     view.worker_effort((px - size * .3, py - size * .27, px + size * .3, head), tired, now)

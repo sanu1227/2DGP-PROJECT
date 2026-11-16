@@ -28,7 +28,16 @@ const sheets = {
     'tool_rack', 'candle_sconce', 'crypt_banner', 'crest',
     'crystal_sconce', 'archive_banner', 'wall_pipes', 'air_vent',
   ],
-  workshop: ['workshop_cap', 'workshop_face', 'workshop_rock', 'workshop_floor'],
+  workshop_finish_terrain: [
+    'workshop_floor_ashlar', 'workshop_floor_slate', 'workshop_floor_scorched',
+    'workshop_cap', 'workshop_face', 'workshop_corner',
+    'workshop_rock', 'workshop_rock_chipped', 'workshop_plinth',
+  ],
+  workshop_finish_props: [
+    'workshop_trap_broken', 'workshop_trap_installed', 'workshop_trap_active', 'workshop_exit_closed',
+    'workshop_exit_ready', 'workshop_lever_off', 'workshop_lever_on', 'workshop_part',
+    'workshop_anvil', 'workshop_lantern', 'workshop_candle_sconce', 'workshop_tool_rack',
+  ],
 };
 
 function cleanAlpha(data, width, height) {
@@ -89,9 +98,9 @@ async function packSheet(name, names, manifest) {
   const sourcePath = path.join(root, 'source', `${name}.png`);
   const source = sharp(sourcePath);
   const { width, height } = await source.metadata();
-  const columns = name === 'workshop' ? 2 : 4;
+  const columns = name === 'workshop_finish_terrain' ? 3 : 4;
   const rows = names.length / columns;
-  const terrain = name === 'terrain' || name === 'workshop';
+  const terrain = name === 'terrain' || name === 'workshop_finish_terrain';
   const layers = [];
   for (const [index, key] of names.entries()) {
     const col = index % columns;
