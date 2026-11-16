@@ -37,6 +37,7 @@ class Level:
     jobs: frozenset[Pos] = frozenset()
     action_limit: int | None = None
     echo_links: dict[Pos, tuple[Pos, int]] = field(default_factory=dict)
+    timed_echoes: frozenset[Pos] = frozenset()
 
 
 def read_links(raw, field_name, first_name, second_name, first_tiles, second_tiles, prefix, used_ids, optional=()):
@@ -69,9 +70,9 @@ def read_links(raw, field_name, first_name, second_name, first_tiles, second_til
 
 
 def read_echo_links(links, tiles, prefix):
-    echoes, used = {}, set()
+    echoes, used, timed = {}, set(), set()
     for link in links:
-        echo_fields = {"seal", "steps"} & link.keys()
+        echo_fields = {"seal", "steps", "timed"} & link.keys()
         if not echo_fields:
             continue
         seal, steps = link.get("seal"), link.get("steps")
@@ -81,12 +82,17 @@ def read_echo_links(links, tiles, prefix):
             raise ValueError(prefix + "기록석마다 서로 다른 분신 문양을 연결해야 합니다.")
         if type(steps) is not int or not 2 <= steps <= 6:
             raise ValueError(prefix + "분신이 기록할 걸음은 2~6회여야 합니다.")
+        if type(link.get("timed", False)) is not bool:
+            raise ValueError(prefix + "분신 문의 timed 값은 true 또는 false여야 합니다.")
         cell = tuple(seal)
         used.add(cell)
-        echoes[tuple(link["station"])] = (cell, steps)
+        origin = tuple(link["station"])
+        echoes[origin] = (cell, steps)
+        if link.get("timed"):
+            timed.add(origin)
     if used != tiles:
         raise ValueError(prefix + "모든 분신 문양을 기록석에 연결해야 합니다.")
-    return echoes
+    return echoes, frozenset(timed)
 
 
 def load_levels(path: Path | str | None = None) -> list[Level]:
@@ -144,8 +150,8 @@ def load_levels(path: Path | str | None = None) -> list[Level]:
         plate_links, labels = read_links(raw, "plate_links", "plate", "gate", positions["F"], positions["G"], prefix, used_ids)
         power_links, power_labels = read_links(raw, "power_links", "receiver", "gate", positions["Y"], positions["G"], prefix, used_ids)
         worker_links, worker_labels = read_links(raw, "worker_links", "station", "gate",
-                                                  positions["J"], positions["G"], prefix, used_ids, optional=("seal", "steps"))
-        echo_links = read_echo_links(raw.get("worker_links", ()), positions["U"], prefix)
+                                                  positions["J"], positions["G"], prefix, used_ids, optional=("seal", "steps", "timed"))
+        echo_links, timed_echoes = read_echo_links(raw.get("worker_links", ()), positions["U"], prefix)
         links = {**plate_links, **power_links, **worker_links}
         if (set(plate_links) != positions["F"] or set(power_links) != positions["Y"]
                 or set(worker_links) != positions["J"] or set(links.values()) != positions["G"]
@@ -187,6 +193,6 @@ def load_levels(path: Path | str | None = None) -> list[Level]:
             plates=positions["F"], gates={gate: control for control, gate in links.items()}, device_labels=labels,
             chutes=chutes, action_limit=action_limit,
             mirrors=positions["M"], sources=sources, receivers=positions["Y"],
-            rubble=positions["R"], jobs=positions["J"], echo_links=echo_links,
+            rubble=positions["R"], jobs=positions["J"], echo_links=echo_links, timed_echoes=timed_echoes,
         ))
     return levels

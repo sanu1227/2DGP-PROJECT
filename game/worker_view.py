@@ -53,7 +53,8 @@ class EchoMotion:
         return position, self.direction
 
 
-def draw_echo_marks(level, state, board):
+def draw_echo_marks(game, board):
+    level, state = game.level, game.state
     radius = max(8, round(board.half_width * .34))
     for origin, (seal, _) in level.echo_links.items():
         for pos, shape in ((origin, 4), (seal, 0)):
@@ -66,7 +67,7 @@ def draw_echo_marks(level, state, board):
             else:
                 p.draw_circle(x, y, radius, *ECHO_COLOR, filled=False)
                 p.draw_circle(x, y, radius // 2, *ECHO_COLOR, filled=False)
-                if state.echo and state.echo.origin == origin and state.echo.position == pos:
+                if game.echo_pressed(origin):
                     p.draw_circle(x, y, radius // 3, *ECHO_COLOR)
     if state.recording:
         x, y = state.recording.origin

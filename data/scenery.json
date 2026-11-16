@@ -125,14 +125,14 @@
     "wall_mounts": [
       {"sprite": "archive_mount_sconce_nw", "cell": [0, 4], "facing": "right"},
       {"sprite": "archive_mount_banner_ne", "cell": [2, 0], "facing": "down"},
-      {"sprite": "forge_mount_lamp_ne", "cell": [6, 0], "facing": "down"},
+      {"sprite": "forge_mount_lamp_ne", "cell": [5, 0], "facing": "down"},
       {"sprite": "forge_mount_lamp_nw", "cell": [10, 5], "facing": "left"},
-      {"sprite": "forge_mount_lamp_nw", "cell": [0, 7], "facing": "right"}
+      {"sprite": "forge_mount_lamp_nw", "cell": [4, 7], "facing": "left"}
     ],
     "decorations": [
-      {"sprite": "treasury_locked_coffer", "cell": [5, 1], "facing": "right", "scale": 0.67},
+      {"sprite": "treasury_locked_coffer", "cell": [6, 1], "facing": "left", "scale": 0.67},
       {"sprite": "treasury_locked_coffer", "cell": [9, 4], "facing": "down", "scale": 0.63},
-      {"sprite": "treasury_treasure_banner", "cell": [4, 5], "facing": "left", "scale": 0.68}
+      {"sprite": "treasury_treasure_banner", "cell": [1, 6], "facing": "right", "scale": 0.68}
     ]
   },
   "stage_08": {
@@ -149,7 +149,7 @@
     "wall_mounts": [
       {"sprite": "forge_mount_lamp_nw", "cell": [0, 5], "facing": "right"},
       {"sprite": "forge_mount_lamp_ne", "cell": [1, 0], "facing": "down"},
-      {"sprite": "forge_mount_lamp_ne", "cell": [7, 0], "facing": "down"},
+      {"sprite": "forge_mount_lamp_ne", "cell": [6, 0], "facing": "down"},
       {"sprite": "forge_mount_lamp_nw", "cell": [10, 6], "facing": "left"}
     ],
     "decorations": [

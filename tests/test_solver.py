@@ -24,6 +24,9 @@ class SolverTests(unittest.TestCase):
              "magic_sources": [{"cell": [2, 1], "direction": "right"}]},
             {"map": ["########", "#@J.GP##", "#U.T####", "#..LE###"],
              "worker_links": [{"id": "J1", "station": [2, 1], "gate": [4, 1], "seal": [1, 2], "steps": 2}]},
+            {"map": ["########", "#@JGPTL#", "##U###E#", "##.#####"],
+             "worker_links": [{"id": "J1", "station": [2, 1], "gate": [3, 1],
+                               "seal": [2, 2], "steps": 2, "timed": True}]},
         ]
         for index, room in enumerate(rooms):
             room.update(id=f"solver_{index}", title="탐색 검사", hint="복구 후 복귀")

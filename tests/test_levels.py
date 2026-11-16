@@ -38,7 +38,7 @@ class LevelTests(unittest.TestCase):
         self.assertEqual(len(levels), 8)
         self.assertEqual(len({level.id for level in levels}), 8)
         for index, level in enumerate(levels):
-            self.assertEqual((level.width, level.height), [(6, 6), (9, 8), (8, 8), (12, 11), (10, 9), (10, 10), (11, 9), (11, 9)][index])
+            self.assertEqual((level.width, level.height), [(6, 6), (9, 8), (8, 8), (12, 11), (10, 9), (10, 10), (11, 9), (11, 8)][index])
             self.assertTrue(level.title)
             self.assertTrue(level.hint)
 
@@ -113,11 +113,12 @@ class LevelTests(unittest.TestCase):
         stage = dict(VALID_STAGE, map=[
             "########", "#@.....#", "#..J.U.#", "#P..G..#", "#..TLE.#", "########",
         ])
-        link = {"id": "J1", "station": [3, 2], "gate": [4, 3], "seal": [5, 2], "steps": 2}
+        link = {"id": "J1", "station": [3, 2], "gate": [4, 3], "seal": [5, 2], "steps": 2, "timed": True}
         stage["worker_links"] = [link]
         level, = self.load_document({"stages": [stage]})
         self.assertEqual(level.echo_links, {(3, 2): ((5, 2), 2)})
-        for field, value in (("seal", [4, 2]), ("seal", []), ("steps", False), ("steps", 1), ("steps", 7)):
+        self.assertEqual(level.timed_echoes, {(3, 2)})
+        for field, value in (("seal", [4, 2]), ("seal", []), ("steps", False), ("steps", 1), ("steps", 7), ("timed", 1)):
             with self.subTest(field=field, value=value), self.assertRaises(ValueError):
                 stage["worker_links"] = [dict(link, **{field: value})]
                 self.load_document({"stages": [stage]})

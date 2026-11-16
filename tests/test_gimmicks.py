@@ -258,7 +258,7 @@ class GimmickTests(unittest.TestCase):
         self.assertIsNone(find_path(game,next(p for p,k in game.level.initial_items.items() if k=="part")))
         self.assertIsNone(find_path(game,(2,3)))
 
-    def test_echo_replays_recorded_steps_and_only_it_can_power_the_gate(self):
+    def test_first_echo_gate_has_one_turn_and_undo_restores_it(self):
         game = Game(self.levels[6])
         station = min(game.level.echo_links)
         seal, _ = game.level.echo_links[station]
@@ -271,28 +271,21 @@ class GimmickTests(unittest.TestCase):
         self.assertTrue(game.act("interact"))
         self.assertTrue(game.act("left"))
         self.assert_rejected(game, "interact")
-        recording = deepcopy(game.state)
         self.assertTrue(game.act("up"))
         self.assertEqual(game.state.player, station)
-        self.assertEqual(game.state.echo.position, (3, 2))
-        self.assertEqual(game.gate_status(gate), "closed")
-        self.assertTrue(game.undo())
-        self.assertEqual(game.state, recording)
-
-        self.assertTrue(game.act("left"))
-        self.assertTrue(game.act("right"))
-        self.assertEqual(game.state.echo.position, (2, 2))
-        self.assertEqual(game.gate_status(gate), "closed")
-        self.assertTrue(game.undo())
-        self.assertTrue(game.undo())
-        self.assertEqual(game.state, recording)
-
-        for action in ("up", "right"):
-            self.assertTrue(game.act(action))
         self.assertEqual(game.state.echo.position, seal)
         self.assertEqual(game.gate_status(gate), "open")
-        self.assertTrue(game.act("left"))
-        self.assertEqual(game.state.echo.position, seal)
+
+        self.assertTrue(game.act("up"))
+        self.assertEqual(game.gate_status(gate), "closed")
+        self.assertTrue(game.undo())
+        self.assertEqual(game.gate_status(gate), "open")
+        self.assertTrue(game.act("down"))
+        self.assertEqual(game.state.player, gate)
+        self.assertEqual(game.gate_status(gate), "held")
+        self.assertTrue(game.act("down"))
+        self.assertEqual(game.gate_status(gate), "closed")
+        self.assert_rejected(game, "up")
         while game.undo():
             pass
         self.assertEqual(game.state, before)
@@ -304,41 +297,21 @@ class GimmickTests(unittest.TestCase):
             game.state.carrying = item
             self.assert_rejected(game, "interact")
 
-    def test_vault_guard_seals_the_east_winch_and_can_trap_the_player(self):
-        game = Game(self.levels[6])
-        east_winch = max(game.level.jobs)
-        plate = next(iter(game.level.plates))
-        part = next(pos for pos, kind in game.state.items.items() if kind == 'part')
-        game.state.items[plate] = game.state.items.pop(part)
-        game.state.player = next(iter(game.level.posts))
-        game.state.carrying = 'soldier'
-        self.assertTrue(game.act('interact'))
-        self.assertTrue(game.act('left'))
-        self.assertIsNone(find_path(game, east_winch))
-        self.assertIsNotNone(find_path(game, game.level.exit))
-        self.assertTrue(game.undo())
-        self.assertTrue(game.act('right'))
-        self.assertIsNone(find_path(game, game.level.exit))
-
-    def test_treasury_uses_the_first_part_to_hold_the_outer_gate(self):
+    def test_treasury_uses_the_first_part_to_open_the_skeleton_locker(self):
         level = self.levels[6]
         game = Game(level)
-        self.assertEqual(list(level.initial_items.values()).count('soldier'), 1)
-        self.assertFalse(level.benches)
-        gates = {level.device_labels[gate]: gate for gate in level.gates}
-        first_part = min((pos for pos, kind in level.initial_items.items() if kind == 'part'), key=lambda pos: pos[1])
+        gate = next(gate for gate in level.gates if level.device_labels[gate] == "P1")
+        soldier = next(pos for pos, kind in level.initial_items.items() if kind == "soldier")
+        first_part = min((pos for pos, kind in level.initial_items.items() if kind == "part"), key=lambda pos: pos[1])
         for action in SOLUTIONS[level.id]:
             self.assertTrue(game.act(action), game.message)
-            if game.state.player == gates['J2']:
+            if game.state.player == soldier:
                 self.assertNotIn(first_part, game.state.items)
-                self.assertFalse(game.state.installed)
-                self.assertEqual(game.state.items[level.gates[gates['P1']]], 'part')
-                station = level.gates[gates['J2']]
-                self.assertEqual(game.state.echo.origin, station)
-                self.assertEqual(game.state.echo.position, level.echo_links[station][0])
+                self.assertEqual(game.state.items[level.gates[gate]], "part")
+                self.assertEqual(game.gate_status(gate), "open")
                 break
         else:
-            self.fail('두 번째 금고에 도착하지 못했습니다.')
+            self.fail("해골 보관실에 도착하지 못했습니다.")
 
     def test_schema_rejects_retired_belt_and_unlinked_new_devices(self):
         for glyph in ('>','<','^','v','M','Q','Y','V','W','H','J','U'):

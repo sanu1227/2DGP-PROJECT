@@ -614,8 +614,11 @@ class View:
             self.reset_gates()
             self.reset_plates()
             self.gate_game = game
-        gate_openings = {pos: self.gate_opening(pos, 0 if gate_statuses[pos] == "closed" else 1, now)
-                         for pos in level.gates}
+        gate_openings = {}
+        for pos, control in level.gates.items():
+            opening = float(gate_statuses[pos] != "closed")
+            gate_openings[pos] = (opening if control in level.timed_echoes
+                                  else self.gate_opening(pos, opening, now))
         self.plate_depths = {pos: self.plate_pressure(game, pos, now) for pos in level.plates}
         beam_segments, powered_receivers = trace_magic(level, beam_state)
         if self.top_down:
@@ -742,7 +745,10 @@ class View:
                 elif pos in level.gates:
                     status = gate_statuses[pos]
                     objects.append((depth, 1, f"gate_{status}", sx, sy))
-                    labels.append((pos, f"{level.device_labels[pos]} " + {"open": "열림", "held": "닫힘 대기", "closed": "닫힘"}[status]))
+                    label = {"open": "열림", "held": "닫힘 대기", "closed": "닫힘"}[status]
+                    if status == "open" and level.gates[pos] in level.timed_echoes:
+                        label = "지금 통과"
+                    labels.append((pos, f"{level.device_labels[pos]} {label}"))
                 elif pos in level.levers:
                     objects.append((depth, 1, "lever_on" if state.active else "lever_off", sx, sy))
                     labels.append((pos, "레버"))
@@ -755,7 +761,7 @@ class View:
                 if pos in state.soldiers:
                     objects.append((depth, 2, "soldier_deployed", sx, sy))
 
-        draw_echo_marks(level, state, projection)
+        draw_echo_marks(game, projection)
         for station in level.echo_links:
             labels.append((station, recording_label(level, station)))
         echo_pose = self.echo_motion.pose(game, now)

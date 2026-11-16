@@ -21,6 +21,7 @@ class Echo:
     origin: Pos
     position: Pos
     remaining: tuple[str, ...]
+    just_stepped: bool = False
 
 
 @dataclass
@@ -133,14 +134,21 @@ class Game:
         state = self.state if state is None else state
         return pos == state.player or pos in state.items or pos in state.rubble
 
+    def echo_pressed(self, origin: Pos, state: State | None = None) -> bool:
+        state = self.state if state is None else state
+        echo = state.echo
+        seal, _ = self.level.echo_links[origin]
+        if echo is None or echo.origin != origin or echo.position != seal:
+            return False
+        return origin not in self.level.timed_echoes or (echo.just_stepped and bool(echo.remaining))
+
     def gate_status(self, pos: Pos, state: State | None = None) -> str:
         state = self.state if state is None else state
         control = self.level.gates[pos]
         if control in self.level.receivers:
             powered = control in trace_magic(self.level, state)[1]
         elif control in self.level.echo_links:
-            seal, _ = self.level.echo_links[control]
-            powered = state.echo is not None and state.echo.origin == control and state.echo.position == seal
+            powered = self.echo_pressed(control, state)
         elif control in self.level.jobs:
             powered = control in state.workers
         else:
@@ -255,6 +263,8 @@ class Game:
                 state.player = destination
                 return True, "잔해를 한 칸 밀었습니다. Z로 되돌릴 수 있습니다."
             if destination in self.level.gates and not self.walkable(destination, state):
+                if self.level.gates[destination] in self.level.timed_echoes:
+                    return False, "분신이 문양을 밟은 직후 한 턴에만 들어갈 수 있습니다."
                 return False, "닫힌 문입니다. 연결 장치의 상태를 확인하세요."
             if not (0 <= destination[0] < self.level.width and 0 <= destination[1] < self.level.height) or destination in self.level.walls:
                 return False, "벽이나 잔해로 막힌 칸입니다."
@@ -272,6 +282,8 @@ class Game:
         if operation == "record":
             state.echo = None
             state.recording = Recording(pos)
+            if pos in self.level.timed_echoes:
+                return True, "기록을 시작합니다. 문양을 지나는 걸음과 문에 도착할 때를 맞추세요."
             return True, "기록을 시작합니다. 분신이 머물 문양을 향해 이동하세요."
         if operation == "rotate":
             rotation = (state.mirror_rotations.get(pos, 0) + 1) % 4
@@ -338,4 +350,4 @@ class Game:
         x, y = echo.position
         target = x + dx, y + dy
         position = target if self.walkable(target, state) else echo.position
-        state.echo = Echo(echo.origin, position, echo.remaining[1:])
+        state.echo = Echo(echo.origin, position, echo.remaining[1:], position != echo.position)

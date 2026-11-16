@@ -119,6 +119,8 @@ def device_entries(game, gate_statuses, powered, exit_ready, plate_depths):
         entries[pos] = ("plate_down" if pressed else "plate_up"), level.device_labels[pos], TEAL if pressed else GOLD
     for pos, status in gate_statuses.items():
         label, color = {"open": ("열림", TEAL), "held": ("대기", GOLD), "closed": ("닫힘", RED)}[status]
+        if status == "open" and level.gates[pos] in level.timed_echoes:
+            label = "통과"
         entries[pos] = "gate_open", f"{level.device_labels[pos]} {label}", color
     for pos in level.sources:
         entries[pos] = "source", "광원", GOLD
@@ -220,7 +222,7 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, gate_s
 
     background = tuple(scene["background"]) if scene else (19, 27, 32)
     draw_terrain(art, board, level, materials_for(stage), lights, background, now, recesses)
-    draw_echo_marks(level, state, board)
+    draw_echo_marks(game, board)
     raised = [pos for pos, (sprite, _, _) in entries.items() if sprite in RAISED_DEVICES]
     draw_shadows(board, player, [*raised, *state.items, *(pos for pos, _ in rubble)])
 
