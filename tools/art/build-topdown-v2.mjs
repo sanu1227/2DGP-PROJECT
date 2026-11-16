@@ -5,6 +5,11 @@ import sharp from 'sharp';
 
 const root = fileURLToPath(new URL('../../assets/topdown_v2/', import.meta.url));
 const tile = 256;
+const pairedTerrain = (a, b) => [
+  `${a}_floor`, `${a}_floor_alt`, `${b}_floor`, `${b}_floor_alt`,
+  `${a}_cap`, `${a}_face`, `${b}_cap`, `${b}_face`,
+  `${a}_corner`, `${a}_rock`, `${b}_corner`, `${b}_rock`,
+];
 const sheets = {
   terrain: ['floor', 'wall'].flatMap(kind =>
     Array.from({ length: 8 }, (_, index) => `${kind}_${index + 1}`)),
@@ -38,6 +43,41 @@ const sheets = {
     'workshop_exit_ready', 'workshop_lever_off', 'workshop_lever_on', 'workshop_part',
     'workshop_anvil', 'workshop_lantern', 'workshop_candle_sconce', 'workshop_tool_rack',
   ],
+  rooms_02_03: pairedTerrain('room_02', 'room_03'),
+  rooms_04_05: pairedTerrain('room_04', 'room_05'),
+  rooms_06_07: pairedTerrain('room_06', 'room_07'),
+  room_08: [
+    'room_08_floor', 'room_08_floor_alt', 'room_08_floor_inlay',
+    'room_08_cap', 'room_08_face', 'room_08_corner',
+    'room_08_rock', 'room_08_rock_alt', 'room_08_plinth',
+  ],
+  room_devices: [
+    'depth_bone', 'depth_soldier_carried', 'depth_soldier_deployed', 'depth_post_empty',
+    'depth_bench_empty', 'depth_bench_bone', 'depth_plate_up', 'depth_plate_down',
+    'depth_gate_closed', 'depth_gate_open', 'depth_rubble', 'depth_chute_outlet',
+  ],
+  room_magic: [
+    'depth_chute_inlet', 'depth_source', 'depth_receiver', 'depth_mirror_base',
+    'depth_winch', 'depth_helper', 'depth_crystal_sconce', 'depth_lantern',
+    'depth_candle_sconce', 'depth_air_vent', 'depth_wall_pipes', 'depth_crest',
+  ],
+  room_decor: [
+    'depth_sarcophagus', 'depth_candles', 'depth_books', 'depth_throne',
+    'depth_hand_pump', 'depth_elbow_pipe', 'depth_water_barrel', 'depth_brazier',
+    'depth_treasure', 'depth_treasure_banner', 'depth_crypt_banner', 'depth_archive_banner',
+  ],
+};
+const terrainSheets = new Set(['terrain', 'workshop_finish_terrain', 'rooms_02_03',
+  'rooms_04_05', 'rooms_06_07', 'room_08']);
+// 투명 여백의 중심에서 자른다. 생성 원화에 따라 위아래 여백이 균등하지 않다.
+const sourceCuts = {
+  rooms_02_03: [[319, 627, 933], [466, 807]],
+  rooms_04_05: [[322, 626, 934], [448, 787]],
+  rooms_06_07: [[319, 627, 934], [480, 827]],
+  room_08: [[429, 824], [430, 822]],
+  room_devices: [[315, 635, 924], [454, 828]],
+  room_magic: [[367, 762, 1075], [368, 722]],
+  room_decor: [[344, 624, 925], [423, 801]],
 };
 
 function cleanAlpha(data, width, height) {
@@ -98,19 +138,29 @@ async function packSheet(name, names, manifest) {
   const sourcePath = path.join(root, 'source', `${name}.png`);
   const source = sharp(sourcePath);
   const { width, height } = await source.metadata();
-  const columns = name === 'workshop_finish_terrain' ? 3 : 4;
+  const columns = name === 'workshop_finish_terrain' || name === 'room_08' ? 3 : 4;
   const rows = names.length / columns;
-  const terrain = name === 'terrain' || name === 'workshop_finish_terrain';
+  const terrain = terrainSheets.has(name);
+  const [xCuts, yCuts] = sourceCuts[name] ?? [
+    Array.from({ length: columns - 1 }, (_, index) => Math.floor((index + 1) * width / columns)),
+    Array.from({ length: rows - 1 }, (_, index) => Math.floor((index + 1) * height / rows)),
+  ];
+  const xs = [0, ...xCuts, width];
+  const ys = [0, ...yCuts, height];
   const layers = [];
   for (const [index, key] of names.entries()) {
     const col = index % columns;
     const row = Math.floor(index / columns);
-    const left = Math.floor(col * width / columns);
-    const top = Math.floor(row * height / rows);
-    const cell = { left, top, width: Math.floor((col + 1) * width / columns) - left,
-      height: Math.floor((row + 1) * height / rows) - top };
+    const left = xs[col];
+    const top = ys[row];
+    const cell = { left, top, width: xs[col + 1] - left, height: ys[row + 1] - top };
     const { data, info } = await source.clone().extract(cell).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
-    const bounds = cleanAlpha(data, info.width, info.height);
+    let bounds;
+    try {
+      bounds = cleanAlpha(data, info.width, info.height);
+    } catch (error) {
+      throw new Error(`${name}/${key}: ${error.message}`, { cause: error });
+    }
     if (terrain) {
       bounds.left += 8;
       bounds.top += 8;

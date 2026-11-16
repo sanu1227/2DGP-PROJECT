@@ -6,7 +6,14 @@
     "worker": "atlases/worker.png",
     "decor": "atlases/decor.png",
     "workshop_finish_terrain": "atlases/workshop_finish_terrain.png",
-    "workshop_finish_props": "atlases/workshop_finish_props.png"
+    "workshop_finish_props": "atlases/workshop_finish_props.png",
+    "rooms_02_03": "atlases/rooms_02_03.png",
+    "rooms_04_05": "atlases/rooms_04_05.png",
+    "rooms_06_07": "atlases/rooms_06_07.png",
+    "room_08": "atlases/room_08.png",
+    "room_devices": "atlases/room_devices.png",
+    "room_magic": "atlases/room_magic.png",
+    "room_decor": "atlases/room_decor.png"
   },
   "sprites": {
     "floor_1": [
@@ -715,6 +722,573 @@
       521,
       248,
       237
+    ],
+    "room_02_floor": [
+      "rooms_02_03",
+      0,
+      0,
+      256,
+      256
+    ],
+    "room_02_floor_alt": [
+      "rooms_02_03",
+      256,
+      0,
+      256,
+      256
+    ],
+    "room_03_floor": [
+      "rooms_02_03",
+      512,
+      0,
+      256,
+      256
+    ],
+    "room_03_floor_alt": [
+      "rooms_02_03",
+      768,
+      0,
+      256,
+      256
+    ],
+    "room_02_cap": [
+      "rooms_02_03",
+      0,
+      256,
+      256,
+      256
+    ],
+    "room_02_face": [
+      "rooms_02_03",
+      256,
+      256,
+      256,
+      256
+    ],
+    "room_03_cap": [
+      "rooms_02_03",
+      512,
+      256,
+      256,
+      256
+    ],
+    "room_03_face": [
+      "rooms_02_03",
+      768,
+      256,
+      256,
+      256
+    ],
+    "room_02_corner": [
+      "rooms_02_03",
+      0,
+      512,
+      256,
+      256
+    ],
+    "room_02_rock": [
+      "rooms_02_03",
+      256,
+      512,
+      256,
+      256
+    ],
+    "room_03_corner": [
+      "rooms_02_03",
+      512,
+      512,
+      256,
+      256
+    ],
+    "room_03_rock": [
+      "rooms_02_03",
+      768,
+      512,
+      256,
+      256
+    ],
+    "room_04_floor": [
+      "rooms_04_05",
+      0,
+      0,
+      256,
+      256
+    ],
+    "room_04_floor_alt": [
+      "rooms_04_05",
+      256,
+      0,
+      256,
+      256
+    ],
+    "room_05_floor": [
+      "rooms_04_05",
+      512,
+      0,
+      256,
+      256
+    ],
+    "room_05_floor_alt": [
+      "rooms_04_05",
+      768,
+      0,
+      256,
+      256
+    ],
+    "room_04_cap": [
+      "rooms_04_05",
+      0,
+      256,
+      256,
+      256
+    ],
+    "room_04_face": [
+      "rooms_04_05",
+      256,
+      256,
+      256,
+      256
+    ],
+    "room_05_cap": [
+      "rooms_04_05",
+      512,
+      256,
+      256,
+      256
+    ],
+    "room_05_face": [
+      "rooms_04_05",
+      768,
+      256,
+      256,
+      256
+    ],
+    "room_04_corner": [
+      "rooms_04_05",
+      0,
+      512,
+      256,
+      256
+    ],
+    "room_04_rock": [
+      "rooms_04_05",
+      256,
+      512,
+      256,
+      256
+    ],
+    "room_05_corner": [
+      "rooms_04_05",
+      512,
+      512,
+      256,
+      256
+    ],
+    "room_05_rock": [
+      "rooms_04_05",
+      768,
+      512,
+      256,
+      256
+    ],
+    "room_06_floor": [
+      "rooms_06_07",
+      0,
+      0,
+      256,
+      256
+    ],
+    "room_06_floor_alt": [
+      "rooms_06_07",
+      256,
+      0,
+      256,
+      256
+    ],
+    "room_07_floor": [
+      "rooms_06_07",
+      512,
+      0,
+      256,
+      256
+    ],
+    "room_07_floor_alt": [
+      "rooms_06_07",
+      768,
+      0,
+      256,
+      256
+    ],
+    "room_06_cap": [
+      "rooms_06_07",
+      0,
+      256,
+      256,
+      256
+    ],
+    "room_06_face": [
+      "rooms_06_07",
+      256,
+      256,
+      256,
+      256
+    ],
+    "room_07_cap": [
+      "rooms_06_07",
+      512,
+      256,
+      256,
+      256
+    ],
+    "room_07_face": [
+      "rooms_06_07",
+      768,
+      256,
+      256,
+      256
+    ],
+    "room_06_corner": [
+      "rooms_06_07",
+      0,
+      512,
+      256,
+      256
+    ],
+    "room_06_rock": [
+      "rooms_06_07",
+      256,
+      512,
+      256,
+      256
+    ],
+    "room_07_corner": [
+      "rooms_06_07",
+      512,
+      512,
+      256,
+      256
+    ],
+    "room_07_rock": [
+      "rooms_06_07",
+      768,
+      512,
+      256,
+      256
+    ],
+    "room_08_floor": [
+      "room_08",
+      0,
+      0,
+      256,
+      256
+    ],
+    "room_08_floor_alt": [
+      "room_08",
+      256,
+      0,
+      256,
+      256
+    ],
+    "room_08_floor_inlay": [
+      "room_08",
+      512,
+      0,
+      256,
+      256
+    ],
+    "room_08_cap": [
+      "room_08",
+      0,
+      256,
+      256,
+      256
+    ],
+    "room_08_face": [
+      "room_08",
+      256,
+      256,
+      256,
+      256
+    ],
+    "room_08_corner": [
+      "room_08",
+      512,
+      256,
+      256,
+      256
+    ],
+    "room_08_rock": [
+      "room_08",
+      0,
+      512,
+      256,
+      256
+    ],
+    "room_08_rock_alt": [
+      "room_08",
+      256,
+      512,
+      256,
+      256
+    ],
+    "room_08_plinth": [
+      "room_08",
+      512,
+      512,
+      256,
+      256
+    ],
+    "depth_bone": [
+      "room_devices",
+      4,
+      38,
+      248,
+      180
+    ],
+    "depth_soldier_carried": [
+      "room_devices",
+      290,
+      4,
+      188,
+      248
+    ],
+    "depth_soldier_deployed": [
+      "room_devices",
+      559,
+      4,
+      161,
+      248
+    ],
+    "depth_post_empty": [
+      "room_devices",
+      774,
+      4,
+      244,
+      248
+    ],
+    "depth_bench_empty": [
+      "room_devices",
+      10,
+      260,
+      236,
+      248
+    ],
+    "depth_bench_bone": [
+      "room_devices",
+      266,
+      260,
+      236,
+      248
+    ],
+    "depth_plate_up": [
+      "room_devices",
+      516,
+      260,
+      248,
+      247
+    ],
+    "depth_plate_down": [
+      "room_devices",
+      772,
+      262,
+      248,
+      244
+    ],
+    "depth_gate_closed": [
+      "room_devices",
+      4,
+      538,
+      248,
+      204
+    ],
+    "depth_gate_open": [
+      "room_devices",
+      260,
+      537,
+      248,
+      205
+    ],
+    "depth_rubble": [
+      "room_devices",
+      528,
+      516,
+      223,
+      248
+    ],
+    "depth_chute_outlet": [
+      "room_devices",
+      772,
+      523,
+      248,
+      233
+    ],
+    "depth_chute_inlet": [
+      "room_magic",
+      32,
+      4,
+      192,
+      248
+    ],
+    "depth_source": [
+      "room_magic",
+      307,
+      4,
+      154,
+      248
+    ],
+    "depth_receiver": [
+      "room_magic",
+      523,
+      4,
+      234,
+      248
+    ],
+    "depth_mirror_base": [
+      "room_magic",
+      773,
+      4,
+      246,
+      248
+    ],
+    "depth_winch": [
+      "room_magic",
+      4,
+      266,
+      248,
+      236
+    ],
+    "depth_helper": [
+      "room_magic",
+      260,
+      281,
+      248,
+      206
+    ],
+    "depth_crystal_sconce": [
+      "room_magic",
+      582,
+      260,
+      116,
+      248
+    ],
+    "depth_lantern": [
+      "room_magic",
+      844,
+      260,
+      103,
+      248
+    ],
+    "depth_candle_sconce": [
+      "room_magic",
+      21,
+      516,
+      214,
+      248
+    ],
+    "depth_air_vent": [
+      "room_magic",
+      264,
+      516,
+      239,
+      248
+    ],
+    "depth_wall_pipes": [
+      "room_magic",
+      547,
+      516,
+      186,
+      248
+    ],
+    "depth_crest": [
+      "room_magic",
+      795,
+      516,
+      201,
+      248
+    ],
+    "depth_sarcophagus": [
+      "room_decor",
+      42,
+      4,
+      172,
+      248
+    ],
+    "depth_candles": [
+      "room_decor",
+      292,
+      4,
+      184,
+      248
+    ],
+    "depth_books": [
+      "room_decor",
+      523,
+      4,
+      234,
+      248
+    ],
+    "depth_throne": [
+      "room_decor",
+      805,
+      4,
+      181,
+      248
+    ],
+    "depth_hand_pump": [
+      "room_decor",
+      32,
+      260,
+      191,
+      248
+    ],
+    "depth_elbow_pipe": [
+      "room_decor",
+      274,
+      260,
+      220,
+      248
+    ],
+    "depth_water_barrel": [
+      "room_decor",
+      541,
+      260,
+      197,
+      248
+    ],
+    "depth_brazier": [
+      "room_decor",
+      786,
+      260,
+      220,
+      248
+    ],
+    "depth_treasure": [
+      "room_decor",
+      4,
+      528,
+      248,
+      223
+    ],
+    "depth_treasure_banner": [
+      "room_decor",
+      314,
+      516,
+      139,
+      248
+    ],
+    "depth_crypt_banner": [
+      "room_decor",
+      565,
+      516,
+      149,
+      248
+    ],
+    "depth_archive_banner": [
+      "room_decor",
+      815,
+      516,
+      162,
+      248
     ]
   }
 }
