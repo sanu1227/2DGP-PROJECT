@@ -5,6 +5,7 @@ from math import cos, exp, pi, sin
 import pico2d.pico2d as p
 
 from game.front_end import Button, bevel
+from game.layout import WIDTH, BOARD_TOP
 from game.logo_mode import fade_to_black
 
 INK = (239, 237, 219)
@@ -51,8 +52,10 @@ class StageFeedback:
     def draw_entry(view, game, index, total, elapsed):
         progress = min(1, elapsed / .20, (ENTRY_SECONDS - elapsed) / .24)
         lift = round(4 * (1 - progress) ** 2)
-        bevel((452, 876 + lift, 1568, 911 + lift), (22, 39, 43), TEAL)
-        view.text(473, 894 + lift, game.level.hint, 18, GOLD)
+        y = BOARD_TOP + 9 + lift
+        bevel((32, y, WIDTH - 32, y + 30), (27, 38, 40), (86, 92, 74))
+        view.text(54, y + 15, "방 힌트", 16, GOLD)
+        view.text(138, y + 15, game.level.hint, 18, INK)
 
     def draw_result(self, view, game, index, total, elapsed):
         fade_to_black(.64)

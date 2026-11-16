@@ -5,7 +5,7 @@ from math import hypot, pi, sin
 import pico2d.pico2d as p
 
 from game.levels import DIRECTIONS
-from game.layout import WIDTH
+from game.layout import WIDTH, STATUS_Y
 from game.play_effects import ring
 
 
@@ -63,21 +63,20 @@ def draw_worker_status(view, game, context, context_color):
             title = "재생 완료"
         slots = (None,) * step + echo.remaining
 
-    p.draw_rectangle(32, 32, WIDTH - 32, 78, 28, 39, 44, filled=True)
-    view.text(48, 55, f"{title} {step}/{total}", 18, ECHO_COLOR)
+    view.text(58, STATUS_Y, f"{title} {step}/{total}", 18, ECHO_COLOR)
     for index, action in enumerate(slots):
         x = 212 + 42 * index
         current = index == (step if recording else step - 1)
         border = ECHO_COLOR if current else (88, 103, 111)
-        p.draw_rectangle(x, 39, x + 34, 71, 42, 47, 57, filled=True)
-        p.draw_rectangle(x, 39, x + 34, 71, *border, filled=False)
+        p.draw_rectangle(x, STATUS_Y - 16, x + 34, STATUS_Y + 16, 42, 47, 57, filled=True)
+        p.draw_rectangle(x, STATUS_Y - 16, x + 34, STATUS_Y + 16, *border, filled=False)
         if action is not None:
-            draw_direction_arrow(x + 17, 55, action, ECHO_COLOR if recording else (210, 215, 222))
+            draw_direction_arrow(x + 17, STATUS_Y, action, ECHO_COLOR if recording else (210, 215, 222))
         elif not recording:
-            view.centered(x + 17, 55, str(index + 1), 16, border)
+            view.centered(x + 17, STATUS_Y, str(index + 1), 16, border)
 
     if recording:
-        view.text(486, 55, "방향키로 이동", 16, (178, 188, 192))
+        view.text(486, STATUS_Y, "방향키로 이동", 16, (178, 188, 192))
     else:
         gates = []
         for gate in seals:
@@ -89,11 +88,11 @@ def draw_worker_status(view, game, context, context_color):
         for index, (label, status) in enumerate(gates):
             x = 486 + 124 * index
             word, color = GATE_STYLES[status]
-            p.draw_rectangle(x, 39, x + 112, 71, 42, 47, 57, filled=True)
-            p.draw_rectangle(x, 39, x + 112, 71, *color, filled=False)
-            view.centered(x + 56, 55, f"{label} {word}", 16, color)
+            p.draw_rectangle(x, STATUS_Y - 16, x + 112, STATUS_Y + 16, 42, 47, 57, filled=True)
+            p.draw_rectangle(x, STATUS_Y - 16, x + 112, STATUS_Y + 16, *color, filled=False)
+            view.centered(x + 56, STATUS_Y, f"{label} {word}", 16, color)
         if context:
-            view.wrapped(750, 61, context, width=WIDTH - 798, size=16, color=context_color)
+            view.wrapped(750, STATUS_Y, context, width=WIDTH - 798, size=16, color=context_color)
     return True
 
 

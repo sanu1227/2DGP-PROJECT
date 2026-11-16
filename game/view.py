@@ -1,5 +1,6 @@
 """pico2d 화면과 키 입력. 퍼즐 판정은 model.Game이 전담한다."""
 
+import ctypes
 import os
 from dataclasses import replace
 from pathlib import Path
@@ -13,8 +14,8 @@ from game.art import Art, MAGIC_BEAM_HEIGHT
 from game.scenery import draw_rubble_track, draw_scars, draw_tinted, floor_style, wall_style
 from game.navigation import ClickNavigator, IsoBoard, TopDownBoard, find_path
 from game.themes import boundary_walls, low_wall_sprite, scene_for, themed_floor
-from game.layout import WIDTH, HEIGHT, BOARD_BOTTOM, BOARD_TOP
-from game.front_end import FrontEnd
+from game.layout import WIDTH, HEIGHT, BOARD_BOTTOM, BOARD_TOP, STATUS_BOTTOM, STATUS_TOP, STATUS_Y
+from game.front_end import FrontEnd, bevel
 from game.tutorial import first_room_hint
 from game.mechanics import fixed_devices, mirror_axis, mirror_cells, trace_magic
 from game.optics import TOPDOWN_SOURCE_REACH, trace_display_magic
@@ -34,6 +35,8 @@ MUTED = (158, 169, 166)
 GOLD = (227, 187, 104)
 TEAL = (104, 206, 184)
 RED = (232, 119, 105)
+HUD_FILL = (26, 39, 42)
+HUD_EDGE = (67, 88, 87)
 ITEM_NAMES = {None: "빈손", "part": "함정 부품", "bone": "뼈 묶음", "soldier": "해골 병사"}
 ITEM_SPRITES = {"part": "part", "bone": "bone_bundle", "soldier": "soldier_carried"}
 FACING = {"up": "ne", "right": "se", "down": "sw", "left": "nw"}
@@ -592,23 +595,19 @@ class View:
     def text(self, x, y, value, size=18, color=INK):
         self.fonts[size].draw(x, y, str(value), color)
 
-    def centered(self, x, y, value, size=18, color=INK):
-        import ctypes
-
+    def text_width(self, value, size):
         width = ctypes.c_int()
         p.TTF_SizeUTF8(self.fonts[size].font, str(value).encode("utf-8"), ctypes.byref(width), None)
-        self.text(x - width.value / 2, y, value, size, color)
+        return width.value
+
+    def centered(self, x, y, value, size=18, color=INK):
+        self.text(x - self.text_width(value, size) / 2, y, value, size, color)
 
     def wrapped(self, x, y, value, width=300, size=16, color=MUTED):
         """UTF-8 실제 글꼴 폭을 기준으로 안내문을 줄바꿈한다."""
-        import ctypes
-
         current = ""
         for character in value:
-            measured = ctypes.c_int()
-            p.TTF_SizeUTF8(self.fonts[size].font, (current + character).encode("utf-8"),
-                          ctypes.byref(measured), None)
-            if current and measured.value > width:
+            if current and self.text_width(current + character, size) > width:
                 self.text(x, y, current, size, color)
                 current = ""
                 y -= size + 9
@@ -759,8 +758,6 @@ class View:
 
     def movement_cost_hint(self, game, path, color):
         """마우스를 올린 경로의 예상 행동 비용을 클릭 전에 보여준다."""
-        import ctypes
-
         if path is None:
             labels = [("이동 불가", 18)]
         elif not path:
@@ -774,12 +771,8 @@ class View:
                 labels.append((f"남은 행동 {remaining}회 · {cost - remaining}회 부족", 13))
             else:
                 labels.append((f"남은 행동 {remaining}회 · 이동 후 {remaining - cost}회 예상", 13))
-        widths = []
-        for label, size in labels:
-            measured = ctypes.c_int()
-            p.TTF_SizeUTF8(self.fonts[size].font, label.encode("utf-8"), ctypes.byref(measured), None)
-            widths.append(measured.value)
-        width, height = max(widths) + 24, 34 if len(labels) == 1 else 56
+        width = max(self.text_width(label, size) for label, size in labels) + 24
+        height = 34 if len(labels) == 1 else 56
         x, y = self.mouse_position
         left = max(32, min(x + 18, WIDTH - 32 - width))
         bottom = max(BOARD_BOTTOM + 4, min(y + 22, BOARD_TOP - height - 4))
@@ -1265,133 +1258,127 @@ class View:
             box(*bounds, color, filled=False)
             self.centered(sx, sy - 46, hint.target_label, 16, color)
             self.hit_regions.append((hint.target, bounds))
-        box(*TUTORIAL_PANEL, (25, 39, 42))
-        box(*TUTORIAL_PANEL, (101, 120, 104), filled=False)
-        self.text(52, 786, "첫 근무 · 튜토리얼", 16, GOLD)
-        self.text(344, 786, f"{hint.step} / 5", 16, TEAL)
+        bevel(TUTORIAL_PANEL, HUD_FILL, HUD_EDGE)
+        self.text(52, 786, "첫 근무 안내", 18, GOLD)
+        self.text(344, 786, f"{hint.step} / 5", 18, TEAL)
         for index in range(5):
             completed = hint.complete or index < hint.step - 1
             color = TEAL if completed else GOLD if index == hint.step - 1 else (59, 77, 77)
             box(52 + index * 70, 762, 112 + index * 70, 765, color)
-        self.text(52, 730, hint.title, 22, INK)
-        self.wrapped(52, 690, hint.instruction, width=344, size=16, color=INK)
-        self.text(52, 619, "행동 무제한 · Z 되돌리기 · R 다시 시작", 13, MUTED)
+        self.text(52, 730, hint.title, 26, INK)
+        self.wrapped(52, 690, hint.instruction, width=344, size=18, color=INK)
+        diamond(59, 622, 6, 6, None, GOLD)
+        self.text(74, 622, "작업 대상", 16, MUTED)
 
     def play_context(self, game):
-        """입문방 이후에는 지금 필요한 작업과 피드백만 한 줄로 표시한다."""
+        """현재 입력에 바로 필요한 안내를 오래된 피드백보다 먼저 표시한다."""
         if game.failed:
             return game.context_action(), RED
         if game.state.cleared:
             return "복구 완료", TEAL
         if game.state.recording:
             return game.context_action(), GOLD
-        if game.repair_percent == 100:
-            return "복구 완료 · 출구로 돌아가세요", TEAL
+        if self.navigation.active:
+            return f"자동 이동 중 · {len(self.navigation.path)}칸 남음", TEAL
+        context = game.context_action()
+        if game.can_interact():
+            return context, TEAL
+        level, state = game.level, game.state
+        if (state.soldiers == level.posts and state.installed == level.traps
+                and (not level.traps or state.active)):
+            return "복구 완료 · 빈손으로 출구에 도착하세요", TEAL
         if self.interaction_hint:
             return self.interaction_hint, GOLD
-        level = game.level
-        targets = (level.traps | level.benches | level.posts | level.levers | level.jobs
-                   | level.chutes.keys() | game.state.items.keys())
-        if game.can_interact() or game.state.player in targets:
-            return game.context_action(), TEAL if game.can_interact() else MUTED
+        if context != INTERACTION_HELP:
+            return context, INK
         quiet = {
             INTERACTION_HELP, "현재 서 있는 칸입니다.",
             "선택한 칸으로 이동합니다. 우클릭으로 취소할 수 있습니다.",
-            "자동 이동을 취소했습니다.", "직전 행동을 되돌렸습니다.",
         }
         if game.message not in quiet and not game.message.startswith("한 칸 이동했습니다."):
-            return game.message, MUTED
-        return "", MUTED
+            return game.message, INK
+        return "복구를 마친 뒤 빈손으로 출구에 도착하세요", MUTED
 
-    def repair_progress(self, game, left, width):
+    def play_header(self, game, index, total):
+        level, state = game.level, game.state
+        top, bottom = HEIGHT - 20, HEIGHT - 84
+        label_y, value_y = top - 17, bottom + 18
+        bevel((32, bottom, WIDTH - 32, top), HUD_FILL, HUD_EDGE)
+        box(42, bottom + 12, 45, top - 12, GOLD)
+        self.text(62, label_y, f"{index + 1:02d} / {total:02d} 방", 16, GOLD)
+        self.text(62, value_y, level.title, 26, INK)
+        for x in (420, 946, 1218):
+            line(x, bottom + 10, x, top - 10, HUD_EDGE)
+
+        if level.traps:
+            self.text(444, label_y, "함정 설치", 16, MUTED)
+            self.text(444, value_y, f"{len(state.installed)} / {len(level.traps)}", 26, INK)
+            phase = "가동 완료" if state.active else "가동 대기" if state.installed == level.traps else "설치 중"
+            phase_color = TEAL if state.active else GOLD if state.installed == level.traps else MUTED
+            self.text(546, value_y, phase, 18, phase_color)
+        if level.posts:
+            x = 714 if level.traps else 444
+            if level.traps:
+                line(x - 24, bottom + 10, x - 24, top - 10, HUD_EDGE)
+            self.text(x, label_y, "병사 배치", 16, MUTED)
+            color = TEAL if state.soldiers == level.posts else INK
+            self.text(x, value_y, f"{len(state.soldiers)} / {len(level.posts)}", 26, color)
+
+        self.text(970, label_y, "운반", 16, MUTED)
+        self.text(970, value_y, ITEM_NAMES[state.carrying], 22, GOLD if state.carrying else INK)
+        if state.carrying:
+            self.hud_item(state.carrying, 1170, bottom + 17)
+
         percent = game.repair_percent
         color = TEAL if percent == 100 else GOLD
-        self.text(left, BOARD_TOP + 25, f"복구율 {percent}%", 16, color)
-        box(left, BOARD_TOP + 5, left + width, BOARD_TOP + 9, (59, 77, 77))
+        left, right = 1242, WIDTH - 56
+        self.text(left, label_y, "복구율", 16, MUTED)
+        value = f"{percent}%"
+        self.text(right - self.text_width(value, 22), label_y, value, 22, color)
+        box(left, value_y - 2, right, value_y + 6, HUD_EDGE)
         if percent:
-            box(left, BOARD_TOP + 5, left + width * percent / 100, BOARD_TOP + 9, color)
+            box(left, value_y - 2, left + (right - left) * percent / 100, value_y + 6, color)
 
-    def draw_play(self, game, index, total):
-        """2번 방부터 사용하는 간결한 플레이 HUD. 게임판 좌표는 유지한다."""
-        level, state = game.level, game.state
-        scene = scene_for(level)
-        background = tuple(scene["background"]) if scene else (19, 27, 32)
-        box(0, 0, WIDTH, HEIGHT, background)
-        self.text(40, HEIGHT - 48, f"{index + 1:02d} / {total:02d}", 18, GOLD)
-        self.text(150, HEIGHT - 48, level.title, 26, INK)
-        self.board(game)
-
-        box(32, BOARD_TOP, WIDTH - 32, BOARD_TOP + 40, (28, 39, 44))
-        x = 48
-        if level.traps:
-            self.text(x, BOARD_TOP + 20, f"함정 {len(state.installed)} / {len(level.traps)}", 18)
-            self.text(x + 150, BOARD_TOP + 20, "가동 완료" if state.active else "미가동", 16,
-                      TEAL if state.active else MUTED)
-            x += 300
-        if level.posts:
-            self.text(x, BOARD_TOP + 20, f"병사 {len(state.soldiers)} / {len(level.posts)}", 18)
-        self.text(740, BOARD_TOP + 20, f"운반: {ITEM_NAMES[state.carrying]}", 18, GOLD if state.carrying else MUTED)
-        if state.carrying:
-            self.hud_item(state.carrying, 940, BOARD_TOP + 8)
-        self.repair_progress(game, 1000, 200)
-
+    def play_footer(self, game, index, total):
         context, color = self.play_context(game)
-        if not draw_worker_status(self, game, context, color) and context:
-            box(32, 32, WIDTH - 32, 78, (28, 39, 44))
-            self.text(48, 55, context, 18, color)
-        if state.cleared:
-            label = "E / Space  다음 방" if index + 1 < total else "E / Space  처음부터 다시"
-            self.text(WIDTH - 323, 55, label, 18, TEAL)
+        bevel((32, STATUS_BOTTOM, WIDTH - 32, STATUS_TOP), HUD_FILL, HUD_EDGE)
+        if not draw_worker_status(self, game, context, color):
+            box(42, STATUS_BOTTOM + 8, 45, STATUS_TOP - 8, color)
+            self.text(58, STATUS_Y, context, 18, color)
+            if game.state.cleared:
+                label = "E / Space  다음 방" if index + 1 < total else "E / Space  처음부터 다시"
+                self.text(WIDTH - 54 - self.text_width(label, 18), STATUS_Y, label, 18, TEAL)
+            elif self.interaction_hint and self.interaction_hint != context:
+                hover = self.interaction_hint
+                self.text(WIDTH - 54 - self.text_width(hover, 18), STATUS_Y, hover, 18, GOLD)
+
+        for x, keys, label in (
+                (32, "좌클릭 / WASD / 방향키", "이동"),
+                (288, "우클릭", "이동 취소"),
+                (466, "E / Space", "작업"),
+                (1072, "Z / Backspace", "되돌리기"),
+                (1300, "R", "재시작"),
+                (1420, "Esc", "일시정지")):
+            right = x + self.text_width(keys, 16) + 20
+            box(x, 16, right, 39, HUD_FILL)
+            box(x, 16, right, 39, HUD_EDGE, filled=False)
+            self.text(x + 10, 27, keys, 16, INK)
+            self.text(right + 10, 27, label, 16, MUTED)
+        if self.show_coordinates:
+            axes = "x 오른쪽 / y 아래" if self.top_down else "x 오른쪽 아래 / y 왼쪽 아래"
+            self.centered(838, 27, f"F2 좌표 · {axes}", 16, MUTED)
 
     def draw(self, game, index, total):
-        level, state = game.level, game.state
         self.tutorial = first_room_hint(game)
         if game.failed:
             self.navigation.cancel()
-        if level.id != "stage_01":
-            self.draw_play(game, index, total)
-            return
-        scene = scene_for(level)
+        scene = scene_for(game.level)
         background = tuple(scene["background"]) if scene else (19, 27, 32)
         box(0, 0, WIDTH, HEIGHT, background)
-        self.text(32, HEIGHT - 36, "용사가 지나간 자리", 32)
-        self.text(450, HEIGHT - 36, level.title, 22)
-        self.text(WIDTH - 190, HEIGHT - 36, f"단계 {index + 1:02d} / {total:02d}", 22, GOLD)
-
         self.board(game)
         self.tutorial_overlay(game)
-
-        # 정보는 위·아래 띠에 모아 넓어진 지도 전체를 한 화면에 유지한다.
-        box(32, BOARD_TOP, WIDTH - 32, BOARD_TOP + 34, (28, 39, 44))
-        self.text(48, BOARD_TOP + 17, f"함정 설치 {len(state.installed)}/{len(level.traps)}", 18)
-        active_label = "완료" if state.active else "대기" if level.traps else "해당 없음"
-        self.text(260, BOARD_TOP + 17, f"가동 {active_label}", 18, TEAL if state.active else INK)
-        self.text(470, BOARD_TOP + 17, f"병사 배치 {len(state.soldiers)}/{len(level.posts)}", 18)
-        self.text(740, BOARD_TOP + 17, f"운반: {ITEM_NAMES[state.carrying]}", 18, GOLD)
-        if state.carrying:
-            self.hud_item(state.carrying, 940, BOARD_TOP + 5)
-        diamond(982, BOARD_TOP + 17, 6, 6, None, GOLD)
-        self.text(997, BOARD_TOP + 17, "상호작용 대상", 13, GOLD)
-        self.repair_progress(game, 1120, 110)
-
-        box(32, 48, WIDTH - 32, BOARD_BOTTOM, (41, 55, 58))
-        context = self.interaction_hint or game.context_action()
-        self.text(48, 80, context, 18, RED if game.failed else TEAL)
-        self.text(48, 59, game.message, 16, INK)
-        if state.cleared:
-            box(WIDTH - 340, 53, WIDTH - 44, 89, (46, 96, 81))
-            label = "E / Space  다음 방" if index + 1 < total else "E / Space  처음부터 다시"
-            self.text(WIDTH - 323, 71, label, 18)
-        elif game.failed:
-            box(WIDTH - 362, 53, WIDTH - 44, 89, (96, 45, 39))
-            self.text(WIDTH - 348, 71, "행동 소진 · 되돌리기 / 재시작", 16, INK)
-        else:
-            status = f"자동 이동 · {len(self.navigation.path)}칸 남음" if self.navigation.active else "모든 복구 후 빈손으로 출구 복귀"
-            self.text(WIDTH - 362, 71, status, 16, MUTED)
-
-        axes = "x 오른쪽 / y 아래" if self.top_down else "x 오른쪽 아래 / y 왼쪽 아래"
-        self.text(34, 32, f"좌클릭  이동    우클릭  취소    WASD / 방향키  이동    개발용 1~{total} 방 이동 · F2 좌표    (x,y): {axes}", 13, MUTED)
-        self.text(34, 12, "E / Space  상호작용·내려놓기·다음 방(완료 후)    Z / Backspace  되돌리기    R  재시작    Esc  일시정지", 13, MUTED)
+        self.play_header(game, index, total)
+        self.play_footer(game, index, total)
 
 
 def run(levels, index=0, smoke_frames=None, *, show_title=True, top_down=False):
