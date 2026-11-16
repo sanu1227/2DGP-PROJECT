@@ -12,6 +12,7 @@ from game.levels import DIRECTIONS
 from game.magic import mirror_output
 from game.mechanics import mirror_cells
 from game.play_effects import beam_contacts, trap_motion
+from game.scenery import draw_rubble_track
 from game.themes import scene_for
 from game.topdown_terrain import Light, draw_shadows, draw_terrain, materials_for
 from game.worker_view import ECHO_COLOR, draw_echo_trail, draw_echo_turn, recording_label
@@ -272,6 +273,7 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, mirror
 
     background = tuple(scene["background"]) if scene else (19, 27, 32)
     draw_terrain(art, board, level, materials_for(stage), lights, background, now, recesses)
+    draw_rubble_track(board, level.rubble_track)
     draw_echo_trail(game, board)
     raised = [mirror_positions.get(pos, pos) for pos, (sprite, _, _) in entries.items() if sprite in RAISED_DEVICES]
     draw_shadows(board, player, [*raised, *state.items, *(pos for pos, _ in rubble.values())])

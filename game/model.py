@@ -332,6 +332,8 @@ class Game:
                 if state.recording:
                     return False, "기록 중에는 발걸음만 남길 수 있습니다."
                 target = destination[0] + dx, destination[1] + dy
+                if destination in self.level.rubble_track and target not in self.level.rubble_track:
+                    return False, "차광 블록은 바닥 레일을 따라 두 자리 사이에서만 움직입니다."
                 forbidden = fixed_devices(self.level, state) | self.level.gates.keys()
                 if (state.carrying or not self.walkable(target, state) or target in forbidden
                         or target in state.items or target in state.workers):

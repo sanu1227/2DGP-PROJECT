@@ -45,13 +45,13 @@ SOLUTIONS = {
         "down"
     ).split(),
     "stage_06": (
-        "right right right right down down left right down down down "
-        "right right down right right interact up left left left left "
-        "interact right right down right interact up left left left up "
-        "up up up interact left left left down right up right "
-        "right down interact up interact up right right up right interact "
-        "down down interact up up interact down left left left down "
-        "down down down left left left left interact up up right"
+        "right down down down right right right up down down right "
+        "right right right down right interact left up left left interact "
+        "right right down interact up left left up up up up "
+        "left left interact down up interact up right right right up "
+        "right interact down interact up interact down left left down left "
+        "left left left up up left interact left interact right interact "
+        "down down down down down right interact down down left left"
     ).split(),
     "stage_07": (
         "down right up left down right right down down left left "

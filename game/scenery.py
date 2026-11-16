@@ -1,6 +1,29 @@
 """기존 아트에 고정된 파손 흔적을 더한다. 지형과 게임 상태는 바꾸지 않는다."""
 
 from ctypes import byref, c_ubyte
+from math import hypot
+
+
+def draw_rubble_track(board, track):
+    """두 광로 사이에서 차광 블록이 움직일 레일과 양 끝의 멈춤쇠."""
+    if not track:
+        return
+    import pico2d.pico2d as p
+
+    (x1, y1), (x2, y2) = map(board.screen, sorted(track))
+    dx, dy = x2 - x1, y2 - y1
+    length = hypot(dx, dy)
+    offset = board.half_width * .24
+    ox, oy = -dy / length * offset, dx / length * offset
+    x1, y1, x2, y2 = x1 - dx * .37, y1 - dy * .37, x2 + dx * .37, y2 + dy * .37
+    for x, y in ((x1, y1), (x2, y2)):
+        p.draw_line(x - ox * 1.25, y - oy * 1.25, x + ox * 1.25, y + oy * 1.25, 179, 140, 80)
+    for sign in (-1, 1):
+        ax, ay = ox * sign, oy * sign
+        for lift, color in ((-2, (27, 25, 24)), (-1, (78, 66, 53)), (0, (156, 133, 100))):
+            p.draw_line(x1 + ax, y1 + ay + lift, x2 + ax, y2 + ay + lift, *color)
+        for x, y in ((x1, y1), (x2, y2)):
+            p.draw_circle(x + ax, y + ay, 2, 189, 157, 105, filled=True)
 
 
 def _pattern(pos):

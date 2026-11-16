@@ -46,6 +46,7 @@ class Level:
     replay_workers: dict[Pos, Pos] = field(default_factory=dict)
     mirror_directions: dict[Pos, str] = field(default_factory=dict)
     movable_mirrors: frozenset[Pos] = frozenset()
+    rubble_track: frozenset[Pos] = frozenset()
 
     @property
     def solid_devices(self) -> frozenset[Pos]:
@@ -168,7 +169,7 @@ def load_levels(path: Path | str | None = None) -> list[Level]:
         prefix = f"스테이지 {index}: "
         required = {"id", "title", "hint", "map"}
         optional = {"plate_links", "chute_links", "action_limit", "power_links", "worker_links",
-                    "magic_sources", "mirror_directions"}
+                    "magic_sources", "mirror_directions", "rubble_track"}
         if not isinstance(raw, dict) or not required <= set(raw) or set(raw) - required - optional:
             raise ValueError(prefix + "id, title, hint, map 필드가 필요합니다.")
         action_limit = raw.get("action_limit")
@@ -191,6 +192,19 @@ def load_levels(path: Path | str | None = None) -> list[Level]:
             raise ValueError(prefix + "지도 테두리는 모두 벽이어야 합니다.")
 
         positions = {glyph: frozenset((x, y) for y, row in enumerate(rows) for x, char in enumerate(row) if char == glyph) for glyph in glyphs}
+        track = frozenset()
+        if "rubble_track" in raw:
+            points = raw["rubble_track"]
+            floor = positions["."] | positions["R"]
+            if (not isinstance(points, list) or len(points) != 2
+                    or any(not isinstance(point, list) or len(point) != 2
+                           or any(type(value) is not int for value in point) or tuple(point) not in floor
+                           for point in points)):
+                raise ValueError(prefix + "차광 레일은 빈 바닥 또는 잔해 칸 두 곳이어야 합니다.")
+            first, second = map(tuple, points)
+            track = frozenset((first, second))
+            if second not in neighbors(first) or len(positions["R"]) != 1 or not positions["R"] <= track:
+                raise ValueError(prefix + "차광 레일은 서로 붙은 두 칸과 그 위의 잔해 하나로 구성해야 합니다.")
         if len(positions["@"]) != 1 or len(positions["E"]) != 1:
             raise ValueError(prefix + "출발점과 출구는 각각 하나여야 합니다.")
         if not positions["T"] and not positions["S"]:
@@ -251,6 +265,6 @@ def load_levels(path: Path | str | None = None) -> list[Level]:
             chutes=chutes, action_limit=action_limit,
             mirrors=mirrors, sources=sources, receivers=positions["Y"], movable_mirrors=positions["N"],
             rubble=positions["R"], jobs=positions["J"], echo_links=echo_links, timed_echoes=timed_echoes,
-            replay_workers=replay_workers, mirror_directions=mirror_directions,
+            replay_workers=replay_workers, mirror_directions=mirror_directions, rubble_track=track,
         ))
     return levels

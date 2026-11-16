@@ -10,7 +10,7 @@ import pico2d.pico2d as p
 
 from game.model import DIRECTIONS, INTERACTION_HELP, PUSH_ACTIONS, Game
 from game.art import Art, MAGIC_BEAM_HEIGHT
-from game.scenery import draw_scars, draw_tinted, floor_style, wall_style
+from game.scenery import draw_rubble_track, draw_scars, draw_tinted, floor_style, wall_style
 from game.navigation import ClickNavigator, IsoBoard, TopDownBoard, find_path
 from game.themes import boundary_walls, low_wall_sprite, scene_for, themed_floor
 from game.layout import WIDTH, HEIGHT, BOARD_BOTTOM, BOARD_TOP
@@ -1071,6 +1071,7 @@ class View:
                 if pos in state.soldiers and self.work_feedback.contacted(pos, "deploy", now):
                     objects.append((depth, 2, "soldier_deployed", sx, sy))
 
+        draw_rubble_track(projection, level.rubble_track)
         draw_echo_marks(game, projection)
         for station, (seals, _) in level.echo_links.items():
             labels.append((station, "기록 완료" if station in state.recorded_stations else recording_label(level, station)))

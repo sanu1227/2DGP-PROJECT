@@ -155,20 +155,20 @@ class GimmickTests(unittest.TestCase):
         level = self.levels[5]
         game = Game(level)
         block, = level.rubble
-        slot = block[0] - 1, block[1]
-        game.state.player = slot
+        slot, = level.rubble_track - level.rubble
+        game.state.player = (block[0] - 1, block[1])
         north, south = sorted(level.gates, key=lambda pos: pos[1])
         before = deepcopy(game.state)
         self.assertEqual(trace_magic(level, game.state)[1], {level.gates[north]})
         self.assertEqual((game.gate_status(north), game.gate_status(south)), ("open", "closed"))
         self.assert_rejected(game, "right")
-        for action in ("down", "right", "right", "up", "left"):
-            self.assertTrue(game.act(action), game.message)
+        game.state.player = (block[0], block[1] + 1)
+        self.assertTrue(game.act("up"), game.message)
         self.assertEqual(game.state.rubble, {slot})
         self.assertEqual(trace_magic(level, game.state)[1], {level.gates[south]})
         self.assertEqual((game.gate_status(north), game.gate_status(south)), ("closed", "open"))
-        self.assert_rejected(game, "left")
-        for action in ("down", "left", "left", "up", "right"):
+        self.assert_rejected(game, "up")
+        for action in ("left", "up", "up", "right", "down"):
             self.assertTrue(game.act(action), game.message)
         self.assertEqual(game.state.rubble, before.rubble)
         self.assertEqual(trace_magic(level, game.state)[1], {level.gates[north]})
