@@ -2,7 +2,8 @@
 
 from ctypes import byref, c_int
 from dataclasses import dataclass
-from math import cos, pi, sin
+from functools import lru_cache
+from math import cos, hypot, pi, sin
 
 import pico2d.pico2d as p
 
@@ -10,6 +11,7 @@ from game.layout import HEIGHT
 
 
 _RING = tuple((cos(index * pi / 8), sin(index * pi / 8)) for index in range(16))
+LIGHT_SAMPLES_PER_CELL = 4
 
 
 @dataclass(frozen=True)
@@ -118,9 +120,64 @@ def floor_shadows(center, size, north, west, east):
             p.draw_line(right - 1 - offset, bottom, right - 1 - offset, top - 1, 12, 9, 13, alpha // 3)
 
 
-def draw_terrain(art, board, level, materials, lights):
+def smoothstep(fraction):
+    fraction = max(0, min(1, fraction))
+    return fraction * fraction * (3 - 2 * fraction)
+
+
+def light_tint(x, y, lights, background, visibility):
+    """바닥 그림자와 겹치는 빛을 한 번에 합성한다."""
+    total_light = 0.0
+    channels = [0.0, 0.0, 0.0]
+    for (lx, ly), width, height, color, alpha in lights:
+        distance = hypot((x - lx) / width, (y - ly) / height)
+        weight = alpha * smoothstep(1 - distance)
+        total_light += weight
+        for index, channel in enumerate(color):
+            channels[index] += channel * weight
+
+    glow = min(.54, total_light / 255) * visibility
+    ambient = .42 * (1 - min(1, total_light / 84))
+    shade = (1 - glow) * (1 - visibility * (1 - ambient))
+    opacity = shade + glow
+    if not glow:
+        return p.SDL_Color(*background, round(255 * opacity))
+    color = [round((shade * base + glow * light / total_light) / opacity)
+             for base, light in zip(background, channels)]
+    return p.SDL_Color(*color, round(255 * opacity))
+
+
+@lru_cache(maxsize=16)
+def lighting_mesh(board, floors, lights, background):
+    """이동과 무관한 조명 메시를 방과 전원 상태별로 재사용한다."""
+    columns = board.width * LIGHT_SAMPLES_PER_CELL + 1
+    rows = board.height * LIGHT_SAMPLES_PER_CELL + 1
+    vertices = []
+    indices = []
+    for row in range(rows):
+        y = row / LIGHT_SAMPLES_PER_CELL - .5
+        for column in range(columns):
+            x = column / LIGHT_SAMPLES_PER_CELL - .5
+            edge = min(x + .5, y + .5, board.width - .5 - x, board.height - .5 - y)
+            rock_depth = min((hypot(max(abs(x - fx) - .5, 0), max(abs(y - fy) - .5, 0))
+                              for fx, fy in floors), default=2)
+            # 통로에서 멀어질수록 돌을 감춰 방 윤곽이 격자 외곽선으로 끊기지 않게 한다.
+            visibility = smoothstep(edge / .58) * (1 - smoothstep((rock_depth - .32) / .93))
+            sx, sy = board.screen((x, y))
+            tint = light_tint(x, y, lights, background, visibility)
+            # 소프트웨어 렌더러에서 삼각형 경계 사이에 암석이 비치지 않게 맞춘다.
+            vertices.append(p.SDL_Vertex(p.SDL_FPoint(round(sx), round(HEIGHT - sy)), tint, p.SDL_FPoint()))
+            if row and column:
+                current = row * columns + column
+                indices.extend((current - columns - 1, current - columns, current,
+                                current - columns - 1, current, current - 1))
+    return (p.SDL_Vertex * len(vertices))(*vertices), (c_int * len(indices))(*indices)
+
+
+def draw_terrain(art, board, level, materials, lights, background):
     size = board.cell_size
-    floors = {(x, y) for y in range(level.height) for x in range(level.width) if (x, y) not in level.walls}
+    floors = frozenset((x, y) for y in range(level.height) for x in range(level.width)
+                       if (x, y) not in level.walls)
 
     previous = c_int()
     p.SDL_GetRenderDrawBlendMode(p.renderer, byref(previous))
@@ -144,8 +201,8 @@ def draw_terrain(art, board, level, materials, lights):
                     art.draw(rock, *center, size, angle=((x * 3 + y) % 4) * pi / 2,
                              opacity=max(.14, .77 - .28 * (distance - 1)))
                     wall_rim(art, board, pos, floors, materials)
-        for position, width, height, color, alpha in lights:
-            radial_layer(*board.screen(position), size * width, size * height, color, alpha)
+        mesh, triangles = lighting_mesh(board, floors, lights, background)
+        p.SDL_RenderGeometry(p.renderer, None, mesh, len(mesh), triangles, len(triangles))
     finally:
         p.SDL_SetRenderDrawBlendMode(p.renderer, previous.value)
 
