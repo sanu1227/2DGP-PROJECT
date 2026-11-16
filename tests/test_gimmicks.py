@@ -122,6 +122,8 @@ class GimmickTests(unittest.TestCase):
         for index, expected in ((4, (1,)), (7, (3, 1, 3))):
             count = len(expected)
             level = replace(self.levels[index], rubble=frozenset())
+            receiver = next(control for gate, control in level.gates.items()
+                            if level.device_labels[gate] == 'M1')
             mirrors = sorted(level.mirrors)
             self.assertEqual(len(mirrors), count)
             winning = []
@@ -129,7 +131,7 @@ class GimmickTests(unittest.TestCase):
                 game = Game(level)
                 game.state.mirror_rotations = dict(zip(mirrors, rotations))
                 segments, powered = trace_magic(level, game.state)
-                if powered:
+                if receiver in powered:
                     winning.append(rotations)
                     hits = [end for _, end in segments if end in level.mirrors]
                     self.assertEqual(len(hits), count)
@@ -144,11 +146,11 @@ class GimmickTests(unittest.TestCase):
                     game.undo()
                     self.assertEqual(game.state, before)
                     self.assertTrue(game.act('interact'))
-            self.assertEqual(trace_magic(level, game.state)[1], set(level.receivers))
+            self.assertEqual(trace_magic(level, game.state)[1], {receiver})
             # 도달 경로의 거울 하나를 빼면 수신기가 작동할 수 없다.
             for mirror in mirrors:
                 broken = replace(level, mirrors=level.mirrors - {mirror})
-                self.assertFalse(trace_magic(broken, game.state)[1])
+                self.assertNotIn(receiver, trace_magic(broken, game.state)[1])
 
     def test_switching_power_and_deploying_guard_changes_available_room(self):
         level = self.levels[5]
@@ -178,6 +180,27 @@ class GimmickTests(unittest.TestCase):
         game.state.player = switch
         self.assertTrue(game.act('interact'))
         self.assertEqual([game.gate_status(gate) for gate in (north, south)], ['open', 'closed'])
+
+    def test_relay_room_requires_staging_the_bone_across_power_modes(self):
+        level = self.levels[5]
+        game = Game(level)
+        lower_bone = max((pos for pos, kind in level.initial_items.items() if kind == 'bone'),
+                         key=lambda pos: pos[1])
+        bench = next(iter(level.benches))
+        picked_up = False
+        for action in SOLUTIONS[level.id]:
+            pos = game.state.player
+            picking = pos == lower_bone and game.state.items.get(pos) == 'bone'
+            hauling = picked_up and game.state.carrying == 'bone'
+            self.assertTrue(game.act(action), game.message)
+            if picking and action == 'interact':
+                picked_up = True
+                self.assertIsNone(find_path(game, bench))
+            if hauling and game.state.items.get(pos) == 'bone':
+                self.assertNotEqual(pos, lower_bone)
+                break
+        else:
+            self.fail('남쪽 뼈를 다른 전력 상태로 넘길 임시 보관이 필요합니다.')
 
     def test_retired_water_is_absent_from_levels_state_and_catalog(self):
         from game.device_catalog import CARDS
@@ -258,6 +281,9 @@ class GimmickTests(unittest.TestCase):
     def test_vault_guard_seals_the_east_winch_and_can_trap_the_player(self):
         game = Game(self.levels[6])
         east_winch = max(game.level.jobs)
+        plate = next(iter(game.level.plates))
+        part = next(pos for pos, kind in game.state.items.items() if kind == 'part')
+        game.state.items[plate] = game.state.items.pop(part)
         game.state.player = next(iter(game.level.posts))
         game.state.carrying = 'soldier'
         self.assertTrue(game.act('interact'))
@@ -267,6 +293,24 @@ class GimmickTests(unittest.TestCase):
         self.assertTrue(game.undo())
         self.assertTrue(game.act('right'))
         self.assertIsNone(find_path(game, game.level.exit))
+
+    def test_treasury_uses_the_first_part_to_hold_the_outer_gate(self):
+        level = self.levels[6]
+        game = Game(level)
+        self.assertEqual(list(level.initial_items.values()).count('soldier'), 1)
+        self.assertFalse(level.benches)
+        gates = {level.device_labels[gate]: gate for gate in level.gates}
+        first_part = min((pos for pos, kind in level.initial_items.items() if kind == 'part'), key=lambda pos: pos[1])
+        for action in SOLUTIONS[level.id]:
+            self.assertTrue(game.act(action), game.message)
+            if game.state.player == gates['J2']:
+                self.assertNotIn(first_part, game.state.items)
+                self.assertFalse(game.state.installed)
+                self.assertEqual(game.state.items[level.gates[gates['P1']]], 'part')
+                self.assertIn(level.gates[gates['J2']], game.state.workers)
+                break
+        else:
+            self.fail('두 번째 금고에 도착하지 못했습니다.')
 
     def test_schema_rejects_retired_belt_and_unlinked_new_devices(self):
         for glyph in ('>','<','^','v','M','Q','Y','V','W','H','J'):
@@ -282,10 +326,11 @@ class GimmickTests(unittest.TestCase):
             state=deepcopy(game.state);getattr(state,field).add((1,1))
             self.assertNotEqual(base,key(state))
 
-    def test_boss_mirror_gate_cannot_be_bypassed_through_the_material_room(self):
+    def test_boss_switches_power_from_the_vault_to_the_exit(self):
         game = Game(self.levels[7])
         job = next(iter(game.level.jobs))
         vault_part = min((p for p, kind in game.level.initial_items.items() if kind == 'part'), key=lambda p: p[1])
+        exit_gate = next(gate for gate in game.level.gates if game.level.device_labels[gate] == 'M2')
         self.assertIsNone(find_path(game, job))
         self.assertIsNone(find_path(game, vault_part))
         for mirror, rotation in zip(sorted(game.level.mirrors), (3, 1, 3)):
@@ -303,8 +348,12 @@ class GimmickTests(unittest.TestCase):
         self.assertTrue(game.act('interact'))
         self.assertFalse(trace_magic(game.level, game.state)[1])
         self.assertIsNone(find_path(game, job))
-        self.assertTrue(game.undo())
-        self.assertIsNotNone(find_path(game, job))
+        self.assertIsNone(find_path(game, game.level.exit))
+        game.state.player = sorted(game.level.mirrors)[1]
+        self.assertTrue(game.act('interact'))
+        self.assertEqual(game.gate_status(exit_gate), 'open')
+        self.assertIsNotNone(find_path(game, game.level.exit))
+        self.assertIsNone(find_path(game, job))
 
 
 if __name__=='__main__':unittest.main()

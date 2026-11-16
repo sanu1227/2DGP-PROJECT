@@ -55,7 +55,7 @@ class BalanceTests(unittest.TestCase):
             (levels[5], levels[5].start, levels[5].exit, levels[5].traps),
             (levels[6], levels[6].start, (9, 5), levels[6].posts),
             (levels[6], levels[6].start, levels[6].exit, levels[6].traps),
-            (levels[7], levels[7].start, (8, 10), {(5, 8)}),
+            (levels[7], levels[7].start, levels[7].exit, levels[7].traps),
         ]
         for level, start, target, blocked in checks:
             with self.subTest(stage=level.id, blocked=blocked):

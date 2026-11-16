@@ -38,7 +38,25 @@ class LowerBound:
         self.floor = {(x, y) for y in range(level.height) for x in range(level.width)} - level.walls
         self.worker_regions = {}
         self.mirror_regions = []
-        self.monotone_mirrors = None
+        mirrors = sorted(level.mirrors)
+        patterns_by_receiver = {receiver: [] for receiver in level.receivers}
+        used_rotations = {mirror: set() for mirror in mirrors}
+        if 0 < len(mirrors) <= 6:
+            probe = Game(level).state
+            probe.rubble.clear()
+            for rotations in product(range(4), repeat=len(mirrors)):
+                probe.mirror_rotations = dict(zip(mirrors, rotations))
+                segments, powered = trace_magic(level, probe)
+                for receiver in powered:
+                    patterns_by_receiver[receiver].append(probe.mirror_rotations)
+                if powered:
+                    for start, _ in segments:
+                        if start in used_rotations:
+                            used_rotations[start].add(probe.mirror_rotations[start])
+        # 어떤 수신 경로에서도 한 방향만 쓰는 거울은 맞춘 뒤 다시 틀 필요가 없다.
+        # 잔해·병사는 광선을 막을 뿐 새 경로를 만들지 않고, 문이 닫혀야 진행하는 규칙도 없다.
+        self.monotone_mirrors = {mirror: next(iter(rotations)) for mirror, rotations in used_rotations.items()
+                                 if len(rotations) == 1}
         # 모든 함정이 문 바깥에 있으면 안쪽 부품은 반드시 이 문을 통과한다.
         # 잔해·병사 차단을 없앤 광선의 가능한 방향만 열거해 회전 횟수 하한을 더한다.
         for gate, control in level.gates.items():
@@ -54,22 +72,9 @@ class LowerBound:
                         queue.append(target)
             if not level.traps <= region:
                 continue
-            mirrors = sorted(level.mirrors)
-            if len(mirrors) > 6:
-                continue  # 큰 지도는 기존의 약한 하한으로 안전하게 돌아간다.
-            probe = Game(level).state
-            probe.rubble.clear()
-            patterns = []
-            for rotations in product(range(4), repeat=len(mirrors)):
-                probe.mirror_rotations = dict(zip(mirrors, rotations))
-                if control in trace_magic(level, probe)[1]:
-                    patterns.append(dict(probe.mirror_rotations))
+            patterns = patterns_by_receiver[control]
             if patterns:
                 self.mirror_regions.append((self.floor - region - {gate}, patterns))
-                if len(level.receivers) == 1 and len(patterns) == 1:
-                    # 유일한 수신 경로에서 맞춘 거울을 다시 틀면 문을 닫을 뿐이다.
-                    # 광선에는 피해나 별도 목표가 없으므로 그 회전은 최단 풀이에 불필요하다.
-                    self.monotone_mirrors = patterns[0]
         # 하나의 초소와 인부로 작업하는 방: 모든 함정이 문 바깥에 있다면
         # 안쪽 부품을 꺼내려면 이 인부를 배치한 후 반드시 회수해야 한다.
         if len(level.posts) == 1 and len(level.jobs) == 1:
@@ -242,8 +247,7 @@ def solve(level, max_states=500_000, upper_bound=None, forbidden=None):
         for action in (*DIRECTIONS, "interact", "drop"):
             game.state = state
             game.history = []
-            if (action == 'interact' and state.player in level.mirrors
-                    and lower_bound.monotone_mirrors is not None
+            if (action == 'interact' and state.player in lower_bound.monotone_mirrors
                     and (state.mirror_rotations.get(state.player, 0) == lower_bound.monotone_mirrors[state.player])
                     and game._interaction(state)[0] == 'rotate'):
                 continue
@@ -330,7 +334,7 @@ def main():
         if result is None:
             raise ValueError(f"{level.id}: 완료 가능한 풀이가 없습니다.")
         required = {4: ("rubble", "plate"), 5: ("rubble", "mirror", "chute", "plate"), 6: ("mirror",),
-                    7: ("helper",), 8: ("rubble", "mirror", "helper", "chute", "plate")}
+                    7: ("helper", "plate"), 8: ("mirror", "helper", "chute", "plate")}
         if args.check_mechanics and index in required:
             layout_required = []
             for mechanic in required[index]:

@@ -80,7 +80,7 @@ def load_levels(path: Path | str | None = None) -> list[Level]:
 
     levels = []
     identifiers = set()
-    glyphs = "#.@EPBTLASFGCOMQYRJ"
+    glyphs = "#.@EPBTLASFGCOMQYRJK"
     for index, raw in enumerate(stages, start=1):
         prefix = f"스테이지 {index}: "
         required = {"id", "title", "hint", "map"}
@@ -112,12 +112,12 @@ def load_levels(path: Path | str | None = None) -> list[Level]:
             raise ValueError(prefix + "복구할 함정이나 초소가 하나 이상 필요합니다.")
         if len(positions["P"]) != len(positions["T"]):
             raise ValueError(prefix + "함정 하나마다 부품 하나가 필요합니다.")
-        if len(positions["B"]) != 2 * len(positions["S"]):
-            raise ValueError(prefix + "초소 하나마다 뼈 묶음 두 개가 필요합니다.")
+        if len(positions["B"]) + 2 * len(positions["K"]) != 2 * len(positions["S"]):
+            raise ValueError(prefix + "초소 하나마다 뼈 묶음 두 개 또는 조립된 병사 한 명이 필요합니다.")
         if positions["T"] and not positions["L"]:
             raise ValueError(prefix + "함정이 있는 방에는 레버가 필요합니다.")
-        if positions["S"] and not positions["A"]:
-            raise ValueError(prefix + "초소가 있는 방에는 작업대가 필요합니다.")
+        if positions["B"] and not positions["A"]:
+            raise ValueError(prefix + "뼈 묶음이 있는 방에는 작업대가 필요합니다.")
         used_ids = set()
         plate_links, labels = read_links(raw, "plate_links", "plate", "gate", positions["F"], positions["G"], prefix, used_ids)
         power_links, power_labels = read_links(raw, "power_links", "receiver", "gate", positions["Y"], positions["G"], prefix, used_ids)
@@ -137,6 +137,7 @@ def load_levels(path: Path | str | None = None) -> list[Level]:
             labels[pos] = labels[pos] + "/" + identifier if pos in labels else identifier
         items = {pos: "part" for pos in positions["P"]}
         items.update({pos: "bone" for pos in positions["B"]})
+        items.update({pos: "soldier" for pos in positions["K"]})
         sources = {}
         raw_sources = raw.get("magic_sources", [])
         if not isinstance(raw_sources, list):
