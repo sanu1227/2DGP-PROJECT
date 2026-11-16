@@ -45,11 +45,11 @@ ROOM_SPRITES = WORKSHOP_SPRITES | {name: f"depth_{name}" for name in (
     "brazier", "treasure", "treasure_banner", "crypt_banner", "archive_banner",
 )}
 PROP_LIGHTS = {
-    "candle_sconce": (2.06, 1.78, (249, 169, 99), 119, .07),
-    "candles": (1.75, 1.54, (250, 177, 104), 104, .07),
-    "lantern": (2.42, 2.05, (248, 164, 80), 132, .07),
-    "brazier": (2.56, 2.20, (253, 128, 73), 143, .08),
-    "crystal_sconce": (2.26, 1.92, (115, 192, 247), 120, .045),
+    "candle_sconce": (2.06, 1.78, (249, 169, 99), 119, .24),
+    "candles": (1.75, 1.54, (250, 177, 104), 104, .23),
+    "lantern": (2.42, 2.05, (248, 164, 80), 132, .24),
+    "brazier": (2.56, 2.20, (253, 128, 73), 143, .27),
+    "crystal_sconce": (2.26, 1.92, (115, 192, 247), 120, .20),
 }
 SIDE_LAMPS = {
     2: ("candle_sconce", (5.76, 2.96)),
@@ -200,8 +200,8 @@ def room_props(scene, level, stage):
 
 def room_lights(level, props, powered, exit_ready, workshop):
     if workshop:
-        lights = [Light((2.9, .72), 2.20, 1.86, (249, 169, 86), 124, .07),
-                  Light((.68, 1.94), 2.05, 1.85, (249, 153, 76), 120, .07)]
+        lights = [Light((2.9, .72), 2.20, 1.86, (249, 169, 86), 124, .24),
+                  Light((.68, 1.94), 2.05, 1.85, (249, 153, 76), 120, .24)]
     else:
         lights = []
         for name, (x, y), _ in props:

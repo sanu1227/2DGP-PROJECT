@@ -156,7 +156,11 @@ def light_tint(samples, background, visibility, scales):
     total_light = 0.0
     red = green = blue = 0.0
     for light_index, light, distance in samples:
-        weight = light.alpha * smoothstep(1 - distance / scales[light_index])
+        falloff = smoothstep(1 - distance / scales[light_index])
+        if light.range_variation:
+            # 중심 밝기는 유지하고 바닥에 닿는 빛의 가장자리가 더 잘 보이게 한다.
+            falloff += .45 * falloff * (1 - falloff)
+        weight = light.alpha * falloff
         total_light += weight
         r, g, b = light.color
         red += r * weight
