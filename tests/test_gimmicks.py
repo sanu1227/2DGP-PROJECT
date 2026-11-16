@@ -49,7 +49,8 @@ class GimmickTests(unittest.TestCase):
         game = Game(self.levels[4])
         for action in ("down", "right"):
             self.assertTrue(game.act(action), game.message)
-        gate = next(gate for gate, control in game.level.gates.items() if control in game.level.receivers)
+        gate = next(gate for gate in game.level.gates if game.level.device_labels[gate] == "M1")
+        exit_gate = next(gate for gate in game.level.gates if game.level.device_labels[gate] == "M2")
         self.assertTrue(game.act('interact'))
         self.assertEqual(game.gate_status(gate), 'closed')
         self.assertTrue(game.act('down'))  # Along the beam; the receiver stays blocked.
@@ -57,7 +58,8 @@ class GimmickTests(unittest.TestCase):
         before=deepcopy(game.state)
         self.assertTrue(game.act('right'))  # Park the rubble in the side recess.
         self.assertEqual(game.gate_status(gate), 'open')
-        self.assertEqual(trace_magic(game.level,game.state)[1], game.level.receivers)
+        self.assertEqual(trace_magic(game.level, game.state)[1], {game.level.gates[gate]})
+        self.assertEqual(game.gate_status(exit_gate), 'closed')
         self.assertNotEqual(key(before), key(game.state))
         game.undo(); self.assertEqual(game.state,before)
         game.state.player=(3,2)
@@ -104,7 +106,7 @@ class GimmickTests(unittest.TestCase):
             self.assertFalse(trace_magic(game.level,game.state)[1])
             getattr(game.state,field).clear()
         game.state.player=(3,3);game.state.items[(3,3)]='bone'
-        self.assertEqual(trace_magic(game.level,game.state)[1],game.level.receivers)
+        self.assertEqual(trace_magic(game.level, game.state)[1], {(3, 5)})
 
     def test_closed_mirror_loop_terminates(self):
         level=replace(self.levels[4],walls=frozenset(),receivers=frozenset(),rubble=frozenset(),
@@ -157,7 +159,8 @@ class GimmickTests(unittest.TestCase):
         block, = level.rubble
         slot, = level.rubble_track - level.rubble
         game.state.player = (block[0] - 1, block[1])
-        north, south = sorted(level.gates, key=lambda pos: pos[1])
+        north, south = sorted((gate for gate, control in level.gates.items() if control in level.receivers),
+                              key=lambda pos: pos[1])
         before = deepcopy(game.state)
         self.assertEqual(trace_magic(level, game.state)[1], {level.gates[north]})
         self.assertEqual((game.gate_status(north), game.gate_status(south)), ("open", "closed"))

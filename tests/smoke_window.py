@@ -86,7 +86,7 @@ def main():
     for stage in reversed(range(len(levels))):
         steps.append((p.SDLK_1 + stage, lambda stage=stage: expect_room(stage)))
     keys = {"up": p.SDLK_w, "down": p.SDLK_s, "left": p.SDLK_a,
-            "right": p.SDLK_RIGHT, "interact": p.SDLK_SPACE}
+            "right": p.SDLK_RIGHT, "interact": p.SDLK_SPACE, "drop": p.SDLK_e}
     for index, level in enumerate(levels):
         actions = SOLUTIONS[level.id]
         for action in actions:
