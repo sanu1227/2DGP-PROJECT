@@ -204,6 +204,8 @@ class GimmickTests(unittest.TestCase):
                 visited.append(door)
             if door == 'P3' and game.state.player == gates[door] and len(visited) == 3:
                 self.assertEqual(visited, ['P1', 'P2', 'P3'])
+                self.assertTrue(all(game.gate_status(gate) == 'open' for gate in gates.values()))
+                self.assertIn(level.gates[gates['P1']], game.state.rubble)
                 for identifier in ('P2', 'P3'):
                     self.assertEqual(game.state.items[level.gates[gates[identifier]]], 'bone')
                 self.assertIsNotNone(find_path(game, armory))

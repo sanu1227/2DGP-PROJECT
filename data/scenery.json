@@ -68,6 +68,7 @@
       {"sprite": "forge_mount_vent_ne", "cell": [6, 4], "facing": "down"},
       {"sprite": "forge_mount_vent_ne", "cell": [10, 4], "facing": "down"},
       {"sprite": "crypt_mount_sconce_nw", "cell": [0, 6], "facing": "right"},
+      {"sprite": "crypt_mount_sconce_ne", "cell": [4, 8], "facing": "down"},
       {"sprite": "crypt_mount_sconce_nw", "cell": [11, 5], "facing": "left"}
     ],
     "decorations": [
