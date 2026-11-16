@@ -1,0 +1,458 @@
+{
+  "atlases": {
+    "terrain": "atlases/terrain.png",
+    "devices": "atlases/devices.png",
+    "objects": "atlases/objects.png",
+    "worker": "atlases/worker.png"
+  },
+  "sprites": {
+    "floor_1": [
+      "terrain",
+      0,
+      0,
+      256,
+      256
+    ],
+    "floor_2": [
+      "terrain",
+      256,
+      0,
+      256,
+      256
+    ],
+    "floor_3": [
+      "terrain",
+      512,
+      0,
+      256,
+      256
+    ],
+    "floor_4": [
+      "terrain",
+      768,
+      0,
+      256,
+      256
+    ],
+    "floor_5": [
+      "terrain",
+      0,
+      256,
+      256,
+      256
+    ],
+    "floor_6": [
+      "terrain",
+      256,
+      256,
+      256,
+      256
+    ],
+    "floor_7": [
+      "terrain",
+      512,
+      256,
+      256,
+      256
+    ],
+    "floor_8": [
+      "terrain",
+      768,
+      256,
+      256,
+      256
+    ],
+    "wall_1": [
+      "terrain",
+      0,
+      512,
+      256,
+      256
+    ],
+    "wall_2": [
+      "terrain",
+      256,
+      512,
+      256,
+      256
+    ],
+    "wall_3": [
+      "terrain",
+      512,
+      512,
+      256,
+      256
+    ],
+    "wall_4": [
+      "terrain",
+      768,
+      512,
+      256,
+      256
+    ],
+    "wall_5": [
+      "terrain",
+      0,
+      768,
+      256,
+      256
+    ],
+    "wall_6": [
+      "terrain",
+      256,
+      768,
+      256,
+      256
+    ],
+    "wall_7": [
+      "terrain",
+      512,
+      768,
+      256,
+      256
+    ],
+    "wall_8": [
+      "terrain",
+      768,
+      768,
+      256,
+      256
+    ],
+    "trap_broken": [
+      "devices",
+      4,
+      4,
+      247,
+      248
+    ],
+    "trap_installed": [
+      "devices",
+      260,
+      6,
+      248,
+      243
+    ],
+    "trap_active": [
+      "devices",
+      516,
+      5,
+      248,
+      246
+    ],
+    "exit_closed": [
+      "devices",
+      772,
+      4,
+      248,
+      247
+    ],
+    "exit_ready": [
+      "devices",
+      21,
+      260,
+      213,
+      248
+    ],
+    "lever_off": [
+      "devices",
+      300,
+      260,
+      168,
+      248
+    ],
+    "lever_on": [
+      "devices",
+      549,
+      260,
+      181,
+      248
+    ],
+    "bench_empty": [
+      "devices",
+      772,
+      287,
+      248,
+      194
+    ],
+    "bench_bone": [
+      "devices",
+      4,
+      543,
+      248,
+      194
+    ],
+    "plate_up": [
+      "devices",
+      260,
+      516,
+      248,
+      248
+    ],
+    "plate_down": [
+      "devices",
+      516,
+      518,
+      248,
+      243
+    ],
+    "gate_closed": [
+      "devices",
+      772,
+      576,
+      248,
+      127
+    ],
+    "gate_open": [
+      "devices",
+      4,
+      830,
+      248,
+      131
+    ],
+    "post_empty": [
+      "devices",
+      260,
+      773,
+      248,
+      246
+    ],
+    "soldier_deployed": [
+      "devices",
+      530,
+      772,
+      220,
+      248
+    ],
+    "rubble": [
+      "devices",
+      772,
+      774,
+      248,
+      244
+    ],
+    "part": [
+      "objects",
+      4,
+      16,
+      248,
+      224
+    ],
+    "bone": [
+      "objects",
+      281,
+      4,
+      205,
+      248
+    ],
+    "soldier_carried": [
+      "objects",
+      565,
+      4,
+      150,
+      248
+    ],
+    "chute_inlet": [
+      "objects",
+      791,
+      4,
+      210,
+      248
+    ],
+    "chute_outlet": [
+      "objects",
+      4,
+      262,
+      248,
+      244
+    ],
+    "source": [
+      "objects",
+      294,
+      260,
+      180,
+      248
+    ],
+    "mirror_base": [
+      "objects",
+      516,
+      260,
+      247,
+      248
+    ],
+    "receiver": [
+      "objects",
+      772,
+      260,
+      248,
+      248
+    ],
+    "winch": [
+      "objects",
+      4,
+      554,
+      248,
+      172
+    ],
+    "helper": [
+      "objects",
+      270,
+      516,
+      227,
+      248
+    ],
+    "anvil": [
+      "objects",
+      516,
+      550,
+      248,
+      179
+    ],
+    "urn": [
+      "objects",
+      807,
+      516,
+      178,
+      248
+    ],
+    "books": [
+      "objects",
+      18,
+      772,
+      220,
+      248
+    ],
+    "pipe": [
+      "objects",
+      291,
+      772,
+      185,
+      248
+    ],
+    "treasure": [
+      "objects",
+      516,
+      786,
+      248,
+      220
+    ],
+    "throne": [
+      "objects",
+      807,
+      772,
+      177,
+      248
+    ],
+    "worker_down_idle": [
+      "worker",
+      49,
+      4,
+      157,
+      248
+    ],
+    "worker_down_walk_a": [
+      "worker",
+      308,
+      4,
+      152,
+      248
+    ],
+    "worker_down_walk_b": [
+      "worker",
+      564,
+      4,
+      152,
+      248
+    ],
+    "worker_down_carry": [
+      "worker",
+      794,
+      4,
+      204,
+      248
+    ],
+    "worker_left_idle": [
+      "worker",
+      59,
+      260,
+      137,
+      248
+    ],
+    "worker_left_walk_a": [
+      "worker",
+      302,
+      260,
+      164,
+      248
+    ],
+    "worker_left_walk_b": [
+      "worker",
+      569,
+      260,
+      142,
+      248
+    ],
+    "worker_left_carry": [
+      "worker",
+      812,
+      260,
+      168,
+      248
+    ],
+    "worker_up_idle": [
+      "worker",
+      47,
+      516,
+      162,
+      248
+    ],
+    "worker_up_walk_a": [
+      "worker",
+      305,
+      516,
+      158,
+      248
+    ],
+    "worker_up_walk_b": [
+      "worker",
+      558,
+      516,
+      163,
+      248
+    ],
+    "worker_up_carry": [
+      "worker",
+      782,
+      516,
+      228,
+      248
+    ],
+    "worker_right_idle": [
+      "worker",
+      60,
+      772,
+      136,
+      248
+    ],
+    "worker_right_walk_a": [
+      "worker",
+      300,
+      772,
+      167,
+      248
+    ],
+    "worker_right_walk_b": [
+      "worker",
+      558,
+      772,
+      164,
+      248
+    ],
+    "worker_right_carry": [
+      "worker",
+      807,
+      772,
+      178,
+      248
+    ]
+  }
+}
