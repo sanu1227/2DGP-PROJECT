@@ -21,7 +21,7 @@ from game.play_menu import PlayClock, PlayMenu
 from game.stage_feedback import StageFeedback
 from game.receiver_feedback import ReceiverFeedback
 from game.topdown import ITEMS as TOPDOWN_ITEMS, TopDownArt, draw_board as draw_topdown_board
-from game.worker_view import EchoMotion, draw_echo_marks, recording_label
+from game.worker_view import EchoMotion, draw_echo_marks, draw_worker_status, recording_label
 from game.music import BackgroundMusic
 
 INK = (226, 230, 219)
@@ -1006,7 +1006,7 @@ class View:
         self.repair_progress(game, 1000, 200)
 
         context, color = self.play_context(game)
-        if context:
+        if not draw_worker_status(self, game, context, color) and context:
             box(32, 32, WIDTH - 32, 78, (28, 39, 44))
             self.text(48, 55, context, 18, color)
         if state.cleared:

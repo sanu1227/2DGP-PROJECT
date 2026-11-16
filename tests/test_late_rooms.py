@@ -3,11 +3,13 @@
 import json
 from pathlib import Path
 import unittest
+from unittest.mock import Mock, patch
 
 from game.levels import load_levels
 from game.model import DIRECTIONS, Game
 from game.navigation import find_path, IsoBoard
 from game.themes import scene_for, themed_floor
+from game.worker_view import draw_worker_status
 
 
 class LateRoomTests(unittest.TestCase):
@@ -109,6 +111,51 @@ class LateRoomTests(unittest.TestCase):
         use(lever)
         self.go(game, level.exit)
         self.assertTrue(game.state.cleared)
+
+    def test_worker_status_shows_recording_order_and_each_boss_gate(self):
+        levels = load_levels()
+        for level in levels:
+            self.assertEqual(level.jobs, level.replay_workers.keys(), level.id)
+        game = Game(levels[7])
+        game.state.player = (1, 3)
+
+        def hud():
+            view = Mock()
+            with (patch("game.worker_view.p.draw_rectangle"),
+                  patch("game.worker_view.draw_direction_arrow") as arrow):
+                self.assertTrue(draw_worker_status(view, game, "", (0, 0, 0)))
+            directions = [call.args[2] for call in arrow.call_args_list]
+            labels = {call.args[2] for calls in (view.text, view.centered) for call in calls.call_args_list}
+            return directions, labels
+
+        self.play(game, "right", "up", "up", "right")
+        directions, labels = hud()
+        self.assertEqual(directions, ["up", "up", "right"])
+        self.assertIn("발걸음 기록 3/5", labels)
+
+        self.play(game, "right", "right")
+        directions, labels = hud()
+        self.assertEqual(directions, ["up", "up", "right", "right", "right"])
+        self.assertTrue({"인부 재생 0/5", "J1 닫힘", "J2 닫힘"} <= labels)
+
+        self.play(game, "right", "right")
+        self.assertTrue({"인부 재생 2/5", "J1 통과", "J2 닫힘"} <= hud()[1])
+        self.play(game, "right", "right")
+        self.assertTrue({"인부 재생 4/5", "J1 닫힘", "J2 통과"} <= hud()[1])
+
+        self.play(game, "right")
+        self.assertTrue({"인부 재생 5/5", "J2 통과 중"} <= hud()[1])
+        self.assertTrue(game.undo())
+        self.assertTrue({"인부 재생 4/5", "J2 통과"} <= hud()[1])
+
+        self.play(game, "right", "down")
+        self.assertFalse(draw_worker_status(Mock(), game, "", (0, 0, 0)))
+
+        game.restart()
+        game.state.player = (1, 3)
+        self.play(game, "right", "up", "up", "right", "left", "right")
+        self.play(game, "left", "down", "up", "right", "right")
+        self.assertTrue({"재생 완료 5/5", "J1 닫힘", "J2 닫힘"} <= hud()[1])
 
     def test_new_themes_and_twelve_cell_boards_resolve_real_assets(self):
         root = Path(__file__).resolve().parents[1]
