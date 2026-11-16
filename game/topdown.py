@@ -7,6 +7,7 @@ from pathlib import Path
 import pico2d.pico2d as p
 
 from game.art import Art
+from game.layout import HEIGHT
 from game.levels import DIRECTIONS
 from game.themes import scene_for
 from game.topdown_terrain import Light, draw_shadows, draw_terrain, materials_for
@@ -126,7 +127,8 @@ def device_entries(game, gate_statuses, powered, exit_ready, plate_depths):
     for pos in level.sources:
         entries[pos] = "source", "광원", GOLD
     for pos in level.mirrors:
-        entries[pos] = "mirror_base", "거울", GOLD
+        facing = state.mirror_rotations.get(pos, 0) + 1
+        entries[pos] = "mirror_base", f"거울 {facing}/4", GOLD
     for pos in level.receivers:
         label = level.device_labels[pos]
         entries[pos] = ("receiver_powered", f"{label} 수신", TEAL) if pos in powered else ("receiver", label, INK)
@@ -152,12 +154,25 @@ def draw_mirror(sx, sy, size, rotation):
         return (sx + size * (tx * tangent + nx * normal),
                 sy - size * (ty * tangent + ny * normal))
 
-    for normal, color in ((-.027, (163, 119, 76)), (-.015, (61, 44, 47)),
-                          (0, (61, 44, 47)), (.015, (123, 195, 218)), (.027, (209, 244, 252))):
-        p.draw_line(*point(-.36, normal), *point(.36, normal), *color)
-    for sign in (-1, 1):
-        for offset in (0, 1 / size, 2 / size):
-            p.draw_line(*point(0, .29 - offset), *point(sign * .11, .17 - offset), 143, 251, 235)
+    def fill(triangles, color):
+        vertices = [
+            p.SDL_Vertex(p.SDL_FPoint(x, HEIGHT - 1 - y), p.SDL_Color(*color, 255), p.SDL_FPoint())
+            for x, y in (point(t, n) for t, n in triangles)
+        ]
+        mesh = (p.SDL_Vertex * len(vertices))(*vertices)
+        p.SDL_RenderGeometry(p.renderer, None, mesh, len(mesh), None, 0)
+
+    span = .36
+    for back, front, color in ((-.034, -.016, (167, 116, 75)),
+                               (-.016, .004, (46, 47, 59)),
+                               (.004, .027, (188, 236, 251))):
+        fill(((-span, back), (span, back), (span, front),
+              (-span, back), (span, front), (-span, front)), color)
+
+    # 화살촉과 자루를 같은 법선에 붙여 중간 프레임에도 정면 방향을 명확히 읽을 수 있게 한다.
+    fill(((0, .315), (-.093, .209), (.093, .209),
+          (-.034, .209), (-.034, .118), (.034, .118),
+          (-.034, .209), (.034, .118), (.034, .209)), (137, 252, 225))
 
 
 def source_nozzle(level, start, end):
