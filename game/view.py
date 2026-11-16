@@ -1,5 +1,6 @@
 """pico2d 화면과 키 입력. 퍼즐 판정은 model.Game이 전담한다."""
 
+from ctypes import byref
 import os
 from pathlib import Path
 from time import perf_counter
@@ -181,6 +182,8 @@ class View:
         self.motion = None
         self.move_seconds = 0.18
         self.rubble_motions = {}
+        self.rubble_impulses = []
+        self.board_offset = (0, 0)
         self.mirror_pushes = {}
         self.plate_delays = {}
         self.echo_motion = EchoMotion()
@@ -350,6 +353,7 @@ class View:
             position, height = self.rubble_pose(game, source, now)
             self.rubble_motions.pop(source, None)
             self.rubble_motions[destination] = (position, height, now)
+            self.rubble_impulses.append(now)
             if destination in game.level.plates:
                 was_pressed = float(game.plate_pressed(destination, previous))
                 self.plate_motions.setdefault(destination, (was_pressed, was_pressed, now, 0))
@@ -442,6 +446,8 @@ class View:
         left, bottom, right, top = TUTORIAL_PANEL
         if self.tutorial and left <= x <= right and bottom <= y <= top:
             return None
+        dx, dy = self.board_offset
+        x, y = x - dx, y - dy
         if self.action_badge_bounds:
             left, bottom, right, top = self.action_badge_bounds
             if left <= x <= right and bottom - 9 <= y <= top:
@@ -536,6 +542,8 @@ class View:
         x, y = self.mouse_position
         left = max(32, min(x + 18, WIDTH - 32 - width))
         bottom = max(BOARD_BOTTOM + 4, min(y + 22, BOARD_TOP - height - 4))
+        dx, dy = self.board_offset
+        left, bottom = left - dx, bottom - dy
         box(left, bottom, left + width, bottom + height, (20, 32, 36))
         box(left, bottom, left + width, bottom + height, color, filled=False)
         self.text(left + 12, bottom + height - 18, labels[0][0], 18, color)
@@ -630,9 +638,36 @@ class View:
         if hidden_inlets:
             self.gate_inlets[self.hit_regions[-1]] = hidden_inlets
 
+    def push_shake_offset(self, now):
+        """짧은 흔들림을 겹쳐도 최대 변위를 제한하고 새 밀기 시작점에서 튀지 않게 한다."""
+        self.rubble_impulses = [start for start in self.rubble_impulses if now - start < PUSH_SECONDS]
+        x, y = 0.0, 0.0
+        for start in self.rubble_impulses:
+            age = max(0, now - start)
+            strength = (1 - age / PUSH_SECONDS) ** 2
+            x += 4.5 * strength * sin(age * 66)
+            y += 2.8 * strength * sin(age * 87)
+        return round(max(-4, min(4, x))), round(max(-3, min(3, y)))
+
     def board(self, game):
-        level, state = game.level, game.state
         now = self.now()
+        self.board_offset = self.push_shake_offset(now)
+        if self.board_offset == (0, 0):
+            self._draw_board(game, now)
+            return
+        dx, dy = self.board_offset
+        viewport = p.SDL_Rect()
+        p.SDL_RenderGetViewport(p.renderer, byref(viewport))
+        # SDL은 위쪽이 원점이다. 바닥, 광원 메시와 스프라이트를 함께 이동한다.
+        shifted = p.SDL_Rect(viewport.x + dx, viewport.y - dy, viewport.w, viewport.h)
+        p.SDL_RenderSetViewport(p.renderer, shifted)
+        try:
+            self._draw_board(game, now)
+        finally:
+            p.SDL_RenderSetViewport(p.renderer, viewport)
+
+    def _draw_board(self, game, now):
+        level, state = game.level, game.state
         if self.mirror_game is not game:
             self.mirror_game, self.mirror_motions = game, {}
         mirrors = mirror_cells(level, state)
@@ -839,7 +874,6 @@ class View:
         # 바닥 전체를 먼저 그려 앞 칸의 바닥이 캐릭터 다리를 덮지 않게 한다.
         target_x, target_y = screen(state.player)
         diamond(target_x, target_y, half_width - 3, int(half_height) - 2, None, TEAL)
-        now = self.now()
         player = self.player_position(state.player, now)
         px, py = screen(player)
         # 같은 칸의 작업대나 배치한 병사와 구별되도록 약간 앞쪽에 선다.
@@ -972,6 +1006,8 @@ class View:
         if hint.target is not None:
             projection = self.projection(game.level)
             sx, sy = projection.screen(hint.target)
+            dx, dy = self.board_offset
+            sx, sy = sx + dx, sy + dy
             color = TEAL if game.state.player == hint.target else GOLD
             for inset in (3, 5):
                 self.tile_outline(projection, sx, sy, projection.half_width - inset,
@@ -981,7 +1017,8 @@ class View:
             box(*bounds, (25, 40, 42))
             box(*bounds, color, filled=False)
             self.centered(sx, sy - 46, hint.target_label, 16, color)
-            self.hit_regions.append((hint.target, bounds))
+            self.hit_regions.append((hint.target, (bounds[0] - dx, bounds[1] - dy,
+                                                   bounds[2] - dx, bounds[3] - dy)))
         box(*TUTORIAL_PANEL, (25, 39, 42))
         box(*TUTORIAL_PANEL, (101, 120, 104), filled=False)
         self.text(52, 786, "첫 근무 · 튜토리얼", 16, GOLD)

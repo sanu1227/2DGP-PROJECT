@@ -5,6 +5,7 @@ os.environ['SDL_AUDIODRIVER'] = 'dummy'
 os.environ['SDL_RENDER_DRIVER'] = 'software'
 import argparse
 from copy import deepcopy
+from ctypes import create_string_buffer
 from dataclasses import replace
 from pathlib import Path
 from unittest.mock import patch
@@ -14,6 +15,13 @@ from game.model import Game
 from game.navigation import IsoBoard
 from game.view import View, WIDTH, HEIGHT, PUSH_SECONDS, PLATE_SECONDS
 from tests.smoke_gate_animation import save_frame
+
+
+def pixels(x, y, width, height):
+    capture = p.SDL_Rect(x, HEIGHT - y - height, width, height)
+    buffer = create_string_buffer(width * height * 4)
+    assert p.SDL_RenderReadPixels(p.renderer, capture, p.SDL_PIXELFORMAT_RGBA32, buffer, width * 4) == 0
+    return buffer.raw
 
 
 def main():
@@ -36,7 +44,8 @@ def main():
                     patch.object(view.art, 'draw', wraps=view.art.draw) as draw:
                 view.draw(game, 3, 8)
             assert game.state == state
-            return next(call.args[1:3] for call in draw.call_args_list if call.args[0] == 'push_rubble')
+            if not view.top_down:
+                return next(call.args[1:3] for call in draw.call_args_list if call.args[0] == 'push_rubble')
 
         def move(now, action):
             previous = game.state
@@ -63,6 +72,32 @@ def main():
         actual = frame(2)
         assert abs(actual[0] - x) < 1e-8 and abs(actual[1] - y - 32 * scale) < 1e-8
 
+        # 실제 렌더링에서 HUD는 고정되고, 씬과 클릭은 같은 픽셀만큼 이동한다.
+        for top_down in (False, True):
+            assert game.undo()
+            view.reset_player()
+            view.reset_plates()
+            view.top_down = top_down
+            frame(2)
+            move(2.1, 'down')
+            board_x, board_y = map(round, view.projection(game.level).screen(source))
+            board_area = (board_x - 48, board_y - 32, 96, 64)
+            hud_area = (32, HEIGHT - 70, 650, 52)
+            with patch.object(view, 'push_shake_offset', return_value=(0, 0)):
+                frame(2.125)
+                stable_board, stable_hud = pixels(*board_area), pixels(*hud_area)
+                stable_cell = view.pick_cell(game, board_x, board_y)
+            frame(2.125)
+            dx, dy = view.board_offset
+            assert 0 < abs(dx) <= 4 and abs(dy) <= 3
+            assert pixels(*hud_area) == stable_hud
+            assert pixels(*board_area) != stable_board
+            assert pixels(board_area[0] + dx, board_area[1] + dy, *board_area[2:]) == stable_board
+            assert stable_cell is not None and view.pick_cell(game, board_x + dx, board_y + dy) == stable_cell
+            frame(2.5)
+            assert view.board_offset == (0, 0)
+        view.top_down = False
+
         # 다시 시작해 일정 간격의 실제 렌더 프레임을 남긴다.
         assert game.undo()
         view.reset_player()
@@ -85,20 +120,23 @@ def main():
         move(6.03, 'down')
         assert frame(6.03) == before, '연속 밀기가 순간 이동했습니다.'
         frozen = frame(6.1)
+        frozen_offset = view.board_offset
         with patch('game.view.perf_counter', return_value=6.1):
             view.pause()
         assert frame(16.1) == frozen
+        assert view.board_offset == frozen_offset
         with patch('game.view.perf_counter', return_value=16.1):
             view.resume()
         assert frame(16.1) == frozen
         assert game.undo()
         view.reset_player()
-        assert not view.rubble_motions and not view.plate_delays
+        assert not view.rubble_motions and not view.plate_delays and not view.rubble_impulses
         assert frame(17) == projection.screen((2, 4))
         game.restart()
         view.reset_player()
         assert frame(18) == projection.screen((2, 3))
-        print('Rubble motion OK: smooth push, climb then press, rapid input, pause, undo, restart; no model mutation.')
+        print('Rubble motion OK: smooth push, plate contact, board shake in both views, fixed HUD, '
+              'picking, rapid input, pause, undo, restart; no model mutation.')
     finally:
         if view:
             view.close()
