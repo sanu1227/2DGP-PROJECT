@@ -32,15 +32,15 @@ class RoomAtmosphere:
         self.began = now
 
     def banner(self, now):
-        return .028 * sin((now - self.began) * 1.65)
+        return .056 * sin((now - self.began) * 1.9)
 
     def draw(self, kind, x, y, size, now, *, top_down):
         if kind not in SCENERY_PROPS:
             return
         age = max(0, now - self.began)
         phase = (x * .016 + y * .023) % (2 * pi)
-        moment = (age + phase) % 9.5
-        rare = moment / 1.15
+        moment = (age + phase) % 4.6
+        rare = moment / 1.55
         # 탑다운은 그림의 중심, 사선은 바닥 접점에서 시작한다.
         center_y = y if top_down else y + size * .32
         with alpha_blend():
@@ -49,7 +49,7 @@ class RoomAtmosphere:
             elif kind == "sarcophagus" and self.stage == "stage_02":
                 for i in range(3):
                     dx = (sin(age * .64 + i) * .26 + i * .13) * size
-                    p.draw_circle(x + dx, y - size * .12, 3 + i, 168, 177, 198, 23, filled=True)
+                    p.draw_circle(x + dx, y - size * .12, 4 + i, 168, 177, 198, 42, filled=True)
             elif kind == "books" and self.stage == "stage_03" and rare < .56:
                 lift = sin(pi * rare / .56)
                 p.draw_line(x - size * .16, center_y, x + size * .11,
@@ -99,16 +99,18 @@ class RoomAtmosphere:
             return
         if self.stage == "stage_02" and kind in ("candle_sconce", "candles") and rare < .65:
             flicker *= .55 + .45 * cos(pi * rare / .65) ** 2
-        length = max(3, round(size * .11))
+        length = max(5, round(size * .20))
         lean = sin(age * 6 + phase) * length * .46
+        p.draw_circle(x + lean * .5, y + length * .35, max(2, round(length * .5)),
+                      237, 115, 55, round(82 * flicker), filled=True)
         p.draw_line(x, y, x + lean, y + length * flicker, 250, 166, 82,
                     round(145 * flicker))
         if self.stage == "stage_01":
-            for i in range(3):
+            for i in range(4):
                 t = (age * .31 + phase + i * .31) % 1
                 px = x + sin(t * 4 + i * 2) * size * .44
-                p.draw_circle(px, y - t * size * .56, 1, 228, 188, 136,
-                              round(84 * sin(pi * t)), filled=True)
+                p.draw_circle(px, y - t * size * .70, 1 + (i % 2), 228, 188, 136,
+                              round(145 * sin(pi * t)), filled=True)
         if kind == "brazier" and rare < 1:
             for i in range(3):
                 t = rare - i * .16
@@ -123,11 +125,11 @@ class RoomAtmosphere:
         if progress < .54:
             travel = (progress / .54) ** 2
             py = y + (1 - travel) * size * .5
-            p.draw_line(x, py, x, py + 3, 137, 181, 193, 171)
+            p.draw_line(x, py, x, py + 5, 153, 204, 211, 212)
         else:
             spread = (progress - .54) / .46
-            opacity = round(105 * (1 - spread))
-            width = 1 + spread * max(4, size * .17)
+            opacity = round(158 * (1 - spread))
+            width = 1 + spread * max(6, size * .28)
             p.draw_line(x - width, y, x + width, y, 148, 182, 187, opacity)
             p.draw_line(x - width * .7, y + 2, x + width * .7, y + 2, 148, 182, 187, opacity)
 
@@ -138,5 +140,5 @@ class RoomAtmosphere:
             if 0 < offset < .64:
                 px = x + size * (.34 * offset + .05 * i)
                 py = y + size * (.85 * offset)
-                p.draw_circle(px, py, max(2, round(size * (.05 + offset * .18))), 197, 210, 211,
-                              round(75 * sin(pi * offset / .64)), filled=True)
+                p.draw_circle(px, py, max(3, round(size * (.09 + offset * .23))), 197, 210, 211,
+                              round(108 * sin(pi * offset / .64)), filled=True)

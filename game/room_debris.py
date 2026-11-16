@@ -12,11 +12,12 @@ from game.mechanics import fixed_devices
 
 
 CHIPS = (
-    (0.00, .40, -12, -7, 36, 2.6),
-    (0.09, .49,   0,  5, 48, 3.2),
-    (0.18, .34,  13,  8, 29, 1.9),
+    (0.00, .49, -13, -7, 43, 3.4),
+    (0.10, .56,   0,  5, 56, 4.0),
+    (0.19, .39,  12,  9, 36, 2.5),
+    (0.24, .50,  22,  4, 49, 2.0),
 )
-LANDING_SECONDS = .26
+LANDING_SECONDS = .34
 FALL_SECONDS = max(delay + seconds for delay, seconds, *_ in CHIPS) + LANDING_SECONDS
 
 
@@ -31,7 +32,7 @@ class RoomDebris:
         self.random = Random(level.id)
         self.random.shuffle(sites)
         self.sites = cycle(sites)
-        self.next_drop = now + 1.8
+        self.next_drop = now + .55
         self.fall = None
 
     def draw(self, board, now):
@@ -40,7 +41,7 @@ class RoomDebris:
             if site is None:
                 return
             self.fall = (site, now, self.random.choice((-1, 1)))
-            self.next_drop = now + self.random.uniform(2.6, 4.2)
+            self.next_drop = now + self.random.uniform(1.45, 2.25)
         if self.fall is None:
             return
         (x, y), began, direction = self.fall
@@ -71,7 +72,7 @@ class RoomDebris:
                         dust_x = px + side * scale * (3 + 9 * landing)
                         dust_y = sy + scale * (1 + 4 * landing)
                         p.draw_line(dust_x, dust_y, dust_x + side * scale, dust_y, 183, 156, 127,
-                                    round(100 * alpha))
+                                    round(162 * alpha))
                 draw_chip(px, py, size * scale, direction * (offset + 3 * travel), round(230 * alpha))
         finally:
             p.SDL_SetRenderDrawBlendMode(p.renderer, blend.value)
@@ -84,6 +85,6 @@ def draw_chip(x, y, size, angle, alpha):
               for u, v in ((-1, .24), (.19, .85), (1, -.04), (-.28, -.78))]
     vertices = (p.SDL_Vertex * 6)()
     for index, (corner, color) in enumerate(zip(
-            (0, 1, 2, 0, 2, 3), ((188, 171, 150),) * 3 + ((116, 101, 89),) * 3)):
+            (0, 1, 2, 0, 2, 3), ((214, 195, 168),) * 3 + ((135, 115, 98),) * 3)):
         vertices[index] = p.SDL_Vertex(points[corner], p.SDL_Color(*color, alpha), p.SDL_FPoint())
     p.SDL_RenderGeometry(p.renderer, None, vertices, len(vertices), None, 0)
