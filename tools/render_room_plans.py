@@ -14,7 +14,7 @@ NOTES = (
     "북·남 서가의 재료를 꺼내고 두 입구의 함정을 고친다. 북쪽 안의 레버도 두 함정을 가동하지만, 그 자리에서 가동하면 돌아올 통로를 잃는다. 출구 근처 레버로 봉쇄할 길을 살펴야 한다.",
     "간수 통로의 잔해를 P1에 밀어 첫 감방을 연다. 그 안의 뼈를 감방 입구 앞 P2에 놓고, 두 번째 뼈는 서쪽 벽 앞 P3에 둔다. 안쪽 무기고에 가려면 P2와 P3을 함께 열어 둬야 한다. 부품을 꺼낸 뒤 남쪽에서 병사를 조립해 동쪽 끝 초소를 채우고, 하단 복도에서 레버를 당긴 뒤 출구로 나간다.",
     "이동 거울을 방향키로 수신기 열에 맞추고 옆 칸에서 아래로 돌린다. 광로를 막는 잔해를 옆으로 밀어낸다. C1 투입구로 뼈를 보내 C1 배출구의 발판으로 남쪽 집수실을 개방한다. 집수실의 뼈를 빼낸 뒤 발판의 뼈를 회수한다.",
-    "중앙의 차광 블록이 좌우 두 칸을 오간다. 오른쪽 광로를 비우면 남쪽 M1 보관실에서 부품과 뼈를 꺼낼 수 있다. 뼈를 넓은 중앙 홀에 잠시 내려놓고 반대편에서 블록을 밀어 북쪽 M2 작업실을 연다. 북쪽 작업대에서 두 뼈를 조립해 서쪽 초소를 채우고 남쪽 통로의 함정을 가동한다.",
+    "서쪽과 동쪽에서 두 줄의 빛이 중앙 홀을 가로지른다. 중앙 레일에서 블록을 위로 밀면 아래쪽 광로가 열려 남동쪽 M1 보관실에 들어갈 수 있다. 뼈를 홀에 잠시 놓고 블록을 아래로 밀어 북동쪽 M2 작업실을 연다. 병사를 중계실 아래쪽 초소에 배치한 뒤 북서쪽 레버를 당기고 남서쪽 출구로 돌아간다.",
     "첫 기록석을 밟고 위, 아래, 위를 기록한다. 세 걸음을 마친 인부가 발판에 멈춰 첫 문을 유지한다. 안쪽 부품을 발판에 올려 해골을 회수한 뒤 초소와 함정을 복구한다. 두 번째 기록석에서는 위로 두 걸음을 기록하면 인부가 금고 쪽 발판에 멈춘다.",
     "거울을 아래로 돌리고 차광 블록을 옆으로 밀어 동쪽 제어실을 연다. 부품으로 함정을 설치한 뒤 거울을 위로 돌려 M2를 연다. 기록석을 밟고 위, 위, 오른쪽, 오른쪽을 기록한다. 인부가 마지막 발판에 서면 두 문이 모두 열려 안쪽 레버까지 갈 수 있다.",
 )
@@ -38,6 +38,7 @@ def main():
     for number, room in enumerate(rooms, 1):
         width, height = len(room["map"][0]), len(room["map"])
         cell, ox, oy = 42, 34, 60
+        track = {tuple(pos) for pos in room.get("rubble_track", [])}
         svg = [f'<svg xmlns="http://www.w3.org/2000/svg" width="{width*cell+68}" height="{height*cell+90}" viewBox="0 0 {width*cell+68} {height*cell+90}">',
                '<rect width="100%" height="100%" fill="#151d23"/>',
                '<g font-family="Malgun Gothic, sans-serif" fill="#eff3f5">',
@@ -48,6 +49,8 @@ def main():
             svg.append(f'<text x="22" y="{oy+y*cell+26}" text-anchor="middle" font-size="11">{y}</text>')
             for x, glyph in enumerate(row):
                 color = "#29333e" if glyph == "#" else "#46555e" if glyph == "." else "#326d68"
+                if (x, y) in track:
+                    color = "#88643e"
                 svg.append(f'<rect x="{ox+x*cell}" y="{oy+y*cell}" width="40" height="40" rx="3" fill="{color}"/>')
                 if glyph not in "#.":
                     svg.append(f'<text x="{ox+x*cell+20}" y="{oy+y*cell+27}" text-anchor="middle" font-size="22">{glyph}</text>')
