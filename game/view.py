@@ -14,7 +14,10 @@ from game.art import Art, MAGIC_BEAM_HEIGHT
 from game.scenery import draw_rubble_track, draw_scars, draw_tinted, floor_style, wall_style
 from game.navigation import ClickNavigator, IsoBoard, TopDownBoard, find_path
 from game.themes import boundary_walls, low_wall_sprite, scene_for, themed_floor
-from game.layout import WIDTH, HEIGHT, BOARD_BOTTOM, BOARD_TOP, STATUS_BOTTOM, STATUS_TOP, STATUS_Y
+from game.layout import (
+    WIDTH, HEIGHT, BOARD_BOTTOM, BOARD_TOP, ACTION_BADGE_BOTTOM_MAX,
+    STATUS_BOTTOM, STATUS_TOP, STATUS_Y, TUTORIAL_PANEL,
+)
 from game.front_end import FrontEnd, bevel
 from game.tutorial import first_room_hint
 from game.mechanics import fixed_devices, mirror_axis, mirror_cells, trace_magic
@@ -45,7 +48,6 @@ GATE_SECONDS = 0.36
 PLATE_SECONDS = 0.24
 PUSH_SECONDS = 0.28
 MIRROR_SECONDS = 0.30
-TUTORIAL_PANEL = (32, 654, 420, 810)
 
 
 def font_path(size=18) -> str:
@@ -130,7 +132,7 @@ class View:
 
     def projection(self, level):
         if self.top_down:
-            return TopDownBoard(level.width, level.height, tutorial=level.id == "stage_01")
+            return TopDownBoard.fit(level.width, level.height, level.walls, tutorial=level.id == "stage_01")
         return IsoBoard(level.width, level.height)
 
     @staticmethod
@@ -270,7 +272,7 @@ class View:
         value = "무제한" if game.remaining_actions is None else str(game.remaining_actions)
         width = max(88, len(value) * 22 + 24)
         x = min(WIDTH - 40 - width / 2, max(40 + width / 2, x))
-        bottom = min(BOARD_TOP - 76, head_top + 16 + sin(now * 2.5) * 2)
+        bottom = min(ACTION_BADGE_BOTTOM_MAX, head_top + 16 + sin(now * 2.5) * 2)
         self.action_badge_bounds = (x - width / 2, bottom, x + width / 2, bottom + 64)
 
     def action_badge(self, game):

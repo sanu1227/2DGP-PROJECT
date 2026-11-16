@@ -4,7 +4,8 @@ from copy import deepcopy
 from dataclasses import replace
 import unittest
 
-from game.levels import DIRECTIONS, neighbors
+from game.layout import BOARD_BOTTOM, BOARD_TOP, TUTORIAL_PANEL, WIDTH
+from game.levels import DIRECTIONS, load_levels, neighbors
 from game.model import Game
 from game.navigation import ClickNavigator, IsoBoard, TopDownBoard, find_path
 from tests.test_devices import load_stage, plate_stage
@@ -40,6 +41,23 @@ class NavigationTests(unittest.TestCase):
                         self.assertIsNone(board.pick(*board.screen(outside)))
                     self.assertEqual(board.pick(*board.screen((2.49, 3.49))), (2, 3))
                     self.assertEqual(board.pick(*board.screen((2.51, 3.49))), (3, 3))
+
+    def test_topdown_fit_enlarges_the_floor_and_keeps_playable_tiles_in_view(self):
+        for level in load_levels():
+            tutorial = level.id == "stage_01"
+            board = TopDownBoard.fit(level.width, level.height, level.walls, tutorial)
+            with self.subTest(stage=level.id):
+                self.assertGreater(board.cell_size, TopDownBoard(level.width, level.height, tutorial).cell_size)
+                for row in range(level.height):
+                    for col in range(level.width):
+                        if (col, row) in level.walls:
+                            continue
+                        x, y = board.screen((col, row))
+                        self.assertEqual(board.pick(x, y), (col, row))
+                        self.assertGreaterEqual(x - board.half_width, TUTORIAL_PANEL[2] if tutorial else 0)
+                        self.assertLessEqual(x + board.half_width, WIDTH)
+                        self.assertGreaterEqual(y - board.half_height, BOARD_BOTTOM)
+                        self.assertLessEqual(y + board.half_height, BOARD_TOP)
 
     def test_path_is_shortest_avoids_walls_and_reports_unreachable_targets(self):
         game = Game(make_level([

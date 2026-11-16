@@ -7,10 +7,11 @@
 
 from collections import deque
 from dataclasses import dataclass
+from functools import cached_property, lru_cache
 from math import floor
 
 from game.levels import Pos
-from game.layout import WIDTH, BOARD_BOTTOM, BOARD_TOP
+from game.layout import WIDTH, BOARD_BOTTOM, BOARD_TOP, ACTION_BADGE_BOTTOM_MAX, TUTORIAL_PANEL
 from game.levels import neighbors
 from game.model import DIRECTIONS, Game
 
@@ -64,11 +65,34 @@ class TopDownBoard:
     width: int
     height: int
     tutorial: bool = False
+    floor_bounds: tuple[int, int, int, int] | None = None
 
-    @property
+    @classmethod
+    @lru_cache(maxsize=32)
+    def fit(cls, width, height, walls, tutorial=False):
+        floors = [(x, y) for y in range(height) for x in range(width) if (x, y) not in walls]
+        xs, ys = zip(*floors)
+        return cls(width, height, tutorial, (min(xs), min(ys), max(xs), max(ys)))
+
+    @cached_property
+    def bounds(self):
+        return self.floor_bounds or (0, 0, self.width - 1, self.height - 1)
+
+    @cached_property
+    def left_margin(self):
+        return TUTORIAL_PANEL[2] + 24 if self.tutorial else 40
+
+    @cached_property
+    def cell_span(self):
+        # 바깥 암석 대신 실제 바닥과 바닥 양쪽 벽면을 화면에 맞춘다.
+        left, top, right, bottom = self.bounds
+        return right - left + 1 + 1.2, bottom - top + 1 + 1.2
+
+    @cached_property
     def cell_size(self) -> int:
-        board_width = WIDTH - (460 if self.tutorial else 80)
-        return min(104, board_width // self.width, (BOARD_TOP - BOARD_BOTTOM - 64) // self.height)
+        columns, rows = self.cell_span
+        return int(min(144, (WIDTH - 40 - self.left_margin) / columns,
+                       (BOARD_TOP - BOARD_BOTTOM - 32) / rows))
 
     @property
     def half_width(self) -> float:
@@ -78,13 +102,16 @@ class TopDownBoard:
     def half_height(self) -> float:
         return self.cell_size / 2
 
-    @property
+    @cached_property
     def origin(self) -> tuple[float, float]:
         size = self.cell_size
-        # 입문방은 왼쪽 안내판과 간격을 두면서 화면 중앙에 가깝게 배치한다.
-        center_x = WIDTH / 2 + (80 if self.tutorial else 0)
-        return (center_x - (self.width - 1) * size / 2,
-                (BOARD_BOTTOM + BOARD_TOP) / 2 + (self.height - 1) * size / 2)
+        left, top, right, bottom = self.bounds
+        center_x = max(WIDTH / 2 + (80 if self.tutorial else 0),
+                       self.left_margin + self.cell_span[0] * size / 2)
+        # 맨 위 칸에서도 캐릭터 머리 위에 남은 행동 배지를 띄울 공간을 둔다.
+        head_offset = ((bottom - top) / 2 + .4) * size
+        center_y = min((BOARD_BOTTOM + BOARD_TOP) / 2, ACTION_BADGE_BOTTOM_MAX - 12 - head_offset)
+        return center_x - (left + right) * size / 2, center_y + (top + bottom) * size / 2
 
     def screen(self, pos: tuple[float, float]) -> tuple[float, float]:
         x, y = self.origin

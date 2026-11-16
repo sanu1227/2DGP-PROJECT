@@ -231,8 +231,9 @@ def lighting_mesh(board, floors, lights, background):
     sample_step = board.cell_size / LIGHT_SAMPLES_PER_CELL
     top = board.screen((0, -.5))[1]
     bottom = board.screen((0, board.height - .5))[1]
-    above = min(padding, int((BOARD_TOP - top) // sample_step))
-    below = min(padding, int((bottom - BOARD_BOTTOM) // sample_step))
+    # 화면 좌표의 반올림으로 격자 밖에 드러나는 암석 픽셀도 덮는다.
+    above = max(1, min(padding, int((BOARD_TOP - top) // sample_step)))
+    below = max(1, min(padding, int((bottom - BOARD_BOTTOM) // sample_step)))
     horizontal = lighting_axis(board.width, padding, padding)
     vertical = lighting_axis(board.height, above, below)
     columns = len(horizontal)
