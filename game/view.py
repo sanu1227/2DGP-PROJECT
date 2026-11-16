@@ -48,6 +48,7 @@ GATE_SECONDS = 0.36
 PLATE_SECONDS = 0.24
 PUSH_SECONDS = 0.28
 MIRROR_SECONDS = 0.30
+TUTORIAL_SECONDS = 4.0
 
 
 def font_path(size=18) -> str:
@@ -110,6 +111,9 @@ class View:
         self.mouse_position = None
         self.show_coordinates = False
         self.tutorial = None
+        self.tutorial_phase = None
+        self.tutorial_started_at = 0.0
+        self.tutorial_visible = False
         self.tutorial_hidden = False
         self.hit_regions = []
         self.hit_masks = {}
@@ -662,7 +666,7 @@ class View:
         if not BOARD_BOTTOM < y < BOARD_TOP:
             return None
         left, bottom, right, top = TUTORIAL_PANEL
-        if self.tutorial and left <= x <= right and bottom <= y <= top:
+        if self.tutorial_visible and left <= x <= right and bottom <= y <= top:
             return None
         if self.action_badge_bounds:
             left, bottom, right, top = self.action_badge_bounds
@@ -1243,10 +1247,24 @@ class View:
                 box(sx - width / 2, sy, sx + width / 2, sy + 18, (19, 27, 32))
                 self.text(sx - width / 2 + 3, sy + 9, label, 13, GOLD)
 
-    def tutorial_overlay(self, game):
-        hint = self.tutorial
-        if hint is None or self.tutorial_hidden:
+    def update_tutorial(self, game):
+        self.tutorial = hint = first_room_hint(game)
+        if hint is None or hint.complete:
+            self.tutorial_phase = None
+            self.tutorial_visible = False
             return
+
+        now = self.now()
+        phase = (game, hint.step)
+        if self.tutorial_phase != phase:
+            self.tutorial_phase = phase
+            self.tutorial_started_at = now
+        self.tutorial_visible = not self.tutorial_hidden and now - self.tutorial_started_at < TUTORIAL_SECONDS
+
+    def tutorial_overlay(self, game):
+        if not self.tutorial_visible:
+            return
+        hint = self.tutorial
         if hint.target is not None:
             projection = self.projection(game.level)
             sx, sy = projection.screen(hint.target)
@@ -1278,7 +1296,7 @@ class View:
             return f"자동 이동 중 · {len(self.navigation.path)}칸 남음", TEAL
         context = game.context_action()
         if game.can_interact():
-            if self.tutorial and not self.tutorial_hidden and self.tutorial.target == game.state.player:
+            if self.tutorial_visible and self.tutorial.target == game.state.player:
                 return "", MUTED
             return context, TEAL
         level, state = game.level, game.state
@@ -1346,7 +1364,7 @@ class View:
             self.text(32, 27, f"F2 좌표 · {axes}", 16, MUTED)
 
     def draw(self, game, index, total):
-        self.tutorial = first_room_hint(game)
+        self.update_tutorial(game)
         if game.failed:
             self.navigation.cancel()
         box(0, 0, WIDTH, HEIGHT, room_background(scene_for(game.level)))
@@ -1381,6 +1399,16 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True, top_down=False):
             view.reset_player()
             view.navigation.cancel()
             view.mouse_position = None
+
+        def restart_room():
+            game.restart()
+            feedback.enter(game, view.now())
+            view.tutorial_phase = None
+            view.navigation.cancel()
+            view.reset_player()
+            view.reset_gates()
+            view.reset_plates()
+
         actions = {
             p.SDLK_UP: "up", p.SDLK_w: "up", p.SDLK_DOWN: "down", p.SDLK_s: "down",
             p.SDLK_LEFT: "left", p.SDLK_a: "left", p.SDLK_RIGHT: "right", p.SDLK_d: "right",
@@ -1427,16 +1455,14 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True, top_down=False):
                     result = play_menu.handle(event)
                     if result in ("resume", "restart", "title"):
                         play_menu.close(view)
-                        if result != "resume":
+                        if result == "restart":
+                            restart_room()
+                        elif result == "title":
                             view.navigation.cancel()
                             view.reset_player()
                             view.reset_gates()
                             view.reset_plates()
-                            if result == "restart":
-                                game.restart()
-                                feedback.enter(game, view.now())
-                            else:
-                                front_end.activate("title")
+                            front_end.activate("title")
                     if result is not None:
                         screen_changed = True
                 elif event.type == p.SDL_KEYDOWN and event.key == p.SDLK_ESCAPE:
@@ -1481,11 +1507,7 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True, top_down=False):
                             view.gate_motions.clear()
                             view.reset_plates()
                     elif event.key == p.SDLK_r:
-                        game.restart()
-                        feedback.enter(game, view.now())
-                        view.reset_player()
-                        view.reset_gates()
-                        view.reset_plates()
+                        restart_room()
                     elif event.key in (p.SDLK_e, p.SDLK_SPACE) and game.state.cleared:
                         next_room()
                         screen_changed = True

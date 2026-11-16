@@ -30,6 +30,51 @@ def capture(path):
         p.SDL_FreeSurface(surface)
 
 
+def check_tutorial_timing(levels):
+    p.open_canvas(view.WIDTH, view.HEIGHT, sync=True)
+    display = None
+    try:
+        display = view.View()
+        display.top_down = True
+        game = Game(levels[0])
+
+        def draw(now, step, visible):
+            with patch.object(view, "perf_counter", return_value=now), patch.object(display, "text", wraps=display.text) as labels:
+                display.draw(game, 0, len(levels))
+            assert display.tutorial.step == step
+            assert display.tutorial_visible == visible
+            assert any(call.args[2] == "첫 근무 안내" for call in labels.call_args_list) == visible
+
+        draw(10, 1, True)
+        target_region = display.hit_regions[-1]
+        with patch.object(view, "perf_counter", return_value=11):
+            display.pause()
+        draw(30, 1, True)
+        with patch.object(view, "perf_counter", return_value=30):
+            display.resume()
+        draw(29 + view.TUTORIAL_SECONDS, 1, False)
+        assert target_region not in display.hit_regions
+        target = display.tutorial.target
+        assert display.pick_cell(game, *display.projection(game.level).screen(target)) == target
+
+        assert game.act("right")
+        draw(40, 2, True)
+        draw(40 + view.TUTORIAL_SECONDS, 2, False)
+        assert display.play_context(game)[0] == game.context_action()
+        assert game.act("interact")
+        draw(50, 3, True)
+        assert game.act("down")
+        draw(50 + view.TUTORIAL_SECONDS, 3, False)
+        assert game.undo()
+        draw(55, 3, False)
+        assert game.undo()
+        draw(56, 2, True)
+    finally:
+        if display:
+            display.close()
+        p.close_canvas()
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--capture-dir", type=Path)
@@ -182,7 +227,7 @@ def main():
                 assert display.tutorial.step == expected_step, (moves, display.tutorial)
                 assert display.tutorial.complete == (moves == len(SOLUTIONS["stage_01"]))
                 assert display.pick_cell(games[-1], 100, 700) is None
-                if display.tutorial.target is not None and not display.tutorial_hidden:
+                if display.tutorial_visible:
                     sx, sy = view.IsoBoard(games[-1].level.width, games[-1].level.height).screen(display.tutorial.target)
                     assert display.pick_cell(games[-1], sx, sy - 46) == display.tutorial.target
         if args.capture_dir and filename:
@@ -236,8 +281,9 @@ def main():
         view.run(load_levels()[:2])
         assert not steps
     assert all(not menu.images for menu in menus)
+    check_tutorial_timing(load_levels())
     print("Native onboarding smoke OK: illustrated title, four sequential comic panels, two guides, back/skip/replay, glyphs and balloon bounds, "
-          "input isolation, all five tutorial steps, target picking, "
+          "input isolation, all five tutorial steps, timer/pause, target picking, "
           "undo/restart, first clear, next room, title shortcuts 1-8, invalid shortcut isolation, Escape.")
 
 
