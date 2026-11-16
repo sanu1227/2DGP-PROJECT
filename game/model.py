@@ -10,6 +10,19 @@ from game.mechanics import trace_magic, fixed_devices
 ITEM_NAMES = {"part": "함정 부품", "bone": "뼈 묶음", "soldier": "해골 병사"}
 
 
+@dataclass(frozen=True)
+class Recording:
+    origin: Pos
+    inputs: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
+class Echo:
+    origin: Pos
+    position: Pos
+    remaining: tuple[str, ...]
+
+
 @dataclass
 class State:
     player: Pos
@@ -24,7 +37,8 @@ class State:
     mirror_rotations: dict[Pos, int] = field(default_factory=dict)
     rubble: set[Pos] = field(default_factory=set)
     workers: set[Pos] = field(default_factory=set)
-    worker_steps: dict[Pos, int] = field(default_factory=dict)
+    recording: Recording | None = None
+    echo: Echo | None = None
 
 
 class Game:
@@ -75,18 +89,15 @@ class Game:
         self.message = message
         if not changed:
             return False
-        for station, step in list(candidate.worker_steps.items()):
-            route = self.level.worker_routes[station]
-            if step + 1 == len(route):
-                del candidate.worker_steps[station]
-                self.message += f" {self.level.device_labels[station]} 인부가 윈치를 돌립니다."
-            else:
-                candidate.worker_steps[station] += 1
+        if candidate.recording and action in DIRECTIONS:
+            self._record_step(candidate, action)
+        self._advance_echo(candidate)
         # ponytail: 최대 12×12칸에서는 전체 복사가 충분하다. 대형 맵이 필요해지면 행동별 차이를 기록한다.
         self.history.append(deepcopy(self.state))
         candidate.moves += 1
         candidate.cleared = (
             candidate.player == self.level.exit
+            and candidate.recording is None
             and candidate.carrying is None
             and candidate.installed == self.level.traps
             and (not self.level.traps or candidate.active)
@@ -125,9 +136,15 @@ class Game:
     def gate_status(self, pos: Pos, state: State | None = None) -> str:
         state = self.state if state is None else state
         control = self.level.gates[pos]
-        powered = (control in trace_magic(self.level, state)[1] if control in self.level.receivers
-                   else control in state.workers and control not in state.worker_steps if control in self.level.jobs
-                   else self.plate_pressed(control, state))
+        if control in self.level.receivers:
+            powered = control in trace_magic(self.level, state)[1]
+        elif control in self.level.echo_links:
+            seal, _ = self.level.echo_links[control]
+            powered = state.echo is not None and state.echo.origin == control and state.echo.position == seal
+        elif control in self.level.jobs:
+            powered = control in state.workers
+        else:
+            powered = self.plate_pressed(control, state)
         if powered:
             return "open"
         if state.player == pos or pos in state.items:
@@ -139,7 +156,6 @@ class Game:
         state = self.state if state is None else state
         return (0 <= pos[0] < self.level.width and 0 <= pos[1] < self.level.height
                 and pos not in self.level.walls and pos not in state.soldiers
-                and pos not in self.level.worker_tiles
                 and pos not in state.rubble
                 and not (state.active and pos in self.level.traps)
                 and (pos not in self.level.gates or self.gate_status(pos, state) == "open"))
@@ -147,6 +163,9 @@ class Game:
     def _interaction(self, state: State) -> tuple[str | None, str]:
         """현재 칸에서 가능한 행동과 안내를 함께 결정한다."""
         pos = state.player
+        if state.recording:
+            _, steps = self.level.echo_links[state.recording.origin]
+            return (None, f"발걸음 기록 {len(state.recording.inputs)}/{steps} · 방향키로 이동")
         if pos in state.items:
             if state.carrying is not None:
                 return None, "손이 찼습니다. 먼저 내려놓으세요."
@@ -154,11 +173,16 @@ class Game:
         if pos in self.level.mirrors:
             return (None, "거울은 빈손으로 돌리세요.") if state.carrying else ("rotate", "E / Space: 거울 90도 회전 · 화살표 쪽 앞면만 반사")
         if pos in self.level.jobs:
+            if pos in self.level.echo_links:
+                if state.carrying:
+                    return None, "발걸음을 기록하려면 손을 비우세요."
+                _, steps = self.level.echo_links[pos]
+                return "record", f"E / Space: 발걸음 {steps}칸 기록"
             if pos in state.workers:
                 return (None, "인부를 회수하려면 손을 비우세요.") if state.carrying else ("recall", "E / Space: 해골 인부 회수")
             if state.carrying != "soldier":
                 return None, "조립된 해골을 데려와 작업을 맡기세요."
-            return "assign", "E / Space: 해골 인부 보내기" if pos in self.level.worker_routes else "E / Space: 해골 인부 배치"
+            return "assign", "E / Space: 해골 인부 배치"
         if pos in self.level.chutes:
             outlet = self.level.chutes[pos]
             if state.carrying != "bone":
@@ -219,6 +243,8 @@ class Game:
             x, y = state.player
             destination = x + dx, y + dy
             if destination in state.rubble:
+                if state.recording:
+                    return False, "기록 중에는 발걸음만 남길 수 있습니다."
                 target = destination[0] + dx, destination[1] + dy
                 forbidden = fixed_devices(self.level) | self.level.gates.keys()
                 if (state.carrying or not self.walkable(target, state) or target in forbidden
@@ -230,8 +256,6 @@ class Game:
                 return True, "잔해를 한 칸 밀었습니다. Z로 되돌릴 수 있습니다."
             if destination in self.level.gates and not self.walkable(destination, state):
                 return False, "닫힌 문입니다. 연결 장치의 상태를 확인하세요."
-            if destination in self.level.worker_tiles:
-                return False, "해골 인부만 지나갈 수 있는 좁은 통로입니다."
             if not (0 <= destination[0] < self.level.width and 0 <= destination[1] < self.level.height) or destination in self.level.walls:
                 return False, "벽이나 잔해로 막힌 칸입니다."
             if state.active and destination in self.level.traps:
@@ -245,6 +269,10 @@ class Game:
         if operation is None:
             return False, message
         pos = state.player
+        if operation == "record":
+            state.echo = None
+            state.recording = Recording(pos)
+            return True, "기록을 시작합니다. 분신이 머물 문양을 향해 이동하세요."
         if operation == "rotate":
             rotation = (state.mirror_rotations.get(pos, 0) + 1) % 4
             if rotation:
@@ -255,13 +283,9 @@ class Game:
         if operation == "assign":
             state.workers.add(pos)
             state.carrying = None
-            if pos in self.level.worker_routes:
-                state.worker_steps[pos] = 0
-                return True, "해골 인부가 좁은 통로로 출발합니다."
             return True, "해골 인부가 윈치를 돌려 문을 유지합니다."
         if operation == "recall":
             state.workers.remove(pos)
-            state.worker_steps.pop(pos, None)
             state.carrying = "soldier"
             return True, "해골 인부가 돌아왔습니다. 다시 보내거나 초소로 데려가세요."
         if operation == "drop":
@@ -293,3 +317,25 @@ class Game:
             return True, "병사를 배치했습니다. 이 칸은 다시 들어올 수 없습니다."
         state.active = True
         return True, "모든 함정을 가동했습니다. 출구로 돌아가세요."
+
+    def _record_step(self, state: State, action: str) -> None:
+        recording = state.recording
+        inputs = (*recording.inputs, action)
+        _, steps = self.level.echo_links[recording.origin]
+        if len(inputs) < steps:
+            state.recording = Recording(recording.origin, inputs)
+            return
+        state.player = recording.origin
+        state.recording = None
+        state.echo = Echo(recording.origin, recording.origin, inputs)
+        self.message = "기록석으로 돌아왔습니다. 분신이 같은 발걸음을 따라갑니다."
+
+    def _advance_echo(self, state: State) -> None:
+        echo = state.echo
+        if not echo or not echo.remaining:
+            return
+        dx, dy = DIRECTIONS[echo.remaining[0]]
+        x, y = echo.position
+        target = x + dx, y + dy
+        position = target if self.walkable(target, state) else echo.position
+        state.echo = Echo(echo.origin, position, echo.remaining[1:])

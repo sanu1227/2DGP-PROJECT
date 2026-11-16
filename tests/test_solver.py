@@ -22,6 +22,8 @@ class SolverTests(unittest.TestCase):
             {"map": ["########", "#@Q.M###", "#...GPE#", "#..YM###", "#..T.L##"],
              "power_links": [{"id": "M1", "receiver": [3, 3], "gate": [4, 2]}],
              "magic_sources": [{"cell": [2, 1], "direction": "right"}]},
+            {"map": ["########", "#@J.GP##", "#U.T####", "#..LE###"],
+             "worker_links": [{"id": "J1", "station": [2, 1], "gate": [4, 1], "seal": [1, 2], "steps": 2}]},
         ]
         for index, room in enumerate(rooms):
             room.update(id=f"solver_{index}", title="탐색 검사", hint="복구 후 복귀")

@@ -62,8 +62,8 @@ def device_lessons(level: Level) -> tuple[DeviceLesson, ...]:
          "당길 수 없어요. 빈 바닥·발판으로만 밀 수 있고, Z로 되돌릴 수 있어요.", level.rubble),
         ("mirror", "빛으로 장치 연결", "빈손으로 E / Space를 눌러 네 방향으로 돌리세요. 화살표 쪽 앞면만 빛을 반사합니다. 수신되면 연결문이 열립니다.",
          "벽·잔해·초소의 병사는 빛을 막아요. 사람·운반물·문은 막지 않아요.", level.mirrors),
-        ("helper", "함께 일하는 해골", "호출대에서 E / Space로 해골을 보내세요. 수리공이 행동할 때마다 인부도 전용 통로를 한 칸 이동해요.",
-         "윈치에 도착하면 문이 열려요. 빈손으로 같은 호출대에서 E를 누르면 인부가 돌아와요.", level.jobs)):
+        ("helper", "발걸음을 따라가는 분신", "빈손으로 기록석에서 E / Space를 눌러 문양까지 걸으세요. 기록이 끝나면 기록석으로 돌아와요.",
+         "분신은 행동마다 기록한 방향으로 이동해요. 문양 위에 있는 동안 연결문이 열려요.", level.jobs)):
         if cells:
             lessons.append(DeviceLesson(kind, title, instruction, reminder, ((min(cells), title),)))
     return tuple(lessons)

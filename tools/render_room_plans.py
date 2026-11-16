@@ -15,10 +15,10 @@ NOTES = (
     "간수 통로의 잔해를 P1에 밀어 첫 감방을 연다. 그 안의 뼈를 감방 입구 앞 P2에 놓고, 두 번째 뼈는 서쪽 벽 앞 P3에 둔다. 안쪽 무기고에 가려면 P2와 P3을 함께 열어 둬야 한다. 부품을 꺼낸 뒤 남쪽에서 병사를 조립해 동쪽 끝 초소를 채우고, 하단 복도에서 레버를 당긴 뒤 출구로 나간다.",
     "수문 광선을 막는 잔해를 옆으로 밀어 반사 경로를 비운다. 광선 방향으로 밀기만 하면 계속 막힌다. 상류에서 뼈를 보내 남쪽 집수실을 개방한다. 집수실의 뼈를 빼낸 뒤 발판의 뼈를 회수한다.",
     "남쪽 수신실에서 부품과 뼈를 빼낸다. 북쪽에만 작업대가 있어 남쪽 뼈는 두 전력 상태를 건너야 한다. 거울은 빈손으로 돌려야 하므로 뼈를 중앙 통로에 잠시 내려놓고 전환한다. 북쪽에 놓인 뼈와 합쳐 조립한 뒤 초소를 채운다.",
-    "첫 호출대에서 해골을 보낸 뒤 금고 쪽으로 움직인다. 인부는 전용 통로를 걸어 윈치에 도착하면 문을 연다. 첫 부품을 P1 발판에 올려 바깥 문을 유지하면서, 인부를 두 번째 호출대에서 보낸다. 두 번째 부품과 인부를 꺼내기 전에는 발판의 부품을 설치할 수 없다.",
-    "동쪽 M1 문을 열어 호출대에서 해골을 보낸다. 수리공이 중앙 거울로 돌아가는 동안 인부가 윈치에 도착해 J1 금고 문을 연다. 인부를 남겨둔 채 거울을 돌리면 M1이 닫히고 북쪽 M2가 열린다. 부품을 꺼내 함정을 설치한 뒤 M1을 다시 열고 호출대에서 인부를 불러온다. 중앙 초소에 배치하면 M1 광선이 끊긴다. 마지막으로 M2를 다시 열고 함정을 건넌 뒤 안쪽 레버를 가동한다.",
+    "북쪽 기록석에서 첫 문양까지 두 걸음을 남긴다. 분신이 문양에 서면 첫 금고가 열리고 그 안의 부품으로 P1 발판을 눌러 동쪽 문을 유지할 수 있다. 두 번째 기록을 시작하면 첫 분신이 사라진다. 두 번째 분신으로 동쪽 금고를 열어 부품과 해골을 확보한다.",
+    "동쪽 M1을 열어 기록석에 들어간다. 문양까지 세 걸음을 남긴 뒤 분신이 금고를 열게 한다. 초소에 해골을 세워 M1을 닫아도 문양 위 분신은 J1을 계속 유지한다. 중앙 거울로 M2를 열고 금고에서 부품을 꺼낸다. 안쪽 레버로 함정을 가동한 뒤 나간다.",
 )
-LEGEND = "@ 출발 · E 출구 · P 부품 · B 뼈 · K 조립된 해골 · T 함정 · L 레버 · A 조립대 · S 초소 · F 발판 · G 문 · C 투입구 · O 배출구 · Q 광원 · M 거울 · Y 수신기 · R 잔해 · J 인부 호출대 · U 인부 전용 통로"
+LEGEND = "@ 출발 · E 출구 · P 부품 · B 뼈 · K 조립된 해골 · T 함정 · L 레버 · A 조립대 · S 초소 · F 발판 · G 문 · C 투입구 · O 배출구 · Q 광원 · M 거울 · Y 수신기 · R 잔해 · J 기록석 · U 분신 문양"
 
 
 def main():
@@ -30,7 +30,7 @@ def main():
            "| 방 | 크기 | 바닥 칸 | 최소 행동 | 제한 | 여유 |", "| --- | --- | ---: | ---: | ---: | ---: |"]
     for number, room in enumerate(rooms, 1):
         width, height = len(room["map"][0]), len(room["map"])
-        floor = sum(c not in "#U" for row in room["map"] for c in row)
+        floor = sum(c != "#" for row in room["map"] for c in row)
         minimum, limit = MINIMUM_ACTIONS[room["id"]], room["action_limit"]
         spare = limit - minimum if limit is not None else "—"
         doc.append(f"| {number} | {width}×{height} | {floor} | {minimum} | {limit or '무제한'} | {spare} |")
@@ -54,18 +54,17 @@ def main():
         for field, source, target in (("plate_links", "plate", "gate"), ("power_links", "receiver", "gate"), ("worker_links", "station", "gate"), ("chute_links", "inlet", "outlet")):
             for link in room.get(field, []):
                 x, y = link[source]
-                if "route" in link:
-                    points = [(x, y), *link["route"]]
-                    path = " ".join(f"{ox+px*cell+20},{oy+py*cell+20}" for px, py in points)
-                    svg.append(f'<polyline points="{path}" fill="none" stroke="#eed09e" stroke-width="2"/>')
-                    x, y = points[-1]
+                if "seal" in link:
+                    px, py = link["seal"]
+                    svg.append(f'<path d="M{ox+x*cell+20},{oy+y*cell+20} L{ox+px*cell+20},{oy+py*cell+20}" stroke="#dda5ff" stroke-width="2" stroke-dasharray="2 4"/>')
+                    x, y = px, py
                 tx, ty = link[target]
                 svg.append(f'<path d="M{ox+x*cell+20},{oy+y*cell+20} L{ox+tx*cell+20},{oy+ty*cell+20}" stroke="#ffd789" stroke-width="2" stroke-dasharray="4 4" opacity=".6"/>')
         svg.append("</g></svg>")
         (folder / f"stage-{number:02}-plan.svg").write_text("\n".join(svg), encoding="utf-8")
         doc += [f"### {number}번 — {room['title']}", "", NOTES[number-1], "", f"![좌표 배치도](screenshots/compact-rooms/stage-{number:02}-plan.svg)", ""]
-    doc += ["## 검증", "", "- 실제 `Game.act`로 최단 풀이를 탐색했다. 수신에 필요한 방향이 하나뿐인 거울은 그 방향에서 다시 돌려 문을 닫는 입력을 제외한다. 인부가 반드시 필요한 문 안의 부품은 인부 운반·배치·회수 비용도 하한에 반영한다. 작은 방의 전체 상태 그래프로 이 하한과 최단 결과를 독립 검사한다.",
-            "- 4번 잔해·발판, 5번 잔해·거울·투입구·발판, 6번 거울, 7번 인부·발판, 8번 거울·인부는 생략하면 행동 제한 안에 완료할 수 없다.",
+    doc += ["## 검증", "", "- 실제 `Game.act`로 최단 풀이를 탐색했다. 분신 위치와 남은 재생 입력을 탐색 상태에 포함한다. 작은 방의 전체 상태 그래프로 이동 하한과 최단 결과를 독립 검사한다.",
+            "- 4번 잔해·발판, 5번 잔해·거울·투입구·발판, 6번 거울, 7번 분신·발판, 8번 거울·분신은 생략하면 행동 제한 안에 완료할 수 없다.",
             "- 최소 행동과 1회 부족한 예산, 자원 보존, 전체 되돌리기, 작은 격자의 클릭 판정, 튜토리얼과 SDL 키보드 완주를 검사한다.",
             "- 화면을 열지 않고 SDL의 탑다운 모드에서 키보드 입력으로 여덟 방을 재생했다. 사람의 초회 체감 난이도는 미측정이다.", "",
             "```powershell", "python tools/solve_levels.py --check --check-mechanics --output docs/balance-report.json", "python -m unittest discover -q", "python tools/render_room_plans.py", "```", "",

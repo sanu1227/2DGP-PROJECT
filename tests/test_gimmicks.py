@@ -258,44 +258,51 @@ class GimmickTests(unittest.TestCase):
         self.assertIsNone(find_path(game,next(p for p,k in game.level.initial_items.items() if k=="part")))
         self.assertIsNone(find_path(game,(2,3)))
 
-    def test_helper_assignment_recall_progress_and_gate(self):
+    def test_echo_replays_recorded_steps_and_only_it_can_power_the_gate(self):
         game = Game(self.levels[6])
-        station = min(game.level.jobs)
+        station = min(game.level.echo_links)
+        seal, _ = game.level.echo_links[station]
         gate = next(gate for gate, control in game.level.gates.items() if control == station)
-        worker = next(pos for pos, kind in game.state.items.items() if kind == 'soldier')
+        game.state.player = seal
+        self.assertEqual(game.gate_status(gate), "closed")
         game.state.player = station
-        game.state.carrying = game.state.items.pop(worker)
-        progress = game.repair_percent
         before = deepcopy(game.state)
 
-        self.assertTrue(game.act('interact'))
-        self.assertEqual(game.state.worker_steps, {station: 1})
-        self.assertEqual(game.gate_status(gate), 'closed')
-        self.assertEqual(game.repair_percent, progress)
-        self.assertIsNone(find_path(game, game.level.worker_routes[station][0]))
-        self.assert_rejected(game, 'up')
-        moving = deepcopy(game.state)
-        self.assertTrue(game.act('left'))
-        self.assertFalse(game.state.worker_steps)
-        self.assertEqual(game.gate_status(gate), 'open')
+        self.assertTrue(game.act("interact"))
+        self.assertTrue(game.act("left"))
+        self.assert_rejected(game, "interact")
+        recording = deepcopy(game.state)
+        self.assertTrue(game.act("up"))
+        self.assertEqual(game.state.player, station)
+        self.assertEqual(game.state.echo.position, (3, 2))
+        self.assertEqual(game.gate_status(gate), "closed")
         self.assertTrue(game.undo())
-        self.assertEqual(game.state, moving)
-        self.assertEqual(game.gate_status(gate), 'closed')
+        self.assertEqual(game.state, recording)
 
-        self.assertTrue(game.act('interact'))  # Calling off a moving worker clears its queued steps.
-        self.assertFalse(game.state.worker_steps)
-        self.assertEqual(game.state.carrying, 'soldier')
+        self.assertTrue(game.act("left"))
+        self.assertTrue(game.act("right"))
+        self.assertEqual(game.state.echo.position, (2, 2))
+        self.assertEqual(game.gate_status(gate), "closed")
         self.assertTrue(game.undo())
-        self.assertEqual(game.state, moving)
         self.assertTrue(game.undo())
+        self.assertEqual(game.state, recording)
+
+        for action in ("up", "right"):
+            self.assertTrue(game.act(action))
+        self.assertEqual(game.state.echo.position, seal)
+        self.assertEqual(game.gate_status(gate), "open")
+        self.assertTrue(game.act("left"))
+        self.assertEqual(game.state.echo.position, seal)
+        while game.undo():
+            pass
         self.assertEqual(game.state, before)
 
-    def test_helper_rejects_wrong_item_and_full_hands(self):
-        game=Game(self.levels[6]);game.state.player=next(iter(game.level.jobs))
-        for item in (None,'bone','part'):
-            game.state.carrying=item;self.assert_rejected(game,'interact')
-        game.state.workers.add(next(iter(game.level.jobs)));game.state.carrying='part'
-        self.assert_rejected(game,'interact')
+    def test_recording_requires_empty_hands(self):
+        game = Game(self.levels[6])
+        game.state.player = min(game.level.echo_links)
+        for item in ("bone", "part", "soldier"):
+            game.state.carrying = item
+            self.assert_rejected(game, "interact")
 
     def test_vault_guard_seals_the_east_winch_and_can_trap_the_player(self):
         game = Game(self.levels[6])
@@ -326,7 +333,9 @@ class GimmickTests(unittest.TestCase):
                 self.assertNotIn(first_part, game.state.items)
                 self.assertFalse(game.state.installed)
                 self.assertEqual(game.state.items[level.gates[gates['P1']]], 'part')
-                self.assertIn(level.gates[gates['J2']], game.state.workers)
+                station = level.gates[gates['J2']]
+                self.assertEqual(game.state.echo.origin, station)
+                self.assertEqual(game.state.echo.position, level.echo_links[station][0])
                 break
         else:
             self.fail('두 번째 금고에 도착하지 못했습니다.')
@@ -344,9 +353,9 @@ class GimmickTests(unittest.TestCase):
         for field in ('workers','rubble'):
             state=deepcopy(game.state);getattr(state,field).add((1,1))
             self.assertNotEqual(base,key(state))
-        game.state.workers.update(game.level.jobs)
-        arrived = key(game.state)
-        game.state.worker_steps[next(iter(game.level.jobs))] = 1
-        self.assertNotEqual(arrived, key(game.state))
+        game.state.player = next(iter(game.level.echo_links))
+        anchor = key(game.state)
+        self.assertTrue(game.act('interact'))
+        self.assertNotEqual(anchor, key(game.state))
 
 if __name__=='__main__':unittest.main()

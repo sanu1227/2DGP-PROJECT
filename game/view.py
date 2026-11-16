@@ -21,7 +21,7 @@ from game.play_menu import PlayClock, PlayMenu
 from game.stage_feedback import StageFeedback
 from game.receiver_feedback import ReceiverFeedback
 from game.topdown import ITEMS as TOPDOWN_ITEMS, TopDownArt, draw_board as draw_topdown_board
-from game.worker_view import WorkerMotion, draw_routes
+from game.worker_view import EchoMotion, draw_echo_marks
 from game.music import BackgroundMusic
 
 INK = (226, 230, 219)
@@ -182,7 +182,7 @@ class View:
         self.move_seconds = 0.18
         self.rubble_motions = {}
         self.plate_delays = {}
-        self.worker_motion = WorkerMotion()
+        self.echo_motion = EchoMotion()
         self.action_badge_bounds = None
 
     def mirror_rotation(self, game, pos, now):
@@ -200,7 +200,7 @@ class View:
     def animate_devices(self, game, previous):
         """성공한 행동 이벤트에만 연결한다. 연타는 현재 각도에서 이어지며 입력을 막지 않는다."""
         now = self.now()
-        self.worker_motion.change(game, previous, now)
+        self.echo_motion.change(game, previous, now)
         if self.mirror_game is not game:
             self.mirror_game, self.mirror_motions = game, {}
         for pos in game.level.mirrors:
@@ -326,6 +326,10 @@ class View:
 
     def animate_move(self, game, previous, action):
         """성공한 이동 이벤트에서만 표시 동작을 시작한다. 연속 입력은 현 위치에서 잇는다."""
+        if previous.recording and game.state.recording is None:
+            self.motion = None
+            self.facing = FACING[action]
+            return
         removed = previous.rubble - game.state.rubble
         added = game.state.rubble - previous.rubble
         pushing = len(removed) == len(added) == 1
@@ -528,7 +532,9 @@ class View:
         targets.update({pos: "병사 조립" for pos in level.benches})
         targets.update({pos: "뼈 투입구" for pos in level.chutes})
         targets.update({pos: "거울 회전" for pos in level.mirrors})
-        targets.update({pos: "인부 회수" if pos in state.workers else "인부 보내기" for pos in level.jobs})
+        targets.update({pos: "인부 회수" if pos in state.workers else "인부 배치"
+                        for pos in level.jobs - level.echo_links.keys()})
+        targets.update({pos: "발걸음 기록" for pos in level.echo_links})
         if not state.active:
             targets.update({pos: "레버 가동" for pos in level.levers})
         targets.update({pos: ITEM_NAMES[kind] for pos, kind in state.items.items()})
@@ -708,7 +714,7 @@ class View:
                         (level.sources, "mana_source", "광원"),
                         (level.receivers, "mana_receiver", level.device_labels.get(pos, "") + (" 수신 완료" if pos in powered_receivers else " 수신 대기")),
                         (state.rubble, "push_rubble", "밀기 · 방향키"),
-                        (level.jobs - level.worker_routes.keys(), "helper_work" if pos in state.workers else "winch", level.device_labels.get(pos, "") + (" 인부 회수" if pos in state.workers else " 인부 배치"))):
+                        (level.jobs - level.echo_links.keys(), "helper_work" if pos in state.workers else "winch", level.device_labels.get(pos, "") + (" 인부 회수" if pos in state.workers else " 인부 배치"))):
                     if pos in cells:
                         # 잔해는 발판 상판을 그린 다음 얹는다. 같은 깊이의 장치보다 앞이다.
                         if sprite == "push_rubble":
@@ -749,18 +755,14 @@ class View:
                 if pos in state.soldiers:
                     objects.append((depth, 2, "soldier_deployed", sx, sy))
 
-        draw_routes(level, projection)
-        for station, route in level.worker_routes.items():
-            labels.append((station, f"{level.device_labels[station]} 호출"))
-            position, working = self.worker_motion.pose(game, station, now)
-            sx, sy = screen(route[-1])
-            sprite = "helper_work" if working else "winch"
-            objects.append((sum(route[-1]), 1, sprite, sx, sy))
-            decor_draws[(sprite, sx, sy)] = scale
-            if position is not None and not working:
-                sx, sy = screen(position)
-                objects.append((sum(position), 2, "soldier_deployed", sx, sy))
-                decor_draws[("soldier_deployed", sx, sy)] = scale * .87
+        draw_echo_marks(level, state, projection)
+        for station in level.echo_links:
+            labels.append((station, f"{level.device_labels[station]} 기록"))
+        echo_pose = self.echo_motion.pose(game, now)
+        if echo_pose:
+            position, direction = echo_pose
+            sx, sy = screen(position)
+            objects.append((sum(position), 2, "echo_actor", sx, sy))
 
         if scene:
             for mount in scene.get("wall_mounts", ()):
@@ -820,6 +822,9 @@ class View:
                 continue
             if sprite.startswith("gate_"):
                 self.gate(level, pos, sx, sy, scale, sprite.removeprefix("gate_"), gate_openings[pos])
+                continue
+            if sprite == "echo_actor":
+                draw_tinted(self.art, f"worker_{FACING[direction]}_idle", sx, sy, scale, (206, 150, 255))
                 continue
             if sprite != "player":
                 if (sx, sy) in wall_tints and (sprite.startswith("wall_low") or "_wall_" in sprite):
@@ -929,12 +934,15 @@ class View:
             return game.context_action(), RED
         if game.state.cleared:
             return "복구 완료", TEAL
+        if game.state.recording:
+            return game.context_action(), GOLD
         if game.repair_percent == 100:
             return "복구 완료 · 출구로 돌아가세요", TEAL
         if self.interaction_hint:
             return self.interaction_hint, GOLD
         level = game.level
-        targets = level.traps | level.benches | level.posts | level.levers | level.chutes.keys() | game.state.items.keys()
+        targets = (level.traps | level.benches | level.posts | level.levers | level.jobs
+                   | level.chutes.keys() | game.state.items.keys())
         if game.can_interact() or game.state.player in targets:
             return game.context_action(), TEAL if game.can_interact() else MUTED
         quiet = {

@@ -36,8 +36,7 @@ class Level:
     rubble: frozenset[Pos] = frozenset()
     jobs: frozenset[Pos] = frozenset()
     action_limit: int | None = None
-    worker_routes: dict[Pos, tuple[Pos, ...]] = field(default_factory=dict)
-    worker_tiles: frozenset[Pos] = frozenset()
+    echo_links: dict[Pos, tuple[Pos, int]] = field(default_factory=dict)
 
 
 def read_links(raw, field_name, first_name, second_name, first_tiles, second_tiles, prefix, used_ids, optional=()):
@@ -69,31 +68,25 @@ def read_links(raw, field_name, first_name, second_name, first_tiles, second_til
     return pairs, labels
 
 
-def read_worker_routes(links, tiles, prefix):
-    routes, used = {}, set()
+def read_echo_links(links, tiles, prefix):
+    echoes, used = {}, set()
     for link in links:
-        if "route" not in link:
+        echo_fields = {"seal", "steps"} & link.keys()
+        if not echo_fields:
             continue
-        station = tuple(link["station"])
-        previous, path = station, []
-        route = link["route"]
-        if not isinstance(route, list) or not route:
-            raise ValueError(prefix + "인부 통로에는 윈치 위치가 필요합니다.")
-        for point in route:
-            if (not isinstance(point, list) or len(point) != 2
-                    or any(type(value) is not int for value in point)):
-                raise ValueError(prefix + "인부 통로의 좌표가 잘못되었습니다.")
-            cell = tuple(point)
-            if (cell not in tiles or cell in used
-                    or abs(cell[0] - previous[0]) + abs(cell[1] - previous[1]) != 1):
-                raise ValueError(prefix + "인부 통로는 호출대에서 이어지는 전용 칸이어야 합니다.")
-            used.add(cell)
-            path.append(cell)
-            previous = cell
-        routes[station] = tuple(path)
+        seal, steps = link.get("seal"), link.get("steps")
+        if (not isinstance(seal, list) or len(seal) != 2
+                or any(type(value) is not int for value in seal)
+                or tuple(seal) not in tiles or tuple(seal) in used):
+            raise ValueError(prefix + "기록석마다 서로 다른 분신 문양을 연결해야 합니다.")
+        if type(steps) is not int or not 2 <= steps <= 6:
+            raise ValueError(prefix + "분신이 기록할 걸음은 2~6회여야 합니다.")
+        cell = tuple(seal)
+        used.add(cell)
+        echoes[tuple(link["station"])] = (cell, steps)
     if used != tiles:
-        raise ValueError(prefix + "모든 인부 전용 칸을 통로에 연결해야 합니다.")
-    return routes
+        raise ValueError(prefix + "모든 분신 문양을 기록석에 연결해야 합니다.")
+    return echoes
 
 
 def load_levels(path: Path | str | None = None) -> list[Level]:
@@ -151,8 +144,8 @@ def load_levels(path: Path | str | None = None) -> list[Level]:
         plate_links, labels = read_links(raw, "plate_links", "plate", "gate", positions["F"], positions["G"], prefix, used_ids)
         power_links, power_labels = read_links(raw, "power_links", "receiver", "gate", positions["Y"], positions["G"], prefix, used_ids)
         worker_links, worker_labels = read_links(raw, "worker_links", "station", "gate",
-                                                  positions["J"], positions["G"], prefix, used_ids, optional=("route",))
-        worker_routes = read_worker_routes(raw.get("worker_links", ()), positions["U"], prefix)
+                                                  positions["J"], positions["G"], prefix, used_ids, optional=("seal", "steps"))
+        echo_links = read_echo_links(raw.get("worker_links", ()), positions["U"], prefix)
         links = {**plate_links, **power_links, **worker_links}
         if (set(plate_links) != positions["F"] or set(power_links) != positions["Y"]
                 or set(worker_links) != positions["J"] or set(links.values()) != positions["G"]
@@ -184,7 +177,7 @@ def load_levels(path: Path | str | None = None) -> list[Level]:
             sources[tuple(cell)] = source["direction"]
         if set(sources) != positions["Q"] or (positions["M"] | positions["Y"] and not sources):
             raise ValueError(prefix + "거울·수신기에는 방향이 지정된 광원이 필요합니다.")
-        if positions["J"] and not positions["S"]:
+        if positions["J"] - echo_links.keys() and not positions["S"]:
             raise ValueError(prefix + "해골 인부는 병사 복구 목표와 함께 배치해야 합니다.")
         levels.append(Level(
             id=raw["id"], title=raw["title"], hint=raw["hint"], rows=tuple(rows),
@@ -194,7 +187,6 @@ def load_levels(path: Path | str | None = None) -> list[Level]:
             plates=positions["F"], gates={gate: control for control, gate in links.items()}, device_labels=labels,
             chutes=chutes, action_limit=action_limit,
             mirrors=positions["M"], sources=sources, receivers=positions["Y"],
-            rubble=positions["R"], jobs=positions["J"],
-            worker_routes=worker_routes, worker_tiles=positions["U"],
+            rubble=positions["R"], jobs=positions["J"], echo_links=echo_links,
         ))
     return levels

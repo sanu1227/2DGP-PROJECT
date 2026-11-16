@@ -51,7 +51,7 @@ def main():
         for index, level in enumerate(levels[3:],3):
             game=Game(level); display.draw(game,index,len(levels))
             for cells,sprite in ((level.mirrors,"mirror"),
-                                 (level.jobs - level.worker_routes.keys(),"winch"),(level.rubble,"push_rubble")):
+                                 (level.jobs - level.echo_links.keys(),"winch"),(level.rubble,"push_rubble")):
                 for pos in cells:
                     visible_item_pixel(display,game,pos,sprite)
                     checked+=1

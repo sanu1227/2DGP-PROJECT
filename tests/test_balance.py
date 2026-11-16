@@ -40,7 +40,7 @@ class BalanceTests(unittest.TestCase):
                 for dx, dy in DIRECTIONS.values():
                     target = (x + dx, y + dy)
                     if (0 <= target[0] < level.width and 0 <= target[1] < level.height
-                            and target not in level.walls | level.worker_tiles | blocked and target not in seen):
+                            and target not in level.walls | blocked and target not in seen):
                         seen.add(target)
                         queue.append(target)
             return seen

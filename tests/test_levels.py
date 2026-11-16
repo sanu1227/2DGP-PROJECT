@@ -49,7 +49,7 @@ class LevelTests(unittest.TestCase):
                 self.assertEqual(len(level.traps), traps)
                 self.assertEqual(len(level.posts), posts)
                 self.assertEqual(len(level.benches), benches)
-                floor = {(x, y) for y in range(level.height) for x in range(level.width)} - level.walls - level.worker_tiles
+                floor = {(x, y) for y in range(level.height) for x in range(level.width)} - level.walls
                 seen = {level.start}
                 queue = deque(seen)
                 while queue:
@@ -109,17 +109,17 @@ class LevelTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     self.load_document({"stages": [stage]})
 
-    def test_worker_routes_require_contiguous_unique_worker_tiles(self):
+    def test_echo_links_validate_recording_length_and_seal(self):
         stage = dict(VALID_STAGE, map=[
-            "########", "#@.K...#", "#..JUU.#", "#P..G.S#", "#..TLE.#", "########",
+            "########", "#@.....#", "#..J.U.#", "#P..G..#", "#..TLE.#", "########",
         ])
-        link = {"id": "J1", "station": [3, 2], "gate": [4, 3], "route": [[4, 2], [5, 2]]}
+        link = {"id": "J1", "station": [3, 2], "gate": [4, 3], "seal": [5, 2], "steps": 2}
         stage["worker_links"] = [link]
         level, = self.load_document({"stages": [stage]})
-        self.assertEqual(level.worker_routes, {(3, 2): ((4, 2), (5, 2))})
-        for route in ([], [[5, 2], [4, 2]], [[4, 2], [4, 2]], [[4, 2], [5, 3]], [[4, 2]]):
-            with self.subTest(route=route), self.assertRaises(ValueError):
-                link["route"] = route
+        self.assertEqual(level.echo_links, {(3, 2): ((5, 2), 2)})
+        for field, value in (("seal", [4, 2]), ("seal", []), ("steps", False), ("steps", 1), ("steps", 7)):
+            with self.subTest(field=field, value=value), self.assertRaises(ValueError):
+                stage["worker_links"] = [dict(link, **{field: value})]
                 self.load_document({"stages": [stage]})
 
     def test_missing_or_malformed_files_report_errors(self):

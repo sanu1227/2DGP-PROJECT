@@ -1,70 +1,72 @@
-"""호출대와 인부 통로 표시. 보간은 게임 행동 수나 문 판정과 별개다."""
-
-from math import floor, hypot
+"""분신 기록석, 문양, 발걸음 표시와 재생 보간."""
 
 import pico2d.pico2d as p
 
+from game.levels import DIRECTIONS
 
-class WorkerMotion:
+
+ECHO_COLOR = (197, 137, 243)
+
+
+class EchoMotion:
     def __init__(self):
         self.game = None
-        self.motions = {}
-
-    @staticmethod
-    def step(route, state, station):
-        return state.worker_steps.get(station, len(route)) if station in state.workers else 0
+        self.motion = None
+        self.direction = "down"
 
     def change(self, game, previous, now):
         if game is not self.game:
-            self.game, self.motions = game, {}
-        for station, route in game.level.worker_routes.items():
-            start = self.step(route, previous, station)
-            end = self.step(route, game.state, station)
-            if end == 0:
-                self.motions.pop(station, None)
-            elif start != end:
-                motion = self.motions.get(station)
-                start = self.progress(motion, now) if motion else start
-                self.motions[station] = (start, end, now, .18 * (end - start))
+            self.game, self.motion = game, None
+        echo = game.state.echo
+        old = previous.echo
+        if not echo:
+            self.motion = None
+            return
+        if old != echo:
+            start = old.position if old else echo.origin
+            if self.motion:
+                start = self.position_at(now)
+            self.motion = (start, echo.position, now)
+            inputs = old.remaining if old else ()
+            if inputs:
+                self.direction = inputs[0]
+            elif echo.position != echo.origin:
+                dx = echo.position[0] - echo.origin[0]
+                dy = echo.position[1] - echo.origin[1]
+                self.direction = next(key for key, value in DIRECTIONS.items() if value == (dx, dy))
 
-    @staticmethod
-    def progress(motion, now):
-        start, end, began, duration = motion
-        fraction = min(1, max(0, (now - began) / duration))
-        return start + (end - start) * fraction
+    def position_at(self, now):
+        start, end, began = self.motion
+        fraction = min(1, max(0, (now - began) / .18))
+        return tuple(a + (b - a) * fraction for a, b in zip(start, end))
 
-    def pose(self, game, station, now):
-        """보이는 현재 위치와 작업 자세 전환 여부를 반환한다."""
-        route = game.level.worker_routes[station]
-        step = self.step(route, game.state, station)
-        if not step:
-            return None, False
-        motion = self.motions.get(station) if game is self.game else None
-        step = self.progress(motion, now) if motion else step
-        if step >= len(route):
-            return route[-1], True
-        path = (station, *route)
-        index = floor(step)
-        fraction = step - index
-        start, end = path[index:index + 2]
-        return tuple(a + (b - a) * fraction for a, b in zip(start, end)), False
+    def pose(self, game, now):
+        echo = game.state.echo
+        if not echo:
+            return None
+        position = self.position_at(now) if game is self.game and self.motion else echo.position
+        return position, self.direction
 
 
-def draw_routes(level, board):
-    color = (195, 158, 92)
-    for station, route in level.worker_routes.items():
-        nodes = [board.screen(pos) for pos in (station, *route)]
-        for (x1, y1), (x2, y2) in zip(nodes, nodes[1:]):
-            dx, dy = x2 - x1, y2 - y1
-            length = hypot(dx, dy)
-            nx, ny = -dy / length, dx / length
-            for start, end in ((.17, .33), (.42, .58), (.67, .83)):
-                for side in (-2, 2):
-                    p.draw_line(x1 + dx * start + nx * side, y1 + dy * start + ny * side,
-                                x1 + dx * end + nx * side, y1 + dy * end + ny * side, *color)
-        x, y = nodes[0]
-        radius = max(8, round(board.half_width * .32))
-        p.draw_circle(x, y, radius, *color, filled=False)
-        p.draw_circle(x, y, round(radius * .54), *color, filled=False)
-        for x, y in nodes[1:-1]:
-            p.draw_circle(x, y, max(3, round(radius * .3)), *color, filled=False)
+def draw_echo_marks(level, state, board):
+    radius = max(8, round(board.half_width * .34))
+    for origin, (seal, _) in level.echo_links.items():
+        for pos, shape in ((origin, 4), (seal, 0)):
+            x, y = board.screen(pos)
+            if shape:
+                points = ((x-radius, y), (x, y+radius), (x+radius, y), (x, y-radius))
+                for a, b in zip(points, points[1:] + points[:1]):
+                    p.draw_line(*a, *b, *ECHO_COLOR)
+                p.draw_circle(x, y, radius // 3, *ECHO_COLOR, filled=False)
+            else:
+                p.draw_circle(x, y, radius, *ECHO_COLOR, filled=False)
+                p.draw_circle(x, y, radius // 2, *ECHO_COLOR, filled=False)
+                if state.echo and state.echo.origin == origin and state.echo.position == pos:
+                    p.draw_circle(x, y, radius // 3, *ECHO_COLOR)
+    if state.recording:
+        x, y = state.recording.origin
+        for action in state.recording.inputs:
+            dx, dy = DIRECTIONS[action]
+            a, b = board.screen((x + dx * .45, y + dy * .45))
+            p.draw_circle(a, b, max(3, radius // 4), *ECHO_COLOR)
+            x, y = x + dx, y + dy

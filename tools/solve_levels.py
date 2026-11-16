@@ -23,7 +23,7 @@ def key(state):
     return (state.player, state.carrying, tuple(sorted(state.items.items())),
             frozenset(state.installed), state.active, frozenset(state.soldiers),
             tuple(sorted(state.bench_bones.items())), tuple(sorted(state.mirror_rotations.items())),
-            frozenset(state.rubble), frozenset(state.workers), frozenset(state.worker_steps.items()))
+            frozenset(state.rubble), frozenset(state.workers), state.recording, state.echo)
 
 
 class LowerBound:
@@ -35,7 +35,7 @@ class LowerBound:
 
     def __init__(self, level):
         self.level = level
-        self.floor = {(x, y) for y in range(level.height) for x in range(level.width)} - level.walls - level.worker_tiles
+        self.floor = {(x, y) for y in range(level.height) for x in range(level.width)} - level.walls
         self.worker_regions = {}
         self.mirror_regions = []
         mirrors = sorted(level.mirrors)
@@ -79,7 +79,7 @@ class LowerBound:
         # 안쪽 부품을 꺼내려면 이 인부를 배치한 후 반드시 회수해야 한다.
         if len(level.posts) == 1 and len(level.jobs) == 1:
             for gate, control in level.gates.items():
-                if control not in level.jobs:
+                if control not in level.jobs or control in level.echo_links:
                     continue
                 region, queue = {control}, deque([control])
                 while queue:
@@ -140,6 +140,8 @@ class LowerBound:
 
     def __call__(self, state):
         level = self.level
+        # 기록을 끝내야 장치를 조작할 수 있으며, 그때 수리공은 기록석으로 돌아온다.
+        player = state.recording.origin if state.recording else state.player
         sources = {kind: [p for p, value in state.items.items() if value == kind]
                    for kind in ("part", "bone", "soldier")}
         # Every loose item must be picked up; a carried item already paid that cost.
@@ -162,7 +164,7 @@ class LowerBound:
                                                   if state.mirror_rotations.get(pos, 0) != target}
                                                  for pattern in patterns))
         if state.carrying:
-            sources[state.carrying].append(state.player)
+            sources[state.carrying].append(player)
         traps = level.traps - state.installed
         posts = level.posts - state.soldiers
         actions += len(traps) + len(sources["bone"]) + len(posts)
@@ -199,18 +201,18 @@ class LowerBound:
             # 인부 회수도 줍기다. 가까운 인부보다 먼 부품을 첫 목적지로
             # 강제하면 실제 최단 비용을 초과해 유효한 풀이를 가지치기한다.
             pickups.extend(state.workers)
-            travel += min(self.distance(None, state.player, q) for q in pickups)
+            travel += min(self.distance(None, player, q) for q in pickups)
         last = set(traps) | set(posts)
         if level.traps and not state.active:
             last |= level.levers
         if last:
             travel += min(self.distance(None, p, level.exit) for p in last)
         elif not state.items and not state.carrying:
-            travel += self.distance(None, state.player, level.exit)
+            travel += self.distance(None, player, level.exit)
         # 위치가 너무 많으면 지수 크기 방문표를 만들지 않고 기존 하한을 사용한다.
         if len(self.visit_cells) <= 14:
             mask = sum(self.visit_bits.get(pos, 0) for pos in must_visit)
-            travel = max(travel, self.visit_tail(state.player, mask))
+            travel = max(travel, self.visit_tail(player, mask))
         return actions + travel
 
 
@@ -271,7 +273,7 @@ def solve(level, max_states=500_000, upper_bound=None, forbidden=None):
 
 def mechanic_required_by_layout(level, mechanic):
     """나머지 문과 장애물을 무시해도 필수 칸에 갈 수 없는 경우를 증명한다."""
-    floor = {(x, y) for y in range(level.height) for x in range(level.width)} - level.walls - level.worker_tiles
+    floor = {(x, y) for y in range(level.height) for x in range(level.width)} - level.walls
 
     def reachable(blocked):
         seen = {level.start}
@@ -354,7 +356,7 @@ def main():
                     operation = game._interaction(game.state)[0]
                     return ((mechanic == "chute" and operation == "send_bone")
                             or (mechanic == "mirror" and operation == "rotate")
-                            or (mechanic == "helper" and operation == "assign"))
+                            or (mechanic == "helper" and operation in ("assign", "record")))
 
                 bypass = solve(level, args.max_states, level.action_limit, forbidden)
                 if bypass is not None:
@@ -365,7 +367,7 @@ def main():
             result["mechanics_required_by_layout"] = layout_required
         result["action_limit"] = level.action_limit
         result["size"] = [level.width, level.height]
-        result["floor_cells"] = level.width * level.height - len(level.walls) - len(level.worker_tiles)
+        result["floor_cells"] = level.width * level.height - len(level.walls)
         results[level.id] = result
         print(json.dumps({"stage": level.id, **{k: v for k, v in result.items() if k != "actions"}}), flush=True)
     if args.output:

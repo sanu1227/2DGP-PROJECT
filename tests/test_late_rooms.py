@@ -19,7 +19,7 @@ class LateRoomTests(unittest.TestCase):
             x, y = game.state.player
             self.assertTrue(game.act(reverse[(cell[0] - x, cell[1] - y)]), game.message)
 
-    def test_boss_must_leave_the_worker_inside_until_the_vault_is_empty(self):
+    def test_boss_echo_keeps_vault_open_after_east_wing_closes(self):
         level = load_levels()[7]
         game = Game(level)
         mirror, = level.mirrors
@@ -47,30 +47,20 @@ class LateRoomTests(unittest.TestCase):
         self.assertTrue(game.undo())
         assert_open("M1")
 
+        use(job)
+        self.go(game, level.echo_links[job][0])
+        self.assertEqual(game.state.player, job)
+        assert_open("M1")
         use(worker)
-        use(job)
-        assert_open("M1")
-        self.go(game, gates["M1"])
         assert_open("M1", "J1")
-        use(job)
-        assert_open("M1")
-        self.assertTrue(game.undo())
-
+        use(post)
+        assert_open("J1")
+        self.assertIsNone(find_path(game, job))
+        self.assertIsNone(find_path(game, part))
         use(mirror)
         assert_open("M2", "J1")
-        self.assertIsNone(find_path(game, job))
         use(part)
         use(trap)
-
-        use(mirror, 3)
-        assert_open("M1", "J1")
-        use(job)
-        assert_open("M1")
-        use(post)
-        assert_open()
-        self.assertIsNone(find_path(game, job))
-        use(mirror)
-        assert_open("M2")
         use(lever)
         self.assertIsNone(find_path(game, mirror))
         self.go(game, level.exit)

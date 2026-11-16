@@ -184,6 +184,6 @@ class ClickNavigator:
             return None
         self.path.pop(0)
         self.next_step_at = now + 0.18
-        if game.state.cleared or game.failed or not self.path:
+        if game.state.player != destination or game.state.cleared or game.failed or not self.path:
             self.cancel()
         return action

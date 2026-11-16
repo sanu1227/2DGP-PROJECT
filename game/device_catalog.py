@@ -46,9 +46,9 @@ CARDS = (
     DeviceCard("mirror", "마력 반사 거울", (("mirror", "4방향 · 90도 회전"), ("mana_receiver", "수신기")),
                "빈손으로 E / Space를 눌러 네 방향으로 돌려요. 화살표가 앞면이에요.",
                "앞면만 반사하고 뒷면은 빛을 막아요. 여러 거울을 이어 수신기에 보내세요."),
-    DeviceCard("helper", "해골 인부", (("winch", "목표 윈치"), ("helper_work", "작업 중")),
-               "호출대에서 E / Space로 보내면, 내 행동마다 인부도 한 칸씩 이동해요.",
-               "인부가 윈치에 도착하면 문이 열려요. 같은 호출대에서 빈손으로 불러오세요."),
+    DeviceCard("helper", "발걸음 분신", (("worker_sw_idle", "수리공의 분신"),),
+               "빈손으로 기록석에서 E / Space를 누르고 문양까지 걸어요.",
+               "분신은 기록한 방향을 재생해요. 문양에 서 있는 동안 연결문이 열려요."),
 )
 PAGE_COUNT = (len(CARDS) + CARDS_PER_PAGE - 1) // CARDS_PER_PAGE
 

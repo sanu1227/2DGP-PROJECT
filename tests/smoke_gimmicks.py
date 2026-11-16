@@ -48,7 +48,8 @@ def main():
                     if changed and name not in captured:
                         capture('-' + name)
                         captured.add(name)
-                if game.state.workers and all(abs(game.state.player[0]-x)+abs(game.state.player[1]-y)>=2 for x,y in game.state.workers) and 'helper' not in captured:
+                helpers = ({game.state.echo.position} if game.state.echo else game.state.workers)
+                if helpers and all(abs(game.state.player[0]-x)+abs(game.state.player[1]-y)>=2 for x,y in helpers) and 'helper' not in captured:
                     capture('-helper')
                     captured.add('helper')
             assert game.state.cleared

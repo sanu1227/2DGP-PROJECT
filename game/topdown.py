@@ -9,7 +9,7 @@ import pico2d.pico2d as p
 from game.levels import DIRECTIONS
 from game.themes import scene_for
 from game.topdown_terrain import Light, draw_shadows, draw_terrain, materials_for
-from game.worker_view import draw_routes
+from game.worker_view import ECHO_COLOR, draw_echo_marks
 
 
 ASSET_ROOT = Path(__file__).resolve().parents[1] / "assets" / "topdown_v2"
@@ -130,10 +130,12 @@ def device_entries(game, gate_statuses, powered, exit_ready, plate_depths):
     for pos in level.jobs:
         working = pos in state.workers
         label = level.device_labels[pos]
-        if pos in level.worker_routes:
-            entries[pos] = None, f"{label} 호출", TEAL if working else GOLD
+        if pos in level.echo_links:
+            entries[pos] = None, f"{label} 기록", ECHO_COLOR
         else:
             entries[pos] = ("helper" if working else "winch"), label, TEAL if working else GOLD
+    for origin, (seal, _) in level.echo_links.items():
+        entries[seal] = None, level.device_labels[origin], ECHO_COLOR
     return entries
 
 
@@ -218,7 +220,7 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, gate_s
 
     background = tuple(scene["background"]) if scene else (19, 27, 32)
     draw_terrain(art, board, level, materials_for(stage), lights, background, now, recesses)
-    draw_routes(level, board)
+    draw_echo_marks(level, state, board)
     raised = [pos for pos, (sprite, _, _) in entries.items() if sprite in RAISED_DEVICES]
     draw_shadows(board, player, [*raised, *state.items, *(pos for pos, _ in rubble)])
 
@@ -252,13 +254,12 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, gate_s
         else:
             art.draw(asset, sx, sy, size * .82)
 
-    for station, route in level.worker_routes.items():
-        position, working = view.worker_motion.pose(game, station, now)
-        sx, sy = board.screen(route[-1])
-        art.draw(sprites["helper" if working else "winch"], sx, sy, size * .82)
-        if position is not None and not working:
-            sx, sy = board.screen(position)
-            art.draw(sprites["soldier_deployed"], sx, sy, size * .64)
+    echo_pose = view.echo_motion.pose(game, now)
+    if echo_pose:
+        position, direction = echo_pose
+        sx, sy = board.screen(position)
+        p.draw_circle(sx, sy, round(size * .33), *ECHO_COLOR)
+        art.draw(f"worker_{direction}_idle", sx, sy, size * .75, opacity=.67)
 
     for pos, kind in state.items.items():
         sx, sy = board.screen(pos)
@@ -282,10 +283,8 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, gate_s
         sprite = ITEMS[state.carrying]
         art.draw(sprites.get(sprite, sprite), px + dx * size * .27, py - dy * size * .27, size * .32)
     head = py + size * .35
-    route = level.worker_routes.get(state.player)
-    # 북쪽으로 출발하는 인부를 수리공의 행동 배지가 덮지 않게 한다.
     badge_x = px
-    if route and state.player in state.worker_steps and route[0][1] < state.player[1]:
+    if state.echo and state.echo.position == (state.player[0], state.player[1] - 1):
         badge_x -= size * .85
     view.place_action_badge(game, badge_x, head, now)
     view.worker_effort((px - size * .3, py - size * .27, px + size * .3, head), tired, now)
