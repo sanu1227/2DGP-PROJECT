@@ -251,6 +251,7 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, mirror
             y += size * .06
         art.draw(sprites.get(sprite, sprite), x, y, size * scale)
 
+    view.room_debris.draw(board, now)
     for pos, (sprite, _, color) in entries.items():
         sx, sy = board.screen(mirror_positions.get(pos, pos))
         asset = sprites.get(sprite, sprite)
