@@ -118,7 +118,7 @@ class GimmickTests(unittest.TestCase):
         self.assertFalse(powered)
 
     def test_later_rooms_require_every_reflection_and_undo_each_rotation(self):
-        for index, expected in ((4, (1,)), (5, (1, 0))):
+        for index, expected in ((4, (1,)), (7, (1,))):
             count = len(expected)
             level = replace(self.levels[index], rubble=frozenset())
             if level.movable_mirrors:
@@ -154,36 +154,27 @@ class GimmickTests(unittest.TestCase):
                 broken = replace(level, mirrors=level.mirrors - {mirror})
                 self.assertNotIn(receiver, trace_magic(broken, game.state)[1])
 
-    def test_switching_power_and_deploying_guard_changes_available_room(self):
+    def test_relay_block_alternates_two_gates_and_cannot_leave_its_slots(self):
         level = self.levels[5]
         game = Game(level)
         north, south = sorted(level.gates, key=lambda pos: pos[1])
-        switch, relay = sorted(level.mirrors, key=lambda pos: pos[1])
-        part = max((pos for pos, item in level.initial_items.items() if item == 'part'), key=lambda pos: pos[1])
-        self.assertEqual([game.gate_status(gate) for gate in (north, south)], ['closed', 'closed'])
-        self.assertEqual(game.state.mirror_rotations[relay], 2)
-
-        game.state.player = relay
-        for _ in range(2):
-            self.assertTrue(game.act('interact'))
-        game.state.player = switch
-        self.assertTrue(game.act('interact'))
-        self.assertEqual([game.gate_status(gate) for gate in (north, south)], ['closed', 'open'])
-        self.assertIsNotNone(find_path(game, part))
-
-        game.state.player = next(iter(level.posts))
-        game.state.carrying = 'soldier'
-        self.assertTrue(game.act('interact'))
-        self.assertIsNone(find_path(game, part))
-        self.assertEqual(game.gate_status(south), 'closed')
+        before = deepcopy(game.state)
+        self.assertEqual(trace_magic(level, game.state)[1], {level.gates[north]})
+        self.assertEqual((game.gate_status(north), game.gate_status(south)), ("open", "closed"))
+        self.assert_rejected(game, "right")
+        for action in ("down", "right", "right", "up", "left"):
+            self.assertTrue(game.act(action), game.message)
+        self.assertEqual(game.state.rubble, {(2, 3)})
+        self.assertEqual(trace_magic(level, game.state)[1], {level.gates[south]})
+        self.assertEqual((game.gate_status(north), game.gate_status(south)), ("closed", "open"))
+        self.assert_rejected(game, "left")
+        for action in ("down", "left", "left", "up", "right"):
+            self.assertTrue(game.act(action), game.message)
+        self.assertEqual(game.state.rubble, before.rubble)
+        self.assertEqual(trace_magic(level, game.state)[1], {level.gates[north]})
+        self.assertEqual((game.gate_status(north), game.gate_status(south)), ("open", "closed"))
         self.assertTrue(game.undo())
-        self.assertEqual(game.gate_status(south), 'open')
-
-        game.state.carrying = None
-        game.state.player = switch
-        self.assertTrue(game.act('interact'))
-        self.assertTrue(game.act('interact'))
-        self.assertEqual([game.gate_status(gate) for gate in (north, south)], ['open', 'closed'])
+        self.assertEqual(trace_magic(level, game.state)[1], {level.gates[south]})
 
     def test_relay_room_requires_staging_the_bone_across_power_modes(self):
         level = self.levels[5]

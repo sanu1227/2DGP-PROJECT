@@ -312,7 +312,12 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, mirror
         art.draw(sprites.get(sprite, sprite), px + dx * size * .27, py - dy * size * .27, size * .32)
     head = py + size * .35
     badge_x = px
-    if state.echo and state.echo.position == (state.player[0], state.player[1] - 1):
+    player_x, player_y = state.player
+    above = (player_x, player_y - 1)
+    beam_devices = level.sources.keys() | level.receivers
+    if above in beam_devices:
+        badge_x += size * (-1 if (player_x + 1, player_y - 1) in beam_devices else 1)
+    elif state.echo and state.echo.position == above:
         badge_x -= size * .85
     view.place_action_badge(game, badge_x, head, now)
     view.worker_effort((px - size * .3, py - size * .27, px + size * .3, head), tired, now)
@@ -343,7 +348,7 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, mirror
             sx, sy = board.screen(position)
             sy += 2 - half
             rectangle(sx - 30, sy - 8, sx + 30, sy + 8, (24, 35, 40))
-            view.centered(sx, sy, "차광 잔해", 13, GOLD)
+            view.centered(sx, sy, "차광 블록", 13, GOLD)
     view.interaction_markers(game, board)
     if view.show_coordinates:
         view.coordinate_overlay(level, board)

@@ -107,7 +107,7 @@
       {"sprite": "forge_mount_lamp_nw", "cell": [9, 6], "facing": "left"}
     ],
     "decorations": [
-      {"sprite": "sewer_pipe_elbow", "cell": [4, 4], "facing": "left", "scale": 0.53},
+      {"sprite": "sewer_pipe_elbow", "cell": [4, 5], "facing": "left", "scale": 0.53},
       {"sprite": "sewer_water_barrel", "cell": [2, 7], "facing": "up", "scale": 0.61}
     ]
   },

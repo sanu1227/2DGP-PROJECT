@@ -343,8 +343,8 @@ def main():
                                  f"기준={MINIMUM_ACTIONS[level.id]}, 제한={level.action_limit})")
         if result is None:
             raise ValueError(f"{level.id}: 완료 가능한 풀이가 없습니다.")
-        required = {4: ("rubble", "plate"), 5: ("rubble", "mirror", "chute", "plate"), 6: ("mirror",),
-                    7: ("helper", "plate"), 8: ("mirror", "helper")}
+        required = {4: ("rubble", "plate"), 5: ("rubble", "mirror", "chute", "plate"), 6: ("rubble",),
+                    7: ("helper", "plate"), 8: ("rubble", "mirror", "helper")}
         if level.movable_mirrors:
             required[index] = (*required.get(index, ()), "mirror_push")
         if args.check_mechanics and index in required:

@@ -81,6 +81,8 @@ class LateRoomTests(unittest.TestCase):
             self.play(game, "interact")
 
         use(mirror)
+        self.go(game, (5, 6))
+        self.play(game, "left")
         use(part)
         use(trap)
         use(mirror)

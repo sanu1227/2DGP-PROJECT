@@ -111,8 +111,9 @@ def capture_rooms(levels):
             # 재생 전후 화면과 수신 파동을 같은 실제 풀이 위치에서 비교한다.
             for action in SOLUTIONS[game.level.id]:
                 previous = game.state
+                powered = trace_magic(game.level, previous)[1]
                 assert game.act(action)
-                if trace_magic(game.level, game.state)[1]:
+                if trace_magic(game.level, game.state)[1] - powered:
                     break
             assert game.undo()
             with patch.object(view, 'perf_counter', return_value=10):

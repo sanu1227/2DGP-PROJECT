@@ -79,6 +79,16 @@ def device_lessons(level: Level, state: State | None = None) -> tuple[DeviceLess
                 targets))
         elif cells:
             lessons.append(DeviceLesson(kind, title, instruction, reminder, ((min(cells), title),)))
+    if rubble and len(level.sources) > 1 and len(level.receivers) > 1:
+        links = tuple((control, gate) for gate, control in sorted(level.gates.items())
+                      if control in level.receivers)
+        targets = ((min(rubble), "차광 블록"),) + tuple(
+            (receiver, f"{level.device_labels[receiver]} 수신기") for receiver in sorted(level.receivers))
+        lessons.append(DeviceLesson(
+            "beam_switch", "두 광로 번갈아 열기",
+            "블록 옆에서 빈손으로 방향키를 눌러 미세요. 한 광로를 막으면 반대편 수신기와 연결문이 켜져요.",
+            "반대편으로 돌아가 블록을 다시 밀면 열린 문이 바뀌어요. 운반 중에는 뼈를 잠시 내려놓으세요.",
+            targets, links))
     return tuple(lessons)
 
 

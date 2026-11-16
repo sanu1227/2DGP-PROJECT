@@ -57,7 +57,7 @@ class PlayMenu:
 
     def open(self, view):
         self.mode, self.selected = "pause", 0
-        if self.room and self.room.level.movable_mirrors:
+        if self.room is not None:
             self.lessons = device_lessons(self.room.level, self.room.state)
         view.pause()
         view.mouse_position = None

@@ -46,13 +46,14 @@ class BalanceTests(unittest.TestCase):
             return seen
 
         # Open doors isolate the effect of the repaired obstacle itself.
+        supply_part = next(pos for pos, kind in levels[5].initial_items.items() if kind == "part")
         checks = [
             (levels[0], levels[0].start, levels[0].exit, levels[0].traps),
             (levels[1], levels[1].start, (6, 2), levels[1].posts),
             (levels[2], levels[2].start, (6, 2), levels[2].posts),
             (levels[2], levels[2].start, (6, 5), {(4, 5)}),
             (levels[3], levels[3].start, levels[3].exit, levels[3].traps),
-            (levels[5], levels[5].start, levels[5].exit, levels[5].traps),
+            (levels[5], levels[5].start, supply_part, levels[5].traps),
             (levels[6], levels[6].start, levels[6].exit, levels[6].traps),
             (levels[7], levels[7].start, levels[7].exit, levels[7].traps),
         ]

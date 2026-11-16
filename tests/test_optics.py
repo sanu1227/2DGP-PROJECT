@@ -79,9 +79,9 @@ class OpticsTests(unittest.TestCase):
         self.assertEqual(powered, {(6, 3)})
         self.assertAlmostEqual(rays[-1][1][0], 5.78)
 
-    def test_multi_mirror_routes_match_logical_receivers_without_state_mutation(self):
+    def test_room_routes_match_logical_receivers_without_state_mutation(self):
         for level in load_levels():
-            if not level.mirrors:
+            if not level.sources:
                 continue
             game = Game(level)
             for action in SOLUTIONS[level.id]:
