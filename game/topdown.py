@@ -6,10 +6,11 @@ from pathlib import Path
 
 import pico2d.pico2d as p
 
+from game.art import Art
 from game.levels import DIRECTIONS
 from game.themes import scene_for
 from game.topdown_terrain import Light, draw_shadows, draw_terrain, materials_for
-from game.worker_view import ECHO_COLOR, draw_echo_marks, recording_label
+from game.worker_view import ECHO_COLOR, draw_echo_trail, recording_label
 
 
 ASSET_ROOT = Path(__file__).resolve().parents[1] / "assets" / "topdown_v2"
@@ -39,7 +40,7 @@ WORKSHOP_SPRITES = {name: f"workshop_{name}" for name in (
 ROOM_SPRITES = WORKSHOP_SPRITES | {name: f"depth_{name}" for name in (
     "bone", "soldier_carried", "soldier_deployed", "post_empty",
     "bench_empty", "bench_bone", "plate_up", "plate_down", "gate_closed", "gate_open", "rubble",
-    "chute_outlet", "chute_inlet", "source", "receiver", "mirror_base", "winch", "helper",
+    "chute_outlet", "chute_inlet", "source", "receiver", "receiver_powered", "mirror_base", "winch", "helper",
     "crystal_sconce", "lantern", "candle_sconce", "air_vent", "wall_pipes", "crest",
     "sarcophagus", "candles", "books", "throne", "hand_pump", "elbow_pipe", "water_barrel",
     "brazier", "treasure", "treasure_banner", "crypt_banner", "archive_banner",
@@ -53,7 +54,7 @@ PROP_LIGHTS = {
 }
 RAISED_DEVICES = frozenset({
     "lever_off", "lever_on", "bench_empty", "bench_bone", "soldier_deployed",
-    "chute_inlet", "source", "mirror_base", "receiver", "winch", "helper",
+    "chute_inlet", "source", "mirror_base", "receiver", "receiver_powered", "winch", "helper",
 })
 
 
@@ -127,35 +128,36 @@ def device_entries(game, gate_statuses, powered, exit_ready, plate_depths):
     for pos in level.mirrors:
         entries[pos] = "mirror_base", "거울", GOLD
     for pos in level.receivers:
-        entries[pos] = "receiver", f"{level.device_labels[pos]} 수신" if pos in powered else level.device_labels[pos], (
-            TEAL if pos in powered else INK)
+        label = level.device_labels[pos]
+        entries[pos] = ("receiver_powered", f"{label} 수신", TEAL) if pos in powered else ("receiver", label, INK)
     for pos in level.jobs:
         working = pos in state.workers
         label = level.device_labels[pos]
         if pos in level.echo_links:
-            entries[pos] = None, recording_label(level, pos), ECHO_COLOR
+            entries[pos] = "recording_stone", recording_label(level, pos), ECHO_COLOR
         else:
             entries[pos] = ("helper" if working else "winch"), label, TEAL if working else GOLD
     for seals, _ in level.echo_links.values():
         for gate, seal in seals.items():
-            entries[seal] = None, level.device_labels[gate], ECHO_COLOR
+            entries[seal] = "replay_seal", level.device_labels[gate], TEAL if game.echo_pressed(gate) else ECHO_COLOR
     return entries
 
 
-def draw_mirror(view, board, pos, rotation):
-    # 거울 면과 앞면 방향을 모델과 같은 지도 좌표에서 투영한다.
-    x, y = pos
-    tx, ty = view.art.mirror_basis(rotation)
+def draw_mirror(sx, sy, size, rotation):
+    """반사면의 위치와 화살표 방향을 광선 판정과 같은 축으로 그린다."""
+    tx, ty = Art.mirror_basis(rotation)
     nx, ny = -ty, tx
-    a = board.screen((x - tx * .36, y - ty * .36))
-    b = board.screen((x + tx * .36, y + ty * .36))
-    for offset in range(-3, 4):
-        p.draw_line(a[0], a[1] + offset, b[0], b[1] + offset, 88, 64, 58)
-    p.draw_line(*a, *b, 220, 230, 220)
-    tip = board.screen((x + nx * .24, y + ny * .24))
+
+    def point(tangent, normal):
+        return (sx + size * (tx * tangent + nx * normal),
+                sy - size * (ty * tangent + ny * normal))
+
+    for normal, color in ((-.027, (163, 119, 76)), (-.015, (61, 44, 47)),
+                          (0, (61, 44, 47)), (.015, (123, 195, 218)), (.027, (209, 244, 252))):
+        p.draw_line(*point(-.36, normal), *point(.36, normal), *color)
     for sign in (-1, 1):
-        tail = board.screen((x + nx * .13 + sign * tx * .07, y + ny * .13 + sign * ty * .07))
-        p.draw_line(*tip, *tail, *TEAL)
+        for offset in (0, 1 / size, 2 / size):
+            p.draw_line(*point(0, .29 - offset), *point(sign * .11, .17 - offset), 143, 251, 235)
 
 
 def source_nozzle(level, start, end):
@@ -167,7 +169,7 @@ def source_nozzle(level, start, end):
         distance = offset_x * dx + offset_y * dy
         outgoing = (end[0] - start[0]) * dx + (end[1] - start[1]) * dy
         if parallel and 0 <= distance < .7 and outgoing > 0:
-            return x + dx * .29, y + dy * .29
+            return x + dx * .275, y + dy * .275
     return start
 
 
@@ -223,7 +225,7 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, gate_s
 
     background = tuple(scene["background"]) if scene else (19, 27, 32)
     draw_terrain(art, board, level, materials_for(stage), lights, background, now, recesses)
-    draw_echo_marks(game, board)
+    draw_echo_trail(game, board)
     raised = [pos for pos, (sprite, _, _) in entries.items() if sprite in RAISED_DEVICES]
     draw_shadows(board, player, [*raised, *state.items, *(pos for pos, _ in rubble)])
 
@@ -235,9 +237,7 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, gate_s
             y += size * .06
         art.draw(sprites.get(sprite, sprite), x, y, size * scale)
 
-    for pos, (sprite, _, _) in entries.items():
-        if sprite is None:
-            continue
+    for pos, (sprite, _, color) in entries.items():
         sx, sy = board.screen(pos)
         asset = sprites.get(sprite, sprite)
         if pos in level.gates:
@@ -250,12 +250,14 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, gate_s
                 art.draw(sprites.get("gate_closed", "gate_closed"), sx, sy, size * .94,
                          angle=angle, opacity=1 - gate_openings[pos])
         elif pos in level.sources:
-            art.draw(asset, sx, sy, size * .68, angle=SOURCE_ANGLES[level.sources[pos]])
+            art.draw(asset, sx, sy, size * .82, angle=SOURCE_ANGLES[level.sources[pos]])
         elif pos in state.soldiers:
             art.draw(sprites.get("post_empty", "post_empty"), sx, sy, size * .79)
             art.draw(asset, sx, sy, size * .72)
         else:
             art.draw(asset, sx, sy, size * .82)
+        if sprite == "replay_seal" and color == TEAL:
+            p.draw_circle(sx, sy, round(size * .42), *TEAL, filled=False)
 
     for origin, pos in state.replay_workers.items():
         if state.echo is None or state.echo.origin != origin:
@@ -308,17 +310,16 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, gate_s
         for offset, color in ((-1, VIOLET), (0, (247, 202, 255)), (1, VIOLET)):
             p.draw_line(x1 + nx * offset, y1 + ny * offset, x2 + nx * offset, y2 + ny * offset, *color)
     for pos in level.mirrors:
-        draw_mirror(view, board, pos, rotations[pos])
+        draw_mirror(*board.screen(pos), size, rotations[pos])
     for pos in powered:
         progress = view.receiver_feedback.progress(game, pos, now)
         sx, sy = board.screen(pos)
-        p.draw_circle(sx, sy, max(2, round(size * .18)), *VIOLET, filled=False)
         if progress < 1:
-            p.draw_circle(sx, sy, max(2, round(size * (.18 + progress * .2))), *VIOLET, filled=False)
+            p.draw_circle(sx, sy, max(2, round(size * (.26 + progress * .16))), *VIOLET, filled=False)
 
     for pos, (_, label, color) in entries.items():
         sx, sy = board.screen(pos)
-        sy += half - 10 if level.sources.get(pos) == "down" else 10 - half
+        sy += half - 2 if level.sources.get(pos) == "down" else 2 - half
         width = min(size - 4, len(label) * 12 + 8)
         rectangle(sx - width / 2, sy - 8, sx + width / 2, sy + 8, (24, 35, 40))
         view.centered(sx, sy, label, 13, color)

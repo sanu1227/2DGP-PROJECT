@@ -7,6 +7,7 @@ import pico2d.pico2d as p
 
 from game.front_end import Button, bevel
 from game.logo_mode import fade_to_black
+from game.topdown import ROOM_SPRITES, draw_mirror
 
 INK = (239, 237, 219)
 MUTED = (164, 182, 177)
@@ -68,6 +69,13 @@ def catalog_buttons():
 
 
 def picture(view, name, x, y, width=160, height=126):
+    if view.top_down:
+        sprite = {"mirror": "mirror_base", "mana_receiver": "receiver", "push_rubble": "rubble"}.get(name, name)
+        size = min(width, height)
+        view.topdown_art.draw(ROOM_SPRITES.get(sprite, sprite), x, y, size)
+        if name == "mirror":
+            draw_mirror(x, y, size, 0)
+        return
     if name == "mirror":
         left, bottom, right, top = view.art.bounds(name, 0, 0, 1)
         scale = min(width / (right - left), height / (top - bottom))
@@ -106,7 +114,7 @@ def draw_catalog(view, game, page):
     view.centered(800, 792, "장치의 모습과 작동 조건을 확인하세요.", 18, INK)
     present = present_devices(game.level)
     cards = CARDS[page * CARDS_PER_PAGE:(page + 1) * CARDS_PER_PAGE]
-    if any(name.startswith("gate_") for card in cards for name, _ in card.pictures):
+    if not view.top_down and any(name.startswith("gate_") for card in cards for name, _ in card.pictures):
         view.art.load_gates()
     for index, card in enumerate(cards):
         left, bottom, right, top = 94 + index * 476, 298, 530 + index * 476, 746
@@ -114,7 +122,10 @@ def draw_catalog(view, game, page):
         bevel((left, bottom, right, top), (30, 48, 52), TEAL if in_room else (81, 99, 99))
         view.text(left + 24, top - 27, "이 방에 있음" if in_room else "다른 구역의 장치", 16, TEAL if in_room else MUTED)
         view.text(left + 24, top - 68, card.title, 32, INK)
-        for i, (name, label) in enumerate(card.pictures):
+        pictures = card.pictures
+        if view.top_down and card.kind == "helper":
+            pictures += (("recording_stone", "기록석"),)
+        for i, (name, label) in enumerate(pictures):
             x = left + 114 + i * 206
             picture(view, name, x, top - 167)
             view.centered(x, top - 247, label, 16, MUTED)

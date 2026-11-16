@@ -13,7 +13,10 @@
     "room_08": "atlases/room_08.png",
     "room_devices": "atlases/room_devices.png",
     "room_magic": "atlases/room_magic.png",
-    "room_decor": "atlases/room_decor.png"
+    "room_decor": "atlases/room_decor.png",
+    "device_mechanisms": "atlases/device_mechanisms.png",
+    "device_fixtures": "atlases/device_fixtures.png",
+    "device_magic": "atlases/device_magic.png"
   },
   "sprites": {
     "floor_1": [
@@ -640,52 +643,52 @@
       256
     ],
     "workshop_trap_broken": [
-      "workshop_finish_props",
-      6,
+      "device_mechanisms",
       4,
-      244,
-      248
+      8,
+      248,
+      239
     ],
     "workshop_trap_installed": [
-      "workshop_finish_props",
+      "device_mechanisms",
       260,
-      6,
-      248,
-      244
-    ],
-    "workshop_trap_active": [
-      "workshop_finish_props",
-      516,
       6,
       248,
       243
     ],
-    "workshop_exit_closed": [
-      "workshop_finish_props",
-      772,
+    "workshop_trap_active": [
+      "device_mechanisms",
+      516,
       7,
       248,
       242
     ],
+    "workshop_exit_closed": [
+      "device_mechanisms",
+      516,
+      265,
+      248,
+      237
+    ],
     "workshop_exit_ready": [
-      "workshop_finish_props",
-      33,
-      260,
-      190,
-      248
+      "device_mechanisms",
+      4,
+      521,
+      248,
+      238
     ],
     "workshop_lever_off": [
-      "workshop_finish_props",
-      309,
+      "device_mechanisms",
+      38,
       260,
-      150,
+      179,
       248
     ],
     "workshop_lever_on": [
-      "workshop_finish_props",
-      550,
+      "device_mechanisms",
+      294,
       260,
-      180,
+      179,
       248
     ],
     "workshop_part": [
@@ -1060,94 +1063,94 @@
       248
     ],
     "depth_post_empty": [
-      "room_devices",
-      774,
-      4,
-      244,
-      248
+      "device_fixtures",
+      772,
+      5,
+      248,
+      246
     ],
     "depth_bench_empty": [
-      "room_devices",
-      10,
-      260,
-      236,
-      248
+      "device_fixtures",
+      4,
+      306,
+      248,
+      156
     ],
     "depth_bench_bone": [
-      "room_devices",
-      266,
+      "device_fixtures",
       260,
-      236,
-      248
+      305,
+      248,
+      157
     ],
     "depth_plate_up": [
-      "room_devices",
-      516,
+      "device_mechanisms",
       260,
+      520,
       248,
-      247
+      240
     ],
     "depth_plate_down": [
-      "room_devices",
-      772,
-      262,
+      "device_mechanisms",
+      516,
+      520,
       248,
-      244
+      240
     ],
     "depth_gate_closed": [
-      "room_devices",
+      "device_fixtures",
       4,
-      538,
+      80,
       248,
-      204
+      96
     ],
     "depth_gate_open": [
-      "room_devices",
+      "device_fixtures",
       260,
-      537,
+      80,
       248,
-      205
+      96
     ],
     "depth_rubble": [
-      "room_devices",
-      528,
+      "device_fixtures",
       516,
-      223,
-      248
+      16,
+      248,
+      224
     ],
     "depth_chute_outlet": [
-      "room_devices",
-      772,
-      523,
-      248,
-      233
+      "device_fixtures",
+      773,
+      260,
+      246,
+      248
     ],
     "depth_chute_inlet": [
-      "room_magic",
-      32,
-      4,
-      192,
+      "device_fixtures",
+      520,
+      260,
+      240,
       248
     ],
     "depth_source": [
-      "room_magic",
-      307,
+      "device_magic",
+      73,
       4,
-      154,
+      110,
       248
     ],
     "depth_receiver": [
-      "room_magic",
-      523,
+      "device_magic",
+      270,
       4,
-      234,
+      228,
       248
     ],
     "depth_mirror_base": [
-      "room_magic",
-      773,
-      4,
-      246,
+      "device_magic",
+      8,
+      260,
+      240,
       248
     ],
     "depth_winch": [
@@ -1288,6 +1291,27 @@
       815,
       516,
       162,
+      248
+    ],
+    "depth_receiver_powered": [
+      "device_magic",
+      526,
+      4,
+      228,
+      248
+    ],
+    "recording_stone": [
+      "device_magic",
+      263,
+      260,
+      242,
+      248
+    ],
+    "replay_seal": [
+      "device_magic",
+      519,
+      260,
+      242,
       248
     ]
   }

@@ -66,7 +66,21 @@ const sheets = {
     'depth_hand_pump', 'depth_elbow_pipe', 'depth_water_barrel', 'depth_brazier',
     'depth_treasure', 'depth_treasure_banner', 'depth_crypt_banner', 'depth_archive_banner',
   ],
+  device_mechanisms: [
+    'workshop_trap_broken', 'workshop_trap_installed', 'workshop_trap_active',
+    'workshop_lever_off', 'workshop_lever_on', 'workshop_exit_closed',
+    'workshop_exit_ready', 'depth_plate_up', 'depth_plate_down',
+  ],
+  device_fixtures: [
+    'depth_gate_closed', 'depth_gate_open', 'depth_rubble', 'depth_post_empty',
+    'depth_bench_empty', 'depth_bench_bone', 'depth_chute_inlet', 'depth_chute_outlet',
+  ],
+  device_magic: [
+    'depth_source', 'depth_receiver', 'depth_receiver_powered',
+    'depth_mirror_base', 'recording_stone', 'replay_seal',
+  ],
 };
+const sheetColumns = { workshop_finish_terrain: 3, room_08: 3, device_mechanisms: 3, device_magic: 3 };
 const terrainSheets = new Set(['terrain', 'workshop_finish_terrain', 'rooms_02_03',
   'rooms_04_05', 'rooms_06_07', 'room_08']);
 // 투명 여백의 중심에서 자른다. 생성 원화에 따라 위아래 여백이 균등하지 않다.
@@ -138,7 +152,7 @@ async function packSheet(name, names, manifest) {
   const sourcePath = path.join(root, 'source', `${name}.png`);
   const source = sharp(sourcePath);
   const { width, height } = await source.metadata();
-  const columns = name === 'workshop_finish_terrain' || name === 'room_08' ? 3 : 4;
+  const columns = sheetColumns[name] ?? 4;
   const rows = names.length / columns;
   const terrain = terrainSheets.has(name);
   const [xCuts, yCuts] = sourceCuts[name] ?? [
@@ -166,6 +180,11 @@ async function packSheet(name, names, manifest) {
       bounds.top += 8;
       bounds.width -= 16;
       bounds.height -= 16;
+    }
+    // 레버가 움직여도 본체가 같은 높이와 크기로 보이도록 두 상태를 같은 틀로 자른다.
+    if (name === 'device_mechanisms' && key.startsWith('workshop_lever_')) {
+      bounds.top = 28;
+      bounds.height = 322;
     }
     const { data: image, info: sprite } = await sharp(data, { raw: info })
       .extract(bounds).resize(terrain ? tile : tile - 8, terrain ? tile : tile - 8,

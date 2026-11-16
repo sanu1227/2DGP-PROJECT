@@ -147,10 +147,16 @@ def draw_echo_marks(game, board):
             p.draw_circle(x, y, radius // 2, *ECHO_COLOR, filled=False)
             if game.echo_pressed(gate):
                 p.draw_circle(x, y, radius // 3, *ECHO_COLOR)
+    draw_echo_trail(game, board)
+
+
+def draw_echo_trail(game, board):
+    state = game.state
     if state.recording:
+        radius = max(3, round(board.half_width * .34) // 4)
         x, y = state.recording.origin
         for action in state.recording.inputs:
             dx, dy = DIRECTIONS[action]
             a, b = board.screen((x + dx * .45, y + dy * .45))
-            p.draw_circle(a, b, max(3, radius // 4), *ECHO_COLOR)
+            p.draw_circle(a, b, radius, *ECHO_COLOR)
             x, y = x + dx, y + dy
