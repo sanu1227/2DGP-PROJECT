@@ -1,7 +1,7 @@
 """탑다운 격자에 퍼즐 상태와 전용 스프라이트를 표시한다."""
 
 import json
-from math import hypot, pi, sin
+from math import cos, hypot, pi, sin
 from pathlib import Path
 
 import pico2d.pico2d as p
@@ -43,7 +43,7 @@ WORKSHOP_SPRITES = {name: f"workshop_{name}" for name in (
 )}
 ROOM_SPRITES = WORKSHOP_SPRITES | {name: f"depth_{name}" for name in (
     "bone", "soldier_carried", "soldier_deployed", "post_empty",
-    "bench_empty", "bench_bone", "plate_up", "plate_down", "gate_closed", "gate_open", "rubble",
+    "bench_empty", "bench_bone", "plate_up", "plate_down", "rubble",
     "chute_outlet", "chute_inlet", "source", "receiver", "receiver_powered", "mirror_base", "winch", "helper",
     "crystal_sconce", "lantern", "candle_sconce", "air_vent", "wall_pipes", "crest",
     "sarcophagus", "candles", "books", "throne", "hand_pump", "elbow_pipe", "water_barrel",
@@ -78,7 +78,7 @@ class TopDownArt:
         self.atlases.clear()
 
     def draw(self, name, x, y, size, *, angle=0, opacity=1, height_scale=1, outline=0,
-             inset=(0, 0)):
+             inset=(0, 0), rows=None, section=None):
         atlas_name, left, top, width, height = self.sprites[name]
         atlas = self.atlases.get(atlas_name)
         if atlas is None:
@@ -87,6 +87,15 @@ class TopDownArt:
         margin_x, margin_y = round(width * inset[0]), round(height * inset[1])
         left, top = left + margin_x, top + margin_y
         width, height = width - 2 * margin_x, height - 2 * margin_y
+        if section is not None:
+            first, last = (round(width * fraction) for fraction in section)
+            left, width = left + first, last - first
+            if not width:
+                return
+        if rows:
+            first, last = rows
+            y += (height / 2 - (first + last) / 2) * scale * height_scale
+            top, height = top + first, last - first
         clip = (left, atlas.h - top - height, width, height)
         draw_width, draw_height = width * scale, height * scale * height_scale
         if outline:
@@ -102,6 +111,21 @@ class TopDownArt:
         finally:
             if opacity != 1:
                 atlas.opacify(1)
+
+    def draw_gate(self, x, y, size, opening, angle=0):
+        panel_size = size * .61
+        if opening == 0:
+            self.draw("depth_gate_panel", x, y, panel_size, angle=angle, height_scale=1.24)
+        elif opening < 1:
+            # 문짝 양 끝을 문기둥 안에서 잘라내며 가운데 통로를 연다.
+            inset = opening / 2
+            offset = panel_size * (1 + opening) / 4
+            dx, dy = offset * cos(angle), offset * sin(angle)
+            self.draw("depth_gate_panel", x - dx, y - dy, panel_size, angle=angle,
+                      height_scale=1.24, section=(inset, .5))
+            self.draw("depth_gate_panel", x + dx, y + dy, panel_size, angle=angle,
+                      height_scale=1.24, section=(.5, 1 - inset))
+        self.draw("depth_gate_open", x, y, size, angle=angle, outline=.28)
 
 
 def rectangle(left, bottom, right, top, color, filled=True):
@@ -271,15 +295,7 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, mirror
             across_x = sum(cell in level.walls for cell in ((x - 1, y), (x + 1, y)))
             across_y = sum(cell in level.walls for cell in ((x, y - 1), (x, y + 1)))
             angle = 0 if across_x > across_y else pi / 2
-            opening = gate_openings[pos]
-            if opening == 0:
-                art.draw(sprites.get("gate_closed", "gate_closed"), sx, sy, size * .94,
-                         angle=angle, outline=True)
-            else:
-                art.draw(asset, sx, sy, size * .94, angle=angle, outline=True)
-                if opening < 1:
-                    art.draw(sprites.get("gate_closed", "gate_closed"), sx, sy + size * .19 * opening,
-                             size * .94, angle=angle, opacity=min(1, 3 * (1 - opening)), inset=(.18, 0))
+            art.draw_gate(sx, sy, size * .96, gate_openings[pos], angle)
             view.draw_gate_dust(board, pos, now)
             if gate_statuses[pos] == "held":
                 p.draw_circle(sx, sy, max(2, round(size * .044)), *GOLD, filled=True)
@@ -297,11 +313,15 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, mirror
             art.draw(asset, sx, sy, size * .72, height_scale=view.work_feedback.soldier_height(pos, now))
         elif sprite == "lever_on":
             progress = view.work_feedback.progress(pos, "lever", now)
-            lever = sprites["lever_off"] if progress < .44 else asset
+            lever = asset if view.work_feedback.contacted(pos, "lever", now) else sprites["lever_off"]
             art.draw(lever, sx, sy, size * .82, outline=True, height_scale=1 - .11 * sin(pi * progress))
         else:
+            if sprite in ("trap_installed", "trap_active") and not view.work_feedback.contacted(pos, "install", now):
+                asset = sprites["trap_broken"]
+            elif sprite == "trap_active" and not view.work_feedback.contacted(pos, "trap", now):
+                asset = sprites["trap_installed"]
             art.draw(asset, sx, sy, size * .82, outline=True)
-        if sprite == "trap_active":
+        if sprite == "trap_active" and view.work_feedback.contacted(pos, "trap", now):
             trap_motion(sx, sy + size * .35, half, now)
         if sprite == "replay_seal" and color == TEAL:
             p.draw_circle(sx, sy, round(size * .42), *TEAL, filled=False)
@@ -322,6 +342,8 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, mirror
             art.draw(f"worker_{direction}_idle", sx, sy, size * .75, opacity=.67)
 
     for pos, kind in state.items.items():
+        if view.item_is_in_hands(game, pos, now):
+            continue
         sx, sy = board.screen(pos)
         sprite = ITEMS[kind]
         lift = view.chute_feedback.item_lift(pos, now)
@@ -337,17 +359,33 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, mirror
     px, py = board.screen(player)
     p.draw_circle(px, py, round(size * .38), *TEAL)
     facing = FACINGS[view.facing]
-    pose = "carry" if state.carrying else (
-        "walk_a" if now - view.motion[2] < .09 else "walk_b") if view.motion else "idle"
+    body_size = size * .75
     tired = view.fatigue(game)
-    art.draw(f"worker_{facing}_{pose}", px, py, size * .75,
-             height_scale=view.player_pose_height(game, tired, now))
-    if state.carrying:
-        dx, dy = DIRECTIONS[facing]
-        sprite = ITEMS[state.carrying]
-        _, lift = view.work_feedback.actor_pose(state.player, now)
-        art.draw(sprites.get(sprite, sprite), px + dx * size * .27 * lift, py - dy * size * .27 * lift, size * .32)
-    head = py + size * .35
+    feet = px, py - body_size / 2
+    pose = view.character_pose(game, board, feet, now, body_size)
+    center_y = feet[1] + body_size / 2 * pose.height
+
+    def draw_item():
+        if pose.item is None:
+            return
+        action = view.current_worker_action(game, now)
+        target = action.target if action else state.player
+        x, y = board.screen(target)
+        if view.work_feedback.progress(target, "pickup", now) < 1 and target in entries:
+            x += .22 * size
+        x, y = pose.item_position(feet, (x, y + .04 * size))
+        sprite = ITEMS[pose.item]
+        swing = .09 if pose.boots == "walk_a" else -.09 if pose.boots == "walk_b" else 0
+        art.draw(sprites.get(sprite, sprite), x, y, size * (.32 + .22 * pose.item_floor_scale),
+                 angle=swing if pose.item == "bone" else 0)
+
+    if facing == "up":
+        draw_item()
+    for part, dx, dy, rows in pose.layers(True):
+        art.draw(f"worker_{facing}_{part}", px + dx, center_y + dy, body_size, height_scale=pose.height, rows=rows)
+    if facing != "up":
+        draw_item()
+    head = feet[1] + body_size * pose.height + pose.shift[1]
     badge_x = px
     player_x, player_y = state.player
     above = (player_x, player_y - 1)

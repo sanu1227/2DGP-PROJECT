@@ -23,9 +23,10 @@ from game.stage_feedback import StageFeedback
 from game.receiver_feedback import ReceiverFeedback
 from game.room_debris import RoomDebris
 from game.room_atmosphere import RoomAtmosphere, prop_kind
-from game.play_effects import ChuteFeedback, WorkFeedback, beam_contacts, dust, ring, rubble_scrape, trap_motion
+from game.play_effects import ChuteFeedback, WorkFeedback, WORK_SECONDS, beam_contacts, dust, ring, rubble_scrape, trap_motion
 from game.topdown import ITEMS as TOPDOWN_ITEMS, TopDownArt, draw_board as draw_topdown_board
 from game.worker_view import EchoMotion, draw_echo_marks, draw_echo_turn, draw_worker_status, recording_label
+from game.worker_animation import GESTURES, WorkerAction, sample_pose
 from game.music import BackgroundMusic
 
 INK = (226, 230, 219)
@@ -36,6 +37,7 @@ RED = (232, 119, 105)
 ITEM_NAMES = {None: "빈손", "part": "함정 부품", "bone": "뼈 묶음", "soldier": "해골 병사"}
 ITEM_SPRITES = {"part": "part", "bone": "bone_bundle", "soldier": "soldier_carried"}
 FACING = {"up": "ne", "right": "se", "down": "sw", "left": "nw"}
+FACING_DIRECTION = {sprite: direction for direction, sprite in FACING.items()}
 GATE_SECONDS = 0.36
 PLATE_SECONDS = 0.24
 PUSH_SECONDS = 0.28
@@ -193,6 +195,7 @@ class View:
         self.echo_motion = EchoMotion()
         self.chute_feedback = ChuteFeedback()
         self.work_feedback = WorkFeedback()
+        self.worker_action = None
         self.action_badge_bounds = None
 
     def mirror_rotation(self, game, pos, now):
@@ -211,7 +214,11 @@ class View:
         """성공한 행동 이벤트에만 연결한다. 연타는 현재 각도에서 이어지며 입력을 막지 않는다."""
         now = self.now()
         self.echo_motion.change(game, previous, now)
-        self.work_feedback.changed(game, previous, now)
+        work = self.work_feedback.changed(game, previous, now)
+        if work:
+            kind, target = work
+            if kind in GESTURES:
+                self.start_worker_action(game, previous, kind, target, now)
         outlet = self.chute_feedback.transferred(game, previous, now)
         if outlet in game.level.plates and not game.plate_pressed(outlet, previous):
             self.plate_motions.setdefault(outlet, (0, 0, now, 0))
@@ -323,6 +330,7 @@ class View:
         now = self.now()
         start = self.player_position(previous, now)
         self.facing = FACING[action]
+        self.worker_action = None
         self.move_seconds = seconds
         self.motion = (start, destination, now)
 
@@ -391,13 +399,78 @@ class View:
         self.move_player(previous.player, game.state.player, action,
                          PUSH_SECONDS if self.pushing else .18)
 
-    def player_pose_height(self, game, tired, now):
-        crouch, _ = self.work_feedback.actor_pose(game.state.player, now)
-        height = self.worker_height(tired, now) * crouch
-        if self.pushing and self.motion:
-            progress = min(1, max(0, (now - self.motion[2]) / PUSH_SECONDS))
-            height *= 1 - .14 * sin(pi * progress)
-        return height
+    def start_worker_action(self, game, previous, kind, target, now):
+        action = WorkerAction(kind, previous.player, target, previous.carrying,
+                              game.state.carrying, now, WORK_SECONDS[kind])
+        self.worker_action = action
+        if action.direction:
+            self.facing = FACING[action.direction]
+        elif kind == "lever":
+            self.facing = FACING["down"]
+        if kind == "drop" and target in game.level.plates and not game.plate_pressed(target, previous):
+            self.plate_motions.setdefault(target, (0, 0, now, 0))
+            self.plate_delays[target] = (now + action.contact * action.seconds, 0)
+
+    def current_worker_action(self, game, now):
+        action = self.worker_action
+        if action and action.origin == game.state.player and action.progress(now) < 1:
+            return action
+        return None
+
+    def character_pose(self, game, board, feet, now, body_size):
+        walk = "idle"
+        if self.motion:
+            walk = "walk_a" if now - self.motion[2] < self.move_seconds / 2 else "walk_b"
+        action = self.current_worker_action(game, now)
+        pose = sample_pose(FACING_DIRECTION[self.facing], body_size, self.worker_height(self.fatigue(game), now),
+                           walk, game.state.carrying, action, now, top_down=self.top_down,
+                           push=bool(self.pushing and self.motion))
+        if action and action.kind == "lever":
+            x, y = board.screen(action.target)
+            _, reach = action.reaches(now)
+            progress = action.progress(now)
+            if self.top_down:
+                handle = (x, y + body_size * (.32 if progress >= action.contact else -.32))
+            else:
+                handle = (x + body_size * (.16 if progress >= action.contact else -.16), y + body_size * .42)
+            pose = pose.reach_toward(feet, handle, reach, body_size)
+        return pose
+
+    def item_is_in_hands(self, game, pos, now):
+        action = self.current_worker_action(game, now)
+        return action and action.kind == "drop" and action.target == pos and action.progress(now) < action.contact
+
+    def draw_iso_worker(self, game, board, sx, sy, scale, now):
+        state = game.state
+        pose = self.character_pose(game, board, (sx, sy), now, 256 * scale)
+        action = self.current_worker_action(game, now)
+
+        def draw_item():
+            kind = pose.item
+            if kind is None:
+                return
+            sprite = ITEM_SPRITES[kind]
+            data = self.art.manifest["sprites"][sprite]
+            rect = data["content_rect"]
+            center = {"x": rect["left"] + rect["width"] / 2, "y": rect["top"] + rect["height"] / 2}
+            target = action.target if action else state.player
+            x, y = board.screen(target)
+            y += (self.support_height(game, target) + data["anchor"]["y"] - center["y"]) * scale
+            x, y = pose.item_position((sx, sy), (x, y))
+            self.art.draw(sprite, x, y, scale * (.65 + .35 * pose.item_floor_scale), anchor=center)
+
+        back = self.facing in ("ne", "nw")
+        if back:
+            draw_item()
+        for part, dx, dy, rows in pose.layers(False):
+            sprite = f"worker_{self.facing}_{part}"
+            self.art.draw(sprite, sx + dx, sy + dy, scale, height_scale=pose.height, rows=rows)
+            self.sprite_hit_region(state.player, sprite, sx + dx, sy + dy, scale, height_scale=pose.height, rows=rows)
+        if not back:
+            draw_item()
+        body_bounds = self.hit_regions[-1][1]
+        self.place_action_badge(game, sx, body_bounds[3], now)
+        self.worker_effort(body_bounds, self.fatigue(game), now)
 
     def draw_rubble_scrape(self, board, pos, position, now):
         motion = self.rubble_motions.get(pos)
@@ -535,16 +608,16 @@ class View:
                         continue
                     return pos
                 if mask:
-                    sprite, sx, sy, scale, flip, height_scale, rotation = mask
-                    if not self.art.hit_test(sprite, sx, sy, scale, (x, y), flip, height_scale, rotation):
+                    if not self.art.hit_test(*mask[:4], (x, y), *mask[4:]):
                         continue
                 return pos
         return self.projection(game.level).pick(x, y)
 
-    def sprite_hit_region(self, pos, sprite, sx, sy, scale, flip=False, height_scale=1.0, rotation=0):
-        region = (pos, self.art.bounds(sprite, sx, sy, scale, flip, height_scale, rotation))
+    def sprite_hit_region(self, pos, sprite, sx, sy, scale, flip=False, height_scale=1.0, rotation=0, rows=None):
+        region = (pos, self.art.bounds(sprite, sx, sy, scale, flip, height_scale, rotation, rows))
         self.hit_regions.append(region)
-        self.hit_masks[region] = (sprite, sx, sy, scale, flip, height_scale, rotation)
+        mask = (sprite, sx, sy, scale, flip, height_scale, rotation)
+        self.hit_masks[region] = (*mask, rows) if rows else mask
 
     def navigation_overlay(self, game, projection):
         if game.failed or game.state.cleared:
@@ -833,9 +906,10 @@ class View:
                         objects.append((depth, 0, wall_sprite, sx, sy))
                         wall_tints[(sx, sy)] = wall_tint
                 elif pos in level.traps:
-                    tile = "trap_installed" if pos in state.installed else "trap_broken"
+                    installed = pos in state.installed and self.work_feedback.contacted(pos, "install", now)
+                    tile = "trap_installed" if installed else "trap_broken"
                     tint = None
-                    if state.active:
+                    if state.active and self.work_feedback.contacted(pos, "trap", now):
                         objects.append((depth, 0, "trap_active", sx, sy))
                     labels.append((pos, "가동" if state.active else "설치" if pos in state.installed else "파손"))
                 elif pos in level.posts:
@@ -906,7 +980,7 @@ class View:
                     stored = state.bench_bones.get(pos, 0)
                     objects.append((depth, 1, "bench_one_bone" if stored else "bench_empty", sx, sy))
                     labels.append((pos, f"조립 {stored}/2"))
-                if pos in state.items:
+                if pos in state.items and not self.item_is_in_hands(game, pos, now):
                     objects.append((depth, 2, ITEM_SPRITES[state.items[pos]], sx, sy))
                 if pos in state.soldiers:
                     objects.append((depth, 2, "soldier_deployed", sx, sy))
@@ -1016,7 +1090,7 @@ class View:
                     height = self.work_feedback.soldier_height(pos, now)
                 elif sprite == "lever_on":
                     progress = self.work_feedback.progress(pos, "lever", now)
-                    if progress < .44:
+                    if not self.work_feedback.contacted(pos, "lever", now):
                         sprite = "lever_off"
                     height = 1 - .11 * sin(pi * progress)
                 if (sx, sy) in wall_tints and (sprite.startswith("wall_low") or "_wall_" in sprite):
@@ -1029,24 +1103,7 @@ class View:
                     self.receiver_feedback.draw(game, pos, sx, sy, scale, now)
                 self.sprite_hit_region(pos, sprite, sx, sy, scale, height_scale=height)
                 continue
-            pose = "idle"
-            if self.motion:
-                pose = "walk_a" if now - self.motion[2] < 0.09 else "walk_b"
-            if state.carrying:
-                pose = "carry"
-            tired = self.fatigue(game)
-            height_scale = self.player_pose_height(game, tired, now)
-            _, lift = self.work_feedback.actor_pose(state.player, now)
-            # 뒤를 볼 때 운반물은 몸 뒤에, 앞을 볼 때는 손 위에 합성한다.
-            offset_x = 12 if self.facing in ("ne", "se") else -12
-            if state.carrying and self.facing in ("ne", "nw"):
-                self.item(state.carrying, sx + offset_x * lift, sy + 32 * height_scale * lift, scale * 0.65)
-            self.art.draw(f"worker_{self.facing}_{pose}", sx, sy, scale, height_scale=height_scale)
-            self.sprite_hit_region(pos, f"worker_{self.facing}_{pose}", sx, sy, scale, height_scale=height_scale)
-            self.place_action_badge(game, sx, self.hit_regions[-1][1][3], now)
-            self.worker_effort(self.hit_regions[-1][1], tired, now)
-            if state.carrying and self.facing in ("se", "sw"):
-                self.item(state.carrying, sx + offset_x * lift, sy + 24 * height_scale * lift, scale * 0.65)
+            self.draw_iso_worker(game, projection, sx, sy, scale, now)
 
         self.room_debris.draw(projection, now)
         self.work_feedback.draw(projection, now)
@@ -1393,9 +1450,6 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True, top_down=False):
                         direction = PUSH_ACTIONS.get(action, action)
                         if direction in FACING and changed:
                             view.animate_move(game, previous, direction)
-                        elif changed:
-                            # 도착 직후 상호작용하면 그 칸에 바로 정렬한다.
-                            view.motion = None
                         if changed:
                             view.animate_devices(game, previous)
                             if game.state.cleared:

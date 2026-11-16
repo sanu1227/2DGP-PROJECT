@@ -6,6 +6,8 @@ from math import cos, hypot, pi, sin
 
 import pico2d.pico2d as p
 
+from game.worker_animation import GESTURES
+
 DUST = (192, 168, 138)
 TEAL = (112, 216, 190)
 AMBER = (233, 174, 99)
@@ -150,7 +152,6 @@ def trap_motion(x, y, size, now):
 class WorkFeedback:
     def __init__(self):
         self.events = {}
-        self.actor = None
 
     def changed(self, game, before, now):
         state, level = game.state, game.level
@@ -176,9 +177,8 @@ class WorkFeedback:
             self.events.update(((trap, "trap"), now) for trap in level.traps)
         if kind:
             self.events[pos, kind] = now
-            self.actor = (before.player, kind, now)
-        elif state.player != before.player:
-            self.actor = None
+            return kind, pos
+        return None
 
     def progress(self, pos, kind, now):
         began = self.events.get((pos, kind))
@@ -186,22 +186,17 @@ class WorkFeedback:
             return 1
         return min(1, max(0, (now - began) / WORK_SECONDS[kind]))
 
-    def actor_pose(self, pos, now):
-        """굽히는 정도와 손에 든 물건이 올라온 비율."""
-        if self.actor is None or self.actor[0] != pos:
-            return 1, 1
-        _, kind, began = self.actor
-        progress = min(1, max(0, (now - began) / WORK_SECONDS[kind]))
-        crouch = 1 - .18 * sin(pi * progress)
-        lift = min(1, progress * 1.45) if kind in ("pickup", "assemble") else 1
-        return crouch, lift
+    def contacted(self, pos, kind, now):
+        if kind == "trap":
+            elapsed = now - self.events.get((pos, kind), now - WORK_SECONDS[kind])
+            return elapsed >= WORK_SECONDS["lever"] * GESTURES["lever"].contact
+        return self.progress(pos, kind, now) >= GESTURES[kind].contact
 
     def drop_lift(self, pos, now):
         progress = self.progress(pos, "drop", now)
-        if progress < .62:
-            return 1 - (progress / .62) ** 2
-        if progress < 1:
-            return .22 * sin(pi * (progress - .62) / .38)
+        contact = GESTURES["drop"].contact
+        if contact < progress < 1:
+            return .22 * sin(pi * (progress - contact) / (1 - contact))
         return 0
 
     def soldier_height(self, pos, now):
