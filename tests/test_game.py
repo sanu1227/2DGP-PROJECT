@@ -319,14 +319,14 @@ class GameTests(unittest.TestCase):
         while self.game.state.active:
             self.assertTrue(self.game.undo())
         self.assertEqual(self.game.state, before)
-        self.go((5, 2))
+        self.go((5, 1))
         self.act("interact")
         self.assertEqual(self.game.state.carrying, "bone")
 
     def test_third_room_first_guard_requires_leaving_toward_remaining_work(self):
         self.game = Game(load_levels()[2])
         # Collect both rooms' bones before closing the upper entrance.
-        for target in ((6, 2), (4, 2), (5, 2), (2, 3), (5, 5), (2, 3), (3, 2)):
+        for target in ((6, 2), (4, 2), (5, 1), (2, 3), (5, 6), (2, 3), (3, 2)):
             self.go(target)
             self.act("interact")
         self.assertEqual(self.game.state.soldiers, {(3, 2)})

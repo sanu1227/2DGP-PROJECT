@@ -191,6 +191,26 @@ class GimmickTests(unittest.TestCase):
         self.assertEqual(game.gate_status(next(iter(game.level.gates))),'open')
         game.undo();self.assertEqual(game.state,before)
 
+    def test_prison_requires_open_cells_to_reach_the_armory(self):
+        level = self.levels[3]
+        game = Game(level)
+        armory = next(pos for pos, item in level.initial_items.items() if item == 'part')
+        gates = {level.device_labels[gate]: gate for gate in level.gates}
+        visited = []
+        for action in SOLUTIONS[level.id]:
+            self.assertTrue(game.act(action), game.message)
+            door = level.device_labels.get(game.state.player)
+            if game.state.player in level.gates and door not in visited:
+                visited.append(door)
+            if door == 'P3' and game.state.player == gates[door] and len(visited) == 3:
+                self.assertEqual(visited, ['P1', 'P2', 'P3'])
+                for identifier in ('P2', 'P3'):
+                    self.assertEqual(game.state.items[level.gates[gates[identifier]]], 'bone')
+                self.assertIsNotNone(find_path(game, armory))
+                break
+        else:
+            self.fail('검증 풀이가 무기고 문을 통과하지 않았습니다.')
+
     def test_rubble_rejects_carrying_walls_items_and_devices(self):
         for mode in ('carrying','wall','item','device','rubble'):
             game=Game(self.levels[3]);game.state.player=(2,2)
@@ -208,13 +228,14 @@ class GimmickTests(unittest.TestCase):
 
     def test_helper_assignment_recall_progress_and_gate(self):
         game=Game(self.levels[6]);game.state.player=next(iter(game.level.jobs));game.state.carrying='soldier'
+        gate = next(gate for gate, control in game.level.gates.items() if control == game.state.player)
         game.state.items={p:k for p,k in game.state.items.items() if k!='bone'}
         progress=game.repair_percent;before=deepcopy(game.state)
         self.assertTrue(game.act('interact'))
-        self.assertEqual(game.gate_status(next(iter(game.level.gates))),'open')
+        self.assertEqual(game.gate_status(gate),'open')
         self.assertEqual(game.repair_percent,progress)
         self.assertTrue(game.act('interact'))
-        self.assertEqual(game.gate_status(next(iter(game.level.gates))),'closed')
+        self.assertEqual(game.gate_status(gate),'closed')
         self.assertEqual(game.state.carrying,'soldier')
         game.undo();game.undo();self.assertEqual(game.state,before)
 

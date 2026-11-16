@@ -48,14 +48,14 @@ class BalanceTests(unittest.TestCase):
         # Open doors isolate the effect of the repaired obstacle itself.
         checks = [
             (levels[0], levels[0].start, levels[0].exit, levels[0].traps),
-            (levels[1], levels[1].start, (5, 1), levels[1].posts),
+            (levels[1], levels[1].start, (6, 2), levels[1].posts),
             (levels[2], levels[2].start, (6, 2), levels[2].posts),
             (levels[2], levels[2].start, (6, 5), {(4, 5)}),
             (levels[3], levels[3].start, levels[3].exit, levels[3].traps),
             (levels[5], levels[5].start, levels[5].exit, levels[5].traps),
-            (levels[6], levels[6].start, next(p for p, kind in levels[6].initial_items.items() if kind == "part"), levels[6].posts),
+            (levels[6], levels[6].start, levels[6].exit, levels[6].posts),
             (levels[6], levels[6].start, levels[6].exit, levels[6].traps),
-            (levels[7], levels[7].start, (7, 8), {(4, 7)}),
+            (levels[7], levels[7].start, (8, 10), {(5, 8)}),
         ]
         for level, start, target, blocked in checks:
             with self.subTest(stage=level.id, blocked=blocked):
