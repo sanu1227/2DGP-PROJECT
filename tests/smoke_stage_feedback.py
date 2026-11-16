@@ -55,7 +55,9 @@ def render_checks(levels):
         halfway = feedback.entered_at + display.clock.offset + ENTRY_SECONDS - ENTRY_FADE_SECONDS / 2
         with patch.object(view, "perf_counter", return_value=halfway), patch.object(display, "text") as labels:
             feedback.draw(display, game, 3, len(levels))
-            color = next(call.args[4] for call in labels.call_args_list if call.args[2] == game.level.hint)
+            theme, = labels.call_args_list
+            assert theme.args[2] == game.level.hint
+            color = theme.args[4]
             background = room_background(scene_for(game.level))
             for faded, base, full in zip(color, background, INK):
                 assert abs(faded - (base + full) / 2) <= .5
