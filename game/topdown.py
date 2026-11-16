@@ -176,13 +176,15 @@ def device_entries(game, gate_statuses, powered, exit_ready):
         label = level.device_labels[pos]
         if pos in level.echo_links:
             recording = state.recording and state.recording.origin == pos
+            label = "기록 완료" if pos in state.recorded_stations else recording_label(level, pos)
             entries[pos] = (("recording_plate_active", "기록 중", GOLD) if recording else
-                            ("recording_plate", recording_label(level, pos), ECHO_COLOR))
+                            ("recording_plate", label, ECHO_COLOR))
         else:
             entries[pos] = ("helper" if working else "winch"), label, TEAL if working else GOLD
     for seals, _ in level.echo_links.values():
         for gate, seal in seals.items():
-            entries[seal] = "replay_seal", level.device_labels[gate], TEAL if game.echo_pressed(gate) else ECHO_COLOR
+            if seal not in level.plates:
+                entries[seal] = "replay_seal", level.device_labels[gate], TEAL if game.echo_pressed(gate) else ECHO_COLOR
     return entries
 
 
@@ -254,6 +256,7 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, mirror
     ready = (state.installed == level.traps and (not level.traps or state.active)
              and state.soldiers == level.posts and state.carrying is None)
     entries = device_entries(game, gate_statuses, powered, ready)
+    outlet_labels = view.chute_outlet_labels(level)
     workshop = stage == 1
     sprites = WORKSHOP_SPRITES if workshop else ROOM_SPRITES
     props, prop_lights, recesses = room_props(scene)
@@ -316,7 +319,7 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, mirror
             progress = view.work_feedback.progress(pos, "lever", now)
             lever = asset if view.work_feedback.contacted(pos, "lever", now) else sprites["lever_off"]
             art.draw(lever, sx, sy, size * .82, outline=True, height_scale=1 - .11 * sin(pi * progress))
-        else:
+        elif pos not in outlet_labels:
             if pos in level.benches:
                 asset = sprites["bench_bone" if view.bench_shows_bones(game, pos, now) else "bench_empty"]
             elif sprite in ("trap_installed", "trap_active") and not view.work_feedback.contacted(pos, "install", now):
@@ -328,6 +331,9 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, mirror
             trap_motion(sx, sy + size * .35, half, now)
         if sprite == "replay_seal" and color == TEAL:
             p.draw_circle(sx, sy, round(size * .42), *TEAL, filled=False)
+
+    for pos in outlet_labels:
+        view.draw_chute_outlet(board, pos)
 
     for origin, pos in state.replay_workers.items():
         if state.echo is None or state.echo.origin != origin:
@@ -427,6 +433,8 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, mirror
     for pos, (_, label, color) in entries.items():
         sx, sy = board.screen(mirror_positions.get(pos, pos))
         sy += half - 2 if level.sources.get(pos) == "down" else 2 - half
+        if pos in outlet_labels:
+            label, color = outlet_labels[pos], TEAL
         width = min(size - 4, len(label) * 12 + 8)
         rectangle(sx - width / 2, sy - 8, sx + width / 2, sy + 8, (24, 35, 40))
         view.centered(sx, sy, label, 13, color)
@@ -436,6 +444,7 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, mirror
             sy += 2 - half
             rectangle(sx - 30, sy - 8, sx + 30, sy + 8, (24, 35, 40))
             view.centered(sx, sy, "차광 블록", 13, GOLD)
+    view.highlight_chute_pair(game, board)
     view.interaction_markers(game, board)
     if view.show_coordinates:
         view.coordinate_overlay(level, board)

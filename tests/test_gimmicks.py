@@ -47,16 +47,13 @@ class GimmickTests(unittest.TestCase):
 
     def test_sewer_rubble_needs_to_be_pushed_off_the_beam(self):
         game = Game(self.levels[4])
-        for action in ("down", "push_right", "right"):
+        for action in ("down", "right"):
             self.assertTrue(game.act(action), game.message)
         gate = next(gate for gate, control in game.level.gates.items() if control in game.level.receivers)
         self.assertTrue(game.act('interact'))
         self.assertEqual(game.gate_status(gate), 'closed')
         self.assertTrue(game.act('down'))  # Along the beam; the receiver stays blocked.
         self.assertEqual(game.gate_status(gate), 'closed')
-        self.assertTrue(game.undo())
-        self.assertTrue(game.act('left'))
-        self.assertTrue(game.act('down'))
         before=deepcopy(game.state)
         self.assertTrue(game.act('right'))  # Park the rubble in the side recess.
         self.assertEqual(game.gate_status(gate), 'open')
@@ -157,6 +154,9 @@ class GimmickTests(unittest.TestCase):
     def test_relay_block_alternates_two_gates_and_cannot_leave_its_slots(self):
         level = self.levels[5]
         game = Game(level)
+        block, = level.rubble
+        slot = block[0] - 1, block[1]
+        game.state.player = slot
         north, south = sorted(level.gates, key=lambda pos: pos[1])
         before = deepcopy(game.state)
         self.assertEqual(trace_magic(level, game.state)[1], {level.gates[north]})
@@ -164,7 +164,7 @@ class GimmickTests(unittest.TestCase):
         self.assert_rejected(game, "right")
         for action in ("down", "right", "right", "up", "left"):
             self.assertTrue(game.act(action), game.message)
-        self.assertEqual(game.state.rubble, {(2, 3)})
+        self.assertEqual(game.state.rubble, {slot})
         self.assertEqual(trace_magic(level, game.state)[1], {level.gates[south]})
         self.assertEqual((game.gate_status(north), game.gate_status(south)), ("closed", "open"))
         self.assert_rejected(game, "left")
@@ -253,12 +253,12 @@ class GimmickTests(unittest.TestCase):
         self.assertIsNone(find_path(game,next(p for p,k in game.level.initial_items.items() if k=="part")))
         self.assertIsNone(find_path(game,(2,3)))
 
-    def test_two_step_recording_starts_on_entry_and_replays_on_later_actions(self):
+    def test_recording_starts_on_entry_and_replays_on_later_actions(self):
         game = Game(self.levels[6])
         station = min(game.level.replay_workers)
         spawn = game.level.replay_workers[station]
-        gate = next(gate for gate, control in game.level.gates.items() if control == station)
         seals, _ = game.level.echo_links[station]
+        gate, = seals
         game.state.player = (2, 2)
         before = deepcopy(game.state)
 
@@ -267,23 +267,28 @@ class GimmickTests(unittest.TestCase):
         self.assertEqual(game.state.recording.inputs, ())
         self.assertTrue(game.act("up"))
         self.assert_rejected(game, "interact")
-        self.assertTrue(game.act("right"))
+        self.assertTrue(game.act("down"))
+        self.assertTrue(game.act("up"))
         self.assertIsNone(game.state.recording)
-        self.assertEqual(game.state.player, (4, 1))
+        self.assertEqual(game.state.player, (3, 1))
         self.assertEqual(game.state.replay_workers[station], spawn)
-        self.assertEqual(game.state.echo.remaining, ("up", "right"))
+        self.assertEqual(game.state.echo.remaining, ("up", "down", "up"))
         self.assertEqual(game.gate_status(gate), "closed")
 
-        self.assertTrue(game.act("down"))
+        self.assertTrue(game.act("right"))
         self.assertEqual(game.state.replay_workers[station], seals[gate])
         self.assertEqual(game.gate_status(gate), "open")
         self.assertTrue(game.act("down"))
-        self.assertEqual(game.state.player, gate)
-        self.assertEqual(game.gate_status(gate), "held")
-        self.assertTrue(game.act("down"))
-        self.assertEqual(game.state.replay_workers[station], (2, 1))
+        self.assertEqual(game.state.replay_workers[station], spawn)
         self.assertEqual(game.gate_status(gate), "closed")
-        self.assert_rejected(game, "up")
+        self.assert_rejected(game, "down")
+        self.assertTrue(game.act("up"))
+        self.assertEqual(game.state.replay_workers[station], seals[gate])
+        self.assertEqual(game.gate_status(gate), "open")
+        self.assertTrue(game.act("down"))
+        self.assertTrue(game.act("down"))
+        self.assertEqual(game.state.player, gate)
+        self.assertEqual(game.gate_status(gate), "open")
         while game.undo():
             pass
         self.assertEqual(game.state, before)

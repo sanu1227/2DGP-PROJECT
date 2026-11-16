@@ -106,7 +106,7 @@ def main():
         ([("left", 1460, 900)], "controls:0", 0, None),
         ([p.SDLK_RETURN], "controls:1", 0, None),
         ([("left", 1390, 72), p.SDLK_d], "playing", 0, None),
-        ([p.SDLK_ESCAPE, p.SDLK_d], "playing", 0, None),
+        ([], "playing", 0, None),
         ([p.SDLK_d], "playing", 1, None),
         ([p.SDLK_r], "playing", 0, None),
         ([("left", 100, 700)], "playing", 0, None),
@@ -124,7 +124,7 @@ def main():
         ([p.SDLK_BACKSPACE], "playing", len(SOLUTIONS["stage_01"]) - 1, None),
         ([p.SDLK_a], "playing", len(SOLUTIONS["stage_01"]), None),
         ([p.SDLK_SPACE], "playing", 0, None, "stage_02"),
-        ([p.SDLK_ESCAPE], "playing", 0, None, "stage_02"),
+        ([], "playing", 0, None, "stage_02"),
         ([p.SDLK_1], "playing", 0, None),
         (["close"], "playing", 0, None),
     ])

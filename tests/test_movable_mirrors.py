@@ -25,7 +25,7 @@ class MovableMirrorTests(unittest.TestCase):
     def test_push_aligns_mirror_and_rubble_opens_then_closes_light_path(self):
         game = Game(self.level)
         initial = deepcopy(game.state)
-        self.assertTrue(game.act("push_right"))
+        self.assertTrue(game.act("right"))
         self.assertEqual(mirror_cells(self.level, game.state), {self.aligned})
         self.assertEqual(game.state.mirror_rotations, {self.aligned: 1})
         self.assertEqual(game.gate_status(self.gate), "closed")
@@ -41,7 +41,7 @@ class MovableMirrorTests(unittest.TestCase):
         for _ in range(3):
             self.assertTrue(game.undo())
         self.assertEqual(game.state, initial)
-        self.assertTrue(game.act("push_right"))
+        self.assertTrue(game.act("right"))
         game.restart()
         self.assertEqual(game.state, initial)
 
@@ -50,11 +50,12 @@ class MovableMirrorTests(unittest.TestCase):
         self.assertTrue(game.act("right"))
         self.assertEqual(game.state.player, self.origin)
         self.assertTrue(game.act("interact"))
-        self.assertEqual(game.state.mirror_rotations, {self.origin: 2})
+        self.assertEqual(game.state.mirror_rotations, {self.aligned: 2})
         self.assertTrue(game.act("left"))
+        self.assertTrue(game.act("right"))
         before = deepcopy(game.state)
         game.state.carrying = "bone"
-        self.assertFalse(game.act("push_right"))
+        self.assertFalse(game.act("right"))
         self.assertEqual(game.state.carrying, "bone")
         game.state.carrying = None
         self.assertEqual(game.state, before)

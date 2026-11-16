@@ -104,7 +104,7 @@ def find_path(game: Game, target: Pos | None, *, approach_device: bool = False) 
         return None
     if target is None:
         return None
-    if approach_device and target in game.level.solid_devices:
+    if approach_device and target in game.level.solid_devices | game.state.movable_mirrors:
         destinations = set(neighbors(target))
     else:
         destinations = {target}

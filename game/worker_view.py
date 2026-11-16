@@ -154,6 +154,8 @@ def draw_echo_marks(game, board):
             p.draw_line(*a, *b, *ECHO_COLOR)
         p.draw_circle(x, y, radius // 3, *ECHO_COLOR, filled=False)
         for gate, seal in seals.items():
+            if seal in level.plates:
+                continue
             x, y = board.screen(seal)
             p.draw_circle(x, y, radius, *ECHO_COLOR, filled=False)
             p.draw_circle(x, y, radius // 2, *ECHO_COLOR, filled=False)
@@ -193,8 +195,9 @@ def draw_echo_turn(game, board, motion, now):
     seals, _ = game.level.echo_links[echo.origin]
     for gate, seal in seals.items():
         if game.echo_pressed(gate):
-            x, y = board.screen(seal)
-            ring(x, y, board.half_width * .43, SEAL_COLOR, 230)
+            if seal not in game.level.plates:
+                x, y = board.screen(seal)
+                ring(x, y, board.half_width * .43, SEAL_COLOR, 230)
             x, y = board.screen(gate)
             extent = board.half_width * .37
             for side in (-1, 1):

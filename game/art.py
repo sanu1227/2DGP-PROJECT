@@ -64,6 +64,17 @@ class Art:
         self.manifest['atlases'].update(manifest['atlases'])
         self.manifest['sprites'].update(manifest['sprites'])
 
+    def load_chute_outlet(self):
+        if "chute_outlet" in self.atlases:
+            return
+        root = ART_ROOT.parent / "gimmicks_v1" / "chute-outlet"
+        manifest = json.loads((root / "manifest.json").read_text(encoding="utf-8"))
+        path = root / manifest["atlases"]["chute_outlet"]["file"]
+        self.atlases["chute_outlet"] = p.load_image(str(path))
+        self.atlas_paths["chute_outlet"] = path
+        self.manifest["atlases"].update(manifest["atlases"])
+        self.manifest["sprites"].update(manifest["sprites"])
+
     @staticmethod
     def source_pose(direction):
         return ('mana_source_up' if direction in ('up', 'left') else 'mana_source', direction in ('down', 'left'))

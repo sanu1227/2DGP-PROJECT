@@ -94,16 +94,16 @@ def input_checks(levels):
     final_key = {"left": p.SDLK_a, "right": p.SDLK_d, "up": p.SDLK_w, "down": p.SDLK_s,
                  "interact": p.SDLK_e}[SOLUTIONS[levels[0].id][-1]]
     batches = [
-        ([key(p.SDLK_ESCAPE)], 0, False),  # 첫 장치 안내를 닫는다.
+        ([], 0, False),  # 힌트를 보면서 바로 첫 행동을 할 수 있다.
         ([key(final_key), key(p.SDLK_SPACE)], 0, True),
         ([key(p.SDLK_z)], 0, False),
         ([key(final_key)], 0, True),
         ([key(p.SDLK_ESCAPE)], 0, True),
         ([key(p.SDLK_ESCAPE)], 0, True),
         ([click(800, 272), key(p.SDLK_d)], 1, False),
-        ([key(p.SDLK_ESCAPE)], 1, False),
+        ([], 1, False),
         ([key(p.SDLK_8)], 7, True),
-        ([key(p.SDLK_ESCAPE)], 7, True),
+        ([], 7, True),
         ([click(800, 272), key(p.SDLK_d)], 0, False),
         ([key(p.SDLK_r)], 0, False),
         ([SimpleNamespace(type=p.SDL_QUIT)], 0, False),

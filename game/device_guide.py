@@ -131,7 +131,7 @@ def draw_lesson(view, game, lesson, regions, labels, card, page, total):
             view.centered((left + right) / 2, (bottom + top) / 2, label, 18, INK)
     left, bottom, right, top = card
     bevel(card, (24, 39, 43), (103, 148, 132))
-    view.text(left + 26, top - 30, "새 장치 안내", 18, TEAL)
+    view.text(left + 26, top - 30, "이 방의 장치", 18, TEAL)
     view.text(right - 78, top - 30, f"{page + 1} / {total}", 18, GOLD)
     view.text(left + 26, top - 80, lesson.title, 32, GOLD)
     y = view.wrapped(left + 26, top - 130, lesson.instruction, width=CARD_WIDTH - 52, size=18, color=INK)

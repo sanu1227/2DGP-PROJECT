@@ -36,20 +36,20 @@ CARDS = (
                "작업대 옆 칸에서 뼈 2묶음을 하나씩 납품하고, 병사를 배치대로 옮기세요.",
                "배치대에서 E / Space로 배치. 배치한 칸은 다시 들어갈 수 없어요."),
     DeviceCard("plate", "발판과 연결문", (("plate_down", "발판"), ("gate_closed", "연결문")),
-               "수리공이나 물건으로 발판을 누르면 연결된 문이 열려요.",
+               "수리공, 인부, 물건이 발판을 누르면 연결된 문이 열려요.",
                "무게가 사라지면 닫혀요. 문 위에 있으면 나갈 때까지 기다려요."),
-    DeviceCard("chute", "뼈 투입구", (("chute_inlet", "투입구"), ("chute_outlet", "배출구")),
+    DeviceCard("chute", "뼈 투입구", (("chute_inlet", "투입구"), ("chute_dispenser", "배출구")),
                "뼈를 들고 투입구 위에서 E / Space를 누르면 연결된 배출구로 보내요.",
                "뼈만 전송 가능. 배출구가 물건이나 병사로 막히면 보낼 수 없어요."),
     DeviceCard("rubble", "잔해 밀기", (("push_rubble", "밀 수 있는 잔해"),),
                "빈손으로 잔해 쪽 방향키를 누르면 한 칸 밀며 이동해요.",
                "광로 위에서는 빛을 막아요. 빈 바닥·발판으로 밀고 Z로 되돌릴 수 있어요."),
     DeviceCard("mirror", "마력 반사 거울", (("mirror", "4방향 · 90도 회전"), ("mana_receiver", "수신기")),
-               "빈손으로 고정 거울 옆이나 이동 거울 위에서 E / Space로 돌려요.",
-               "이동 거울은 옆 칸에서 Shift+방향키로 밀 수 있어요. 빛이 수신기에 닿으면 문이 열려요."),
+               "빈손으로 거울 옆에서 E / Space를 누르면 돌아가요.",
+               "이동 거울은 옆 칸에서 방향키로 밀어요. 거울 옆에서 E로 돌리면 광로가 바뀌어요."),
     DeviceCard("helper", "해골 인부", (("soldier_deployed", "해골 인부"),),
                "기록 발판을 밟고 표시된 칸 수만큼 이동하면 방향이 기록돼요.",
-               "기록 뒤 수리공이 행동할 때마다 인부가 자기 자리에서 다음 방향으로 한 칸씩 이동해요."),
+               "기록석마다 한 번만 기록해요. 인부가 발판 위에 멈추면 연결문이 계속 열려요."),
 )
 PAGE_COUNT = (len(CARDS) + CARDS_PER_PAGE - 1) // CARDS_PER_PAGE
 
@@ -69,7 +69,9 @@ def catalog_buttons():
 
 
 def picture(view, name, x, y, width=160, height=126):
-    if view.top_down:
+    if name == "chute_dispenser":
+        view.art.load_chute_outlet()
+    if view.top_down and name != "chute_dispenser":
         if name in ("gate_open", "gate_closed"):
             view.topdown_art.draw_gate(x, y, min(width, height), float(name == "gate_open"))
             return

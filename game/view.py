@@ -1,6 +1,5 @@
 """pico2d 화면과 키 입력. 퍼즐 판정은 model.Game이 전담한다."""
 
-from ctypes import byref
 import os
 from dataclasses import replace
 from pathlib import Path
@@ -188,9 +187,7 @@ class View:
         self.motion = None
         self.move_seconds = 0.18
         self.rubble_motions = {}
-        self.rubble_impulses = []
         self.push_target = None
-        self.board_offset = (0, 0)
         self.mirror_pushes = {}
         self.plate_delays = {}
         self.echo_motion = EchoMotion()
@@ -395,7 +392,6 @@ class View:
             position, height = self.rubble_pose(game, source, now)
             self.rubble_motions.pop(source, None)
             self.rubble_motions[destination] = (position, height, now)
-            self.rubble_impulses.append(now)
             if destination in game.level.plates:
                 was_pressed = float(game.plate_pressed(destination, previous))
                 self.plate_motions.setdefault(destination, (was_pressed, was_pressed, now, 0))
@@ -667,8 +663,6 @@ class View:
         left, bottom, right, top = TUTORIAL_PANEL
         if self.tutorial and left <= x <= right and bottom <= y <= top:
             return None
-        dx, dy = self.board_offset
-        x, y = x - dx, y - dy
         if self.action_badge_bounds:
             left, bottom, right, top = self.action_badge_bounds
             if left <= x <= right and bottom - 9 <= y <= top:
@@ -721,7 +715,7 @@ class View:
         if hovered is not None:
             target = hovered
             path = find_path(game, target, approach_device=True)
-            if path is not None and target in game.level.solid_devices:
+            if path is not None and target in game.level.solid_devices | game.state.movable_mirrors:
                 target = path[-1] if path else game.state.player
             color = TEAL if path is not None else RED
             if path is not None and game.remaining_actions is not None and len(path) > game.remaining_actions:
@@ -738,6 +732,30 @@ class View:
                           int(projection.half_height) - 3, color)
         if hovered is not None:
             self.movement_cost_hint(game, path, color)
+
+    @staticmethod
+    def chute_outlet_labels(level):
+        return {outlet: f"{level.device_labels[inlet]} 배출구" for inlet, outlet in level.chutes.items()}
+
+    def draw_chute_outlet(self, board, pos):
+        self.art.load_chute_outlet()
+        name = "chute_dispenser"
+        x, y = board.screen(pos)
+        height = board.half_width * (1.38 if self.top_down else .79)
+        y += board.half_width * (.24 if self.top_down else .18)
+        scale = height / self.art.manifest["sprites"][name]["height"]
+        self.art.draw(name, x, y, scale)
+        self.sprite_hit_region(pos, name, x, y, scale)
+
+    def highlight_chute_pair(self, game, board):
+        if not game.level.chutes or self.mouse_position is None:
+            return
+        hovered = self.pick_cell(game, *self.mouse_position)
+        for inlet, outlet in game.level.chutes.items():
+            if hovered in (inlet, outlet):
+                for pos in (inlet, outlet):
+                    self.tile_outline(board, *board.screen(pos), board.half_width - 3,
+                                      int(board.half_height) - 2, TEAL)
 
     def movement_cost_hint(self, game, path, color):
         """마우스를 올린 경로의 예상 행동 비용을 클릭 전에 보여준다."""
@@ -765,8 +783,6 @@ class View:
         x, y = self.mouse_position
         left = max(32, min(x + 18, WIDTH - 32 - width))
         bottom = max(BOARD_BOTTOM + 4, min(y + 22, BOARD_TOP - height - 4))
-        dx, dy = self.board_offset
-        left, bottom = left - dx, bottom - dy
         box(left, bottom, left + width, bottom + height, (20, 32, 36))
         box(left, bottom, left + width, bottom + height, color, filled=False)
         self.text(left + 12, bottom + height - 18, labels[0][0], 18, color)
@@ -781,13 +797,13 @@ class View:
         if state.cleared or game.failed:
             return
         ready_target = game.interaction_target()
-        solid_devices = level.solid_devices
+        solid_devices = level.solid_devices | state.movable_mirrors
         targets = {pos: "함정 설치" for pos in level.traps - state.installed}
         targets.update({pos: "병사 배치" for pos in level.posts - state.soldiers})
         targets.update({pos: "병사 조립" for pos in level.benches})
         targets.update({pos: "뼈 투입구" for pos in level.chutes})
         mirrors = mirror_cells(level, state)
-        targets.update({pos: "이동 거울 · Shift+방향키" if pos in state.movable_mirrors else "거울 회전"
+        targets.update({pos: "이동 거울 · 방향키로 밀기" if pos in state.movable_mirrors else "거울 회전"
                         for pos in mirrors})
         targets.update({pos: "인부 회수" if pos in state.workers else "인부 배치"
                         for pos in level.jobs - level.echo_links.keys()})
@@ -867,33 +883,8 @@ class View:
         if hidden_inlets:
             self.gate_inlets[self.hit_regions[-1]] = hidden_inlets
 
-    def push_shake_offset(self, now):
-        """짧은 흔들림을 겹쳐도 최대 변위를 제한하고 새 밀기 시작점에서 튀지 않게 한다."""
-        self.rubble_impulses = [start for start in self.rubble_impulses if now - start < PUSH_SECONDS]
-        x, y = 0.0, 0.0
-        for start in self.rubble_impulses:
-            age = max(0, now - start)
-            strength = (1 - age / PUSH_SECONDS) ** 2
-            x += 4.5 * strength * sin(age * 66)
-            y += 2.8 * strength * sin(age * 87)
-        return round(max(-4, min(4, x))), round(max(-3, min(3, y)))
-
     def board(self, game):
-        now = self.now()
-        self.board_offset = self.push_shake_offset(now)
-        if self.board_offset == (0, 0):
-            self._draw_board(game, now)
-            return
-        dx, dy = self.board_offset
-        viewport = p.SDL_Rect()
-        p.SDL_RenderGetViewport(p.renderer, byref(viewport))
-        # SDL은 위쪽이 원점이다. 바닥, 광원 메시와 스프라이트를 함께 이동한다.
-        shifted = p.SDL_Rect(viewport.x + dx, viewport.y - dy, viewport.w, viewport.h)
-        p.SDL_RenderSetViewport(p.renderer, shifted)
-        try:
-            self._draw_board(game, now)
-        finally:
-            p.SDL_RenderSetViewport(p.renderer, viewport)
+        self._draw_board(game, self.now())
 
     def _draw_board(self, game, now):
         level, state = game.level, game.state
@@ -952,6 +943,7 @@ class View:
         half_width, half_height = projection.half_width, projection.half_height
         scale = half_width * 2 / self.art.manifest["coordinates"]["tile_footprint"]["width"]
         screen = projection.screen
+        outlet_labels = self.chute_outlet_labels(level)
         self.hit_regions.clear()
         self.hit_masks.clear()
         self.gate_hit_masks.clear()
@@ -1049,16 +1041,16 @@ class View:
                             labels.append((pos, label))
                 if pos in level.chutes:
                     objects.append((depth, 1, "chute_inlet", sx, sy))
-                    labels.append((pos, "뼈 투입구"))
-                elif pos in level.chutes.values():
-                    objects.append((depth, 0.5, "chute_outlet", sx, sy))
-                    if pos not in level.plates:
-                        labels.append((pos, f"{level.device_labels[pos]} 배출"))
+                    labels.append((pos, f"{level.device_labels[pos]} 투입구"))
+                elif pos in outlet_labels:
+                    objects.append((depth, 1.25, "chute_dispenser", sx, sy))
+                    labels.append((pos, outlet_labels[pos]))
                 if pos in level.plates:
                     pressed = game.plate_pressed(pos, state)
                     objects.append((depth, 1, "plate_down" if pressed else "plate_up", sx, sy))
                     plate_label = "잔해 적재" if pos in state.rubble else "눌림" if pressed else "발판"
-                    labels.append((pos, f"{level.device_labels[pos]} {plate_label}"))
+                    if pos not in outlet_labels:
+                        labels.append((pos, f"{level.device_labels[pos]} {plate_label}"))
                 elif pos in level.gates:
                     status = gate_statuses[pos]
                     objects.append((depth, 1, f"gate_{status}", sx, sy))
@@ -1081,9 +1073,10 @@ class View:
 
         draw_echo_marks(game, projection)
         for station, (seals, _) in level.echo_links.items():
-            labels.append((station, recording_label(level, station)))
+            labels.append((station, "기록 완료" if station in state.recorded_stations else recording_label(level, station)))
             if len(seals) > 1:
-                labels.extend((seal, level.device_labels[gate]) for gate, seal in seals.items())
+                labels.extend((seal, level.device_labels[gate]) for gate, seal in seals.items()
+                              if seal not in level.plates)
         for origin, pos in state.replay_workers.items():
             if state.echo is None or state.echo.origin != origin:
                 sx, sy = screen(pos)
@@ -1152,6 +1145,9 @@ class View:
                 self.art.draw_plate(sx, sy, scale, pressed)
                 self.sprite_hit_region(pos, "plate_up", sx, sy, scale)
                 self.plate_hit_masks[self.hit_regions[-1]] = (sx, sy, scale, pressed)
+                continue
+            if sprite == "chute_dispenser":
+                self.draw_chute_outlet(projection, pos)
                 continue
             if sprite == "mirror":
                 pos = mirror_draws[(sx, sy)]
@@ -1234,6 +1230,7 @@ class View:
                     box(sx - width / 2, sy - 28, sx + width / 2, sy - 6, TEAL, filled=False)
             self.text(sx - width / 2 + 5, sy - 17, label, 16, color)
             self.hit_regions.append((pos, (sx - width / 2, sy - 28, sx + width / 2, sy - 6)))
+        self.highlight_chute_pair(game, projection)
         self.interaction_markers(game, projection)
         if self.show_coordinates:
             self.coordinate_overlay(level, projection)
@@ -1257,8 +1254,6 @@ class View:
         if hint.target is not None:
             projection = self.projection(game.level)
             sx, sy = projection.screen(hint.target)
-            dx, dy = self.board_offset
-            sx, sy = sx + dx, sy + dy
             color = TEAL if game.state.player == hint.target else GOLD
             for inset in (3, 5):
                 self.tile_outline(projection, sx, sy, projection.half_width - inset,
@@ -1268,8 +1263,7 @@ class View:
             box(*bounds, (25, 40, 42))
             box(*bounds, color, filled=False)
             self.centered(sx, sy - 46, hint.target_label, 16, color)
-            self.hit_regions.append((hint.target, (bounds[0] - dx, bounds[1] - dy,
-                                                   bounds[2] - dx, bounds[3] - dy)))
+            self.hit_regions.append((hint.target, bounds))
         box(*TUTORIAL_PANEL, (25, 39, 42))
         box(*TUTORIAL_PANEL, (101, 120, 104), filled=False)
         self.text(52, 786, "첫 근무 · 튜토리얼", 16, GOLD)
@@ -1362,7 +1356,6 @@ class View:
         self.text(32, HEIGHT - 36, "용사가 지나간 자리", 32)
         self.text(450, HEIGHT - 36, level.title, 22)
         self.text(WIDTH - 190, HEIGHT - 36, f"단계 {index + 1:02d} / {total:02d}", 22, GOLD)
-        self.wrapped(450, HEIGHT - 69, level.hint, width=WIDTH - 490, size=16)
 
         self.board(game)
         self.tutorial_overlay(game)
@@ -1461,7 +1454,6 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True, top_down=False):
                     elif result == "start":
                         index = 0
                         game = Game(levels[index])
-                        play_menu.seen_devices.clear()
                         view.reset_player()
                         view.navigation.cancel()
                         view.mouse_position = None
@@ -1536,8 +1528,6 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True, top_down=False):
                         screen_changed = True
                     elif event.key in actions:
                         action = actions[event.key]
-                        if action in DIRECTIONS and p.SDL_GetModState() & p.KMOD_SHIFT:
-                            action = f"push_{action}"
                         previous = game.state
                         changed = game.act(action)
                         direction = PUSH_ACTIONS.get(action, action)

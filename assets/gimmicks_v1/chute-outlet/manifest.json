@@ -1,0 +1,32 @@
+{
+  "atlases": {
+    "chute_outlet": {
+      "file": "outlet.png",
+      "width": 223,
+      "height": 256
+    }
+  },
+  "sprites": {
+    "chute_dispenser": {
+      "atlas": "chute_outlet",
+      "width": 223,
+      "height": 256,
+      "anchor": {
+        "x": 125,
+        "y": 253
+      },
+      "clip_rect_pico2d": [
+        0,
+        0,
+        223,
+        256
+      ],
+      "content_rect": {
+        "left": 0,
+        "top": 0,
+        "width": 223,
+        "height": 256
+      }
+    }
+  }
+}

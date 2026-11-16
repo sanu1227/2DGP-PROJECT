@@ -39,7 +39,6 @@ class PlayMenu:
     def __init__(self):
         self.mode = None
         self.selected = 0
-        self.seen_devices = set()
         self.room = None
         self.lessons = ()
         self.pages = ()
@@ -72,12 +71,6 @@ class PlayMenu:
             return
         self.room = game
         self.lessons = device_lessons(game.level)
-        unseen = tuple(lesson for lesson in self.lessons if lesson.kind not in self.seen_devices)
-        if unseen:
-            self.pages, self.page_index = unseen, 0
-            self.mode, self.selected, self.return_mode = "device", 0, None
-            view.pause()
-            view.mouse_position = None
 
     def finish_guide(self):
         if self.return_mode == "controls":
@@ -112,8 +105,6 @@ class PlayMenu:
         elif action == "catalog_back":
             self.mode, self.selected = "pause", 3
         elif action in ("guide_next", "guide_skip"):
-            self.seen_devices.update(lesson.kind for lesson in
-                                     (self.pages if action == "guide_skip" else (self.pages[self.page_index],)))
             if action == "guide_skip" or self.page_index + 1 == len(self.pages):
                 return self.finish_guide()
             self.page_index += 1
@@ -178,7 +169,7 @@ class PlayMenu:
                 ("이동", "좌클릭 / WASD / 방향키"),
                 ("자동 이동 취소", "우클릭"),
                 ("줍기 / 설치 / 내려놓기", "같은 칸에서 E / Space"),
-                ("이동 거울 밀기", "옆 칸에서 Shift+방향키"),
+                ("잔해와 이동 거울 밀기", "빈손으로 옆 칸에서 WASD / 방향키"),
                 ("되돌리기", "Z / Backspace"),
                 ("현재 방 다시 시작", "R"),
                 ("일시정지 / 계속하기", "Esc"),

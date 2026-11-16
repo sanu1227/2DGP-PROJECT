@@ -75,30 +75,23 @@ def main():
         actual = frame(2)
         assert abs(actual[0] - x) < 1e-8 and abs(actual[1] - y - 32 * scale) < 1e-8
 
-        # 실제 렌더링에서 HUD는 고정되고, 씬과 클릭은 같은 픽셀만큼 이동한다.
+        # 두 시점에서 밀어도 SDL 화면 영역을 옮기거나 화면 전체를 깜박이지 않는다.
         for top_down in (False, True):
             assert game.undo()
             view.reset_player()
             view.reset_plates()
             view.top_down = top_down
             frame(2)
+            hud_area = (32, HEIGHT - 70, 650, 52)
+            stable_hud = pixels(*hud_area)
             move(2.1, 'down')
             board_x, board_y = map(round, view.projection(game.level).screen(source))
-            board_area = (board_x - 48, board_y - 32, 96, 64)
-            hud_area = (32, HEIGHT - 70, 650, 52)
-            with patch.object(view, 'push_shake_offset', return_value=(0, 0)):
-                frame(2.125)
-                stable_board, stable_hud = pixels(*board_area), pixels(*hud_area)
-                stable_cell = view.pick_cell(game, board_x, board_y)
-            frame(2.125)
-            dx, dy = view.board_offset
-            assert 0 < abs(dx) <= 4 and abs(dy) <= 3
-            assert pixels(*hud_area) == stable_hud
-            assert pixels(*board_area) != stable_board
-            assert pixels(board_area[0] + dx, board_area[1] + dy, *board_area[2:]) == stable_board
-            assert stable_cell is not None and view.pick_cell(game, board_x + dx, board_y + dy) == stable_cell
-            frame(2.5)
-            assert view.board_offset == (0, 0)
+            with patch.object(p, 'SDL_RenderSetViewport') as viewport:
+                for time in (2.125, 2.18, 2.24):
+                    frame(time)
+                    assert pixels(*hud_area) == stable_hud
+                viewport.assert_not_called()
+            assert view.pick_cell(game, board_x, board_y) is not None
         view.top_down = False
 
         # 다시 시작해 일정 간격의 실제 렌더 프레임을 남긴다.
@@ -123,22 +116,20 @@ def main():
         move(6.03, 'down')
         assert frame(6.03) == before, '연속 밀기가 순간 이동했습니다.'
         frozen = frame(6.1)
-        frozen_offset = view.board_offset
         with patch('game.view.perf_counter', return_value=6.1):
             view.pause()
         assert frame(16.1) == frozen
-        assert view.board_offset == frozen_offset
         with patch('game.view.perf_counter', return_value=16.1):
             view.resume()
         assert frame(16.1) == frozen
         assert game.undo()
         view.reset_player()
-        assert not view.rubble_motions and not view.plate_delays and not view.rubble_impulses
+        assert not view.rubble_motions and not view.plate_delays
         assert frame(17) == projection.screen((2, 4))
         game.restart()
         view.reset_player()
         assert frame(18) == projection.screen((2, 3))
-        print('Rubble motion OK: smooth push, plate contact, board shake in both views, fixed HUD, '
+        print('Rubble motion OK: smooth push, plate contact, fixed viewport and HUD in both views, '
               'picking, rapid input, pause, undo, restart; no model mutation.')
     finally:
         if view:

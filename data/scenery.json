@@ -102,13 +102,13 @@
     "floors": ["forge_floor_plain", "forge_floor_riveted", "sewer_floor_puddle", "sewer_floor_grate"],
     "wall_mounts": [
       {"sprite": "forge_mount_lamp_nw", "cell": [0, 4], "facing": "right"},
-      {"sprite": "forge_mount_vent_ne", "cell": [2, 1], "facing": "down"},
-      {"sprite": "forge_mount_lamp_nw", "cell": [9, 1], "facing": "left"},
-      {"sprite": "forge_mount_lamp_nw", "cell": [9, 6], "facing": "left"}
+      {"sprite": "forge_mount_vent_nw", "cell": [7, 6], "facing": "left"},
+      {"sprite": "forge_mount_lamp_nw", "cell": [11, 2], "facing": "left"},
+      {"sprite": "forge_mount_lamp_nw", "cell": [11, 7], "facing": "left"}
     ],
     "decorations": [
-      {"sprite": "sewer_pipe_elbow", "cell": [4, 5], "facing": "left", "scale": 0.53},
-      {"sprite": "sewer_water_barrel", "cell": [2, 7], "facing": "up", "scale": 0.61}
+      {"sprite": "sewer_pipe_elbow", "cell": [7, 5], "facing": "left", "scale": 0.53},
+      {"sprite": "sewer_water_barrel", "cell": [1, 8], "facing": "right", "scale": 0.61}
     ]
   },
   "stage_07": {

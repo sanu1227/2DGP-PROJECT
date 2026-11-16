@@ -15,7 +15,7 @@ import time
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from game.levels import load_levels, neighbors
-from game.model import DIRECTIONS, PUSH_ACTIONS, Game
+from game.model import DIRECTIONS, Game
 from game.mechanics import trace_magic
 
 
@@ -24,7 +24,7 @@ def key(state):
             frozenset(state.installed), state.active, frozenset(state.soldiers),
             tuple(sorted(state.bench_bones.items())), tuple(sorted(state.mirror_rotations.items())),
             frozenset(state.rubble), frozenset(state.workers), state.recording, state.echo,
-            frozenset(state.replay_workers.items()), frozenset(state.movable_mirrors))
+            frozenset(state.replay_workers.items()), frozenset(state.movable_mirrors), frozenset(state.recorded_stations))
 
 
 class LowerBound:
@@ -256,10 +256,7 @@ def solve(level, max_states=500_000, upper_bound=None, forbidden=None):
         expanded += 1
         if expanded > max_states:
             raise RuntimeError(f"{level.id}: 탐색 상한 {max_states}개 상태 도달. 최단성 미검증.")
-        x, y = state.player
-        pushes = (action for action, direction in PUSH_ACTIONS.items()
-                  if (x + DIRECTIONS[direction][0], y + DIRECTIONS[direction][1]) in state.movable_mirrors)
-        for action in (*DIRECTIONS, "interact", "drop", *pushes):
+        for action in (*DIRECTIONS, "interact", "drop"):
             game.state = state
             game.history = []
             if action == 'interact' and lower_bound.monotone_mirrors:
@@ -365,12 +362,11 @@ def main():
                     continue
 
                 def forbidden(game, action):
-                    if mechanic == "mirror_push":
-                        return action in PUSH_ACTIONS
                     if action in DIRECTIONS:
                         dx, dy = DIRECTIONS[action]
                         target = game.state.player[0] + dx, game.state.player[1] + dy
-                        return ((mechanic == "rubble" and target in game.state.rubble)
+                        return ((mechanic == "mirror_push" and target in game.state.movable_mirrors)
+                                or (mechanic == "rubble" and target in game.state.rubble)
                                 or (mechanic == "plate" and level.gates.get(target) in level.plates))
                     if action != "interact":
                         return False

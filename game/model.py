@@ -10,7 +10,7 @@ from game.mechanics import trace_magic, fixed_devices
 
 ITEM_NAMES = {"part": "함정 부품", "bone": "뼈 묶음", "soldier": "해골 병사"}
 PUSH_ACTIONS = {f"push_{direction}": direction for direction in DIRECTIONS}
-INTERACTION_HELP = "물건은 위에서, 작업대와 고정 거울은 옆에서 E를 누르세요."
+INTERACTION_HELP = "물건은 위에서, 작업대와 거울은 옆에서 E를 누르세요."
 
 
 @dataclass(frozen=True)
@@ -45,6 +45,7 @@ class State:
     recording: Recording | None = None
     echo: Echo | None = None
     replay_workers: dict[Pos, Pos] = field(default_factory=dict)
+    recorded_stations: set[Pos] = field(default_factory=set)
 
 
 class Game:
@@ -107,6 +108,7 @@ class Game:
         if recording is None or recording.origin not in candidate.replay_workers:
             self._advance_echo(candidate)
         if (action in DIRECTIONS and recording is None and candidate.player in candidate.replay_workers
+                and candidate.player not in candidate.recorded_stations
                 and (candidate.echo is None or not candidate.echo.remaining)):
             candidate.echo = None
             candidate.recording = Recording(candidate.player)
@@ -156,12 +158,14 @@ class Game:
 
     def plate_pressed(self, pos: Pos, state: State | None = None) -> bool:
         state = self.state if state is None else state
-        return pos == state.player or pos in state.items or pos in state.rubble
+        return pos == state.player or pos in state.items or pos in state.rubble or pos in state.replay_workers.values()
 
     def echo_pressed(self, gate: Pos, state: State | None = None) -> bool:
         state = self.state if state is None else state
         echo = state.echo
         origin = self.level.gates[gate]
+        if origin in self.level.plates:
+            return self.plate_pressed(origin, state)
         seals, _ = self.level.echo_links[origin]
         if echo is None or echo.origin != origin or echo.position != seals[gate]:
             return False
@@ -190,6 +194,7 @@ class Game:
         return (0 <= pos[0] < self.level.width and 0 <= pos[1] < self.level.height
                 and pos not in self.level.walls and pos not in state.soldiers
                 and pos not in state.rubble
+                and pos not in state.movable_mirrors
                 and pos not in self.level.solid_devices
                 and not (state.active and pos in self.level.traps)
                 and (pos not in self.level.gates or self.gate_status(pos, state) == "open"))
@@ -208,7 +213,7 @@ class Game:
                 if state.carrying == "bone":
                     return "deliver", "E: 뼈 납품·병사 조립" if stored else "E: 뼈 납품 (1/2)", target
                 nearby_hint = nearby_hint or f"뼈 묶음을 가져오세요. ({stored}/2)"
-            elif target in solid_devices:
+            elif target in solid_devices or target in state.movable_mirrors:
                 if state.carrying is None:
                     return "rotate", "E / Space: 거울 90도 회전 · 화살표 방향으로 빛 방출", target
                 nearby_hint = nearby_hint or "거울은 빈손으로 돌리세요."
@@ -237,6 +242,8 @@ class Game:
             return (None, "거울은 빈손으로 돌리세요.") if state.carrying else ("rotate", "E / Space: 거울 90도 회전 · 화살표 방향으로 빛 방출")
         if pos in self.level.jobs:
             if pos in state.replay_workers:
+                if pos in state.recorded_stations:
+                    return None, "기록을 마친 발판입니다. Z로 되돌리거나 R로 다시 시작할 수 있습니다."
                 return None, "기록 발판을 밟으면 자동으로 기록합니다."
             if pos in self.level.echo_links:
                 if state.carrying:
@@ -319,6 +326,8 @@ class Game:
             dx, dy = DIRECTIONS[action]
             x, y = state.player
             destination = x + dx, y + dy
+            if destination in state.movable_mirrors:
+                return self._push_mirror(state, action)
             if destination in state.rubble:
                 if state.recording:
                     return False, "기록 중에는 발걸음만 남길 수 있습니다."
@@ -415,6 +424,7 @@ class Game:
             return
         state.recording = None
         if recording.origin in state.replay_workers:
+            state.recorded_stations.add(recording.origin)
             state.echo = Echo(recording.origin, state.replay_workers[recording.origin], inputs)
             self.message = "기록 완료. 다음 행동부터 해골 인부가 한 칸씩 움직입니다."
         else:

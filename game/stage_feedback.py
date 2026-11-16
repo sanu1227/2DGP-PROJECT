@@ -11,7 +11,7 @@ INK = (239, 237, 219)
 MUTED = (164, 182, 177)
 GOLD = (231, 190, 108)
 TEAL = (112, 216, 190)
-ENTRY_SECONDS = 1.6
+ENTRY_SECONDS = 7.5
 
 
 class StageFeedback:
@@ -44,18 +44,15 @@ class StageFeedback:
         now = view.now()
         if game.state.cleared:
             self.draw_result(view, game, index, total, max(0, now - self.completed_at))
-        elif game.state.moves == 0 and 0 <= now - self.entered_at < ENTRY_SECONDS:
+        elif 0 <= now - self.entered_at < ENTRY_SECONDS:
             self.draw_entry(view, game, index, total, now - self.entered_at)
 
     @staticmethod
     def draw_entry(view, game, index, total, elapsed):
-        # 안내와 메뉴에서는 플레이 시계가 멈추므로 배너 재생 시간도 보존된다.
-        progress = min(1, elapsed / .22, (ENTRY_SECONDS - elapsed) / .25)
-        lift = round(32 * (1 - max(0, progress)) ** 2)
-        bevel((466, 650 + lift, 1134, 796 + lift), (22, 39, 43), TEAL)
-        view.centered(800, 767 + lift, f"제 {index + 1:02d} 구역  /  {total:02d}", 18, TEAL)
-        view.centered(800, 723 + lift, game.level.title, 32, INK)
-        view.centered(800, 680 + lift, "복구 작업 시작", 22, GOLD)
+        progress = min(1, elapsed / .20, (ENTRY_SECONDS - elapsed) / .24)
+        lift = round(4 * (1 - progress) ** 2)
+        bevel((452, 876 + lift, 1568, 911 + lift), (22, 39, 43), TEAL)
+        view.text(473, 894 + lift, game.level.hint, 18, GOLD)
 
     def draw_result(self, view, game, index, total, elapsed):
         fade_to_black(.64)

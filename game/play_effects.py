@@ -49,8 +49,8 @@ def rubble_scrape(board, start, target, position, progress):
     length = max(1, hypot(tx - sx, ty - sy))
     dx, dy = (tx - sx) / length, (ty - sy) / length
     radius = board.half_width * .38
-    dust(x - dx * radius, y - dy * radius * .55, progress,
-         direction=(-dx, -dy), size=max(.7, min(1.4, board.half_width / 45)))
+    dust(x - dx * radius, y - dy * radius * .55, progress * .78,
+         direction=(-dx, -dy), size=max(.85, min(1.55, board.half_width / 38)))
 
 
 def ring(x, y, radius, color, opacity):

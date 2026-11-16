@@ -66,7 +66,7 @@ def device_lessons(level: Level, state: State | None = None) -> tuple[DeviceLess
         ("mirror", "빛으로 장치 연결", "빈손으로 고정 거울 옆 칸에서 E / Space를 눌러 돌리세요. 빛은 화살표 방향으로 나갑니다.",
          "수신기에 닿으면 연결문이 열려요. 벽·잔해·초소의 병사·광원은 빛을 막아요.", mirrors),
         ("helper", "발걸음을 따라가는 해골 인부", "기록 발판을 밟고 표시된 칸 수만큼 자유롭게 이동하세요.",
-         "기록이 끝나면 다음 행동부터 인부가 자기 자리에서 한 칸씩 따라 해요. 문양을 지날 때 문이 한 턴 열려요.", level.jobs)):
+         "기록석마다 한 번 기록해요. 인부가 발판 위에 머무르면 연결된 문도 열린 채로 유지돼요.", level.jobs)):
         if kind == "mirror" and level.movable_mirrors:
             movable = level.movable_mirrors if state is None else state.movable_mirrors
             targets = ((min(movable), "이동 거울"),)
@@ -74,7 +74,7 @@ def device_lessons(level: Level, state: State | None = None) -> tuple[DeviceLess
                 targets += ((min(rubble), "빛을 막는 잔해"),)
             lessons.append(DeviceLesson(
                 kind, "거울과 잔해로 광로 조절",
-                "빈손으로 이동 거울 옆에서 Shift+방향키를 누르면 한 칸 밀어요. 거울 위에서 E / Space로 돌리세요.",
+                "빈손으로 이동 거울 쪽 방향키를 누르면 밀어요. 거울 옆에서 E / Space로 돌리세요.",
                 "잔해는 빛을 막아요. 방향키로 잔해를 광로 밖에 밀어내면 수신기에 닿은 빛이 문을 열어요.",
                 targets))
         elif cells:

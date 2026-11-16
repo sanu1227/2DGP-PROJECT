@@ -26,91 +26,77 @@ class LateRoomTests(unittest.TestCase):
         for action in directions:
             self.assertTrue(game.act(action), game.message)
 
-    def test_second_worker_replays_from_its_own_tile(self):
+    def test_second_worker_replays_and_holds_an_ordinary_plate(self):
         level = load_levels()[6]
         gate = next(pos for pos in level.gates if level.device_labels[pos] == "J2")
-        station = level.gates[gate]
-        seals, steps = level.echo_links[station]
-        self.assertEqual(steps, 4)
+        station = next(pos for pos, (seals, _) in level.echo_links.items() if gate in seals)
+        plate = level.gates[gate]
+        self.assertIn(plate, level.plates)
         game = Game(level)
         game.state.player = (5, 4)
 
-        self.play(game, "down", "up", "up", "right", "down")
-        self.assertEqual(game.state.player, (6, 4))
+        self.play(game, "down", "up", "up")
         self.assertEqual(game.state.replay_workers[station], (6, 5))
         self.assertEqual(game.gate_status(gate), "closed")
-        self.play(game, "right")
-        self.assertEqual(game.state.replay_workers[station], (6, 4))
-        self.assertEqual(game.gate_status(gate), "closed")
-        self.play(game, "down")
-        self.assertEqual(game.state.replay_workers[station], seals[gate])
-        self.assertEqual(game.gate_status(gate), "open")
         self.play(game, "right", "right")
-        self.assertEqual(game.gate_status(gate), "closed")
+        self.assertEqual(game.state.replay_workers[station], plate)
+        self.assertTrue(game.plate_pressed(plate))
+        self.play(game, "down", "down", "right")
+        self.assertEqual(game.state.player, gate)
+        self.assertEqual(game.gate_status(gate), "open")
 
-    def test_worker_reuses_current_position_and_advances_on_interact(self):
+    def test_recording_is_single_use_and_successful_interaction_advances_worker(self):
         level = load_levels()[6]
         game = Game(level)
         station = min(level.replay_workers)
         game.state.player = (2, 2)
         part = next(pos for pos, kind in game.state.items.items() if kind == "part")
         game.state.carrying = game.state.items.pop(part)
+        self.play(game, "right", "up", "down", "up")
+        self.assertEqual(game.state.recorded_stations, {station})
+        self.assertTrue(game.undo())
+        self.assertEqual(game.state.recording.inputs, ("up", "down"))
+        self.assertFalse(game.state.recorded_stations)
+        self.play(game, "up", "interact")
+        self.assertEqual(game.state.player, (3, 1))
+        self.assertEqual(game.state.replay_workers[station], (1, 1))
+        self.play(game, "down", "up", "down")
+        self.assertEqual(game.state.player, station)
+        self.assertIsNone(game.state.recording)
+        self.assertFalse(game.can_interact())
+        game.restart()
+        self.assertFalse(game.state.recorded_stations)
 
-        self.play(game, "right", "right", "up")
-        self.assertEqual(game.state.replay_workers[station], (1, 2))
-        self.play(game, "interact")  # The player drops the part without moving.
-        self.assertEqual(game.state.player, (4, 1))
-        self.assertEqual(game.state.replay_workers[station], (2, 2))
-        self.play(game, "left", "down", "right", "up")
-        self.assertEqual(game.state.replay_workers[station], (2, 1))
-        self.play(game, "interact")
-        self.assertEqual(game.state.replay_workers[station], (3, 1))
-
-    def test_boss_worker_follows_two_different_recordings_from_its_own_tile(self):
+    def test_boss_worker_stops_on_one_plate_and_holds_both_doors(self):
         level = load_levels()[7]
         game = Game(level)
         station, = level.jobs
         lever, = level.levers
-        gates = {level.device_labels[gate]: gate for gate in level.gates}
-        first, second = gates["J1"], gates["J2"]
+        seals, steps = level.echo_links[station]
+        plate, = set(seals.values())
+        doors = tuple(seals)
+        self.assertEqual(steps, 4)
+        self.assertTrue(all(level.gates[door] == plate for door in doors))
 
         for action in SOLUTIONS[level.id]:
             self.play(game, action)
             if game.state.player == station:
                 break
-        self.assertEqual(game.state.recording.inputs, ())
-        start = game.state.moves
-
-        self.play(game, "up", "up", "right", "left", "right")
-        self.play(game, "right", "right", "right", "right", "right", "right")
-        self.assertEqual(game.state.replay_workers[station], (2, 1))
-        self.assertEqual(game.gate_status(first), "closed")
-        self.assertEqual(game.gate_status(second), "closed")
-        self.assertFalse(game.act("right"))
-        while game.state.moves > start:
-            self.assertTrue(game.undo())
-
-        self.play(game, "up", "up", "right", "right", "right")
-        self.assertEqual(game.state.player, (5, 1))
-        self.assertEqual(game.state.replay_workers[station], (1, 3))
-        for worker, statuses in (
-            ((1, 2), ("closed", "closed")), ((1, 1), ("open", "closed")),
-            ((2, 1), ("held", "closed")), ((3, 1), ("closed", "open")),
-            ((4, 1), ("closed", "held")),
-        ):
-            self.play(game, "right")
-            self.assertEqual(game.state.replay_workers[station], worker)
-            self.assertEqual((game.gate_status(first), game.gate_status(second)), statuses)
+        self.play(game, "up", "up", "right", "right")
+        self.assertEqual(game.state.replay_workers[station], level.replay_workers[station])
+        self.play(game, "right", "left", "right")
+        self.assertTrue(all(game.gate_status(door) == "closed" for door in doors))
+        self.play(game, "right")
+        self.assertEqual(game.state.replay_workers[station], plate)
+        self.assertTrue(all(game.gate_status(door) == "open" for door in doors))
         self.go(game, lever)
         self.play(game, "interact")
         self.go(game, level.exit)
         self.assertTrue(game.state.cleared)
 
-    def test_worker_status_shows_recording_order_and_each_boss_gate(self):
-        levels = load_levels()
-        for level in levels:
-            self.assertEqual(level.jobs, level.replay_workers.keys(), level.id)
-        game = Game(levels[7])
+    def test_worker_status_shows_recording_order_and_open_doors(self):
+        level = load_levels()[7]
+        game = Game(level)
         game.state.player = (1, 3)
 
         def hud():
@@ -125,31 +111,16 @@ class LateRoomTests(unittest.TestCase):
         self.play(game, "right", "up", "up", "right")
         directions, labels = hud()
         self.assertEqual(directions, ["up", "up", "right"])
-        self.assertIn("발걸음 기록 3/5", labels)
-
-        self.play(game, "right", "right")
-        directions, labels = hud()
-        self.assertEqual(directions, ["up", "up", "right", "right", "right"])
-        self.assertTrue({"인부 재생 0/5", "J1 닫힘", "J2 닫힘"} <= labels)
-
-        self.play(game, "right", "right")
-        self.assertTrue({"인부 재생 2/5", "J1 통과", "J2 닫힘"} <= hud()[1])
-        self.play(game, "right", "right")
-        self.assertTrue({"인부 재생 4/5", "J1 닫힘", "J2 통과"} <= hud()[1])
+        self.assertIn("발걸음 기록 3/4", labels)
 
         self.play(game, "right")
-        self.assertTrue({"인부 재생 5/5", "J2 통과 중"} <= hud()[1])
+        directions, labels = hud()
+        self.assertEqual(directions, ["up", "up", "right", "right"])
+        self.assertTrue({"인부 재생 0/4", "J1 닫힘", "J2 닫힘"} <= labels)
+        self.play(game, "right", "left", "right", "right")
+        self.assertTrue({"재생 완료 4/4", "J1 통과", "J2 통과"} <= hud()[1])
         self.assertTrue(game.undo())
-        self.assertTrue({"인부 재생 4/5", "J2 통과"} <= hud()[1])
-
-        self.play(game, "right", "down")
-        self.assertFalse(draw_worker_status(Mock(), game, "", (0, 0, 0)))
-
-        game.restart()
-        game.state.player = (1, 3)
-        self.play(game, "right", "up", "up", "right", "left", "right")
-        self.play(game, "left", "down", "up", "right", "right")
-        self.assertTrue({"재생 완료 5/5", "J1 닫힘", "J2 닫힘"} <= hud()[1])
+        self.assertTrue({"인부 재생 3/4", "J1 닫힘", "J2 닫힘"} <= hud()[1])
 
     def test_new_themes_and_twelve_cell_boards_resolve_real_assets(self):
         root = Path(__file__).resolve().parents[1]
