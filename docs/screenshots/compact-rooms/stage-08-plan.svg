@@ -29,11 +29,10 @@
 <rect x="496" y="60" width="40" height="40" rx="3" fill="#29333e"/>
 <text x="22" y="128" text-anchor="middle" font-size="11">1</text>
 <rect x="34" y="102" width="40" height="40" rx="3" fill="#29333e"/>
-<rect x="76" y="102" width="40" height="40" rx="3" fill="#326d68"/>
-<text x="96" y="129" text-anchor="middle" font-size="22">U</text>
+<rect x="76" y="102" width="40" height="40" rx="3" fill="#46555e"/>
 <rect x="118" y="102" width="40" height="40" rx="3" fill="#46555e"/>
 <rect x="160" y="102" width="40" height="40" rx="3" fill="#326d68"/>
-<text x="180" y="129" text-anchor="middle" font-size="22">U</text>
+<text x="180" y="129" text-anchor="middle" font-size="22">F</text>
 <rect x="202" y="102" width="40" height="40" rx="3" fill="#46555e"/>
 <rect x="244" y="102" width="40" height="40" rx="3" fill="#46555e"/>
 <rect x="286" y="102" width="40" height="40" rx="3" fill="#46555e"/>
@@ -151,8 +150,8 @@
 <rect x="496" y="396" width="40" height="40" rx="3" fill="#29333e"/>
 <path d="M222,374 L348,332" stroke="#ffd789" stroke-width="2" stroke-dasharray="4 4" opacity=".6"/>
 <path d="M222,248 L138,248" stroke="#ffd789" stroke-width="2" stroke-dasharray="4 4" opacity=".6"/>
-<path d="M138,206 L96,122" stroke="#dda5ff" stroke-width="2" stroke-dasharray="2 4"/>
-<path d="M96,122 L390,122" stroke="#ffd789" stroke-width="2" stroke-dasharray="4 4" opacity=".6"/>
+<path d="M138,206 L180,122" stroke="#dda5ff" stroke-width="2" stroke-dasharray="2 4"/>
+<path d="M180,122 L390,122" stroke="#ffd789" stroke-width="2" stroke-dasharray="4 4" opacity=".6"/>
 <path d="M138,206 L180,122" stroke="#dda5ff" stroke-width="2" stroke-dasharray="2 4"/>
 <path d="M180,122 L474,122" stroke="#ffd789" stroke-width="2" stroke-dasharray="4 4" opacity=".6"/>
 </g></svg>
