@@ -192,7 +192,7 @@ class Game:
             return (None, "거울은 빈손으로 돌리세요.") if state.carrying else ("rotate", "E / Space: 거울 90도 회전 · 화살표 쪽 앞면만 반사")
         if pos in self.level.jobs:
             if pos in state.replay_workers:
-                return None, "기록석을 밟으면 자동으로 기록합니다."
+                return None, "기록 발판을 밟으면 자동으로 기록합니다."
             if pos in self.level.echo_links:
                 if state.carrying:
                     return None, "발걸음을 기록하려면 손을 비우세요."
@@ -357,7 +357,7 @@ class Game:
         else:
             state.player = recording.origin
             state.echo = Echo(recording.origin, recording.origin, inputs)
-            self.message = "기록석으로 돌아왔습니다. 분신이 같은 발걸음을 따라갑니다."
+            self.message = "기록 발판으로 돌아왔습니다. 분신이 같은 발걸음을 따라갑니다."
 
     def _advance_echo(self, state: State) -> None:
         echo = state.echo

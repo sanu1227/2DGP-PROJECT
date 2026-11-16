@@ -136,7 +136,9 @@ def device_entries(game, gate_statuses, powered, exit_ready, plate_depths):
         working = pos in state.workers
         label = level.device_labels[pos]
         if pos in level.echo_links:
-            entries[pos] = "recording_stone", recording_label(level, pos), ECHO_COLOR
+            recording = state.recording and state.recording.origin == pos
+            entries[pos] = (("recording_plate_active", "기록 중", GOLD) if recording else
+                            ("recording_plate", recording_label(level, pos), ECHO_COLOR))
         else:
             entries[pos] = ("helper" if working else "winch"), label, TEAL if working else GOLD
     for seals, _ in level.echo_links.values():

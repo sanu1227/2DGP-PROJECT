@@ -16,7 +16,8 @@
     "room_decor": "atlases/room_decor.png",
     "device_mechanisms": "atlases/device_mechanisms.png",
     "device_fixtures": "atlases/device_fixtures.png",
-    "device_magic": "atlases/device_magic.png"
+    "device_magic": "atlases/device_magic.png",
+    "device_recording": "atlases/device_recording.png"
   },
   "sprites": {
     "floor_1": [
@@ -1300,19 +1301,26 @@
       228,
       248
     ],
-    "recording_stone": [
-      "device_magic",
-      263,
-      260,
-      242,
-      248
-    ],
     "replay_seal": [
       "device_magic",
       519,
       260,
       242,
       248
+    ],
+    "recording_plate": [
+      "device_recording",
+      4,
+      6,
+      248,
+      243
+    ],
+    "recording_plate_active": [
+      "device_recording",
+      260,
+      6,
+      248,
+      243
     ]
   }
 }

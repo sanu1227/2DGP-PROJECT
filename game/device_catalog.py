@@ -48,7 +48,7 @@ CARDS = (
                "빈손으로 E / Space를 눌러 네 방향으로 돌려요. 화살표가 앞면이에요.",
                "앞면만 반사하고 뒷면은 빛을 막아요. 여러 거울을 이어 수신기에 보내세요."),
     DeviceCard("helper", "해골 인부", (("soldier_deployed", "해골 인부"),),
-               "기록석을 밟고 표시된 칸 수만큼 이동하면 방향이 기록돼요.",
+               "기록 발판을 밟고 표시된 칸 수만큼 이동하면 방향이 기록돼요.",
                "기록 뒤 수리공이 행동할 때마다 인부가 자기 자리에서 다음 방향으로 한 칸씩 이동해요."),
 )
 PAGE_COUNT = (len(CARDS) + CARDS_PER_PAGE - 1) // CARDS_PER_PAGE
@@ -124,7 +124,7 @@ def draw_catalog(view, game, page):
         view.text(left + 24, top - 68, card.title, 32, INK)
         pictures = card.pictures
         if view.top_down and card.kind == "helper":
-            pictures += (("recording_stone", "기록석"),)
+            pictures += (("recording_plate", "기록 발판"),)
         for i, (name, label) in enumerate(pictures):
             x = left + 114 + i * 206
             picture(view, name, x, top - 167)

@@ -540,6 +540,9 @@ class View:
             targets.update({pos: "레버 가동" for pos in level.levers})
         targets.update({pos: ITEM_NAMES[kind] for pos, kind in state.items.items()})
         for pos in sorted(targets, key=lambda cell: (sum(cell), cell)):
+            # 탑다운 기록 발판의 표시등을 금색 표식으로 가리지 않는다.
+            if self.top_down and pos in level.echo_links:
+                continue
             sx, sy = projection.screen(pos)
             # 같은 칸 캐릭터까지 포함해 표식이 머리나 물건에 가려지지 않게 한다.
             top = max((rect[3] for cell, rect in self.hit_masks if cell == pos), default=sy + 8)

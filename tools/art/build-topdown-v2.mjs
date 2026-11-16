@@ -77,10 +77,13 @@ const sheets = {
   ],
   device_magic: [
     'depth_source', 'depth_receiver', 'depth_receiver_powered',
-    'depth_mirror_base', 'recording_stone', 'replay_seal',
+    'depth_mirror_base', null, 'replay_seal',
   ],
+  device_recording: ['recording_plate', 'recording_plate_active'],
 };
-const sheetColumns = { workshop_finish_terrain: 3, room_08: 3, device_mechanisms: 3, device_magic: 3 };
+const sheetColumns = {
+  workshop_finish_terrain: 3, room_08: 3, device_mechanisms: 3, device_magic: 3, device_recording: 2,
+};
 const terrainSheets = new Set(['terrain', 'workshop_finish_terrain', 'rooms_02_03',
   'rooms_04_05', 'rooms_06_07', 'room_08']);
 // 투명 여백의 중심에서 자른다. 생성 원화에 따라 위아래 여백이 균등하지 않다.
@@ -163,6 +166,7 @@ async function packSheet(name, names, manifest) {
   const ys = [0, ...yCuts, height];
   const layers = [];
   for (const [index, key] of names.entries()) {
+    if (key === null) continue;
     const col = index % columns;
     const row = Math.floor(index / columns);
     const left = xs[col];
