@@ -326,7 +326,8 @@ class View:
 
     def animate_move(self, game, previous, action):
         """성공한 이동 이벤트에서만 표시 동작을 시작한다. 연속 입력은 현 위치에서 잇는다."""
-        if previous.recording and game.state.recording is None:
+        if (previous.recording and game.state.recording is None
+                and previous.recording.origin not in game.state.replay_workers):
             self.motion = None
             self.facing = FACING[action]
             return
@@ -766,6 +767,10 @@ class View:
             labels.append((station, recording_label(level, station)))
             if len(seals) > 1:
                 labels.extend((seal, level.device_labels[gate]) for gate, seal in seals.items())
+        for origin, pos in state.replay_workers.items():
+            if state.echo is None or state.echo.origin != origin:
+                sx, sy = screen(pos)
+                objects.append((sum(pos), 2, "resting_recorded_worker", sx, sy))
         echo_pose = self.echo_motion.pose(game, now)
         if echo_pose:
             position, direction = echo_pose
@@ -831,8 +836,14 @@ class View:
             if sprite.startswith("gate_"):
                 self.gate(level, pos, sx, sy, scale, sprite.removeprefix("gate_"), gate_openings[pos])
                 continue
+            if sprite == "resting_recorded_worker":
+                self.art.draw(ITEM_SPRITES["soldier"], sx, sy, scale)
+                continue
             if sprite == "echo_actor":
-                draw_tinted(self.art, f"worker_{FACING[direction]}_idle", sx, sy, scale, (206, 150, 255))
+                if state.echo.origin in state.replay_workers:
+                    self.art.draw("soldier_deployed", sx, sy, scale * .87)
+                else:
+                    draw_tinted(self.art, f"worker_{FACING[direction]}_idle", sx, sy, scale, (206, 150, 255))
                 continue
             if sprite != "player":
                 if (sx, sy) in wall_tints and (sprite.startswith("wall_low") or "_wall_" in sprite):

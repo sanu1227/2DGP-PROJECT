@@ -40,6 +40,7 @@ class State:
     workers: set[Pos] = field(default_factory=set)
     recording: Recording | None = None
     echo: Echo | None = None
+    replay_workers: dict[Pos, Pos] = field(default_factory=dict)
 
 
 class Game:
@@ -48,7 +49,8 @@ class Game:
         self.restart()
 
     def restart(self) -> None:
-        self.state = State(player=self.level.start, items=dict(self.level.initial_items), rubble=set(self.level.rubble))
+        self.state = State(player=self.level.start, items=dict(self.level.initial_items),
+                           rubble=set(self.level.rubble), replay_workers=dict(self.level.replay_workers))
         self.history: list[State] = []
         self.message = "물건이나 장치 위에서 E를 누르세요."
 
@@ -90,9 +92,16 @@ class Game:
         self.message = message
         if not changed:
             return False
-        if candidate.recording and action in DIRECTIONS:
+        recording = candidate.recording
+        if recording and action in DIRECTIONS:
             self._record_step(candidate, action)
-        self._advance_echo(candidate)
+        if recording is None or recording.origin not in candidate.replay_workers:
+            self._advance_echo(candidate)
+        if (action in DIRECTIONS and recording is None and candidate.player in candidate.replay_workers
+                and (candidate.echo is None or not candidate.echo.remaining)):
+            candidate.echo = None
+            candidate.recording = Recording(candidate.player)
+            self.message = "기록 시작. 해골 인부에게 남길 방향으로 이동하세요."
         # ponytail: 최대 12×12칸에서는 전체 복사가 충분하다. 대형 맵이 필요해지면 행동별 차이를 기록한다.
         self.history.append(deepcopy(self.state))
         candidate.moves += 1
@@ -182,6 +191,8 @@ class Game:
         if pos in self.level.mirrors:
             return (None, "거울은 빈손으로 돌리세요.") if state.carrying else ("rotate", "E / Space: 거울 90도 회전 · 화살표 쪽 앞면만 반사")
         if pos in self.level.jobs:
+            if pos in state.replay_workers:
+                return None, "기록석을 밟으면 자동으로 기록합니다."
             if pos in self.level.echo_links:
                 if state.carrying:
                     return None, "발걸음을 기록하려면 손을 비우세요."
@@ -265,7 +276,8 @@ class Game:
                 return True, "잔해를 한 칸 밀었습니다. Z로 되돌릴 수 있습니다."
             if destination in self.level.gates and not self.walkable(destination, state):
                 if self.level.gates[destination] in self.level.timed_echoes:
-                    return False, "분신이 문양을 밟은 직후 한 턴에만 들어갈 수 있습니다."
+                    actor = "해골 인부" if self.level.gates[destination] in state.replay_workers else "분신"
+                    return False, f"{actor}가 문양을 밟은 직후 한 턴에만 들어갈 수 있습니다."
                 return False, "닫힌 문입니다. 연결 장치의 상태를 확인하세요."
             if not (0 <= destination[0] < self.level.width and 0 <= destination[1] < self.level.height) or destination in self.level.walls:
                 return False, "벽이나 잔해로 막힌 칸입니다."
@@ -338,10 +350,14 @@ class Game:
         if len(inputs) < steps:
             state.recording = Recording(recording.origin, inputs)
             return
-        state.player = recording.origin
         state.recording = None
-        state.echo = Echo(recording.origin, recording.origin, inputs)
-        self.message = "기록석으로 돌아왔습니다. 분신이 같은 발걸음을 따라갑니다."
+        if recording.origin in state.replay_workers:
+            state.echo = Echo(recording.origin, state.replay_workers[recording.origin], inputs)
+            self.message = "기록 완료. 다음 행동부터 해골 인부가 한 칸씩 움직입니다."
+        else:
+            state.player = recording.origin
+            state.echo = Echo(recording.origin, recording.origin, inputs)
+            self.message = "기록석으로 돌아왔습니다. 분신이 같은 발걸음을 따라갑니다."
 
     def _advance_echo(self, state: State) -> None:
         echo = state.echo
@@ -352,3 +368,5 @@ class Game:
         target = x + dx, y + dy
         position = target if self.walkable(target, state) else echo.position
         state.echo = Echo(echo.origin, position, echo.remaining[1:], position != echo.position)
+        if echo.origin in state.replay_workers:
+            state.replay_workers[echo.origin] = position

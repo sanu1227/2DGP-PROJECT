@@ -23,7 +23,8 @@ def key(state):
     return (state.player, state.carrying, tuple(sorted(state.items.items())),
             frozenset(state.installed), state.active, frozenset(state.soldiers),
             tuple(sorted(state.bench_bones.items())), tuple(sorted(state.mirror_rotations.items())),
-            frozenset(state.rubble), frozenset(state.workers), state.recording, state.echo)
+            frozenset(state.rubble), frozenset(state.workers), state.recording, state.echo,
+            frozenset(state.replay_workers.items()))
 
 
 class LowerBound:
@@ -141,7 +142,8 @@ class LowerBound:
     def __call__(self, state):
         level = self.level
         # 기록을 끝내야 장치를 조작할 수 있으며, 그때 수리공은 기록석으로 돌아온다.
-        player = state.recording.origin if state.recording else state.player
+        player = (state.recording.origin if state.recording and state.recording.origin not in level.replay_workers
+                  else state.player)
         sources = {kind: [p for p, value in state.items.items() if value == kind]
                    for kind in ("part", "bone", "soldier")}
         # Every loose item must be picked up; a carried item already paid that cost.
@@ -358,7 +360,8 @@ def main():
                             or (mechanic == "mirror" and operation == "rotate")
                             or (mechanic == "helper" and operation in ("assign", "record")))
 
-                bypass = solve(level, args.max_states, level.action_limit, forbidden)
+                bypass_level = replace(level, replay_workers={}) if mechanic == "helper" else level
+                bypass = solve(bypass_level, args.max_states, level.action_limit, forbidden)
                 if bypass is not None:
                     raise ValueError(f"{level.id}: {mechanic} 없이 {bypass['minimum']}회에 완료 가능")
                 print(f"{level.id}: {mechanic} 생략 시 제한 내 완료 불가", flush=True)

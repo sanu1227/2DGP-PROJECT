@@ -257,12 +257,20 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, gate_s
         else:
             art.draw(asset, sx, sy, size * .82)
 
+    for origin, pos in state.replay_workers.items():
+        if state.echo is None or state.echo.origin != origin:
+            sx, sy = board.screen(pos)
+            art.draw(sprites["soldier_carried"], sx, sy, size * .54)
+
     echo_pose = view.echo_motion.pose(game, now)
     if echo_pose:
         position, direction = echo_pose
         sx, sy = board.screen(position)
         p.draw_circle(sx, sy, round(size * .33), *ECHO_COLOR)
-        art.draw(f"worker_{direction}_idle", sx, sy, size * .75, opacity=.67)
+        if state.echo.origin in state.replay_workers:
+            art.draw(sprites["soldier_deployed"], sx, sy, size * .72)
+        else:
+            art.draw(f"worker_{direction}_idle", sx, sy, size * .75, opacity=.67)
 
     for pos, kind in state.items.items():
         sx, sy = board.screen(pos)

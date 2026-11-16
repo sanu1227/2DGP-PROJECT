@@ -30,16 +30,17 @@ class EchoMotion:
             self.motion = None
             return
         if old != echo:
-            start = old.position if old else echo.origin
-            if self.motion:
+            origin = previous.replay_workers.get(echo.origin, echo.origin)
+            start = old.position if old else origin
+            if self.motion and echo.origin not in game.state.replay_workers:
                 start = self.position_at(now)
             self.motion = (start, echo.position, now)
             inputs = old.remaining if old else ()
             if inputs:
                 self.direction = inputs[0]
-            elif echo.position != echo.origin:
-                dx = echo.position[0] - echo.origin[0]
-                dy = echo.position[1] - echo.origin[1]
+            elif echo.position != origin:
+                dx = echo.position[0] - origin[0]
+                dy = echo.position[1] - origin[1]
                 self.direction = next(key for key, value in DIRECTIONS.items() if value == (dx, dy))
 
     def position_at(self, now):

@@ -38,6 +38,7 @@ class Level:
     action_limit: int | None = None
     echo_links: dict[Pos, tuple[dict[Pos, Pos], int]] = field(default_factory=dict)
     timed_echoes: frozenset[Pos] = frozenset()
+    replay_workers: dict[Pos, Pos] = field(default_factory=dict)
 
 
 def read_links(raw, field_name, first_name, second_name, first_tiles, second_tiles, prefix, used_ids,
@@ -71,11 +72,11 @@ def read_links(raw, field_name, first_name, second_name, first_tiles, second_til
     return pairs, labels
 
 
-def read_echo_links(links, tiles, prefix):
-    echoes, used, timed, winches = {}, set(), set(), set()
+def read_echo_links(links, tiles, worker_tiles, prefix):
+    echoes, used, timed, winches, workers = {}, set(), set(), set(), {}
     for link in links:
         origin = tuple(link["station"])
-        echo_fields = {"seal", "steps", "timed"} & link.keys()
+        echo_fields = {"seal", "steps", "timed", "worker"} & link.keys()
         if not echo_fields:
             if origin in winches or origin in echoes:
                 raise ValueError(prefix + "윈치에는 문 하나만 연결할 수 있습니다.")
@@ -93,8 +94,19 @@ def read_echo_links(links, tiles, prefix):
         if type(link.get("timed", False)) is not bool:
             raise ValueError(prefix + "분신 문의 timed 값은 true 또는 false여야 합니다.")
         is_timed = link.get("timed", False)
-        if origin in echoes and (echoes[origin][1] != steps or (origin in timed) != is_timed):
-            raise ValueError(prefix + "같은 기록석에 연결된 문은 걸음 수와 개방 방식이 같아야 합니다.")
+        worker = link.get("worker")
+        if "worker" in link:
+            if (not isinstance(worker, list) or len(worker) != 2
+                    or any(type(value) is not int for value in worker) or tuple(worker) not in worker_tiles):
+                raise ValueError(prefix + "기록석의 인부 위치는 지도에서 K로 표시해야 합니다.")
+            worker = tuple(worker)
+        if origin in echoes and (echoes[origin][1] != steps or (origin in timed) != is_timed
+                                 or workers.get(origin) != worker):
+            raise ValueError(prefix + "같은 기록석의 문은 걸음 수, 개방 방식, 담당 인부가 같아야 합니다.")
+        if worker is not None and origin not in workers:
+            if worker in workers.values():
+                raise ValueError(prefix + "다른 기록석의 담당 인부와 위치가 겹칩니다.")
+            workers[origin] = worker
         seals, _ = echoes.setdefault(origin, ({}, steps))
         seals[tuple(link["gate"])] = tuple(seal)
         used.add(tuple(seal))
@@ -102,7 +114,7 @@ def read_echo_links(links, tiles, prefix):
             timed.add(origin)
     if used != tiles:
         raise ValueError(prefix + "모든 분신 문양을 기록석에 연결해야 합니다.")
-    return echoes, frozenset(timed)
+    return echoes, frozenset(timed), workers
 
 
 def load_levels(path: Path | str | None = None) -> list[Level]:
@@ -150,8 +162,6 @@ def load_levels(path: Path | str | None = None) -> list[Level]:
             raise ValueError(prefix + "복구할 함정이나 초소가 하나 이상 필요합니다.")
         if len(positions["P"]) != len(positions["T"]):
             raise ValueError(prefix + "함정 하나마다 부품 하나가 필요합니다.")
-        if len(positions["B"]) + 2 * len(positions["K"]) != 2 * len(positions["S"]):
-            raise ValueError(prefix + "초소 하나마다 뼈 묶음 두 개 또는 조립된 병사 한 명이 필요합니다.")
         if positions["T"] and not positions["L"]:
             raise ValueError(prefix + "함정이 있는 방에는 레버가 필요합니다.")
         if positions["B"] and not positions["A"]:
@@ -161,8 +171,12 @@ def load_levels(path: Path | str | None = None) -> list[Level]:
         power_links, power_labels = read_links(raw, "power_links", "receiver", "gate", positions["Y"], positions["G"], prefix, used_ids)
         worker_gates, worker_labels = read_links(raw, "worker_links", "gate", "station",
                                                   positions["G"], positions["J"], prefix, used_ids,
-                                                  optional=("seal", "steps", "timed"), share_destination=True)
-        echo_links, timed_echoes = read_echo_links(raw.get("worker_links", ()), positions["U"], prefix)
+                                                  optional=("seal", "steps", "timed", "worker"), share_destination=True)
+        echo_links, timed_echoes, replay_workers = read_echo_links(
+            raw.get("worker_links", ()), positions["U"], positions["K"], prefix)
+        soldiers = positions["K"] - set(replay_workers.values())
+        if len(positions["B"]) + 2 * len(soldiers) != 2 * len(positions["S"]):
+            raise ValueError(prefix + "초소 하나마다 뼈 묶음 두 개 또는 조립된 병사 한 명이 필요합니다.")
         gates = {gate: control for control, gate in (plate_links | power_links).items()} | worker_gates
         if (set(plate_links) != positions["F"] or set(power_links) != positions["Y"]
                 or set(worker_gates.values()) != positions["J"] or gates.keys() != positions["G"]
@@ -178,7 +192,7 @@ def load_levels(path: Path | str | None = None) -> list[Level]:
             labels[pos] = labels[pos] + "/" + identifier if pos in labels else identifier
         items = {pos: "part" for pos in positions["P"]}
         items.update({pos: "bone" for pos in positions["B"]})
-        items.update({pos: "soldier" for pos in positions["K"]})
+        items.update({pos: "soldier" for pos in soldiers})
         sources = {}
         raw_sources = raw.get("magic_sources", [])
         if not isinstance(raw_sources, list):
@@ -205,5 +219,6 @@ def load_levels(path: Path | str | None = None) -> list[Level]:
             chutes=chutes, action_limit=action_limit,
             mirrors=positions["M"], sources=sources, receivers=positions["Y"],
             rubble=positions["R"], jobs=positions["J"], echo_links=echo_links, timed_echoes=timed_echoes,
+            replay_workers=replay_workers,
         ))
     return levels

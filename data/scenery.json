@@ -149,7 +149,7 @@
     "wall_mounts": [
       {"sprite": "forge_mount_lamp_nw", "cell": [0, 5], "facing": "right"},
       {"sprite": "forge_mount_lamp_ne", "cell": [2, 0], "facing": "down"},
-      {"sprite": "forge_mount_lamp_ne", "cell": [7, 2], "facing": "down"},
+      {"sprite": "forge_mount_lamp_nw", "cell": [11, 2], "facing": "left"},
       {"sprite": "forge_mount_lamp_nw", "cell": [10, 6], "facing": "left"}
     ],
     "decorations": [

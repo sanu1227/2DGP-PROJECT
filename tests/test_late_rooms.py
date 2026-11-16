@@ -19,96 +19,93 @@ class LateRoomTests(unittest.TestCase):
             x, y = game.state.player
             self.assertTrue(game.act(reverse[(cell[0] - x, cell[1] - y)]), game.message)
 
-    def record(self, game, *directions):
-        self.assertTrue(game.act("interact"))
+    def play(self, game, *directions):
         for action in directions:
             self.assertTrue(game.act(action), game.message)
 
-    def test_second_treasury_gate_rejects_finishing_on_the_seal(self):
+    def test_second_worker_replays_from_its_own_tile(self):
         level = load_levels()[6]
         gate = next(pos for pos in level.gates if level.device_labels[pos] == "J2")
         station = level.gates[gate]
         seals, steps = level.echo_links[station]
-        seal = seals[gate]
         self.assertEqual(steps, 4)
-
         game = Game(level)
-        game.state.player = station
-        self.record(game, "right", "left", "right", "up")
-        for action in ("right", "left", "right"):
-            self.assertTrue(game.act(action))
-            self.assertEqual(game.gate_status(gate), "closed")
-        self.assertEqual(game.state.echo.position, seal)
-        self.assertFalse(game.state.echo.remaining)
+        game.state.player = (5, 4)
 
-        game = Game(level)
-        game.state.player = station
-        self.record(game, "right", "up", "left", "left")
-        self.assertEqual(game.state.player, station)
+        self.play(game, "down", "up", "up", "right", "down")
+        self.assertEqual(game.state.player, (6, 4))
+        self.assertEqual(game.state.replay_workers[station], (6, 5))
         self.assertEqual(game.gate_status(gate), "closed")
-        self.assertTrue(game.act("right"))
-        self.assertEqual(game.state.echo.position, seal)
+        self.play(game, "right")
+        self.assertEqual(game.state.replay_workers[station], (6, 4))
+        self.assertEqual(game.gate_status(gate), "closed")
+        self.play(game, "down")
+        self.assertEqual(game.state.replay_workers[station], seals[gate])
         self.assertEqual(game.gate_status(gate), "open")
-        self.assertTrue(game.act("right"))
-        self.assertEqual(game.state.player, gate)
-        self.assertEqual(game.gate_status(gate), "held")
-        self.assertTrue(game.act("right"))
+        self.play(game, "right", "right")
         self.assertEqual(game.gate_status(gate), "closed")
 
-    def test_boss_crosses_both_gates_with_one_echo_recording(self):
+    def test_worker_reuses_current_position_and_advances_on_interact(self):
+        level = load_levels()[6]
+        game = Game(level)
+        station = min(level.replay_workers)
+        game.state.player = (2, 2)
+        part = next(pos for pos, kind in game.state.items.items() if kind == "part")
+        game.state.carrying = game.state.items.pop(part)
+
+        self.play(game, "right", "right", "up")
+        self.assertEqual(game.state.replay_workers[station], (1, 2))
+        self.play(game, "interact")  # The player drops the part without moving.
+        self.assertEqual(game.state.player, (4, 1))
+        self.assertEqual(game.state.replay_workers[station], (2, 2))
+        self.play(game, "left", "down", "right", "up")
+        self.assertEqual(game.state.replay_workers[station], (2, 1))
+        self.play(game, "interact")
+        self.assertEqual(game.state.replay_workers[station], (3, 1))
+
+    def test_boss_worker_follows_two_different_recordings_from_its_own_tile(self):
         level = load_levels()[7]
         game = Game(level)
         mirror, = level.mirrors
-        job, = level.jobs
-        post, = level.posts
+        station, = level.jobs
         trap, = level.traps
         lever, = level.levers
-        worker = next(pos for pos, item in level.initial_items.items() if item == "soldier")
         part = next(pos for pos, item in level.initial_items.items() if item == "part")
         gates = {level.device_labels[gate]: gate for gate in level.gates}
         first, second = gates["J1"], gates["J2"]
-        seals, steps = level.echo_links[job]
-        self.assertEqual(steps, 5)
-        self.assertEqual(set(seals), {first, second})
 
         def use(target):
             self.go(game, target)
-            self.assertTrue(game.act("interact"), game.message)
+            self.play(game, "interact")
 
         use(mirror)
-        use(worker)
-        use(post)
-        self.assertEqual(game.gate_status(gates["M1"]), "closed")
-        use(mirror)
-        self.go(game, job)
-        self.assertEqual(game.gate_status(gates["M2"]), "open")
-        self.assertIsNone(find_path(game, part))
-        before_recording = game.state.moves
-
-        def doors():
-            return game.gate_status(first), game.gate_status(second)
-
-        self.record(game, "up", "up", "right", "left", "right")
-        for expected in (("open", "closed"), ("held", "closed"), ("open", "closed")):
-            self.assertTrue(game.act("right"))
-            self.assertEqual(doors(), expected)
-        before_rejected_move = game.state
-        self.assertFalse(game.act("right"))
-        self.assertEqual(game.state, before_rejected_move)
-        while game.state.moves > before_recording:
-            self.assertTrue(game.undo())
-
-        self.record(game, "up", "up", "right", "right", "right")
-        self.assertEqual(doors(), ("closed", "closed"))
-        for expected in (("open", "closed"), ("held", "closed"),
-                         ("closed", "open"), ("closed", "held"), ("closed", "closed")):
-            self.assertTrue(game.act("right"))
-            self.assertEqual(doors(), expected)
-        self.assertIn(game.state.player, level.initial_items)
-        self.assertIsNone(find_path(game, job))
-
         use(part)
         use(trap)
+        use(mirror)
+        self.go(game, station)
+        self.assertEqual(game.state.recording.inputs, ())
+        start = game.state.moves
+
+        self.play(game, "up", "up", "right", "left", "right")
+        self.play(game, "right", "right", "right", "right", "right", "right")
+        self.assertEqual(game.state.replay_workers[station], (2, 1))
+        self.assertEqual(game.gate_status(first), "closed")
+        self.assertEqual(game.gate_status(second), "closed")
+        self.assertFalse(game.act("right"))
+        while game.state.moves > start:
+            self.assertTrue(game.undo())
+
+        self.play(game, "up", "up", "right", "right", "right")
+        self.assertEqual(game.state.player, (5, 1))
+        self.assertEqual(game.state.replay_workers[station], (1, 3))
+        for worker, statuses in (
+            ((1, 2), ("closed", "closed")), ((1, 1), ("open", "closed")),
+            ((2, 1), ("held", "closed")), ((3, 1), ("closed", "open")),
+            ((4, 1), ("closed", "held")),
+        ):
+            self.play(game, "right")
+            self.assertEqual(game.state.replay_workers[station], worker)
+            self.assertEqual((game.gate_status(first), game.gate_status(second)), statuses)
         use(lever)
         self.go(game, level.exit)
         self.assertTrue(game.state.cleared)
