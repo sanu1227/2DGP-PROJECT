@@ -1,12 +1,12 @@
 {
   "sha256": {
-    "data/stages.json": "295d106bd71d92100eaea89345117d2e1a917441c04cb361d31a134679215bcb",
-    "game/levels.py": "3aabd99ccfdbeb2fcb10a28047c9fe8009a64d857aadf21ab40b06e0f5a12aed",
-    "game/model.py": "f09ba7703eb94ff605115442e2689eafef6c69c214363f50787cee1884425e82",
-    "game/mechanics.py": "87e15aa2eea6d624c1a7124b84ba4d2382736dbcb2e319e1c1850db0dc029a80",
+    "data/stages.json": "846d9faf57ef22d9d31454c24ebe72545dfaccccd941f4228741d8dc58b98216",
+    "game/levels.py": "ce4ca3b9b56bffa52d5b3d885d301032f4601d12b2cd38fb82b8326e09a088b5",
+    "game/model.py": "4b671eae0feacc89ff5df80a2cc51059d77f3543ec9e65a25dc981177fcdfd01",
+    "game/mechanics.py": "bb69d6922d767a01b79a25cd3551ec0e78fb6398ad429067662c4627413ee58a",
     "game/magic.py": "9d34803bcab14900e75ad5bf4b3e076246f46577a5acf2a4ad09fd7c18ecea9a",
-    "tools/solve_levels.py": "9793c49afaca0ba8af4cb940ece22b2ecc29827254911376609aa4e755e9535a",
-    "tests/solutions.py": "d3b03c2d8df803c015209d867c40956c7063304a6810a6b699d0844031265dd4"
+    "tools/solve_levels.py": "d180f0f6f3add2d62cb80ccd0cd819c3bb4debd3b50944684f9ef3d751205e96",
+    "tests/solutions.py": "c70aa4371aeb9022ae7ef58b945a2cad68be53fccbf73bad2e6e40db8e4a2c79"
   },
   "stages": {
     "stage_01": {
@@ -226,7 +226,7 @@
       ],
       "minimum": 76,
       "expanded": 11771,
-      "seconds": 3.01,
+      "seconds": 3.31,
       "core_mechanic_required_within_limit": true,
       "required_mechanics": [
         "rubble",
@@ -245,8 +245,8 @@
     "stage_05": {
       "actions": [
         "down",
+        "push_right",
         "down",
-        "right",
         "right",
         "up",
         "interact",
@@ -306,17 +306,17 @@
         "down"
       ],
       "minimum": 60,
-      "expanded": 831,
-      "seconds": 0.2,
+      "expanded": 8546,
+      "seconds": 2.29,
       "core_mechanic_required_within_limit": true,
       "required_mechanics": [
         "rubble",
         "mirror",
         "chute",
-        "plate"
+        "plate",
+        "mirror_push"
       ],
       "mechanics_required_by_layout": [
-        "mirror",
         "chute",
         "plate"
       ],
@@ -401,7 +401,7 @@
       ],
       "minimum": 69,
       "expanded": 4797,
-      "seconds": 1.17,
+      "seconds": 1.24,
       "core_mechanic_required_within_limit": true,
       "required_mechanics": [
         "mirror"
@@ -462,7 +462,7 @@
       ],
       "minimum": 41,
       "expanded": 7093,
-      "seconds": 2.28,
+      "seconds": 2.53,
       "core_mechanic_required_within_limit": true,
       "required_mechanics": [
         "helper",
@@ -523,7 +523,7 @@
       ],
       "minimum": 39,
       "expanded": 366,
-      "seconds": 0.09,
+      "seconds": 0.1,
       "core_mechanic_required_within_limit": true,
       "required_mechanics": [
         "mirror",

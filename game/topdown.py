@@ -341,16 +341,22 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, mirror
         draw_mirror(*board.screen(position), size, rotations[pos])
     for pos in powered:
         progress = view.receiver_feedback.progress(game, pos, now)
-        sx, sy = board.screen(mirror_positions.get(pos, pos))
+        sx, sy = board.screen(pos)
         if progress < 1:
             p.draw_circle(sx, sy, max(2, round(size * (.26 + progress * .16))), *VIOLET, filled=False)
 
     for pos, (_, label, color) in entries.items():
-        sx, sy = board.screen(pos)
+        sx, sy = board.screen(mirror_positions.get(pos, pos))
         sy += half - 2 if level.sources.get(pos) == "down" else 2 - half
         width = min(size - 4, len(label) * 12 + 8)
         rectangle(sx - width / 2, sy - 8, sx + width / 2, sy + 8, (24, 35, 40))
         view.centered(sx, sy, label, 13, color)
+    if level.sources:
+        for position, _ in rubble:
+            sx, sy = board.screen(position)
+            sy += 2 - half
+            rectangle(sx - 30, sy - 8, sx + 30, sy + 8, (24, 35, 40))
+            view.centered(sx, sy, "차광 잔해", 13, GOLD)
     view.interaction_markers(game, board)
     if view.show_coordinates:
         view.coordinate_overlay(level, board)

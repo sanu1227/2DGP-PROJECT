@@ -36,7 +36,7 @@ SOLUTIONS = {
         "left left up interact down down interact down right interact right right"
     ).split(),
     "stage_05": (
-        "down down right right up interact down down right right right right right up "
+        "down push_right down right up interact down down right right right right right up "
         "up left interact right down down interact left left left left left down down "
         "down right right up right interact left down left left up left interact down "
         "right right right up interact down left left up left interact up up left "

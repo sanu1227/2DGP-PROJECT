@@ -279,6 +279,8 @@ def solve(level, max_states=500_000, upper_bound=None, forbidden=None):
 
 def mechanic_required_by_layout(level, mechanic):
     """나머지 문과 장애물을 무시해도 필수 칸에 갈 수 없는 경우를 증명한다."""
+    if mechanic == "mirror_push" or (mechanic == "mirror" and level.movable_mirrors):
+        return False  # 이동 거울이 있는 경우 실제 행동을 금지한 탐색으로 검사한다.
     floor = {(x, y) for y in range(level.height) for x in range(level.width)} - level.walls
 
     def reachable(blocked):
@@ -297,8 +299,6 @@ def mechanic_required_by_layout(level, mechanic):
     if mechanic == "rubble":
         blocked = level.rubble
     elif mechanic == "mirror":
-        if level.movable_mirrors:
-            return False
         state = Game(level).state
         state.rubble.clear()
         inactive = level.receivers - trace_magic(level, state)[1]

@@ -9,6 +9,7 @@ from game.mechanics import beam_obstacles, mirror_cells
 MAGIC_BEAM_HEIGHT = 70
 MIRROR_HALF_SPAN = .36
 MIRROR_HALF_DEPTH = .027
+RUBBLE_HALF_WIDTH = .38
 SOURCE_REACH = {'right': 74 / 112, 'down': 74 / 112, 'up': 58 / 112, 'left': 58 / 112}
 
 
@@ -44,7 +45,9 @@ def device_hit(origin, direction, center):
 def trace_display_magic(level, state, rotations, *, mirrors=None, rubble=None):
     """발사구에서 광선을 쏴 가장 가까운 장치로 보낸다. 최대 64번 방향을 바꾼다."""
     segments, powered = [], set()
-    obstacles = beam_obstacles(level, state, rubble)
+    rubble = state.rubble if rubble is None else rubble
+    fixtures = beam_obstacles(level, state, rubble=frozenset())
+    obstacles = fixtures | rubble
     if mirrors is None:
         mirrors = {pos: pos for pos in mirror_cells(level, state)}
     for source, name in level.sources.items():
@@ -63,7 +66,8 @@ def trace_display_magic(level, state, rotations, *, mirrors=None, rubble=None):
                           if abs(direction[i]) > 1e-10 for bound in bounds
                           if (bound - origin[i]) / direction[i] > 1e-6]
             for x, y in obstacles:
-                distance = box_hit(origin, direction, x - .5, y - .5, x + .5, y + .5)
+                half = .5 if (x, y) in fixtures else RUBBLE_HALF_WIDTH
+                distance = box_hit(origin, direction, x - half, y - half, x + half, y + half)
                 if distance is not None:
                     candidates.append((distance, 'stop', None))
             for pos in level.receivers:

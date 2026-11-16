@@ -90,7 +90,7 @@ def main():
     for index, level in enumerate(levels):
         actions = SOLUTIONS[level.id]
         for action in actions:
-            steps.append((keys[action], None))
+            steps.append((action if action.startswith("push_") else keys[action], None))
         key, _ = steps.pop()
         steps.append((key, lambda count=len(actions), stage=index: expect(count, cleared=True, stage=stage)))
         steps.append((p.SDLK_RETURN, lambda count=len(actions), stage=index: expect(count, cleared=True, stage=stage)))
@@ -109,6 +109,7 @@ def main():
             pending_check()
             pending_check = None
         key, pending_check = steps.popleft()
+        p.SDL_SetModState(p.KMOD_NONE)
         for queued_key in key if isinstance(key, tuple) else (key,):
             event = p.SDL_Event()
             window_id = p.SDL_GetWindowID(p.window)
@@ -123,6 +124,9 @@ def main():
             elif queued_key == "close":
                 event.type = p.SDL_QUIT
             else:
+                if isinstance(queued_key, str) and queued_key.startswith("push_"):
+                    p.SDL_SetModState(p.KMOD_SHIFT)
+                    queued_key = keys[queued_key.removeprefix("push_")]
                 event.type, event.key.windowID = p.SDL_KEYDOWN, window_id
                 event.key.state, event.key.repeat = p.SDL_PRESSED, 0
                 event.key.keysym.sym = queued_key

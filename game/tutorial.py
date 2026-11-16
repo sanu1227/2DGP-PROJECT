@@ -3,7 +3,8 @@
 from dataclasses import dataclass
 
 from game.levels import Level, Pos
-from game.model import Game
+from game.mechanics import mirror_cells
+from game.model import Game, State
 
 
 @dataclass(frozen=True)
@@ -26,7 +27,7 @@ class DeviceLesson:
     links: tuple[tuple[Pos, Pos], ...] = ()
 
 
-def device_lessons(level: Level) -> tuple[DeviceLesson, ...]:
+def device_lessons(level: Level, state: State | None = None) -> tuple[DeviceLesson, ...]:
     """지도에 실제로 있는 장치와 연결만 설명한다. 정답 경로는 제공하지 않는다."""
     lessons = []
     if level.traps and level.levers:
@@ -57,14 +58,26 @@ def device_lessons(level: Level) -> tuple[DeviceLesson, ...]:
             "연결된 배출구로 보냅니다. 배출구가 물건이나 병사로 막혀 있으면 보낼 수 없어요.",
             "투입구에는 뼈만 넣을 수 있어요.",
             ((inlet, "뼈 투입구"), (outlet, "배출구")), ((inlet, outlet),)))
+    rubble = level.rubble if state is None else state.rubble
+    mirrors = level.mirrors if state is None else mirror_cells(level, state)
     for kind, title, instruction, reminder, cells in (
         ("rubble", "잔해를 밀어 길 만들기", "잔해 옆에서 빈손으로 잔해 쪽 방향키를 누르세요. 한 칸 밀며 이동합니다.",
-         "당길 수 없어요. 빈 바닥·발판으로만 밀 수 있고, Z로 되돌릴 수 있어요.", level.rubble),
+         "당길 수 없어요. 빈 바닥·발판으로만 밀 수 있고, Z로 되돌릴 수 있어요.", rubble),
         ("mirror", "빛으로 장치 연결", "빈손으로 E / Space를 눌러 돌리세요. 거울에 들어온 빛은 화살표가 가리키는 상하좌우로 나갑니다.",
-         "수신기에 닿으면 연결문이 열려요. 벽·잔해·초소의 병사·광원은 빛을 막아요.", level.mirrors),
+         "수신기에 닿으면 연결문이 열려요. 벽·잔해·초소의 병사·광원은 빛을 막아요.", mirrors),
         ("helper", "발걸음을 따라가는 해골 인부", "기록 발판을 밟고 표시된 칸 수만큼 자유롭게 이동하세요.",
          "기록이 끝나면 다음 행동부터 인부가 자기 자리에서 한 칸씩 따라 해요. 문양을 지날 때 문이 한 턴 열려요.", level.jobs)):
-        if cells:
+        if kind == "mirror" and level.movable_mirrors:
+            movable = level.movable_mirrors if state is None else state.movable_mirrors
+            targets = ((min(movable), "이동 거울"),)
+            if rubble:
+                targets += ((min(rubble), "빛을 막는 잔해"),)
+            lessons.append(DeviceLesson(
+                kind, "거울과 잔해로 광로 조절",
+                "빈손으로 이동 거울 옆에서 Shift+방향키를 누르면 한 칸 밀어요. 거울 위에서 E / Space로 돌리세요.",
+                "잔해는 빛을 막아요. 방향키로 잔해를 광로 밖에 밀어내면 수신기에 닿은 빛이 문을 열어요.",
+                targets))
+        elif cells:
             lessons.append(DeviceLesson(kind, title, instruction, reminder, ((min(cells), title),)))
     return tuple(lessons)
 

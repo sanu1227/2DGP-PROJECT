@@ -57,6 +57,8 @@ class PlayMenu:
 
     def open(self, view):
         self.mode, self.selected = "pause", 0
+        if self.room and self.room.level.movable_mirrors:
+            self.lessons = device_lessons(self.room.level, self.room.state)
         view.pause()
         view.mouse_position = None
 
@@ -176,12 +178,13 @@ class PlayMenu:
                 ("이동", "좌클릭 / WASD / 방향키"),
                 ("자동 이동 취소", "우클릭"),
                 ("줍기 / 설치 / 내려놓기", "같은 칸에서 E / Space"),
+                ("이동 거울 밀기", "옆 칸에서 Shift+방향키"),
                 ("되돌리기", "Z / Backspace"),
                 ("현재 방 다시 시작", "R"),
                 ("일시정지 / 계속하기", "Esc"),
             )
             for i, (label, keys) in enumerate(controls):
-                y = 648 - i * 53
+                y = 650 - i * 45
                 view.text(436, y, label, 22, INK)
                 view.text(800, y, keys, 22, TEAL)
             view.centered(800, 315, "목표를 모두 복구한 뒤, 빈손으로 출구에 도착하세요.", 18, MUTED)

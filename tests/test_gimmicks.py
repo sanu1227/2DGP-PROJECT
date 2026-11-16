@@ -46,7 +46,9 @@ class GimmickTests(unittest.TestCase):
                     self.assertEqual(game.state, before)
 
     def test_sewer_rubble_needs_to_be_pushed_off_the_beam(self):
-        game=Game(self.levels[4]); game.state.player=(3,2)
+        game = Game(self.levels[4])
+        for action in ("down", "push_right", "right"):
+            self.assertTrue(game.act(action), game.message)
         gate = next(gate for gate, control in game.level.gates.items() if control in game.level.receivers)
         self.assertTrue(game.act('interact'))
         self.assertEqual(game.gate_status(gate), 'closed')
@@ -99,6 +101,7 @@ class GimmickTests(unittest.TestCase):
 
     def test_beam_blockers_and_closed_gate_do_not_create_feedback(self):
         game=Game(self.levels[4]); game.state.mirror_rotations={(3,2): 1}
+        game.state.movable_mirrors = {(3, 2)}
         for field in ('rubble','soldiers'):
             getattr(game.state,field).add((3,3))
             self.assertFalse(trace_magic(game.level,game.state)[1])
@@ -118,6 +121,8 @@ class GimmickTests(unittest.TestCase):
         for index, expected in ((4, (1,)), (5, (1, 0))):
             count = len(expected)
             level = replace(self.levels[index], rubble=frozenset())
+            if level.movable_mirrors:
+                level = replace(level, mirrors=frozenset({(3, 2)}), movable_mirrors=frozenset())
             receiver = next(control for gate, control in level.gates.items()
                             if level.device_labels[gate] == 'M1')
             mirrors = sorted(level.mirrors)

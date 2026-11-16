@@ -55,7 +55,7 @@ class OpticsTests(unittest.TestCase):
                 getattr(game.state, kind).add((4, 3))
             rays, powered = trace_display_magic(game.level, game.state, {})
             self.assertFalse(powered)
-            self.assertEqual(rays[-1][1], (3.5, 3))
+            self.assertEqual(rays[-1][1], (3.62 if kind == "rubble" else 3.5, 3))
         game = Game(level)
         rays, powered = trace_display_magic(level, game.state, {})
         self.assertEqual(powered, {(6, 3)})
