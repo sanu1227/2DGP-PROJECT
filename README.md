@@ -60,6 +60,8 @@
 
 **기본 플레이 화면은 위에서 내려다보는 정사각 격자입니다.** 여덟 방의 지형과 수리공, 장치를 [새 탑다운 에셋](assets/topdown_v2/README.md)으로 표시합니다. `python main.py --stage 1`은 첫 방부터, `python main.py --isometric`은 기존 사선 화면으로 시작합니다. [탑다운 1번 방](docs/screenshots/topdown-v2/stage-01.png) · [8번 방](docs/screenshots/topdown-v2/stage-08.png) · [8번 방 광선 연결](docs/screenshots/topdown-v2/stage-08-powered.png).
 
+1번 정비실은 통로를 따라 벽의 윗돌과 앞면을 나눠 그립니다. 등불은 가까운 바닥을 비추고, 함정을 가동하면 열린 출구에 청록빛이 번집니다. [함정을 가동한 1번 방](docs/screenshots/topdown-v2/stage-01-activated.png).
+
 **새 기믹 4종을 적용한 프로토타입 0.9**입니다. 1번 6×6, 2·4번 7×7, 3·5·6·7번 8×8, 8번 10×10입니다. 1600×960 화면에서 클릭·키보드로 이동하며 잔해 밀기는 방향키/WASD를 사용합니다. 모든 방의 최단 풀이를 검증했으며 사람의 초회 플레이 시간과 체감 난이도는 아직 측정하지 않았습니다.
 
 7번 [인부와 보물창고](docs/screenshots/compact-rooms/stage-07.png), 8번 [왕좌실 공동 복구](docs/screenshots/compact-rooms/stage-08.png)를 플레이할 수 있습니다. [현재 배치 안내](docs/방크기조정.md)를 확인하세요. 타이틀에서 숫자키 `7`, `8`로 바로 시작할 수 있습니다.

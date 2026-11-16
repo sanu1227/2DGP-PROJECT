@@ -8,6 +8,7 @@ import pico2d.pico2d as p
 
 from game.levels import DIRECTIONS
 from game.themes import scene_for
+from game import topdown_workshop
 
 
 ASSET_ROOT = Path(__file__).resolve().parents[1] / "assets" / "topdown_v2"
@@ -149,6 +150,8 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, gate_s
     ready = (state.installed == level.traps and (not level.traps or state.active)
              and state.soldiers == level.posts and state.carrying is None)
     entries = device_entries(game, gate_statuses, powered, ready, view.plate_depths)
+    workshop = level.id == "stage_01"
+    player = view.player_position(state.player, now)
     view.hit_regions.clear()
     view.hit_masks.clear()
     view.gate_hit_masks.clear()
@@ -156,22 +159,32 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, gate_s
     view.plate_hit_masks.clear()
     view.action_badge_bounds = None
 
-    for y in range(level.height):
-        for x in range(level.width):
-            pos = x, y
-            sx, sy = board.screen(pos)
-            wall = pos in level.walls
-            art.draw(f"{'wall' if wall else 'floor'}_{stage}", sx, sy, size)
-            rectangle(sx - half, sy - half, sx + half, sy + half, (33, 39, 44), False)
+    if workshop:
+        topdown_workshop.draw_terrain(art, board, level, ready)
+        raised_objects = [pos for pos, (sprite, _, _) in entries.items() if sprite.startswith("lever_")]
+        topdown_workshop.draw_shadows(board, player, [*raised_objects, *state.items])
+    else:
+        for y in range(level.height):
+            for x in range(level.width):
+                pos = x, y
+                sx, sy = board.screen(pos)
+                wall = pos in level.walls
+                art.draw(f"{'wall' if wall else 'floor'}_{stage}", sx, sy, size)
+                rectangle(sx - half, sy - half, sx + half, sy + half, (33, 39, 44), False)
     if scene:
         for mount in scene.get("wall_mounts", ()):
             key = mount["sprite"].rsplit("_", 1)[0]
             if key in DECOR:
-                art.draw(DECOR[key], *board.screen(tuple(mount["cell"])), size * .46)
+                x, y = mount["cell"]
+                if workshop:
+                    x, y = (x + .32, y + .04) if x == 0 else (x, y + .23)
+                art.draw(DECOR[key], *board.screen((x, y)), size * .46)
         for decoration in scene["decorations"]:
             key = decoration["sprite"]
             if key in DECOR:
                 art.draw(DECOR[key], *board.screen(tuple(decoration["cell"])), size * .72)
+    if workshop and (3, 0) in level.walls:
+        art.draw("candle_sconce", *board.screen((3, .24)), size * .38)
 
     for pos, (sprite, _, _) in entries.items():
         sx, sy = board.screen(pos)
@@ -199,18 +212,20 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, gate_s
         sx, sy = board.screen(position)
         art.draw("rubble", sx, sy + min(height, 24) * size / 256, size * .68)
 
-    px, py = board.screen(view.player_position(state.player, now))
+    px, py = board.screen(player)
     p.draw_circle(px, py, round(size * .38), *TEAL)
     facing = FACINGS[view.facing]
     pose = "carry" if state.carrying else (
         "walk_a" if now - view.motion[2] < .09 else "walk_b") if view.motion else "idle"
     tired = view.fatigue(game)
-    art.draw(f"worker_{facing}_{pose}", px, py, size * .68, height_scale=view.worker_height(tired, now))
+    art.draw(f"worker_{facing}_{pose}", px, py, size * (.75 if workshop else .68),
+             height_scale=view.worker_height(tired, now))
     if state.carrying:
         dx, dy = DIRECTIONS[facing]
         art.draw(ITEMS[state.carrying], px + dx * size * .27, py - dy * size * .27, size * .32)
-    view.place_action_badge(game, px, py + size * .29, now)
-    view.worker_effort((px - size * .3, py - size * .27, px + size * .3, py + size * .29), tired, now)
+    head = py + size * (.35 if workshop else .29)
+    view.place_action_badge(game, px, head, now)
+    view.worker_effort((px - size * .3, py - size * .27, px + size * .3, head), tired, now)
 
     for start, end in beam_segments:
         x1, y1 = board.screen(source_nozzle(level, start, end))

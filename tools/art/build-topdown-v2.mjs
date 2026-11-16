@@ -28,6 +28,7 @@ const sheets = {
     'tool_rack', 'candle_sconce', 'crypt_banner', 'crest',
     'crystal_sconce', 'archive_banner', 'wall_pipes', 'air_vent',
   ],
+  workshop: ['workshop_cap', 'workshop_face', 'workshop_rock', 'workshop_floor'],
 };
 
 function cleanAlpha(data, width, height) {
@@ -88,17 +89,19 @@ async function packSheet(name, names, manifest) {
   const sourcePath = path.join(root, 'source', `${name}.png`);
   const source = sharp(sourcePath);
   const { width, height } = await source.metadata();
+  const columns = name === 'workshop' ? 2 : 4;
+  const rows = names.length / columns;
+  const terrain = name === 'terrain' || name === 'workshop';
   const layers = [];
   for (const [index, key] of names.entries()) {
-    const col = index % 4;
-    const row = Math.floor(index / 4);
-    const left = Math.floor(col * width / 4);
-    const top = Math.floor(row * height / 4);
-    const cell = { left, top, width: Math.floor((col + 1) * width / 4) - left,
-      height: Math.floor((row + 1) * height / 4) - top };
+    const col = index % columns;
+    const row = Math.floor(index / columns);
+    const left = Math.floor(col * width / columns);
+    const top = Math.floor(row * height / rows);
+    const cell = { left, top, width: Math.floor((col + 1) * width / columns) - left,
+      height: Math.floor((row + 1) * height / rows) - top };
     const { data, info } = await source.clone().extract(cell).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
     const bounds = cleanAlpha(data, info.width, info.height);
-    const terrain = name === 'terrain';
     if (terrain) {
       bounds.left += 8;
       bounds.top += 8;
@@ -116,7 +119,7 @@ async function packSheet(name, names, manifest) {
     manifest.sprites[key] = [name, x, y, sprite.width, sprite.height];
   }
   const relative = `atlases/${name}.png`;
-  await sharp({ create: { width: tile * 4, height: tile * 4, channels: 4, background: '#00000000' } })
+  await sharp({ create: { width: tile * columns, height: tile * rows, channels: 4, background: '#00000000' } })
     .composite(layers).png().toFile(path.join(root, relative));
   manifest.atlases[name] = relative;
 }

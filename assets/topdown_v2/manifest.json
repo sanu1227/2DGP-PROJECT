@@ -4,7 +4,8 @@
     "devices": "atlases/devices.png",
     "objects": "atlases/objects.png",
     "worker": "atlases/worker.png",
-    "decor": "atlases/decor.png"
+    "decor": "atlases/decor.png",
+    "workshop": "atlases/workshop.png"
   },
   "sprites": {
     "floor_1": [
@@ -566,6 +567,34 @@
       773,
       248,
       246
+    ],
+    "workshop_cap": [
+      "workshop",
+      0,
+      0,
+      256,
+      256
+    ],
+    "workshop_face": [
+      "workshop",
+      256,
+      0,
+      256,
+      256
+    ],
+    "workshop_rock": [
+      "workshop",
+      0,
+      256,
+      256,
+      256
+    ],
+    "workshop_floor": [
+      "workshop",
+      256,
+      256,
+      256,
+      256
     ]
   }
 }
