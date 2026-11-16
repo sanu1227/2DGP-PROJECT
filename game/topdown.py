@@ -7,6 +7,7 @@ from pathlib import Path
 import pico2d.pico2d as p
 
 from game.art import Art
+from game.device_outline import DeviceOutlines
 from game.layout import HEIGHT
 from game.levels import DIRECTIONS
 from game.themes import scene_for
@@ -62,30 +63,36 @@ RAISED_DEVICES = frozenset({
 class TopDownArt:
     def __init__(self):
         self.atlases = {}
+        self.outlines = DeviceOutlines()
         manifest = json.loads((ASSET_ROOT / "manifest.json").read_text(encoding="utf-8"))
         self.sprites = manifest["sprites"]
         self.files = manifest["atlases"]
 
     def close(self):
+        self.outlines.close()
         for atlas in self.atlases.values():
             p.SDL_DestroyTexture(atlas.texture)
             atlas.texture = None
         self.atlases.clear()
 
-    def draw(self, name, x, y, size, *, angle=0, opacity=1, height_scale=1):
+    def draw(self, name, x, y, size, *, angle=0, opacity=1, height_scale=1, outline=0):
         atlas_name, left, top, width, height = self.sprites[name]
         atlas = self.atlases.get(atlas_name)
         if atlas is None:
             atlas = self.atlases[atlas_name] = p.load_image(str(ASSET_ROOT / self.files[atlas_name]))
         scale = size / max(width, height)
         clip = (left, atlas.h - top - height, width, height)
+        draw_width, draw_height = width * scale, height * scale * height_scale
+        if outline:
+            rect = p.to_sdl_rect(x - draw_width / 2, y - draw_height / 2, draw_width, draw_height)
+            self.outlines.draw(ASSET_ROOT / self.files[atlas_name], (left, top, width, height), rect, angle, outline)
         if opacity != 1:
             atlas.opacify(opacity)
         try:
             if angle:
-                atlas.clip_composite_draw(*clip, angle, "", x, y, width * scale, height * scale * height_scale)
+                atlas.clip_composite_draw(*clip, angle, "", x, y, draw_width, draw_height)
             else:
-                atlas.clip_draw(*clip, x, y, width * scale, height * scale * height_scale)
+                atlas.clip_draw(*clip, x, y, draw_width, draw_height)
         finally:
             if opacity != 1:
                 atlas.opacify(1)
@@ -262,17 +269,18 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, gate_s
             across_x = sum(cell in level.walls for cell in ((x - 1, y), (x + 1, y)))
             across_y = sum(cell in level.walls for cell in ((x, y - 1), (x, y + 1)))
             angle = 0 if across_x > across_y else pi / 2
-            art.draw(asset, sx, sy, size * .94, angle=angle)
-            if gate_openings[pos] < 1:
+            opening = gate_openings[pos]
+            art.draw(asset, sx, sy, size * .94, angle=angle, outline=opening)
+            if opening < 1:
                 art.draw(sprites.get("gate_closed", "gate_closed"), sx, sy, size * .94,
-                         angle=angle, opacity=1 - gate_openings[pos])
+                         angle=angle, opacity=1 - opening, outline=1 - opening)
         elif pos in level.sources:
-            art.draw(asset, sx, sy, size * .82, angle=SOURCE_ANGLES[level.sources[pos]])
+            art.draw(asset, sx, sy, size * .82, angle=SOURCE_ANGLES[level.sources[pos]], outline=True)
         elif pos in state.soldiers:
-            art.draw(sprites.get("post_empty", "post_empty"), sx, sy, size * .79)
+            art.draw(sprites.get("post_empty", "post_empty"), sx, sy, size * .79, outline=True)
             art.draw(asset, sx, sy, size * .72)
         else:
-            art.draw(asset, sx, sy, size * .82)
+            art.draw(asset, sx, sy, size * .82, outline=True)
         if sprite == "replay_seal" and color == TEAL:
             p.draw_circle(sx, sy, round(size * .42), *TEAL, filled=False)
 
@@ -298,7 +306,7 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, gate_s
                  size * .54)
     for position, height in rubble:
         sx, sy = board.screen(position)
-        art.draw(sprites.get("rubble", "rubble"), sx, sy + min(height, 24) * size / 256, size * .74)
+        art.draw(sprites.get("rubble", "rubble"), sx, sy + min(height, 24) * size / 256, size * .74, outline=True)
 
     px, py = board.screen(player)
     p.draw_circle(px, py, round(size * .38), *TEAL)
