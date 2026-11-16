@@ -5,12 +5,25 @@ from dataclasses import replace
 import unittest
 
 from game.model import Game
-from game.navigation import ClickNavigator, IsoBoard, find_path
+from game.navigation import ClickNavigator, IsoBoard, TopDownBoard, find_path
 from tests.test_devices import load_stage, plate_stage
 from tests.test_game import make_level
 
 
 class NavigationTests(unittest.TestCase):
+    def test_topdown_centers_and_clicks_share_square_boundaries(self):
+        for width, height, tutorial in ((6, 6, True), (7, 10, False), (10, 7, False), (12, 12, False)):
+            with self.subTest(size=(width, height), tutorial=tutorial):
+                board = TopDownBoard(width, height, tutorial)
+                x, y = board.screen((0, 0))
+                self.assertEqual(board.screen((1, 1)), (x + board.cell_size, y - board.cell_size))
+                for row in range(height):
+                    for col in range(width):
+                        self.assertEqual(board.pick(*board.screen((col, row))), (col, row))
+                self.assertIsNone(board.pick(*board.screen((-.51, 0))))
+                self.assertIsNone(board.pick(*board.screen((0, height - .49))))
+                self.assertEqual(board.pick(*board.screen((.51, .49))), (1, 0))
+
     def test_isometric_pick_roundtrip_and_outer_boundaries_for_supported_sizes(self):
         for width in range(6, 13):
             for height in range(6, 13):

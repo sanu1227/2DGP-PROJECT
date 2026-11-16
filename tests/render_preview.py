@@ -19,6 +19,7 @@ def main():
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--target", type=int, nargs=2, metavar=("X", "Y"), help="선택한 이동 경로도 표시")
     parser.add_argument("--hide-coordinates", action="store_true", help="F2 좌표를 숨긴 게임 화면 저장")
+    parser.add_argument("--top-down", action="store_true", help="기본 탑다운 화면으로 저장")
     args = parser.parse_args()
     levels = load_levels()
     if not 1 <= args.stage <= len(levels):
@@ -34,6 +35,7 @@ def main():
     view = None
     try:
         view = View()
+        view.top_down = args.top_down
         if args.hide_coordinates:
             view.show_coordinates = False
         if args.target is not None and not view.navigation.start(game, tuple(args.target), perf_counter()):

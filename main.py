@@ -11,6 +11,7 @@ def main() -> int:
     parser.add_argument("--stage", type=int, help="시작 로고와 타이틀을 건너뛰고 시작할 방 번호 (1부터)")
     parser.add_argument("--check", action="store_true", help="창 없이 스테이지 데이터 검사")
     parser.add_argument("--smoke-frames", type=int, help="지정 프레임만 표시한 뒤 종료 (창 검사)")
+    parser.add_argument("--isometric", action="store_true", help="기존 사선 시점으로 실행")
     args = parser.parse_args()
     if args.smoke_frames is not None and args.smoke_frames < 1:
         parser.error("--smoke-frames는 1 이상이어야 합니다.")
@@ -25,7 +26,8 @@ def main() -> int:
         # 논리 검사와 테스트는 SDL 또는 화면 없이 실행할 수 있다.
         from game.view import run
 
-        run(levels, (args.stage or 1) - 1, args.smoke_frames, show_title=args.stage is None)
+        run(levels, (args.stage or 1) - 1, args.smoke_frames,
+            show_title=args.stage is None, top_down=not args.isometric)
     except ModuleNotFoundError as error:
         print(f"의존성을 불러올 수 없습니다: {error}\npython -m pip install -r requirements.txt", file=sys.stderr)
         return 1

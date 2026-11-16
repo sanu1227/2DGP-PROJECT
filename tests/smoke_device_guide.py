@@ -33,7 +33,7 @@ def check_layout(menu):
                    for l, b, r, t in menu.guide_regions), "강조 창에서 장치가 잘림"
 
 
-def render_checks(levels, folder=Path("docs/screenshots/gimmicks-v1/device-guide")):
+def render_checks(levels, folder=Path("docs/screenshots/gimmicks-v1/device-guide"), *, top_down=False):
     p.open_canvas(view.WIDTH, view.HEIGHT, sync=True)
     display = None
     original_text = view.View.text
@@ -52,6 +52,7 @@ def render_checks(levels, folder=Path("docs/screenshots/gimmicks-v1/device-guide
 
     try:
         display = view.View()
+        display.top_down = top_down
         for index, level in enumerate(levels):
             game = Game(level)
             initial = deepcopy(game.state)
@@ -241,9 +242,10 @@ def first_room_checks(levels):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--capture-dir", type=Path, default=Path("docs/screenshots/gimmicks-v1/device-guide"))
+    parser.add_argument("--top-down", action="store_true", help="탑다운 플레이 화면의 안내를 검사")
     args = parser.parse_args()
     levels = load_levels()
-    render_checks(levels, args.capture_dir)
+    render_checks(levels, args.capture_dir, top_down=args.top_down)
     input_checks(levels)
     first_room_checks(levels)
     print("Device guide smoke OK: seven first encounters, non-overlapping spotlights/labels/cards in every room, spotlight pixels, glyphs, skip/replay, undo/restart, full first-room clear and input isolation.")

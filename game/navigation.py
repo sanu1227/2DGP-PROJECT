@@ -56,6 +56,45 @@ class IsoBoard:
         return None
 
 
+@dataclass(frozen=True)
+class TopDownBoard:
+    """화면 위에서부터 읽는 정사각 격자. 중심 좌표와 클릭이 같은 경계를 쓴다."""
+
+    width: int
+    height: int
+    tutorial: bool = False
+
+    @property
+    def cell_size(self) -> int:
+        board_width = WIDTH - (460 if self.tutorial else 80)
+        return min(104, board_width // self.width, (BOARD_TOP - BOARD_BOTTOM - 64) // self.height)
+
+    @property
+    def half_width(self) -> float:
+        return self.cell_size / 2
+
+    @property
+    def half_height(self) -> float:
+        return self.cell_size / 2
+
+    @property
+    def origin(self) -> tuple[float, float]:
+        size = self.cell_size
+        center_x = WIDTH / 2 + (190 if self.tutorial else 0)
+        return (center_x - (self.width - 1) * size / 2,
+                (BOARD_BOTTOM + BOARD_TOP) / 2 + (self.height - 1) * size / 2)
+
+    def screen(self, pos: tuple[float, float]) -> tuple[float, float]:
+        x, y = self.origin
+        return x + pos[0] * self.cell_size, y - pos[1] * self.cell_size
+
+    def pick(self, sx: float, sy: float) -> Pos | None:
+        ox, oy = self.origin
+        x = floor((sx - ox) / self.cell_size + .5)
+        y = floor((oy - sy) / self.cell_size + .5)
+        return (x, y) if 0 <= x < self.width and 0 <= y < self.height else None
+
+
 def find_path(game: Game, target: Pos | None) -> list[Pos] | None:
     """현재 진입 가능한 최단 경로를 돌려준다. 시작칸은 결과에서 제외한다."""
     start = game.state.player

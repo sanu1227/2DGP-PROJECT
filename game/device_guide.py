@@ -6,7 +6,6 @@ import pico2d.pico2d as p
 
 from game.front_end import bevel
 from game.layout import WIDTH, HEIGHT
-from game.navigation import IsoBoard
 
 INK = (239, 237, 219)
 GOLD = (231, 190, 108)
@@ -15,7 +14,7 @@ CARD_WIDTH, CARD_HEIGHT = 420, 430
 
 
 def target_bounds(view, level, targets):
-    projection = IsoBoard(level.width, level.height)
+    projection = view.projection(level)
     result = {}
     for pos, _ in targets:
         x, y = projection.screen(pos)
@@ -115,7 +114,7 @@ def card_bounds(holes):
 
 def draw_lesson(view, game, lesson, regions, labels, card, page, total):
     dim_except(regions)
-    projection = IsoBoard(game.level.width, game.level.height)
+    projection = view.projection(game.level)
     for source, destination in lesson.links:
         x1, y1 = projection.screen(source)
         x2, y2 = projection.screen(destination)

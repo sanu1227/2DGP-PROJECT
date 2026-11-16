@@ -11,7 +11,7 @@ import pico2d.pico2d as p
 from game.model import Game
 from game.art import Art, MAGIC_BEAM_HEIGHT
 from game.scenery import draw_scars, draw_tinted, floor_style, wall_style
-from game.navigation import ClickNavigator, IsoBoard, find_path
+from game.navigation import ClickNavigator, IsoBoard, TopDownBoard, find_path
 from game.themes import boundary_walls, low_wall_sprite, scene_for, themed_floor
 from game.layout import WIDTH, HEIGHT, BOARD_BOTTOM, BOARD_TOP
 from game.front_end import FrontEnd
@@ -20,6 +20,7 @@ from game.mechanics import trace_magic, fixed_devices
 from game.play_menu import PlayClock, PlayMenu
 from game.stage_feedback import StageFeedback
 from game.receiver_feedback import ReceiverFeedback
+from game.topdown import ITEMS as TOPDOWN_ITEMS, TopDownArt, draw_board as draw_topdown_board
 from game.music import BackgroundMusic
 
 INK = (226, 230, 219)
@@ -91,6 +92,8 @@ class View:
         self.clock = PlayClock()
         self.fonts = {}
         self.art = None
+        self.topdown_art = None
+        self.top_down = False
         self.navigation = ClickNavigator()
         self.mouse_position = None
         self.show_coordinates = False
@@ -115,6 +118,18 @@ class View:
     def now(self):
         return self.clock.now(perf_counter())
 
+    def projection(self, level):
+        if self.top_down:
+            return TopDownBoard(level.width, level.height, tutorial=level.id == "stage_01")
+        return IsoBoard(level.width, level.height)
+
+    @staticmethod
+    def tile_outline(projection, x, y, width, height, color):
+        if isinstance(projection, TopDownBoard):
+            box(x - width, y - height, x + width, y + height, color, filled=False)
+        else:
+            diamond(x, y, width, height, None, color)
+
     def pause(self):
         self.clock.pause(perf_counter())
 
@@ -122,6 +137,9 @@ class View:
         self.clock.resume(perf_counter())
 
     def close(self):
+        if self.topdown_art:
+            self.topdown_art.close()
+            self.topdown_art = None
         if self.art:
             self.art.close()
             self.art = None
@@ -365,6 +383,12 @@ class View:
         entry = self.art.manifest["sprites"][sprite]
         self.art.draw(sprite, x, y, scale, anchor=entry.get("display_anchor", entry["anchor"]))
 
+    def hud_item(self, kind, x, y):
+        if self.top_down:
+            self.topdown_art.draw(TOPDOWN_ITEMS[kind], x, y + 11, 24)
+        else:
+            self.item(kind, x, y, 0.19)
+
     def support_height(self, game, pos):
         """발판 위 물건과 캐릭터의 접점을 지지면에 맞춘다."""
         if pos in game.level.plates:
@@ -425,7 +449,7 @@ class View:
                     if not self.art.hit_test(sprite, sx, sy, scale, (x, y), flip, height_scale, rotation):
                         continue
                 return pos
-        return IsoBoard(game.level.width, game.level.height).pick(x, y)
+        return self.projection(game.level).pick(x, y)
 
     def sprite_hit_region(self, pos, sprite, sx, sy, scale, flip=False, height_scale=1.0, rotation=0):
         region = (pos, self.art.bounds(sprite, sx, sy, scale, flip, height_scale, rotation))
@@ -452,8 +476,8 @@ class View:
             line(*previous, *point, color)
             diamond(*point, 3, 2, color)
             previous = point
-        diamond(*projection.screen(target), projection.half_width - 5,
-                int(projection.half_height) - 3, None, color)
+        self.tile_outline(projection, *projection.screen(target), projection.half_width - 5,
+                          int(projection.half_height) - 3, color)
         if hovered is not None:
             self.movement_cost_hint(game, path, color)
 
@@ -584,6 +608,13 @@ class View:
         gate_openings = {pos: self.gate_opening(pos, 0 if gate_statuses[pos] == "closed" else 1, now)
                          for pos in level.gates}
         self.plate_depths = {pos: self.plate_pressure(game, pos, now) for pos in level.plates}
+        beam_segments, powered_receivers = trace_magic(level, beam_state)
+        if self.top_down:
+            if self.topdown_art is None:
+                self.topdown_art = TopDownArt()
+            draw_topdown_board(self, game, self.projection(level), now, beam_segments, powered_receivers,
+                               mirror_rotations, gate_statuses, gate_openings)
+            return
         rubble_draws = {}
         if level.gates:
             self.art.load_gates()
@@ -605,7 +636,6 @@ class View:
 
         exit_ready = (state.installed == level.traps and (not level.traps or state.active)
                       and state.soldiers == level.posts and state.carrying is None)
-        beam_segments, powered_receivers = trace_magic(level, beam_state)
         objects, labels, wall_tints = [], [], {}
         decor_draws = {}
         decoration_cells = {tuple(entry["cell"]) for entry in scene["decorations"]} if scene else set()
@@ -850,12 +880,12 @@ class View:
         if hint is None or self.tutorial_hidden:
             return
         if hint.target is not None:
-            projection = IsoBoard(game.level.width, game.level.height)
+            projection = self.projection(game.level)
             sx, sy = projection.screen(hint.target)
             color = TEAL if game.state.player == hint.target else GOLD
             for inset in (3, 5):
-                diamond(sx, sy, projection.half_width - inset,
-                        int(projection.half_height) - inset // 2, None, color)
+                self.tile_outline(projection, sx, sy, projection.half_width - inset,
+                                  int(projection.half_height) - inset // 2, color)
             # 목표 안내도 해당 타일로 이동하는 클릭 영역이다.
             bounds = (sx - 66, sy - 59, sx + 66, sy - 33)
             box(*bounds, (25, 40, 42))
@@ -926,7 +956,7 @@ class View:
             self.text(x, BOARD_TOP + 20, f"병사 {len(state.soldiers)} / {len(level.posts)}", 18)
         self.text(740, BOARD_TOP + 20, f"운반: {ITEM_NAMES[state.carrying]}", 18, GOLD if state.carrying else MUTED)
         if state.carrying:
-            self.item(state.carrying, 940, BOARD_TOP + 8, 0.19)
+            self.hud_item(state.carrying, 940, BOARD_TOP + 8)
         self.repair_progress(game, 1000, 200)
 
         context, color = self.play_context(game)
@@ -967,7 +997,7 @@ class View:
         self.text(470, BOARD_TOP + 17, f"병사 배치 {len(state.soldiers)}/{len(level.posts)}", 18)
         self.text(740, BOARD_TOP + 17, f"운반: {ITEM_NAMES[state.carrying]}", 18, GOLD)
         if state.carrying:
-            self.item(state.carrying, 940, BOARD_TOP + 5, 0.19)
+            self.hud_item(state.carrying, 940, BOARD_TOP + 5)
         diamond(982, BOARD_TOP + 17, 6, 6, None, GOLD)
         self.text(997, BOARD_TOP + 17, "상호작용 대상", 13, GOLD)
         self.repair_progress(game, 1120, 110)
@@ -987,11 +1017,12 @@ class View:
             status = f"자동 이동 · {len(self.navigation.path)}칸 남음" if self.navigation.active else "모든 복구 후 빈손으로 출구 복귀"
             self.text(WIDTH - 362, 71, status, 16, MUTED)
 
-        self.text(34, 32, f"좌클릭  이동    우클릭  취소    WASD / 방향키  이동    개발용 1~{total} 방 이동 · F2 좌표    (x,y): x 오른쪽 아래 / y 왼쪽 아래", 13, MUTED)
+        axes = "x 오른쪽 / y 아래" if self.top_down else "x 오른쪽 아래 / y 왼쪽 아래"
+        self.text(34, 32, f"좌클릭  이동    우클릭  취소    WASD / 방향키  이동    개발용 1~{total} 방 이동 · F2 좌표    (x,y): {axes}", 13, MUTED)
         self.text(34, 12, "E / Space  상호작용·내려놓기·다음 방(완료 후)    Z / Backspace  되돌리기    R  재시작    Esc  일시정지", 13, MUTED)
 
 
-def run(levels, index=0, smoke_frames=None, *, show_title=True):
+def run(levels, index=0, smoke_frames=None, *, show_title=True, top_down=False):
     # 글꼴 오류는 SDL 창을 열기 전에 보고한다.
     font_path()
     p.open_canvas(WIDTH, HEIGHT, sync=True)
@@ -1002,6 +1033,7 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True):
         if not p.window or not p.renderer:
             raise RuntimeError("SDL 게임 창 또는 렌더러를 만들 수 없습니다.")
         view = View()
+        view.top_down = top_down
         front_end = FrontEnd(show_title)
         music = BackgroundMusic()
         play_menu = PlayMenu()

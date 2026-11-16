@@ -4,6 +4,7 @@
 실물 키보드나 자동화 도구의 운영체제 입력 전달까지 검증하지는 않는다.
 """
 
+import argparse
 from collections import deque
 import ctypes
 from unittest.mock import patch
@@ -17,6 +18,9 @@ from tests.test_game import SOLUTIONS
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--top-down", action="store_true", help="탑다운 화면과 부품 클릭도 검사")
+    args = parser.parse_args()
     levels = load_levels()
     games = []
     displays = []
@@ -40,7 +44,7 @@ def main():
         assert not display.show_coordinates
         # Every tile, including walls, must receive its own data coordinate.
         with patch.object(display, "text") as labels:
-            display.coordinate_overlay(levels[stage], view.IsoBoard(levels[stage].width, levels[stage].height))
+            display.coordinate_overlay(levels[stage], display.projection(levels[stage]))
         assert [call.args[2] for call in labels.call_args_list] == [
             f"({x},{y})" for y in range(levels[stage].height) for x in range(levels[stage].width)
         ]
@@ -64,7 +68,7 @@ def main():
         (p.SDLK_SPACE, lambda: expect(0)),
         (p.SDLK_F2, lambda: expect_coordinates(True)),
         (p.SDLK_F2, lambda: expect_coordinates(False)),
-        (p.SDLK_d, lambda: expect(1)),
+        ("click_part" if args.top_down else p.SDLK_d, lambda: expect(1)),
         (p.SDLK_e, lambda: expect(2, "part")),
         (p.SDLK_q, lambda: expect(2, "part")),  # Removed key must not drop or consume a turn.
         (p.SDLK_b, lambda: expect(2, "part")),
@@ -107,11 +111,20 @@ def main():
         key, pending_check = steps.popleft()
         for queued_key in key if isinstance(key, tuple) else (key,):
             event = p.SDL_Event()
-            event.type = p.SDL_QUIT if queued_key == "close" else p.SDL_KEYDOWN
-            event.key.windowID = p.SDL_GetWindowID(p.window)
-            event.key.state = p.SDL_PRESSED
-            event.key.repeat = 0
-            if queued_key != "close":
+            window_id = p.SDL_GetWindowID(p.window)
+            if queued_key == "click_part":
+                display, game = displays[-1], games[-1]
+                part = next(pos for pos, kind in game.state.items.items() if kind == "part")
+                x, y = display.projection(game.level).screen(part)
+                assert display.pick_cell(game, x, y) == part
+                event.type, event.button.windowID = p.SDL_MOUSEBUTTONDOWN, window_id
+                event.button.button, event.button.state = p.SDL_BUTTON_LEFT, p.SDL_PRESSED
+                event.button.x, event.button.y = round(x), round(view.HEIGHT - 1 - y)
+            elif queued_key == "close":
+                event.type = p.SDL_QUIT
+            else:
+                event.type, event.key.windowID = p.SDL_KEYDOWN, window_id
+                event.key.state, event.key.repeat = p.SDL_PRESSED, 0
                 event.key.keysym.sym = queued_key
             if p.SDL_PushEvent(ctypes.byref(event)) != 1:
                 raise RuntimeError("SDL 검사 이벤트를 넣을 수 없습니다.")
@@ -121,7 +134,7 @@ def main():
     with patch.object(view.PlayMenu, "offer"), \
             patch.object(view, "Game", ObservedGame), patch.object(p, "get_events", scripted_events), \
             patch.object(view.View, "__init__", initialize):
-        view.run(levels, show_title=False)
+        view.run(levels, show_title=False, top_down=args.top_down)
     assert not steps
     assert len(games) == 2 * len(levels) + 2
     print(f"Native SDL smoke OK: {len(levels)} clears, coordinates/F2, shortcuts 1-{len(levels)}, E/Space drop and next/replay, Q/B/Enter ignored, transition input isolation, undo, restart, window close.")
