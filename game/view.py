@@ -16,13 +16,13 @@ from game.themes import boundary_walls, low_wall_sprite, scene_for, themed_floor
 from game.layout import WIDTH, HEIGHT, BOARD_BOTTOM, BOARD_TOP
 from game.front_end import FrontEnd
 from game.tutorial import first_room_hint
-from game.mechanics import fixed_devices, mirror_cells
+from game.mechanics import fixed_devices, mirror_cells, trace_magic
 from game.optics import TOPDOWN_SOURCE_REACH, trace_display_magic
 from game.play_menu import PlayClock, PlayMenu
 from game.stage_feedback import StageFeedback
 from game.receiver_feedback import ReceiverFeedback
 from game.room_debris import RoomDebris
-from game.play_effects import dust, rubble_scrape
+from game.play_effects import ChuteFeedback, beam_contacts, dust, ring, rubble_scrape
 from game.topdown import ITEMS as TOPDOWN_ITEMS, TopDownArt, draw_board as draw_topdown_board
 from game.worker_view import EchoMotion, draw_echo_marks, draw_worker_status, recording_label
 from game.music import BackgroundMusic
@@ -190,6 +190,7 @@ class View:
         self.mirror_pushes = {}
         self.plate_delays = {}
         self.echo_motion = EchoMotion()
+        self.chute_feedback = ChuteFeedback()
         self.action_badge_bounds = None
 
     def mirror_rotation(self, game, pos, now):
@@ -208,6 +209,10 @@ class View:
         """성공한 행동 이벤트에만 연결한다. 연타는 현재 각도에서 이어지며 입력을 막지 않는다."""
         now = self.now()
         self.echo_motion.change(game, previous, now)
+        outlet = self.chute_feedback.transferred(game, previous, now)
+        if outlet in game.level.plates and not game.plate_pressed(outlet, previous):
+            self.plate_motions.setdefault(outlet, (0, 0, now, 0))
+            self.plate_delays[outlet] = (now + self.chute_feedback.arrival, 0)
         if self.mirror_game is not game:
             self.mirror_game, self.mirror_motions = game, {}
         for pos in mirror_cells(game.level, previous) & mirror_cells(game.level, game.state):
@@ -222,6 +227,14 @@ class View:
                 start, target = old, old + (new - old) % 4
             duration = min(.5, MIRROR_SECONDS * (target - start))
             self.mirror_motions[pos] = (start, target, now, duration)
+
+    def draw_mirror_stop(self, board, pos, point, now):
+        motion = self.mirror_motions.get(pos)
+        if motion:
+            t = (now - motion[2]) / motion[3]
+            if .72 < t < 1:
+                x, y = point
+                ring(x, y, board.half_width * (.45 + (t - .72) * .6), GOLD, 170 * (1 - t) / .28)
 
     @staticmethod
     def fatigue(game):
@@ -701,11 +714,14 @@ class View:
         mirror_positions = {pos: self.mirror_position(pos, now) for pos in mirrors}
         mirror_rotations = {pos: self.mirror_rotation(game, pos, now) for pos in mirrors}
         rubble_positions = {self.rubble_pose(game, pos, now)[0] for pos in state.rubble}
+        rubble_contacts = []
         beam_segments, powered_receivers = trace_display_magic(
             level, state, mirror_rotations, mirrors=mirror_positions, rubble=rubble_positions,
-            source_reach=TOPDOWN_SOURCE_REACH if self.top_down else None)
+            source_reach=TOPDOWN_SOURCE_REACH if self.top_down else None, rubble_contacts=rubble_contacts)
         self.receiver_feedback.observe(game, powered_receivers, now)
-        gate_statuses = {pos: (('open' if control in powered_receivers else 'held' if state.player == pos else 'closed')
+        logical_power = trace_magic(level, state)[1]
+        gate_statuses = {pos: (('open' if control in logical_power else
+                               'held' if pos == state.player or pos in state.items else 'closed')
                               if control in level.receivers else game.gate_status(pos, state))
                          for pos, control in level.gates.items()}
         if self.gate_game is not game:
@@ -717,6 +733,8 @@ class View:
         self.plate_depths = {pos: self.plate_pressure(game, pos, now) for pos in level.plates}
         for pos, control in level.gates.items():
             opening = float(gate_statuses[pos] != "closed")
+            if control in level.receivers:
+                opening = float(control in powered_receivers or gate_statuses[pos] == "held")
             if gate_statuses[pos] == "open" and control in self.plate_delays:
                 # 블록이 발판에 닿기 전까지 격자의 표시 위치를 유지한다.
                 opening = self.plate_delays[control][1]
@@ -726,7 +744,7 @@ class View:
             if self.topdown_art is None:
                 self.topdown_art = TopDownArt()
             draw_topdown_board(self, game, self.projection(level), now, beam_segments, powered_receivers,
-                               mirror_rotations, mirror_positions, gate_statuses, gate_openings)
+                               mirror_rotations, mirror_positions, gate_statuses, gate_openings, rubble_contacts)
             return
         rubble_draws = {}
         mirror_draws = {}
@@ -929,6 +947,7 @@ class View:
                 self.draw_rubble_scrape(projection, pos, position, now)
             elif sprite in ITEM_SPRITES.values():
                 sy += self.support_height(game, pos) * scale
+                sy += self.chute_feedback.item_lift(pos, now) * 28 * scale
             if sprite in ("plate_up", "plate_down"):
                 pressed = self.plate_depths[pos]
                 self.art.draw_plate(sx, sy, scale, pressed)
@@ -939,6 +958,7 @@ class View:
                 pos = mirror_draws[(sx, sy)]
                 rotation = mirror_rotations[pos]
                 self.art.draw(sprite, sx, sy, scale, rotation=rotation)
+                self.draw_mirror_stop(projection, pos, (sx, sy + 56 * scale), now)
                 self.sprite_hit_region(pos, sprite, sx, sy, scale, rotation=rotation)
                 continue
             if sprite == 'mana_source':
@@ -987,12 +1007,14 @@ class View:
                 self.item(state.carrying, sx + offset_x, sy + 24 * height_scale, scale * 0.65)
 
         self.room_debris.draw(projection, now)
+        self.chute_feedback.draw(projection, now, lambda x, y, ratio: self.item("bone", x, y, scale * ratio))
         # 광선은 물체와 구별되는 높은 선으로 그리고 끝점도 현재 상태에서 계산한다.
         for start, end in beam_segments:
             x1,y1=screen(start); x2,y2=screen(end)
             edge, core = (157, 72, 216), (244, 185, 255)
             for offset,color in ((-1,edge),(0,core),(1,edge)):
                 line(x1,y1+MAGIC_BEAM_HEIGHT*scale+offset,x2,y2+MAGIC_BEAM_HEIGHT*scale+offset,color)
+        beam_contacts(projection, rubble_contacts, now, height=MAGIC_BEAM_HEIGHT * scale)
         # 상태 문구를 바닥 아트와 함께 유지해 색이나 작은 그림에만 의존하지 않는다.
         for pos, label in labels:
             sx, sy = screen(pos)
@@ -1331,6 +1353,8 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True, top_down=False):
                             view.animate_devices(game, previous)
                             if game.state.cleared:
                                 screen_changed = True
+                        elif action == "interact":
+                            view.chute_feedback.blocked(game, view.now())
             # 이미 보간 중인 한 칸이 끝난 뒤에만 다음 자동 이동을 실행한다.
             if front_end.screen == "playing":
                 play_menu.offer(game, view)

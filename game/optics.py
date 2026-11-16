@@ -45,7 +45,8 @@ def device_hit(origin, direction, center):
     return distance if distance > 1e-6 else None
 
 
-def trace_display_magic(level, state, rotations, *, mirrors=None, rubble=None, source_reach=None):
+def trace_display_magic(level, state, rotations, *, mirrors=None, rubble=None, source_reach=None,
+                        rubble_contacts=None):
     """발사구에서 광선을 쏴 가장 가까운 장치로 보낸다. 최대 64번 방향을 바꾼다."""
     segments, powered = [], set()
     rubble = state.rubble if rubble is None else rubble
@@ -77,7 +78,7 @@ def trace_display_magic(level, state, rotations, *, mirrors=None, rubble=None, s
                 half_y = .5 if fixture or y != int(y) else RUBBLE_HALF_WIDTH
                 distance = box_hit(origin, direction, x - half_x, y - half_y, x + half_x, y + half_y)
                 if distance is not None:
-                    candidates.append((distance, 'stop', None))
+                    candidates.append((distance, 'stop' if fixture else 'rubble', None))
             for pos in level.receivers:
                 distance = device_hit(origin, direction, pos)
                 if distance is not None:
@@ -91,6 +92,8 @@ def trace_display_magic(level, state, rotations, *, mirrors=None, rubble=None, s
             distance, kind, target = min(candidates, key=lambda item: item[0])
             end = mirrors[target] if kind == 'mirror' else tuple(origin[i] + direction[i] * distance for i in (0, 1))
             segments.append((origin, end))
+            if kind == 'rubble' and rubble_contacts is not None:
+                rubble_contacts.append((origin, end))
             if kind == 'receiver':
                 powered.add(target)
             if kind != 'mirror':

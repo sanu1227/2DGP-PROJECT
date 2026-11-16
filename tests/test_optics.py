@@ -71,9 +71,11 @@ class OpticsTests(unittest.TestCase):
             game = Game(replace(level, walls=frozenset({(4, 3)})) if kind == 'walls' else level)
             if kind != 'walls':
                 getattr(game.state, kind).add((4, 3))
-            rays, powered = trace_display_magic(game.level, game.state, {})
+            contacts = []
+            rays, powered = trace_display_magic(game.level, game.state, {}, rubble_contacts=contacts)
             self.assertFalse(powered)
             self.assertEqual(rays[-1][1], (3.62 if kind == "rubble" else 3.5, 3))
+            self.assertEqual(contacts, [rays[-1]] if kind == "rubble" else [])
         game = Game(level)
         rays, powered = trace_display_magic(level, game.state, {})
         self.assertEqual(powered, {(6, 3)})

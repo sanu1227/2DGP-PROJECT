@@ -11,6 +11,7 @@ from game.layout import HEIGHT
 from game.levels import DIRECTIONS
 from game.magic import mirror_output
 from game.mechanics import mirror_cells
+from game.play_effects import beam_contacts
 from game.themes import scene_for
 from game.topdown_terrain import Light, draw_shadows, draw_terrain, materials_for
 from game.worker_view import ECHO_COLOR, draw_echo_trail, recording_label
@@ -219,7 +220,7 @@ def room_lights(level, lights, powered, exit_ready):
 
 
 def draw_board(view, game, board, now, beam_segments, powered, rotations, mirror_positions,
-               gate_statuses, gate_openings):
+               gate_statuses, gate_openings, rubble_contacts):
     level, state = game.level, game.state
     art = view.topdown_art
     size, half = board.cell_size, board.half_width
@@ -311,7 +312,9 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, mirror
     for pos, kind in state.items.items():
         sx, sy = board.screen(pos)
         sprite = ITEMS[kind]
-        art.draw(sprites.get(sprite, sprite), sx + (size * .22 if pos in entries else 0), sy + size * .04,
+        lift = view.chute_feedback.item_lift(pos, now)
+        lateral = size * .22 if pos in entries else 0
+        art.draw(sprites.get(sprite, sprite), sx + lateral * (1 - lift), sy + size * (.04 + .28 * lift),
                  size * .54, outline=True)
     for pos, (position, height) in rubble.items():
         sx, sy = board.screen(position)
@@ -342,6 +345,7 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, mirror
     view.place_action_badge(game, badge_x, head, now)
     view.worker_effort((px - size * .3, py - size * .27, px + size * .3, head), tired, now)
 
+    view.chute_feedback.draw(board, now, lambda x, y, ratio: art.draw(sprites["bone"], x, y, size * .32 * ratio))
     for start, end in beam_segments:
         x1, y1 = board.screen(start)
         x2, y2 = board.screen(end)
@@ -349,8 +353,10 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, mirror
         nx, ny = (y1 - y2) / length, (x2 - x1) / length
         for offset, color in ((-1, VIOLET), (0, (247, 202, 255)), (1, VIOLET)):
             p.draw_line(x1 + nx * offset, y1 + ny * offset, x2 + nx * offset, y2 + ny * offset, *color)
+    beam_contacts(board, rubble_contacts, now)
     for pos, position in mirror_positions.items():
         draw_mirror(*board.screen(position), size, rotations[pos])
+        view.draw_mirror_stop(board, pos, board.screen(position), now)
     for pos in powered:
         progress = view.receiver_feedback.progress(game, pos, now)
         sx, sy = board.screen(pos)
