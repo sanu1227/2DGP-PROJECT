@@ -101,7 +101,7 @@
 <text x="222" y="297" text-anchor="middle" font-size="22">M</text>
 <rect x="244" y="270" width="40" height="40" rx="3" fill="#46555e"/>
 <rect x="286" y="270" width="40" height="40" rx="3" fill="#46555e"/>
-<rect x="328" y="270" width="40" height="40" rx="3" fill="#29333e"/>
+<rect x="328" y="270" width="40" height="40" rx="3" fill="#46555e"/>
 <rect x="370" y="270" width="40" height="40" rx="3" fill="#29333e"/>
 <rect x="412" y="270" width="40" height="40" rx="3" fill="#29333e"/>
 <rect x="454" y="270" width="40" height="40" rx="3" fill="#29333e"/>
