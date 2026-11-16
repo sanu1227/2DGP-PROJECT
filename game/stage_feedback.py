@@ -45,7 +45,7 @@ class StageFeedback:
         now = view.now()
         if game.state.cleared:
             self.draw_result(view, game, index, total, max(0, now - self.completed_at))
-        elif 0 <= now - self.entered_at < ENTRY_SECONDS:
+        elif game.level.id != "stage_01" and 0 <= now - self.entered_at < ENTRY_SECONDS:
             self.draw_entry(view, game, index, total, now - self.entered_at)
 
     @staticmethod

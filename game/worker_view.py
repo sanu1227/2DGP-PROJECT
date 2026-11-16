@@ -63,6 +63,7 @@ def draw_worker_status(view, game, context, context_color):
             title = "재생 완료"
         slots = (None,) * step + echo.remaining
 
+    view.play_status_panel(WIDTH - 32, ECHO_COLOR)
     view.text(58, STATUS_Y, f"{title} {step}/{total}", 18, ECHO_COLOR)
     for index, action in enumerate(slots):
         x = 212 + 42 * index

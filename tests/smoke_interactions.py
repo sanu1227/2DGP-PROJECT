@@ -74,6 +74,7 @@ def main():
         assert not game.can_interact()
         # Hovering the marker exposes the collectible's name and keeps its click target.
         game.state.player = game.level.start
+        game.state.carrying = None
         view.draw(game, 0, len(levels))
         pos = next(iter(game.state.items))
         left, bottom, right, top = view.interaction_regions[pos]
