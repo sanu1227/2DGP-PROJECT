@@ -105,15 +105,15 @@ def first_room_hint(game: Game) -> TutorialHint | None:
                             level.exit, "출구로 이동")
     if state.installed == level.traps:
         target = min(level.levers)
-        instruction = ("E로 가동하세요. 가동한 함정은 통과 불가."
+        instruction = ("E로 가동. 가동하면 통과 불가."
                        if state.player in level.levers else
                        "함정을 건너 레버에서 E를 누르세요.")
         return TutorialHint(4, "건너편에서 레버 가동", instruction, target, "레버 가동")
     if state.carrying == "part":
         target = min(level.traps - state.installed)
-        instruction = ("E로 설치하세요. 설치 후 통과할 수 있어요."
+        instruction = ("E로 설치. 가동 전엔 통과 가능."
                        if state.player == target else
-                       "표시된 함정으로 이동해 E를 누르세요.")
+                       "함정 위에서 E를 누르세요.")
         return TutorialHint(3, "함정에 부품 설치", instruction, target, "함정에 설치")
     parts = sorted(pos for pos, kind in state.items.items() if kind == "part")
     if parts:

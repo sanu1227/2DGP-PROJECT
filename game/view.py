@@ -1273,16 +1273,24 @@ class View:
                 self.tile_outline(projection, sx, sy, projection.half_width - inset,
                                   int(projection.half_height) - inset // 2, color)
             # 목표 안내도 해당 타일로 이동하는 클릭 영역이다.
-            bounds = (sx - 66, sy - 59, sx + 66, sy - 33)
+            label_y = sy - 46
+            half_width = self.text_width(hint.target_label, 22) / 2 + 14
+            left, right = sx - half_width, sx + half_width
+            if self.action_badge_bounds:
+                badge_left, badge_bottom, badge_right, badge_top = self.action_badge_bounds
+                if (left < badge_right and right > badge_left
+                        and label_y - 16 < badge_top and label_y + 16 > badge_bottom - 9):
+                    label_y = sy + 46
+            bounds = (left, label_y - 16, right, label_y + 16)
             box(*bounds, (25, 40, 42))
             box(*bounds, color, filled=False)
-            self.centered(sx, sy - 46, hint.target_label, 16, color)
+            self.centered(sx, label_y, hint.target_label, 22, color)
             self.hit_regions.append((hint.target, bounds))
         bevel(TUTORIAL_PANEL, HUD_FILL, HUD_EDGE)
-        self.text(52, 786, "첫 근무 안내", 18, GOLD)
-        self.text(344, 786, f"{hint.step} / 5", 18, TEAL)
-        self.text(52, 748, hint.title, 26, INK)
-        self.wrapped(52, 707, hint.instruction, width=344, size=18, color=INK)
+        self.text(52, 786, "첫 근무 안내", 22, GOLD)
+        self.text(344, 786, f"{hint.step} / 5", 22, TEAL)
+        self.text(52, 748, hint.title, 32, INK)
+        self.wrapped(52, 707, hint.instruction, width=348, size=26, color=INK)
 
     def play_context(self, game):
         """현재 입력에 바로 필요한 안내를 오래된 피드백보다 먼저 표시한다."""

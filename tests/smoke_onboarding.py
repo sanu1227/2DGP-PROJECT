@@ -69,6 +69,13 @@ def check_tutorial_timing(levels):
         draw(55, 3, False)
         assert game.undo()
         draw(56, 2, True)
+
+        for action in SOLUTIONS[game.level.id][1:8]:
+            assert game.act(action)
+        draw(57, 4, True)
+        target, (left, bottom, right, top) = display.hit_regions[-1]
+        assert target == display.tutorial.target
+        assert display.pick_cell(game, (left + right) / 2, (bottom + top) / 2) == target
     finally:
         if display:
             display.close()
@@ -228,8 +235,9 @@ def main():
                 assert display.tutorial.complete == (moves == len(SOLUTIONS["stage_01"]))
                 assert display.pick_cell(games[-1], 100, 700) is None
                 if display.tutorial_visible:
-                    sx, sy = view.IsoBoard(games[-1].level.width, games[-1].level.height).screen(display.tutorial.target)
-                    assert display.pick_cell(games[-1], sx, sy - 46) == display.tutorial.target
+                    target, (left, bottom, right, top) = display.hit_regions[-1]
+                    assert target == display.tutorial.target
+                    assert display.pick_cell(games[-1], (left + right) / 2, (bottom + top) / 2) == target
         if args.capture_dir and filename:
             if screen == "playing":
                 # 기록용 PNG는 걸음 보간이 끝난 위치를 보여 준다.

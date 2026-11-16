@@ -60,12 +60,12 @@ class StageFeedback:
                          for base, channel in zip(background, color))
 
         hint = game.level.hint
-        width = view.text_width(hint, 18) + 116
+        width = view.text_width(hint, 32) + 132
         left = (WIDTH - width) // 2
-        y = BOARD_TOP + 24
-        bevel((left, y - 16, left + width, y + 16), tinted((27, 38, 40)), tinted((86, 92, 74)))
-        view.text(left + 20, y, "방 힌트", 16, tinted(GOLD))
-        view.text(left + 96, y, hint, 18, tinted(INK))
+        y = BOARD_TOP + 20
+        bevel((left, y - 23, left + width, y + 23), tinted((27, 38, 40)), tinted((121, 111, 75)))
+        view.text(left + 22, y, "방 힌트", 22, tinted(GOLD))
+        view.text(left + 110, y, hint, 32, tinted(INK))
 
     def draw_result(self, view, game, index, total, elapsed):
         fade_to_black(.64)
