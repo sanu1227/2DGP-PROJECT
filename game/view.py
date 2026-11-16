@@ -434,11 +434,21 @@ class View:
             else:
                 handle = (x + body_size * (.16 if progress >= action.contact else -.16), y + body_size * .42)
             pose = pose.reach_toward(feet, handle, reach, body_size)
+        elif action and action.kind in ("deliver", "assemble"):
+            edge = tuple(a + (b - a) * .57 for a, b in zip(action.origin, action.target))
+            x, y = board.screen(edge)
+            _, reach = action.reaches(now)
+            pose = pose.reach_toward(feet, (x, y + body_size * (.03 if self.top_down else .28)), reach, body_size)
         return pose
 
     def item_is_in_hands(self, game, pos, now):
         action = self.current_worker_action(game, now)
         return action and action.kind == "drop" and action.target == pos and action.progress(now) < action.contact
+
+    def bench_shows_bones(self, game, pos, now):
+        if not self.work_feedback.contacted(pos, "assemble", now):
+            return True
+        return pos in game.state.bench_bones and self.work_feedback.contacted(pos, "deliver", now)
 
     def draw_iso_worker(self, game, board, sx, sy, scale, now):
         state = game.state
@@ -456,6 +466,8 @@ class View:
             target = action.target if action else state.player
             x, y = board.screen(target)
             y += (self.support_height(game, target) + data["anchor"]["y"] - center["y"]) * scale
+            if action and action.kind in ("deliver", "assemble"):
+                y += 64 * scale
             x, y = pose.item_position((sx, sy), (x, y))
             self.art.draw(sprite, x, y, scale * (.65 + .35 * pose.item_floor_scale), anchor=center)
 
@@ -913,7 +925,7 @@ class View:
                         objects.append((depth, 0, "trap_active", sx, sy))
                     labels.append((pos, "가동" if state.active else "설치" if pos in state.installed else "파손"))
                 elif pos in level.posts:
-                    if pos in state.soldiers:
+                    if pos in state.soldiers and self.work_feedback.contacted(pos, "deploy", now):
                         tile, tint = "post_empty", None
                     else:
                         # 발판까지 포함한 통합 그림을 깊이 순서에 맞춰 한 번만 그린다.
@@ -978,11 +990,12 @@ class View:
                     labels.append((pos, "레버"))
                 elif pos in level.benches:
                     stored = state.bench_bones.get(pos, 0)
-                    objects.append((depth, 1, "bench_one_bone" if stored else "bench_empty", sx, sy))
+                    bench = "bench_one_bone" if self.bench_shows_bones(game, pos, now) else "bench_empty"
+                    objects.append((depth, 1, bench, sx, sy))
                     labels.append((pos, f"조립 {stored}/2"))
                 if pos in state.items and not self.item_is_in_hands(game, pos, now):
                     objects.append((depth, 2, ITEM_SPRITES[state.items[pos]], sx, sy))
-                if pos in state.soldiers:
+                if pos in state.soldiers and self.work_feedback.contacted(pos, "deploy", now):
                     objects.append((depth, 2, "soldier_deployed", sx, sy))
 
         draw_echo_marks(game, projection)

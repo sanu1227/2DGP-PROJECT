@@ -202,6 +202,8 @@ class WorkFeedback:
     def soldier_height(self, pos, now):
         progress = self.progress(pos, "deploy", now)
         if progress < 1:
+            contact = GESTURES["deploy"].contact
+            progress = max(0, (progress - contact) / (1 - contact))
             return 1 - .25 * (1 - progress) * cos(progress * 10)
         phase = (now + pos[0] * .4 + pos[1] * .7) % 6
         return 1 + .022 * sin(pi * phase / .52) if phase < .52 else 1

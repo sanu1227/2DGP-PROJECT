@@ -17,6 +17,9 @@ GESTURES = {
     "drop": Gesture(((0, 0, 0), (.57, 1, 1), (.72, .85, .6), (1, 0, 0)), .57),
     "install": Gesture(((0, 0, 0), (.35, .70, .68), (.66, .91, 1), (1, 0, 0)), .66),
     "lever": Gesture(((0, .06, 0), (.33, .35, 1), (.60, .15, .72), (1, 0, 0)), .60),
+    "deliver": Gesture(((0, 0, 0), (.29, .13, .62), (.54, .46, 1), (1, 0, 0)), .54),
+    "assemble": Gesture(((0, 0, 0), (.31, .35, .70), (.56, .61, 1), (1, 0, 0)), .56),
+    "deploy": Gesture(((0, 0, 0), (.25, .38, .54), (.57, .88, 1), (1, 0, 0)), .57),
 }
 
 # 투명 여백을 포함한 아틀라스의 운반 자세에서 양 손 사이의 중심.
@@ -109,12 +112,16 @@ def sample_pose(direction, body_size, rest_height, walk, carrying, action, now, 
         upper, boots = "carry", "idle"
         if action.kind == "pickup":
             floor_scale = 1 - smooth((phase - contact) / (1 - contact))
-        elif action.kind == "drop":
+        elif action.kind in ("drop", "install", "deliver", "deploy"):
             floor_scale = smooth(phase / contact)
             item = action.before_item if phase < contact else None
-        elif action.kind == "install":
-            floor_scale = smooth(phase / contact)
-            item = action.before_item if phase < contact else None
+        elif action.kind == "assemble":
+            if phase < contact:
+                item = action.before_item
+                floor_scale = smooth(phase / contact)
+            else:
+                item = action.after_item
+                floor_scale = 1 - smooth((phase - contact) / (1 - contact))
     elif push:
         upper = "carry"
         bend, reach = .54, .76

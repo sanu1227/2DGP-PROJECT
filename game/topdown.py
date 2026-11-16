@@ -310,13 +310,16 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, mirror
             art.draw(asset, sx, sy, size * .82, angle=SOURCE_ANGLES[level.sources[pos]], outline=True)
         elif pos in state.soldiers:
             art.draw(sprites.get("post_empty", "post_empty"), sx, sy, size * .79, outline=True)
-            art.draw(asset, sx, sy, size * .72, height_scale=view.work_feedback.soldier_height(pos, now))
+            if view.work_feedback.contacted(pos, "deploy", now):
+                art.draw(asset, sx, sy, size * .72, height_scale=view.work_feedback.soldier_height(pos, now))
         elif sprite == "lever_on":
             progress = view.work_feedback.progress(pos, "lever", now)
             lever = asset if view.work_feedback.contacted(pos, "lever", now) else sprites["lever_off"]
             art.draw(lever, sx, sy, size * .82, outline=True, height_scale=1 - .11 * sin(pi * progress))
         else:
-            if sprite in ("trap_installed", "trap_active") and not view.work_feedback.contacted(pos, "install", now):
+            if pos in level.benches:
+                asset = sprites["bench_bone" if view.bench_shows_bones(game, pos, now) else "bench_empty"]
+            elif sprite in ("trap_installed", "trap_active") and not view.work_feedback.contacted(pos, "install", now):
                 asset = sprites["trap_broken"]
             elif sprite == "trap_active" and not view.work_feedback.contacted(pos, "trap", now):
                 asset = sprites["trap_installed"]
@@ -373,6 +376,8 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, mirror
         x, y = board.screen(target)
         if view.work_feedback.progress(target, "pickup", now) < 1 and target in entries:
             x += .22 * size
+        if action and action.kind in ("deliver", "assemble"):
+            y += .10 * size
         x, y = pose.item_position(feet, (x, y + .04 * size))
         sprite = ITEMS[pose.item]
         swing = .09 if pose.boots == "walk_a" else -.09 if pose.boots == "walk_b" else 0
