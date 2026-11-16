@@ -303,7 +303,7 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, gate_s
         sx, sy = board.screen(pos)
         sprite = ITEMS[kind]
         art.draw(sprites.get(sprite, sprite), sx + (size * .22 if pos in entries else 0), sy + size * .04,
-                 size * .54)
+                 size * .54, outline=True)
     for position, height in rubble:
         sx, sy = board.screen(position)
         art.draw(sprites.get("rubble", "rubble"), sx, sy + min(height, 24) * size / 256, size * .74, outline=True)
