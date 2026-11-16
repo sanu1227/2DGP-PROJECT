@@ -19,7 +19,10 @@ class ActionLimitTests(unittest.TestCase):
         self.levels = load_levels()
 
     def test_unlimited_tutorial_and_authored_budgets(self):
-        self.assertEqual([l.action_limit for l in self.levels], [None] + [MINIMUM_ACTIONS[level.id] + 2 for level in self.levels[1:]])
+        self.assertIsNone(self.levels[0].action_limit)
+        spare_actions = [level.action_limit - MINIMUM_ACTIONS[level.id] for level in self.levels[1:]]
+        self.assertTrue(all(spare > 2 for spare in spare_actions))
+        self.assertGreater(len(set(spare_actions)), 1)
         game = Game(self.levels[0])
         for index in range(200):
             self.assertTrue(game.act("right" if index % 2 == 0 else "left"))

@@ -10,11 +10,14 @@ from tests.solutions import MINIMUM_ACTIONS, SOLUTIONS
 
 
 class BalanceTests(unittest.TestCase):
-    def test_reference_routes_finish_on_exact_budget_and_have_two_spare_actions(self):
+    def test_reference_routes_finish_on_exact_budget(self):
         for index, level in enumerate(load_levels()):
             minimum = MINIMUM_ACTIONS[level.id]
             with self.subTest(stage=level.id):
-                self.assertEqual(level.action_limit, None if index == 0 else minimum + 2)
+                if index == 0:
+                    self.assertIsNone(level.action_limit)
+                else:
+                    self.assertGreater(level.action_limit, minimum)
                 self.assertEqual(len(SOLUTIONS[level.id]), minimum)
                 for budget in (minimum - 1, minimum):
                     game = Game(replace(level, action_limit=budget))
@@ -48,8 +51,9 @@ class BalanceTests(unittest.TestCase):
             (levels[1], levels[1].start, (5, 1), levels[1].posts),
             (levels[2], levels[2].start, (6, 2), levels[2].posts),
             (levels[2], levels[2].start, (6, 5), {(4, 5)}),
+            (levels[3], levels[3].start, levels[3].exit, levels[3].traps),
             (levels[5], levels[5].start, levels[5].exit, levels[5].traps),
-            (levels[6], levels[6].start, (6, 2), levels[6].posts),
+            (levels[6], levels[6].start, next(p for p, kind in levels[6].initial_items.items() if kind == "part"), levels[6].posts),
             (levels[6], levels[6].start, levels[6].exit, levels[6].traps),
             (levels[7], levels[7].start, (7, 8), {(4, 7)}),
         ]

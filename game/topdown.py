@@ -122,7 +122,7 @@ def device_entries(game, gate_statuses, powered, exit_ready, plate_depths):
     for pos in level.chutes.values():
         entries[pos] = "chute_outlet", "배출", GOLD
     for pos in level.chutes:
-        entries[pos] = "chute_inlet", "투입구", GOLD
+        entries[pos] = "chute_inlet", f"{level.device_labels[pos]} 투입구", GOLD
     for pos in level.plates:
         pressed = plate_depths[pos] >= .5
         entries[pos] = ("plate_down" if pressed else "plate_up"), level.device_labels[pos], TEAL if pressed else GOLD

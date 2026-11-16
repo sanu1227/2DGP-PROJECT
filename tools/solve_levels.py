@@ -265,12 +265,47 @@ def solve(level, max_states=500_000, upper_bound=None, forbidden=None):
     return None
 
 
+def mechanic_required_by_layout(level, mechanic):
+    """나머지 문과 장애물을 무시해도 필수 칸에 갈 수 없는 경우를 증명한다."""
+    floor = {(x, y) for y in range(level.height) for x in range(level.width)} - level.walls
+
+    def reachable(blocked):
+        seen = {level.start}
+        queue = deque(seen)
+        while queue:
+            x, y = queue.popleft()
+            for dx, dy in DIRECTIONS.values():
+                target = x + dx, y + dy
+                if target in floor and target not in blocked and target not in seen:
+                    seen.add(target)
+                    queue.append(target)
+        return seen
+
+    controls = {"plate": level.plates, "helper": level.jobs}
+    if mechanic == "rubble":
+        blocked = level.rubble
+    elif mechanic == "mirror":
+        state = Game(level).state
+        state.rubble.clear()
+        inactive = level.receivers - trace_magic(level, state)[1]
+        blocked = {gate for gate, control in level.gates.items() if control in inactive}
+    elif mechanic == "chute":
+        # 발판이 자기 문 안쪽에 있고 비어 있으면 바깥에서 직접 누를 수 없다.
+        blocked = {gate for gate, control in level.gates.items() if control in level.plates
+                   and control not in level.initial_items and control not in level.rubble
+                   and control not in reachable({gate})}
+    else:
+        blocked = {gate for gate, control in level.gates.items() if control in controls[mechanic]}
+    required_cells = level.initial_items.keys() | level.traps | level.posts | {level.exit}
+    return not required_cells <= reachable(blocked)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--stage", type=int, nargs="+")
     parser.add_argument("--max-states", type=int, default=500_000)
     parser.add_argument("--output", type=Path)
-    parser.add_argument("--check", action="store_true", help="최단 풀이와 최소+2회 제한 검증")
+    parser.add_argument("--check", action="store_true", help="최단 풀이와 방별 여유 행동 검증")
     parser.add_argument("--check-mechanics", action="store_true", help="4~8번 핵심 장치를 각각 생략하면 제한 내 완료 불가인지 검사")
     args = parser.parse_args()
     from tests.solutions import MINIMUM_ACTIONS, SOLUTIONS
@@ -285,29 +320,35 @@ def main():
         valid = all(check.act(a) for a in route) and check.state.cleared
         result = solve(level, args.max_states, len(route) if valid else None)
         if args.check:
-            expected_limit = None if index == 1 else MINIMUM_ACTIONS[level.id] + 2
+            valid_limit = (level.action_limit is None if index == 1 else
+                           level.action_limit is not None and level.action_limit > MINIMUM_ACTIONS[level.id])
             if (not valid or result is None or result["minimum"] != MINIMUM_ACTIONS[level.id]
-                    or len(route) != result["minimum"] or level.action_limit != expected_limit):
+                    or len(route) != result["minimum"] or not valid_limit):
                 raise ValueError(f"{level.id}: 기준 풀이·최소 행동·제한 규칙 불일치 "
                                  f"(재생={valid}, 탐색={None if result is None else result['minimum']}, "
                                  f"기준={MINIMUM_ACTIONS[level.id]}, 제한={level.action_limit})")
         if result is None:
             raise ValueError(f"{level.id}: 완료 가능한 풀이가 없습니다.")
-        required = {4: ("rubble", "plate"), 5: ("mirror", "chute"), 6: ("mirror",),
-                    7: ("helper",), 8: ("rubble", "mirror", "helper", "chute")}
+        required = {4: ("rubble", "plate"), 5: ("mirror", "chute", "plate"), 6: ("mirror",),
+                    7: ("helper",), 8: ("rubble", "mirror", "helper", "chute", "plate")}
         if args.check_mechanics and index in required:
+            layout_required = []
             for mechanic in required[index]:
+                if mechanic_required_by_layout(level, mechanic):
+                    layout_required.append(mechanic)
+                    print(f"{level.id}: {mechanic} 생략 시 배치상 완료 불가", flush=True)
+                    continue
+
                 def forbidden(game, action):
                     if action in DIRECTIONS:
                         dx, dy = DIRECTIONS[action]
                         target = game.state.player[0] + dx, game.state.player[1] + dy
                         return ((mechanic == "rubble" and target in game.state.rubble)
-                                or (mechanic == "plate" and (target in level.plates or
-                                    (target in game.state.rubble and (target[0] + dx, target[1] + dy) in level.plates))))
-                    operation = (game._drop_interaction(game.state) if action == "drop" else
-                                 game._interaction(game.state))[0]
-                    return ((mechanic == "plate" and operation == "drop" and game.state.player in level.plates)
-                            or (mechanic == "chute" and operation == "send_bone")
+                                or (mechanic == "plate" and level.gates.get(target) in level.plates))
+                    if action != "interact":
+                        return False
+                    operation = game._interaction(game.state)[0]
+                    return ((mechanic == "chute" and operation == "send_bone")
                             or (mechanic == "mirror" and operation == "rotate")
                             or (mechanic == "helper" and operation == "assign"))
 
@@ -317,6 +358,7 @@ def main():
                 print(f"{level.id}: {mechanic} 생략 시 제한 내 완료 불가", flush=True)
             result["core_mechanic_required_within_limit"] = True
             result["required_mechanics"] = list(required[index])
+            result["mechanics_required_by_layout"] = layout_required
         result["action_limit"] = level.action_limit
         result["size"] = [level.width, level.height]
         result["floor_cells"] = level.width * level.height - len(level.walls)
@@ -324,7 +366,8 @@ def main():
         print(json.dumps({"stage": level.id, **{k: v for k, v in result.items() if k != "actions"}}), flush=True)
     if args.output:
         root = Path(__file__).resolve().parents[1]
-        fingerprints = {name: hashlib.sha256((root / name).read_bytes()).hexdigest()
+        # Git의 줄바꿈 설정에 관계없이 같은 입력은 같은 체크섬을 갖는다.
+        fingerprints = {name: hashlib.sha256((root / name).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
                         for name in ("data/stages.json", "game/levels.py", "game/model.py",
                                      "game/mechanics.py", "tools/solve_levels.py", "tests/solutions.py")}
         report = {"sha256": fingerprints, "stages": results}

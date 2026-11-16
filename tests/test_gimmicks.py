@@ -47,10 +47,11 @@ class GimmickTests(unittest.TestCase):
 
     def test_mirror_rotation_opens_gate_and_undo_restores_beam(self):
         game=Game(self.levels[4]); game.state.player=(3,2)
+        gate = next(gate for gate, control in game.level.gates.items() if control in game.level.receivers)
         before=deepcopy(game.state)
-        self.assertEqual(game.gate_status(next(iter(game.level.gates))), 'closed')
+        self.assertEqual(game.gate_status(gate), 'closed')
         self.assertTrue(game.act('interact'))
-        self.assertEqual(game.gate_status(next(iter(game.level.gates))), 'open')
+        self.assertEqual(game.gate_status(gate), 'open')
         self.assertEqual(trace_magic(game.level,game.state)[1], {(3,4)})
         self.assertNotEqual(key(before), key(game.state))
         game.undo(); self.assertEqual(game.state,before)
@@ -111,7 +112,7 @@ class GimmickTests(unittest.TestCase):
         self.assertFalse(powered)
 
     def test_later_rooms_require_every_reflection_and_undo_each_rotation(self):
-        for index, expected in ((4, (1,)), (5, (1, 3)), (7, (3, 1, 3))):
+        for index, expected in ((4, (1,)), (7, (3, 1, 3))):
             count = len(expected)
             level = self.levels[index]
             mirrors = sorted(level.mirrors)
@@ -141,6 +142,35 @@ class GimmickTests(unittest.TestCase):
             for mirror in mirrors:
                 broken = replace(level, mirrors=level.mirrors - {mirror})
                 self.assertFalse(trace_magic(broken, game.state)[1])
+
+    def test_switching_power_and_deploying_guard_changes_available_room(self):
+        level = self.levels[5]
+        game = Game(level)
+        north, south = sorted(level.gates, key=lambda pos: pos[1])
+        switch, relay = sorted(level.mirrors, key=lambda pos: pos[1])
+        part = next(pos for pos, item in level.initial_items.items() if item == 'part')
+        self.assertEqual([game.gate_status(gate) for gate in (north, south)], ['closed', 'closed'])
+
+        game.state.player = relay
+        for _ in range(3):
+            self.assertTrue(game.act('interact'))
+        game.state.player = switch
+        self.assertTrue(game.act('interact'))
+        self.assertEqual([game.gate_status(gate) for gate in (north, south)], ['closed', 'open'])
+        self.assertIsNotNone(find_path(game, part))
+
+        game.state.player = next(iter(level.posts))
+        game.state.carrying = 'soldier'
+        self.assertTrue(game.act('interact'))
+        self.assertIsNone(find_path(game, part))
+        self.assertEqual(game.gate_status(south), 'closed')
+        self.assertTrue(game.undo())
+        self.assertEqual(game.gate_status(south), 'open')
+
+        game.state.carrying = None
+        game.state.player = switch
+        self.assertTrue(game.act('interact'))
+        self.assertEqual([game.gate_status(gate) for gate in (north, south)], ['open', 'closed'])
 
     def test_retired_water_is_absent_from_levels_state_and_catalog(self):
         from game.device_catalog import CARDS

@@ -66,7 +66,10 @@ def check_feedback(levels, capture):
                 checked += 1
             assert game.state.cleared and display.fatigue(game) == 0
             assert game.undo()
-            assert display.fatigue(game) == (0 if limit is None else 2)
+            remaining = game.remaining_actions
+            assert display.fatigue(game) == (
+                0 if remaining is None or remaining > threshold else 2 if remaining <= 5 else 1
+            )
             game.restart()
             assert display.fatigue(game) == 0
         p.update_canvas()
