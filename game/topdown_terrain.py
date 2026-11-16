@@ -7,11 +7,13 @@ from math import cos, hypot, pi, sin
 
 import pico2d.pico2d as p
 
-from game.layout import HEIGHT
+from game.layout import BOARD_BOTTOM, BOARD_TOP, HEIGHT
 
 
 _RING = tuple((cos(index * pi / 8), sin(index * pi / 8)) for index in range(16))
 LIGHT_SAMPLES_PER_CELL = 4
+EXTERIOR_PADDING_SAMPLES = 9  # 조명 메시 표본 9칸 = 타일 2.25칸
+EXTERIOR_LIGHT_STRENGTH = .58
 
 
 @dataclass(frozen=True)
@@ -141,9 +143,11 @@ def smoothstep(fraction):
     return fraction * fraction * (3 - 2 * fraction)
 
 
-def light_samples(x, y, lights):
+def light_samples(x, y, lights, visibility):
     samples = []
     for index, light in enumerate(lights):
+        if not visibility and not light.range_variation:
+            continue
         lx, ly = light.position
         distance = hypot((x - lx) / light.width, (y - ly) / light.height)
         if distance < 1 + light.range_variation:
@@ -151,23 +155,28 @@ def light_samples(x, y, lights):
     return samples
 
 
-def light_tint(samples, background, visibility, scales):
-    """바닥 그림자와 겹치는 빛을 한 번에 합성한다."""
+def light_tint(samples, background, visibility, exterior, scales):
+    """바닥 그림자와 바깥으로 새어 나가는 빛을 한 번에 합성한다."""
     total_light = 0.0
+    reflected_light = 0.0
     red = green = blue = 0.0
     for light_index, light, distance in samples:
         falloff = smoothstep(1 - distance / scales[light_index])
+        reflection = visibility
         if light.range_variation:
             # 중심 밝기는 유지하고 바닥에 닿는 빛의 가장자리가 더 잘 보이게 한다.
             falloff += .45 * falloff * (1 - falloff)
+            reflection += exterior
         weight = light.alpha * falloff
         total_light += weight
+        reflected = weight * reflection
+        reflected_light += reflected
         r, g, b = light.color
-        red += r * weight
-        green += g * weight
-        blue += b * weight
+        red += r * reflected
+        green += g * reflected
+        blue += b * reflected
 
-    glow = min(.54, total_light / 255) * visibility
+    glow = min(.54 * (visibility + exterior), reflected_light / 255)
     ambient = .42 * (1 - min(1, total_light / 84))
     shade = (1 - glow) * (1 - visibility * (1 - ambient))
     opacity = shade + glow
@@ -175,41 +184,69 @@ def light_tint(samples, background, visibility, scales):
         return p.SDL_Color(*background, round(255 * opacity))
     base_red, base_green, base_blue = background
     base_weight = shade / opacity
-    light_weight = glow / (total_light * opacity)
+    light_weight = glow / (reflected_light * opacity)
     return p.SDL_Color(round(base_red * base_weight + red * light_weight),
                        round(base_green * base_weight + green * light_weight),
                        round(base_blue * base_weight + blue * light_weight), round(255 * opacity))
 
 
+def lighting_axis(cells, before, after):
+    """방 바깥의 부드러운 빛은 더 넓은 간격으로 표본을 잡는다."""
+    last = cells * LIGHT_SAMPLES_PER_CELL
+    offsets = [-step for step in range(2, before, 2)]
+    if before:
+        offsets.append(-before)
+    outer = list(range(last + 2, last + after, 2))
+    if after:
+        outer.append(last + after)
+    return (*reversed(offsets), *range(last + 1), *outer)
+
+
 @lru_cache(maxsize=16)
 def lighting_mesh(board, floors, lights, background):
     """방과 전원 상태별로 화면 좌표와 광원까지의 거리를 재사용한다."""
-    columns = board.width * LIGHT_SAMPLES_PER_CELL + 1
-    rows = board.height * LIGHT_SAMPLES_PER_CELL + 1
+    padding = EXTERIOR_PADDING_SAMPLES
+    sample_step = board.cell_size / LIGHT_SAMPLES_PER_CELL
+    top = board.screen((0, -.5))[1]
+    bottom = board.screen((0, board.height - .5))[1]
+    above = min(padding, int((BOARD_TOP - top) // sample_step))
+    below = min(padding, int((bottom - BOARD_BOTTOM) // sample_step))
+    horizontal = lighting_axis(board.width, padding, padding)
+    vertical = lighting_axis(board.height, above, below)
+    columns = len(horizontal)
     vertices = []
     indices = []
     animated = []
+    lit_or_terrain = []
     base_scales = (1.0,) * len(lights)
-    for row in range(rows):
-        y = row / LIGHT_SAMPLES_PER_CELL - .5
-        for column in range(columns):
-            x = column / LIGHT_SAMPLES_PER_CELL - .5
+    for row, row_sample in enumerate(vertical):
+        y = row_sample / LIGHT_SAMPLES_PER_CELL - .5
+        sy = board.screen((0, y))[1]
+        hud_gap = min(sy - BOARD_BOTTOM, BOARD_TOP - sy)
+        exterior_fade = smoothstep((hud_gap - sample_step) / (sample_step * 2))
+        for column, column_sample in enumerate(horizontal):
+            x = column_sample / LIGHT_SAMPLES_PER_CELL - .5
             edge = min(x + .5, y + .5, board.width - .5 - x, board.height - .5 - y)
-            rock_depth = min((hypot(max(abs(x - fx) - .5, 0), max(abs(y - fy) - .5, 0))
-                              for fx, fy in floors), default=2)
-            # 통로에서 멀어질수록 돌을 감춰 방 윤곽이 격자 외곽선으로 끊기지 않게 한다.
-            visibility = smoothstep(edge / .58) * (1 - smoothstep((rock_depth - .32) / .93))
-            sx, sy = board.screen((x, y))
-            samples = light_samples(x, y, lights) if visibility else ()
-            tint = light_tint(samples, background, visibility, base_scales)
+            visibility = 0.0
+            if edge > 0:
+                rock_depth = min((hypot(max(abs(x - fx) - .5, 0), max(abs(y - fy) - .5, 0))
+                                  for fx, fy in floors), default=2)
+                # 통로에서 멀어질수록 돌을 감춰 방 윤곽이 격자 외곽선으로 끊기지 않게 한다.
+                visibility = smoothstep(edge / .58) * (1 - smoothstep((rock_depth - .32) / .93))
+            exterior = EXTERIOR_LIGHT_STRENGTH * (1 - visibility) * exterior_fade
+            sx = board.screen((x, y))[0]
+            samples = light_samples(x, y, lights, visibility) if visibility or exterior else ()
+            tint = light_tint(samples, background, visibility, exterior, base_scales)
             if any(light.range_variation for _, light, _ in samples):
-                animated.append((len(vertices), visibility, samples))
+                animated.append((len(vertices), visibility, exterior, samples))
+            lit_or_terrain.append(edge >= 0 or bool(samples))
             # 소프트웨어 렌더러에서 삼각형 경계 사이에 암석이 비치지 않게 맞춘다.
             vertices.append(p.SDL_Vertex(p.SDL_FPoint(round(sx), round(HEIGHT - sy)), tint, p.SDL_FPoint()))
             if row and column:
                 current = row * columns + column
-                indices.extend((current - columns - 1, current - columns, current,
-                                current - columns - 1, current, current - 1))
+                corner = current - columns - 1
+                if any(lit_or_terrain[i] for i in (corner, current - columns, current - 1, current)):
+                    indices.extend((corner, current - columns, current, corner, current, current - 1))
     return (p.SDL_Vertex * len(vertices))(*vertices), (c_int * len(indices))(*indices), animated
 
 
@@ -242,8 +279,8 @@ def draw_terrain(art, board, level, materials, lights, background, now):
                     wall_rim(art, board, pos, floors, materials)
         mesh, triangles, animated = lighting_mesh(board, floors, lights, background)
         scales = tuple(light.radius_scale(now) for light in lights)
-        for index, visibility, samples in animated:
-            mesh[index].color = light_tint(samples, background, visibility, scales)
+        for index, visibility, exterior, samples in animated:
+            mesh[index].color = light_tint(samples, background, visibility, exterior, scales)
         p.SDL_RenderGeometry(p.renderer, None, mesh, len(mesh), triangles, len(triangles))
     finally:
         p.SDL_SetRenderDrawBlendMode(p.renderer, previous.value)
