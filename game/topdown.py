@@ -1,14 +1,14 @@
 """탑다운 격자에 퍼즐 상태와 전용 스프라이트를 표시한다."""
 
 import json
-from math import pi
+from math import hypot, pi
 from pathlib import Path
 
 import pico2d.pico2d as p
 
 from game.levels import DIRECTIONS
 from game.themes import scene_for
-from game import topdown_workshop
+from game import topdown_terrain
 
 
 ASSET_ROOT = Path(__file__).resolve().parents[1] / "assets" / "topdown_v2"
@@ -31,6 +31,29 @@ DECOR = {
     "sewer_mount_lamp": "lantern", "sewer_mount_pipes": "wall_pipes",
 }
 STAGE_THEMES = {f"stage_{stage:02d}": stage for stage in range(1, 9)}
+WORKSHOP_SPRITES = {name: f"workshop_{name}" for name in (
+    "trap_broken", "trap_installed", "trap_active", "exit_closed", "exit_ready",
+    "lever_off", "lever_on", "part", "anvil", "lantern", "candle_sconce", "tool_rack",
+)}
+ROOM_SPRITES = WORKSHOP_SPRITES | {name: f"depth_{name}" for name in (
+    "bone", "soldier_carried", "soldier_deployed", "post_empty",
+    "bench_empty", "bench_bone", "plate_up", "plate_down", "gate_closed", "gate_open", "rubble",
+    "chute_outlet", "chute_inlet", "source", "receiver", "mirror_base", "winch", "helper",
+    "crystal_sconce", "lantern", "candle_sconce", "air_vent", "wall_pipes", "crest",
+    "sarcophagus", "candles", "books", "throne", "hand_pump", "elbow_pipe", "water_barrel",
+    "brazier", "treasure", "treasure_banner", "crypt_banner", "archive_banner",
+)}
+PROP_LIGHTS = {
+    "candle_sconce": ((249, 163, 93), 89),
+    "candles": ((250, 176, 102), 79),
+    "lantern": ((247, 157, 71), 85),
+    "brazier": ((253, 124, 68), 91),
+    "crystal_sconce": ((95, 188, 245), 77),
+}
+RAISED_DEVICES = frozenset({
+    "lever_off", "lever_on", "bench_empty", "bench_bone", "soldier_deployed",
+    "chute_inlet", "source", "mirror_base", "receiver", "winch", "helper",
+})
 
 
 class TopDownArt:
@@ -38,12 +61,7 @@ class TopDownArt:
         self.atlases = {}
         manifest = json.loads((ASSET_ROOT / "manifest.json").read_text(encoding="utf-8"))
         self.sprites = manifest["sprites"]
-        try:
-            for name, filename in manifest["atlases"].items():
-                self.atlases[name] = p.load_image(str(ASSET_ROOT / filename))
-        except Exception:
-            self.close()
-            raise
+        self.files = manifest["atlases"]
 
     def close(self):
         for atlas in self.atlases.values():
@@ -53,7 +71,9 @@ class TopDownArt:
 
     def draw(self, name, x, y, size, *, angle=0, opacity=1, height_scale=1):
         atlas_name, left, top, width, height = self.sprites[name]
-        atlas = self.atlases[atlas_name]
+        atlas = self.atlases.get(atlas_name)
+        if atlas is None:
+            atlas = self.atlases[atlas_name] = p.load_image(str(ASSET_ROOT / self.files[atlas_name]))
         scale = size / max(width, height)
         clip = (left, atlas.h - top - height, width, height)
         if opacity != 1:
@@ -141,6 +161,42 @@ def source_nozzle(level, start, end):
     return start
 
 
+def room_props(scene, level, workshop):
+    props = []
+    if scene:
+        for mount in scene.get("wall_mounts", ()):
+            key = mount["sprite"].rsplit("_", 1)[0]
+            if key in DECOR:
+                x, y = mount["cell"]
+                pos = (x + .32, y + .04) if x == 0 else (x, y + .23)
+                props.append((DECOR[key], pos, .46))
+        for decoration in scene["decorations"]:
+            key = decoration["sprite"]
+            if key in DECOR:
+                scale = .72 if workshop else min(.91, decoration["scale"] + .08)
+                props.append((DECOR[key], tuple(decoration["cell"]), scale))
+    if workshop and (3, 0) in level.walls:
+        props.append(("candle_sconce", (3, .24), .42))
+    return props
+
+
+def room_lights(level, props, powered, exit_ready, workshop):
+    if workshop:
+        lights = [((2.9, .63), 1.56, 1.33, (249, 161, 78), 92),
+                  ((.65, 1.94), 1.49, 1.37, (245, 141, 63), 88)]
+    else:
+        lights = []
+        for name, (x, y), _ in props:
+            if name in PROP_LIGHTS:
+                color, alpha = PROP_LIGHTS[name]
+                lights.append(((x + .31 if x < 1 else x, y + .31 if y < 1 else y), 1.56, 1.25, color, alpha))
+        lights.extend((pos, .88, .78, (178, 94, 240), 46) for pos in level.sources)
+        lights.extend((pos, .91, .80, (187, 118, 248), 76) for pos in sorted(powered))
+    if exit_ready:
+        lights.append((level.exit, .84, .72, (54, 191, 141), 83))
+    return lights
+
+
 def draw_board(view, game, board, now, beam_segments, powered, rotations, gate_statuses, gate_openings):
     level, state = game.level, game.state
     art = view.topdown_art
@@ -150,9 +206,12 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, gate_s
     ready = (state.installed == level.traps and (not level.traps or state.active)
              and state.soldiers == level.posts and state.carrying is None)
     entries = device_entries(game, gate_statuses, powered, ready, view.plate_depths)
-    workshop = level.id == "stage_01"
-    sprites = topdown_workshop.SPRITES if workshop else {}
+    workshop = stage == 1
+    sprites = WORKSHOP_SPRITES if workshop else ROOM_SPRITES
+    props = room_props(scene, level, workshop)
+    lights = room_lights(level, props, powered, ready, workshop)
     player = view.player_position(state.player, now)
+    rubble = [view.rubble_pose(game, pos, now) for pos in sorted(state.rubble)]
     view.hit_regions.clear()
     view.hit_masks.clear()
     view.gate_hit_masks.clear()
@@ -160,66 +219,46 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, gate_s
     view.plate_hit_masks.clear()
     view.action_badge_bounds = None
 
-    if workshop:
-        topdown_workshop.draw_terrain(art, board, level, ready)
-        raised_objects = [pos for pos, (sprite, _, _) in entries.items() if sprite.startswith("lever_")]
-        topdown_workshop.draw_shadows(board, player, [*raised_objects, *state.items])
-    else:
-        for y in range(level.height):
-            for x in range(level.width):
-                pos = x, y
-                sx, sy = board.screen(pos)
-                wall = pos in level.walls
-                art.draw(f"{'wall' if wall else 'floor'}_{stage}", sx, sy, size)
-                rectangle(sx - half, sy - half, sx + half, sy + half, (33, 39, 44), False)
-    if scene:
-        for mount in scene.get("wall_mounts", ()):
-            key = mount["sprite"].rsplit("_", 1)[0]
-            if key in DECOR:
-                x, y = mount["cell"]
-                if workshop:
-                    x, y = (x + .32, y + .04) if x == 0 else (x, y + .23)
-                sprite = DECOR[key]
-                art.draw(sprites.get(sprite, sprite), *board.screen((x, y)), size * .46)
-        for decoration in scene["decorations"]:
-            key = decoration["sprite"]
-            if key in DECOR:
-                sprite = DECOR[key]
-                x, y = board.screen(tuple(decoration["cell"]))
-                if workshop and sprite == "anvil":
-                    art.draw("workshop_plinth", x, y, size * .83)
-                    y += size * .06
-                art.draw(sprites.get(sprite, sprite), x, y, size * .72)
-    if workshop and (3, 0) in level.walls:
-        art.draw("workshop_candle_sconce", *board.screen((3, .24)), size * .42)
+    topdown_terrain.draw_terrain(art, board, level, topdown_terrain.materials_for(stage), lights)
+    raised = [pos for pos, (sprite, _, _) in entries.items() if sprite in RAISED_DEVICES]
+    topdown_terrain.draw_shadows(board, player, [*raised, *state.items, *(pos for pos, _ in rubble)])
+
+    for sprite, pos, scale in props:
+        x, y = board.screen(pos)
+        plinth = {"anvil": "workshop_plinth", "throne": "room_08_plinth"}.get(sprite)
+        if plinth:
+            art.draw(plinth, x, y, size * (.83 if workshop else .85))
+            y += size * .06
+        art.draw(sprites.get(sprite, sprite), x, y, size * scale)
 
     for pos, (sprite, _, _) in entries.items():
         sx, sy = board.screen(pos)
+        asset = sprites.get(sprite, sprite)
         if pos in level.gates:
             x, y = pos
             across_x = sum(cell in level.walls for cell in ((x - 1, y), (x + 1, y)))
             across_y = sum(cell in level.walls for cell in ((x, y - 1), (x, y + 1)))
             angle = 0 if across_x > across_y else pi / 2
-            art.draw(sprite, sx, sy, size * .94, angle=angle)
+            art.draw(asset, sx, sy, size * .94, angle=angle)
             if gate_openings[pos] < 1:
-                art.draw("gate_closed", sx, sy, size * .94, angle=angle, opacity=1 - gate_openings[pos])
+                art.draw(sprites.get("gate_closed", "gate_closed"), sx, sy, size * .94,
+                         angle=angle, opacity=1 - gate_openings[pos])
         elif pos in level.sources:
-            art.draw(sprite, sx, sy, size * .68, angle=SOURCE_ANGLES[level.sources[pos]])
+            art.draw(asset, sx, sy, size * .68, angle=SOURCE_ANGLES[level.sources[pos]])
         elif pos in state.soldiers:
-            art.draw("post_empty", sx, sy, size * .79)
-            art.draw(sprite, sx, sy, size * .64)
+            art.draw(sprites.get("post_empty", "post_empty"), sx, sy, size * .79)
+            art.draw(asset, sx, sy, size * .72)
         else:
-            art.draw(sprites.get(sprite, sprite), sx, sy, size * (.82 if workshop else .72))
+            art.draw(asset, sx, sy, size * .82)
 
     for pos, kind in state.items.items():
         sx, sy = board.screen(pos)
         sprite = ITEMS[kind]
         art.draw(sprites.get(sprite, sprite), sx + (size * .22 if pos in entries else 0), sy + size * .04,
-                 size * (.54 if workshop else .47))
-    for pos in state.rubble:
-        position, height = view.rubble_pose(game, pos, now)
+                 size * .54)
+    for position, height in rubble:
         sx, sy = board.screen(position)
-        art.draw("rubble", sx, sy + min(height, 24) * size / 256, size * .68)
+        art.draw(sprites.get("rubble", "rubble"), sx, sy + min(height, 24) * size / 256, size * .74)
 
     px, py = board.screen(player)
     p.draw_circle(px, py, round(size * .38), *TEAL)
@@ -227,21 +266,23 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, gate_s
     pose = "carry" if state.carrying else (
         "walk_a" if now - view.motion[2] < .09 else "walk_b") if view.motion else "idle"
     tired = view.fatigue(game)
-    art.draw(f"worker_{facing}_{pose}", px, py, size * (.75 if workshop else .68),
+    art.draw(f"worker_{facing}_{pose}", px, py, size * .75,
              height_scale=view.worker_height(tired, now))
     if state.carrying:
         dx, dy = DIRECTIONS[facing]
         sprite = ITEMS[state.carrying]
         art.draw(sprites.get(sprite, sprite), px + dx * size * .27, py - dy * size * .27, size * .32)
-    head = py + size * (.35 if workshop else .29)
+    head = py + size * .35
     view.place_action_badge(game, px, head, now)
     view.worker_effort((px - size * .3, py - size * .27, px + size * .3, head), tired, now)
 
     for start, end in beam_segments:
         x1, y1 = board.screen(source_nozzle(level, start, end))
         x2, y2 = board.screen(end)
+        length = max(1, hypot(x2 - x1, y2 - y1))
+        nx, ny = (y1 - y2) / length, (x2 - x1) / length
         for offset, color in ((-1, VIOLET), (0, (247, 202, 255)), (1, VIOLET)):
-            p.draw_line(x1, y1 + offset, x2, y2 + offset, *color)
+            p.draw_line(x1 + nx * offset, y1 + ny * offset, x2 + nx * offset, y2 + ny * offset, *color)
     for pos in level.mirrors:
         draw_mirror(view, board, pos, rotations[pos])
     for pos in powered:

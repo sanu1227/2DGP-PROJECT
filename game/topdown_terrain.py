@@ -1,6 +1,7 @@
-"""정비실의 벽 단차, 윤곽과 국소 조명을 그린다."""
+"""퍼즐 격자 위에 방별 벽 단차와 국소 조명을 그린다."""
 
 from ctypes import byref, c_int
+from dataclasses import dataclass
 from math import cos, pi, sin
 
 import pico2d.pico2d as p
@@ -9,12 +10,33 @@ from game.layout import HEIGHT
 
 
 _RING = tuple((cos(index * pi / 8), sin(index * pi / 8)) for index in range(16))
-FLOORS = ("workshop_floor_ashlar", "workshop_floor_slate", "workshop_floor_ashlar",
-          "workshop_floor_slate", "workshop_floor_scorched")
-SPRITES = {name: f"workshop_{name}" for name in (
-    "trap_broken", "trap_installed", "trap_active", "exit_closed", "exit_ready",
-    "lever_off", "lever_on", "part", "anvil", "lantern", "candle_sconce", "tool_rack",
-)}
+
+
+@dataclass(frozen=True)
+class Materials:
+    floors: tuple[str, ...]
+    cap: str
+    face: str
+    corner: str
+    rocks: tuple[str, str]
+
+
+WORKSHOP = Materials(
+    ("workshop_floor_ashlar", "workshop_floor_slate", "workshop_floor_ashlar",
+     "workshop_floor_slate", "workshop_floor_scorched"),
+    "workshop_cap", "workshop_face", "workshop_corner", ("workshop_rock", "workshop_rock_chipped"),
+)
+
+
+def materials_for(stage):
+    if stage == 1:
+        return WORKSHOP
+    prefix = f"room_{stage:02d}"
+    plain, alt = f"{prefix}_floor", f"{prefix}_floor_alt"
+    floors = (plain, alt, plain, alt, f"{prefix}_floor_inlay") if stage == 8 else (plain, plain, alt, plain, plain)
+    rock = f"{prefix}_rock"
+    return Materials(floors, f"{prefix}_cap", f"{prefix}_face",
+                     f"{prefix}_corner", (rock, f"{prefix}_rock_alt" if stage == 8 else rock))
 
 
 def radial_layer(x, y, width, height, color, alpha):
@@ -47,7 +69,7 @@ def panel(art, name, left, bottom, width, height, *, vertical=False):
         art.draw(name, x, y, width, height_scale=height / width)
 
 
-def wall_rim(art, board, pos, floors):
+def wall_rim(art, board, pos, floors, materials):
     """바닥과 만나는 면은 밝은 윗돌과 어두운 벽면으로 표시한다."""
     x, y = pos
     size = board.cell_size
@@ -58,29 +80,31 @@ def wall_rim(art, board, pos, floors):
     north, west, east, south = ((x, y - 1) in floors, (x - 1, y) in floors,
                                  (x + 1, y) in floors, (x, y + 1) in floors)
     if west:
-        panel(art, "workshop_cap", left, bottom, rim, size, vertical=True)
+        panel(art, materials.cap, left, bottom, rim, size, vertical=True)
     if east:
-        panel(art, "workshop_cap", left + size - rim, bottom, rim, size, vertical=True)
+        panel(art, materials.cap, left + size - rim, bottom, rim, size, vertical=True)
     if north:
-        panel(art, "workshop_face", left, bottom + size - rim - face * .5, size, face * .5)
-        panel(art, "workshop_cap", left, bottom + size - rim, size, rim)
+        panel(art, materials.face, left, bottom + size - rim - face * .5, size, face * .5)
+        panel(art, materials.cap, left, bottom + size - rim, size, rim)
         p.draw_line(left, bottom + size - 1, left + size - 1, bottom + size - 1, 127, 116, 105, 125)
     if south:
-        panel(art, "workshop_face", left, bottom, size, face)
-        panel(art, "workshop_cap", left, bottom + face, size, rim)
+        panel(art, materials.face, left, bottom, size, face)
+        panel(art, materials.cap, left, bottom + face, size, rim)
         p.draw_line(left, bottom + face, left + size - 1, bottom + face, 201, 178, 143, 110)
     for direction, side in ((-1, west), (1, east)):
         if side:
             continue
         corner = left if direction < 0 else left + size - rim
         if not south and (x + direction, y + 1) in floors:
-            panel(art, "workshop_face", corner, bottom, rim, face)
-            panel(art, "workshop_corner", corner, bottom + face, rim, rim)
+            panel(art, materials.face, corner, bottom, rim, face)
+            panel(art, materials.corner, corner, bottom + face, rim, rim)
         if not north and (x + direction, y - 1) in floors:
-            panel(art, "workshop_corner", corner, bottom + size - rim, rim, rim)
+            panel(art, materials.corner, corner, bottom + size - rim, rim, rim)
 
 
 def floor_shadows(center, size, north, west, east):
+    if not (north or west or east):
+        return
     sx, sy = center
     left, right, top, bottom = sx - size / 2, sx + size / 2, sy + size / 2, sy - size / 2
     depth = round(size * .16)
@@ -94,7 +118,7 @@ def floor_shadows(center, size, north, west, east):
             p.draw_line(right - 1 - offset, bottom, right - 1 - offset, top - 1, 12, 9, 13, alpha // 3)
 
 
-def draw_terrain(art, board, level, exit_ready):
+def draw_terrain(art, board, level, materials, lights):
     size = board.cell_size
     floors = {(x, y) for y in range(level.height) for x in range(level.width) if (x, y) not in level.walls}
 
@@ -107,7 +131,7 @@ def draw_terrain(art, board, level, exit_ready):
                 pos = x, y
                 center = board.screen(pos)
                 if pos in floors:
-                    floor = FLOORS[(x * 7 + y * 3) % len(FLOORS)]
+                    floor = materials.floors[(x * 7 + y * 3) % len(materials.floors)]
                     art.draw(floor, *center, size)
                     floor_shadows(center, size, (x, y - 1) not in floors, (x - 1, y) not in floors,
                                   (x + 1, y) not in floors)
@@ -116,15 +140,12 @@ def draw_terrain(art, board, level, exit_ready):
                                      31, 24, 26, 68)
                 else:
                     distance = min((abs(x - fx) + abs(y - fy) for fx, fy in floors), default=3)
-                    rock = "workshop_rock_chipped" if (x + y * 2) % 3 == 0 else "workshop_rock"
+                    rock = materials.rocks[int((x + y * 2) % 3 == 0)]
                     art.draw(rock, *center, size, angle=((x * 3 + y) % 4) * pi / 2,
                              opacity=max(.14, .77 - .28 * (distance - 1)))
-                    wall_rim(art, board, pos, floors)
-        # 뒤쪽 촛불과 왼쪽 등불이 복구 통로를 비춘다.
-        radial_layer(*board.screen((2.9, .63)), size * 1.56, size * 1.33, (249, 161, 78), 92)
-        radial_layer(*board.screen((.65, 1.94)), size * 1.49, size * 1.37, (245, 141, 63), 88)
-        if exit_ready:
-            radial_layer(*board.screen(level.exit), size * .84, size * .72, (54, 191, 141), 83)
+                    wall_rim(art, board, pos, floors, materials)
+        for position, width, height, color, alpha in lights:
+            radial_layer(*board.screen(position), size * width, size * height, color, alpha)
     finally:
         p.SDL_SetRenderDrawBlendMode(p.renderer, previous.value)
 
