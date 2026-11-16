@@ -1,6 +1,6 @@
 {
   "sha256": {
-    "data/stages.json": "a4bc25be2841f07782d697f81baed4745df78372c75938fd2be05178f04e1523",
+    "data/stages.json": "73ec4a3724e8478955e920682301c46f4e862f4d6d3c24469df725b742f92350",
     "game/levels.py": "ba5de97fafc88a9bc937e39fa7a879f344b34404a1bb411c8cac86e6f6369b12",
     "game/model.py": "12c7600b9815a74c64f8ba2a709628ac3e83116a11eaf9d0c59ebcea950f60de",
     "game/mechanics.py": "f599a54ecfb778a983ba93a52a6aaf9a1a2df6f198ecc91160c7f98c66b964d6",
@@ -127,7 +127,7 @@
       ],
       "minimum": 45,
       "expanded": 512,
-      "seconds": 0.12,
+      "seconds": 0.15,
       "action_limit": 52,
       "size": [
         8,
@@ -171,7 +171,7 @@
       ],
       "minimum": 31,
       "expanded": 79,
-      "seconds": 0.02,
+      "seconds": 0.03,
       "core_mechanic_required_within_limit": true,
       "required_mechanics": [
         "rubble",
@@ -232,7 +232,7 @@
       ],
       "minimum": 39,
       "expanded": 286,
-      "seconds": 0.06,
+      "seconds": 0.08,
       "core_mechanic_required_within_limit": true,
       "required_mechanics": [
         "mirror",
@@ -306,7 +306,7 @@
       ],
       "minimum": 50,
       "expanded": 1755,
-      "seconds": 0.5,
+      "seconds": 0.47,
       "core_mechanic_required_within_limit": true,
       "required_mechanics": [
         "mirror"
@@ -489,8 +489,8 @@
         "down"
       ],
       "minimum": 105,
-      "expanded": 133894,
-      "seconds": 40.08,
+      "expanded": 124276,
+      "seconds": 36.14,
       "core_mechanic_required_within_limit": true,
       "required_mechanics": [
         "rubble",
@@ -511,7 +511,7 @@
         10,
         11
       ],
-      "floor_cells": 46
+      "floor_cells": 45
     }
   }
 }

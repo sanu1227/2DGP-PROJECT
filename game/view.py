@@ -8,7 +8,7 @@ from math import floor, sin, sqrt
 
 import pico2d.pico2d as p
 
-from game.model import Game
+from game.model import DIRECTIONS, Game
 from game.art import Art, MAGIC_BEAM_HEIGHT
 from game.scenery import draw_scars, draw_tinted, floor_style, wall_style
 from game.navigation import ClickNavigator, IsoBoard, TopDownBoard, find_path
@@ -623,6 +623,8 @@ class View:
             for pack in scene["packs"]:
                 self.art.load_theme(pack)
             self.art.load_walls(scene.get("wall_pack", scene["packs"][0]))
+            for mount in scene.get("wall_mounts", ()):
+                self.art.load_walls(mount["sprite"].split("_", 1)[0])
         # 기존 사선 비율로 바닥과 높은 외곽 벽을 함께 화면에 넣는다.
         projection = IsoBoard(level.width, level.height)
         half_width, half_height = projection.half_width, projection.half_height
@@ -747,12 +749,13 @@ class View:
         if scene:
             for mount in scene.get("wall_mounts", ()):
                 pos = tuple(mount["cell"])
-                sx, sy = screen(pos)
-                sx += (-56 if pos[0] == 0 else 56) * scale
-                sy += mount.get("height", 150) * scale
+                dx, dy = DIRECTIONS[mount["facing"]]
+                sx, sy = screen((pos[0] + dx * .43, pos[1] + dy * .43))
+                tall_wall = (pos[0] == 0 and dx == 1) or (pos[1] == 0 and dy == 1)
+                sy += (140 if tall_wall else self.art.surface_height("wall_low_pier") + 25) * scale
                 sprite = mount["sprite"]
                 objects.append((sum(pos), 0.25, sprite, sx, sy))
-                decor_draws[(sprite, sx, sy)] = scale
+                decor_draws[(sprite, sx, sy)] = scale * (.83 if tall_wall else .58)
             for decoration in scene["decorations"]:
                 pos = tuple(decoration["cell"])
                 sx, sy = screen(pos)
@@ -977,13 +980,10 @@ class View:
             return
         scene = scene_for(level)
         background = tuple(scene["background"]) if scene else (19, 27, 32)
-        accent = tuple(scene["accent"]) if scene else MUTED
         box(0, 0, WIDTH, HEIGHT, background)
         self.text(32, HEIGHT - 36, "용사가 지나간 자리", 32)
         self.text(450, HEIGHT - 36, level.title, 22)
         self.text(WIDTH - 190, HEIGHT - 36, f"단계 {index + 1:02d} / {total:02d}", 22, GOLD)
-        atmosphere = scene["name"] if scene else "던전 복구 작업실"
-        self.text(34, HEIGHT - 72, f"{level.width}×{level.height}  {atmosphere}", 16, accent)
         self.wrapped(450, HEIGHT - 69, level.hint, width=WIDTH - 490, size=16)
 
         self.board(game)

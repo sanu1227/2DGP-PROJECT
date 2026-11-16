@@ -30,7 +30,6 @@ DECOR = {
     "archive_mount_sconce": "crystal_sconce", "archive_mount_banner": "archive_banner",
     "sewer_mount_lamp": "lantern", "sewer_mount_pipes": "wall_pipes",
 }
-DECOR_OFFSETS = {"boss_throne": (0, 1), "treasury_locked_coffer": (-1, 0)}
 STAGE_THEMES = {f"stage_{stage:02d}": stage for stage in range(1, 9)}
 WORKSHOP_SPRITES = {name: f"workshop_{name}" for name in (
     "trap_broken", "trap_installed", "trap_active", "exit_closed", "exit_ready",
@@ -50,15 +49,6 @@ PROP_LIGHTS = {
     "lantern": (2.42, 2.05, (248, 164, 80), 132, .24),
     "brazier": (2.56, 2.20, (253, 128, 73), 143, .27),
     "crystal_sconce": (2.26, 1.92, (115, 192, 247), 120, .20),
-}
-SIDE_LAMPS = {
-    2: ("candle_sconce", (5.76, 2.96)),
-    3: ("crystal_sconce", (6.76, 5.82)),
-    4: ("candle_sconce", (5.76, 3.95)),
-    5: ("lantern", (6.76, 2.06)),
-    6: ("lantern", (6.76, 4.06)),
-    7: ("lantern", (6.76, 3.06)),
-    8: ("lantern", (8.76, 7.06)),
 }
 RAISED_DEVICES = frozenset({
     "lever_off", "lever_on", "bench_empty", "bench_bone", "soldier_deployed",
@@ -171,47 +161,29 @@ def source_nozzle(level, start, end):
     return start
 
 
-def room_props(scene, level, stage):
-    props = []
-    workshop = stage == 1
-    if scene:
-        for mount in scene.get("wall_mounts", ()):
-            key = mount["sprite"].rsplit("_", 1)[0]
-            if key in DECOR:
-                x, y = mount["cell"]
-                pos = (x + .32, y + .04) if x == 0 else (x, y + .23)
-                props.append((DECOR[key], pos, .46))
-        for decoration in scene["decorations"]:
-            key = decoration["sprite"]
-            if key in DECOR:
-                x, y = decoration["cell"]
-                dx, dy = DECOR_OFFSETS.get(key, (0, 0))
-                if (x + dx, y + dy) in level.walls:
-                    x, y = x + dx, y + dy
-                scale = .72 if workshop else min(.91, decoration["scale"] + .08)
-                props.append((DECOR[key], (x, y), scale))
-    if workshop and (3, 0) in level.walls:
-        props.append(("candle_sconce", (3, .24), .42))
-    if stage in SIDE_LAMPS:
-        name, pos = SIDE_LAMPS[stage]
-        props.append((name, pos, .43))
-    return props
+def room_props(scene):
+    """실내 쪽 벽면을 기준으로 소품과 조명, 벽감의 위치를 맞춘다."""
+    props, lights, recesses = [], [], {}
+    if scene is None:
+        return props, lights, recesses
+    for mounted, entries in ((True, scene.get("wall_mounts", ())), (False, scene["decorations"])):
+        for entry in entries:
+            x, y = entry["cell"]
+            dx, dy = DIRECTIONS[entry["facing"]]
+            key = entry["sprite"]
+            sprite = DECOR[key.rsplit("_", 1)[0] if mounted else key]
+            if not mounted:
+                recesses[(x, y)] = (dx, dy)
+            offset = .41 if mounted else .05
+            props.append((sprite, (x + dx * offset, y + dy * offset), .38 if mounted else entry["scale"]))
+            if sprite in PROP_LIGHTS:
+                lights.append(Light((x + dx * .73, y + dy * .73), *PROP_LIGHTS[sprite]))
+    return props, lights, recesses
 
 
-def room_lights(level, props, powered, exit_ready, workshop):
-    if workshop:
-        lights = [Light((2.9, .72), 2.20, 1.86, (249, 169, 86), 124, .24),
-                  Light((.68, 1.94), 2.05, 1.85, (249, 153, 76), 120, .24)]
-    else:
-        lights = []
-        for name, (x, y), _ in props:
-            if name in PROP_LIGHTS:
-                # 벽에 달린 등불은 광원의 중심을 통로 쪽으로 옮긴다.
-                x = max(.70, min(level.width - 1.70, x))
-                y = max(.65, min(level.height - 1.65, y))
-                lights.append(Light((x, y), *PROP_LIGHTS[name]))
-        lights.extend(Light(pos, 1.25, 1.12, (178, 94, 240), 60) for pos in level.sources)
-        lights.extend(Light(pos, 1.48, 1.30, (192, 125, 250), 104) for pos in sorted(powered))
+def room_lights(level, lights, powered, exit_ready):
+    lights.extend(Light(pos, 1.25, 1.12, (178, 94, 240), 60) for pos in level.sources)
+    lights.extend(Light(pos, 1.48, 1.30, (192, 125, 250), 104) for pos in sorted(powered))
     if exit_ready:
         lights.append(Light(level.exit, 1.34, 1.15, (64, 202, 151), 103))
     return tuple(lights)
@@ -228,8 +200,8 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, gate_s
     entries = device_entries(game, gate_statuses, powered, ready, view.plate_depths)
     workshop = stage == 1
     sprites = WORKSHOP_SPRITES if workshop else ROOM_SPRITES
-    props = room_props(scene, level, stage)
-    lights = room_lights(level, props, powered, ready, workshop)
+    props, prop_lights, recesses = room_props(scene)
+    lights = room_lights(level, prop_lights, powered, ready)
     player = view.player_position(state.player, now)
     rubble = [view.rubble_pose(game, pos, now) for pos in sorted(state.rubble)]
     view.hit_regions.clear()
@@ -240,7 +212,7 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, gate_s
     view.action_badge_bounds = None
 
     background = tuple(scene["background"]) if scene else (19, 27, 32)
-    draw_terrain(art, board, level, materials_for(stage), lights, background, now)
+    draw_terrain(art, board, level, materials_for(stage), lights, background, now, recesses)
     raised = [pos for pos, (sprite, _, _) in entries.items() if sprite in RAISED_DEVICES]
     draw_shadows(board, player, [*raised, *state.items, *(pos for pos, _ in rubble)])
 

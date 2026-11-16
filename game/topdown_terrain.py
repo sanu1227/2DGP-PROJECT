@@ -135,6 +135,23 @@ def floor_shadows(center, size, north, west, east):
             p.draw_line(right - 1 - offset, bottom, right - 1 - offset, top - 1, 12, 9, 13, alpha // 3)
 
 
+def wall_recess(art, board, pos, facing, materials):
+    """실내로 열린 벽감에 소품 받침과 바닥을 가르는 문턱을 그린다."""
+    x, y = pos
+    dx, dy = facing
+    size = board.cell_size
+    sx, sy = board.screen((x + dx * .07, y + dy * .07))
+    width = size * (.86 if dx else .74)
+    height = size * (.86 if dy else .74)
+    left, bottom = sx - width / 2, sy - height / 2
+    trim = size * .09
+    panel(art, materials.face, left, bottom, width, height)
+    panel(art, materials.cap, left, bottom, trim, height, vertical=True)
+    panel(art, materials.cap, left + width - trim, bottom, trim, height, vertical=True)
+    panel(art, materials.cap, left + trim, bottom, width - 2 * trim, trim)
+    panel(art, materials.cap, left + trim, bottom + height - trim, width - 2 * trim, trim)
+
+
 def smoothstep(fraction):
     fraction = max(0, min(1, fraction))
     return fraction * fraction * (3 - 2 * fraction)
@@ -255,7 +272,7 @@ def lighting_mesh(board, floors, lights, background):
     return (p.SDL_Vertex * len(vertices))(*vertices), (c_int * len(indices))(*indices), animated
 
 
-def draw_terrain(art, board, level, materials, lights, background, now):
+def draw_terrain(art, board, level, materials, lights, background, now, recesses):
     size = board.cell_size
     floors = frozenset((x, y) for y in range(level.height) for x in range(level.width)
                        if (x, y) not in level.walls)
@@ -282,6 +299,8 @@ def draw_terrain(art, board, level, materials, lights, background, now):
                     art.draw(rock, *center, size, angle=((x * 3 + y) % 4) * pi / 2,
                              opacity=max(.14, .77 - .28 * (distance - 1)))
                     wall_rim(art, board, pos, floors, materials)
+                    if pos in recesses:
+                        wall_recess(art, board, pos, recesses[pos], materials)
         mesh, triangles, animated = lighting_mesh(board, floors, lights, background)
         pulse = sin(now * (2 * pi / LIGHT_PULSE_SECONDS))
         scales = []

@@ -4,6 +4,7 @@ from functools import lru_cache
 import json
 from pathlib import Path
 
+from game.levels import DIRECTIONS
 from game.scenery import _pattern, wall_style
 
 
@@ -14,23 +15,28 @@ def _catalog():
 
 
 @lru_cache(maxsize=16)
-def _checked_scene(identifier, walls):
+def _checked_scene(identifier, width, height, walls):
     scene = _catalog().get(identifier)
     if scene:
-        for decoration in scene["decorations"]:
-            if tuple(decoration["cell"]) not in walls:
-                raise ValueError(f"{identifier}: 장식은 막힌 벽칸에만 배치해야 합니다.")
-        for mount in scene.get("wall_mounts", ()):
-            x, y = mount["cell"]
-            direction = "nw" if x == 0 else "ne"
-            if ((x, y) not in walls or (x != 0 and y != 0) or (x, y) == (0, 0)
-                    or not mount["sprite"].endswith(f"_{direction}")):
-                raise ValueError(f"{identifier}: 벽 장식은 방향이 맞는 뒤쪽 외곽 벽에 배치해야 합니다.")
+        occupied = set()
+        for mount, entries in ((False, scene["decorations"]), (True, scene.get("wall_mounts", ()))):
+            for entry in entries:
+                x, y = entry["cell"]
+                dx, dy = DIRECTIONS[entry["facing"]]
+                cell, room_cell = (x, y), (x + dx, y + dy)
+                if (cell not in walls or cell in occupied or room_cell in walls
+                        or not (0 <= room_cell[0] < width and 0 <= room_cell[1] < height)):
+                    raise ValueError(f"{identifier}: {entry['sprite']}는 실내 바닥과 맞닿은 빈 벽면에 둬야 합니다.")
+                if mount and not entry["sprite"].endswith("_nw" if dx else "_ne"):
+                    raise ValueError(f"{identifier}: {entry['sprite']}의 벽면 방향이 맞지 않습니다.")
+                if not mount and not (0 < x < width - 1 and 0 < y < height - 1):
+                    raise ValueError(f"{identifier}: {entry['sprite']}는 방 안쪽 벽칸에 둬야 합니다.")
+                occupied.add(cell)
     return scene
 
 
 def scene_for(level):
-    return _checked_scene(level.id, level.walls)
+    return _checked_scene(level.id, level.width, level.height, level.walls)
 
 
 def themed_floor(scene, pos, near_trap=False):
