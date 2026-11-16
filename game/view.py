@@ -22,6 +22,7 @@ from game.play_menu import PlayClock, PlayMenu
 from game.stage_feedback import StageFeedback
 from game.receiver_feedback import ReceiverFeedback
 from game.room_debris import RoomDebris
+from game.room_atmosphere import RoomAtmosphere, prop_kind
 from game.play_effects import ChuteFeedback, WorkFeedback, beam_contacts, dust, ring, rubble_scrape, trap_motion
 from game.topdown import ITEMS as TOPDOWN_ITEMS, TopDownArt, draw_board as draw_topdown_board
 from game.worker_view import EchoMotion, draw_echo_marks, draw_echo_turn, draw_worker_status, recording_label
@@ -743,6 +744,7 @@ class View:
             self.reset_plates()
             self.gate_game = game
             self.room_debris = RoomDebris(game, now)
+            self.room_atmosphere = RoomAtmosphere(level, now)
         gate_openings = {}
         self.plate_depths = {pos: self.plate_pressure(game, pos, now) for pos in level.plates}
         for pos, control in level.gates.items():
@@ -950,7 +952,13 @@ class View:
                 pos, position, height = rubble_draws[(sx, sy)]
             decor_scale = decor_draws.get((sprite, sx, sy))
             if decor_scale is not None:
-                self.art.draw(sprite, sx, sy, decor_scale)
+                kind = prop_kind(sprite)
+                size = min(projection.half_width, self.art.manifest["sprites"][sprite]["height"] * decor_scale)
+                height = 1 + self.room_atmosphere.banner(now) if kind == "treasure_banner" else 1
+                if kind == "boss_throne":
+                    self.room_atmosphere.throne_shadow(sx, sy, size, now)
+                self.art.draw(sprite, sx, sy, decor_scale, height_scale=height)
+                self.room_atmosphere.draw(kind, sx, sy, size, now, top_down=False)
                 # 장식의 위쪽 그림이 뒤의 이동 칸/장치 클릭을 가로채지 않는다.
                 continue
             # 논리 칸은 높이를 더하기 전에 결정해야 클릭 대상이 옆 칸으로 밀리지 않는다.

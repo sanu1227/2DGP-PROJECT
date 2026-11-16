@@ -251,11 +251,16 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, mirror
 
     for sprite, pos, scale in props:
         x, y = board.screen(pos)
+        prop_size = size * scale
+        if sprite == "throne":
+            view.room_atmosphere.throne_shadow(x, y, prop_size, now)
         plinth = {"anvil": "workshop_plinth", "throne": "room_08_plinth"}.get(sprite)
         if plinth:
             art.draw(plinth, x, y, size * (.83 if workshop else .85))
             y += size * .06
-        art.draw(sprites.get(sprite, sprite), x, y, size * scale)
+        sway = view.room_atmosphere.banner(now) if sprite == "treasure_banner" else 0
+        art.draw(sprites.get(sprite, sprite), x + prop_size * .45 * sin(sway), y, prop_size, angle=sway)
+        view.room_atmosphere.draw(sprite, x, y, prop_size, now, top_down=True)
 
     view.room_debris.draw(board, now)
     for pos, (sprite, _, color) in entries.items():

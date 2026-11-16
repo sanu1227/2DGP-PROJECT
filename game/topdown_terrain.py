@@ -302,9 +302,10 @@ def draw_terrain(art, board, level, materials, lights, background, now, recesses
                     if pos in recesses:
                         wall_recess(art, board, pos, recesses[pos], materials)
         mesh, triangles, animated = lighting_mesh(board, floors, lights, background)
-        pulse = sin(now * (2 * pi / LIGHT_PULSE_SECONDS))
         scales = []
         for light in lights:
+            x, y = light.position
+            pulse = sin(now * (2 * pi / LIGHT_PULSE_SECONDS) + x * .75 + y * 1.15)
             variation = light.range_variation * pulse
             scales.append((1 + variation * INTERIOR_PULSE_STRENGTH, 1 + variation))
         for index, visibility, exterior, samples in animated:
