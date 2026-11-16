@@ -31,8 +31,10 @@
 <text x="96" y="129" text-anchor="middle" font-size="22">@</text>
 <rect x="118" y="102" width="40" height="40" rx="3" fill="#46555e"/>
 <rect x="160" y="102" width="40" height="40" rx="3" fill="#46555e"/>
-<rect x="202" y="102" width="40" height="40" rx="3" fill="#46555e"/>
-<rect x="244" y="102" width="40" height="40" rx="3" fill="#29333e"/>
+<rect x="202" y="102" width="40" height="40" rx="3" fill="#326d68"/>
+<text x="222" y="129" text-anchor="middle" font-size="22">U</text>
+<rect x="244" y="102" width="40" height="40" rx="3" fill="#326d68"/>
+<text x="264" y="129" text-anchor="middle" font-size="22">U</text>
 <rect x="286" y="102" width="40" height="40" rx="3" fill="#326d68"/>
 <text x="306" y="129" text-anchor="middle" font-size="22">P</text>
 <rect x="328" y="102" width="40" height="40" rx="3" fill="#29333e"/>
@@ -61,8 +63,10 @@
 <rect x="160" y="186" width="40" height="40" rx="3" fill="#46555e"/>
 <rect x="202" y="186" width="40" height="40" rx="3" fill="#46555e"/>
 <rect x="244" y="186" width="40" height="40" rx="3" fill="#29333e"/>
-<rect x="286" y="186" width="40" height="40" rx="3" fill="#29333e"/>
-<rect x="328" y="186" width="40" height="40" rx="3" fill="#29333e"/>
+<rect x="286" y="186" width="40" height="40" rx="3" fill="#326d68"/>
+<text x="306" y="213" text-anchor="middle" font-size="22">U</text>
+<rect x="328" y="186" width="40" height="40" rx="3" fill="#326d68"/>
+<text x="348" y="213" text-anchor="middle" font-size="22">U</text>
 <rect x="370" y="186" width="40" height="40" rx="3" fill="#29333e"/>
 <rect x="412" y="186" width="40" height="40" rx="3" fill="#29333e"/>
 <rect x="454" y="186" width="40" height="40" rx="3" fill="#29333e"/>
@@ -137,6 +141,8 @@
 <rect x="412" y="396" width="40" height="40" rx="3" fill="#29333e"/>
 <rect x="454" y="396" width="40" height="40" rx="3" fill="#29333e"/>
 <path d="M138,248 L264,248" stroke="#ffd789" stroke-width="2" stroke-dasharray="4 4" opacity=".6"/>
-<path d="M222,164 L306,164" stroke="#ffd789" stroke-width="2" stroke-dasharray="4 4" opacity=".6"/>
-<path d="M306,248 L348,290" stroke="#ffd789" stroke-width="2" stroke-dasharray="4 4" opacity=".6"/>
+<polyline points="222,164 222,122 264,122" fill="none" stroke="#eed09e" stroke-width="2"/>
+<path d="M264,122 L306,164" stroke="#ffd789" stroke-width="2" stroke-dasharray="4 4" opacity=".6"/>
+<polyline points="306,248 306,206 348,206" fill="none" stroke="#eed09e" stroke-width="2"/>
+<path d="M348,206 L348,290" stroke="#ffd789" stroke-width="2" stroke-dasharray="4 4" opacity=".6"/>
 </g></svg>

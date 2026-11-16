@@ -49,6 +49,8 @@ class LateRoomTests(unittest.TestCase):
 
         use(worker)
         use(job)
+        assert_open("M1")
+        self.go(game, gates["M1"])
         assert_open("M1", "J1")
         use(job)
         assert_open("M1")

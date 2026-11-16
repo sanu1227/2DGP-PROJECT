@@ -259,17 +259,36 @@ class GimmickTests(unittest.TestCase):
         self.assertIsNone(find_path(game,(2,3)))
 
     def test_helper_assignment_recall_progress_and_gate(self):
-        game=Game(self.levels[6]);game.state.player=next(iter(game.level.jobs));game.state.carrying='soldier'
-        gate = next(gate for gate, control in game.level.gates.items() if control == game.state.player)
-        game.state.items={p:k for p,k in game.state.items.items() if k!='bone'}
-        progress=game.repair_percent;before=deepcopy(game.state)
+        game = Game(self.levels[6])
+        station = min(game.level.jobs)
+        gate = next(gate for gate, control in game.level.gates.items() if control == station)
+        worker = next(pos for pos, kind in game.state.items.items() if kind == 'soldier')
+        game.state.player = station
+        game.state.carrying = game.state.items.pop(worker)
+        progress = game.repair_percent
+        before = deepcopy(game.state)
+
         self.assertTrue(game.act('interact'))
-        self.assertEqual(game.gate_status(gate),'open')
-        self.assertEqual(game.repair_percent,progress)
-        self.assertTrue(game.act('interact'))
-        self.assertEqual(game.gate_status(gate),'closed')
-        self.assertEqual(game.state.carrying,'soldier')
-        game.undo();game.undo();self.assertEqual(game.state,before)
+        self.assertEqual(game.state.worker_steps, {station: 1})
+        self.assertEqual(game.gate_status(gate), 'closed')
+        self.assertEqual(game.repair_percent, progress)
+        self.assertIsNone(find_path(game, game.level.worker_routes[station][0]))
+        self.assert_rejected(game, 'up')
+        moving = deepcopy(game.state)
+        self.assertTrue(game.act('left'))
+        self.assertFalse(game.state.worker_steps)
+        self.assertEqual(game.gate_status(gate), 'open')
+        self.assertTrue(game.undo())
+        self.assertEqual(game.state, moving)
+        self.assertEqual(game.gate_status(gate), 'closed')
+
+        self.assertTrue(game.act('interact'))  # Calling off a moving worker clears its queued steps.
+        self.assertFalse(game.state.worker_steps)
+        self.assertEqual(game.state.carrying, 'soldier')
+        self.assertTrue(game.undo())
+        self.assertEqual(game.state, moving)
+        self.assertTrue(game.undo())
+        self.assertEqual(game.state, before)
 
     def test_helper_rejects_wrong_item_and_full_hands(self):
         game=Game(self.levels[6]);game.state.player=next(iter(game.level.jobs))
@@ -313,7 +332,7 @@ class GimmickTests(unittest.TestCase):
             self.fail('두 번째 금고에 도착하지 못했습니다.')
 
     def test_schema_rejects_retired_belt_and_unlinked_new_devices(self):
-        for glyph in ('>','<','^','v','M','Q','Y','V','W','H','J'):
+        for glyph in ('>','<','^','v','M','Q','Y','V','W','H','J','U'):
             raw=plate_stage();row=list(raw['map'][3]);row[3]=glyph;raw['map'][3]=''.join(row)
             with self.subTest(glyph=glyph),self.assertRaises(ValueError):load_stage(raw)
 
@@ -325,5 +344,9 @@ class GimmickTests(unittest.TestCase):
         for field in ('workers','rubble'):
             state=deepcopy(game.state);getattr(state,field).add((1,1))
             self.assertNotEqual(base,key(state))
+        game.state.workers.update(game.level.jobs)
+        arrived = key(game.state)
+        game.state.worker_steps[next(iter(game.level.jobs))] = 1
+        self.assertNotEqual(arrived, key(game.state))
 
 if __name__=='__main__':unittest.main()

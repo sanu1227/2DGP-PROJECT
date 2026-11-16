@@ -9,6 +9,7 @@ import pico2d.pico2d as p
 from game.levels import DIRECTIONS
 from game.themes import scene_for
 from game.topdown_terrain import Light, draw_shadows, draw_terrain, materials_for
+from game.worker_view import draw_routes
 
 
 ASSET_ROOT = Path(__file__).resolve().parents[1] / "assets" / "topdown_v2"
@@ -128,7 +129,11 @@ def device_entries(game, gate_statuses, powered, exit_ready, plate_depths):
             TEAL if pos in powered else INK)
     for pos in level.jobs:
         working = pos in state.workers
-        entries[pos] = ("helper" if working else "winch"), level.device_labels[pos], TEAL if working else GOLD
+        label = level.device_labels[pos]
+        if pos in level.worker_routes:
+            entries[pos] = None, f"{label} 호출", TEAL if working else GOLD
+        else:
+            entries[pos] = ("helper" if working else "winch"), label, TEAL if working else GOLD
     return entries
 
 
@@ -213,6 +218,7 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, gate_s
 
     background = tuple(scene["background"]) if scene else (19, 27, 32)
     draw_terrain(art, board, level, materials_for(stage), lights, background, now, recesses)
+    draw_routes(level, board)
     raised = [pos for pos, (sprite, _, _) in entries.items() if sprite in RAISED_DEVICES]
     draw_shadows(board, player, [*raised, *state.items, *(pos for pos, _ in rubble)])
 
@@ -225,6 +231,8 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, gate_s
         art.draw(sprites.get(sprite, sprite), x, y, size * scale)
 
     for pos, (sprite, _, _) in entries.items():
+        if sprite is None:
+            continue
         sx, sy = board.screen(pos)
         asset = sprites.get(sprite, sprite)
         if pos in level.gates:
@@ -243,6 +251,14 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, gate_s
             art.draw(asset, sx, sy, size * .72)
         else:
             art.draw(asset, sx, sy, size * .82)
+
+    for station, route in level.worker_routes.items():
+        position, working = view.worker_motion.pose(game, station, now)
+        sx, sy = board.screen(route[-1])
+        art.draw(sprites["helper" if working else "winch"], sx, sy, size * .82)
+        if position is not None and not working:
+            sx, sy = board.screen(position)
+            art.draw(sprites["soldier_deployed"], sx, sy, size * .64)
 
     for pos, kind in state.items.items():
         sx, sy = board.screen(pos)
@@ -266,7 +282,12 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, gate_s
         sprite = ITEMS[state.carrying]
         art.draw(sprites.get(sprite, sprite), px + dx * size * .27, py - dy * size * .27, size * .32)
     head = py + size * .35
-    view.place_action_badge(game, px, head, now)
+    route = level.worker_routes.get(state.player)
+    # 북쪽으로 출발하는 인부를 수리공의 행동 배지가 덮지 않게 한다.
+    badge_x = px
+    if route and state.player in state.worker_steps and route[0][1] < state.player[1]:
+        badge_x -= size * .85
+    view.place_action_badge(game, badge_x, head, now)
     view.worker_effort((px - size * .3, py - size * .27, px + size * .3, head), tired, now)
 
     for start, end in beam_segments:

@@ -36,9 +36,11 @@ class Level:
     rubble: frozenset[Pos] = frozenset()
     jobs: frozenset[Pos] = frozenset()
     action_limit: int | None = None
+    worker_routes: dict[Pos, tuple[Pos, ...]] = field(default_factory=dict)
+    worker_tiles: frozenset[Pos] = frozenset()
 
 
-def read_links(raw, field_name, first_name, second_name, first_tiles, second_tiles, prefix, used_ids):
+def read_links(raw, field_name, first_name, second_name, first_tiles, second_tiles, prefix, used_ids, optional=()):
     """지도에 표시한 장치를 명시적 ID와 두 좌표로 연결한다."""
     links = raw.get(field_name, [])
     if not isinstance(links, list):
@@ -46,7 +48,7 @@ def read_links(raw, field_name, first_name, second_name, first_tiles, second_til
     pairs, labels = {}, {}
     destinations = set()
     for link in links:
-        if not isinstance(link, dict) or set(link) != {"id", first_name, second_name}:
+        if not isinstance(link, dict) or set(link) - set(optional) != {"id", first_name, second_name}:
             raise ValueError(prefix + f"{field_name} 연결 필드가 잘못되었습니다.")
         identifier = link["id"]
         if not isinstance(identifier, str) or not re.fullmatch(r"[A-Za-z][A-Za-z0-9_-]{0,7}", identifier) or identifier in used_ids:
@@ -67,6 +69,33 @@ def read_links(raw, field_name, first_name, second_name, first_tiles, second_til
     return pairs, labels
 
 
+def read_worker_routes(links, tiles, prefix):
+    routes, used = {}, set()
+    for link in links:
+        if "route" not in link:
+            continue
+        station = tuple(link["station"])
+        previous, path = station, []
+        route = link["route"]
+        if not isinstance(route, list) or not route:
+            raise ValueError(prefix + "인부 통로에는 윈치 위치가 필요합니다.")
+        for point in route:
+            if (not isinstance(point, list) or len(point) != 2
+                    or any(type(value) is not int for value in point)):
+                raise ValueError(prefix + "인부 통로의 좌표가 잘못되었습니다.")
+            cell = tuple(point)
+            if (cell not in tiles or cell in used
+                    or abs(cell[0] - previous[0]) + abs(cell[1] - previous[1]) != 1):
+                raise ValueError(prefix + "인부 통로는 호출대에서 이어지는 전용 칸이어야 합니다.")
+            used.add(cell)
+            path.append(cell)
+            previous = cell
+        routes[station] = tuple(path)
+    if used != tiles:
+        raise ValueError(prefix + "모든 인부 전용 칸을 통로에 연결해야 합니다.")
+    return routes
+
+
 def load_levels(path: Path | str | None = None) -> list[Level]:
     """프로젝트 경로 기준 JSON을 읽는다. 잘못된 내용은 ValueError를 낸다."""
     source = Path(path) if path is not None else Path(__file__).resolve().parents[1] / "data" / "stages.json"
@@ -80,7 +109,7 @@ def load_levels(path: Path | str | None = None) -> list[Level]:
 
     levels = []
     identifiers = set()
-    glyphs = "#.@EPBTLASFGCOMQYRJK"
+    glyphs = "#.@EPBTLASFGCOMQYRJKU"
     for index, raw in enumerate(stages, start=1):
         prefix = f"스테이지 {index}: "
         required = {"id", "title", "hint", "map"}
@@ -121,7 +150,9 @@ def load_levels(path: Path | str | None = None) -> list[Level]:
         used_ids = set()
         plate_links, labels = read_links(raw, "plate_links", "plate", "gate", positions["F"], positions["G"], prefix, used_ids)
         power_links, power_labels = read_links(raw, "power_links", "receiver", "gate", positions["Y"], positions["G"], prefix, used_ids)
-        worker_links, worker_labels = read_links(raw, "worker_links", "station", "gate", positions["J"], positions["G"], prefix, used_ids)
+        worker_links, worker_labels = read_links(raw, "worker_links", "station", "gate",
+                                                  positions["J"], positions["G"], prefix, used_ids, optional=("route",))
+        worker_routes = read_worker_routes(raw.get("worker_links", ()), positions["U"], prefix)
         links = {**plate_links, **power_links, **worker_links}
         if (set(plate_links) != positions["F"] or set(power_links) != positions["Y"]
                 or set(worker_links) != positions["J"] or set(links.values()) != positions["G"]
@@ -164,5 +195,6 @@ def load_levels(path: Path | str | None = None) -> list[Level]:
             chutes=chutes, action_limit=action_limit,
             mirrors=positions["M"], sources=sources, receivers=positions["Y"],
             rubble=positions["R"], jobs=positions["J"],
+            worker_routes=worker_routes, worker_tiles=positions["U"],
         ))
     return levels

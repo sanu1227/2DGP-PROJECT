@@ -23,7 +23,7 @@ def key(state):
     return (state.player, state.carrying, tuple(sorted(state.items.items())),
             frozenset(state.installed), state.active, frozenset(state.soldiers),
             tuple(sorted(state.bench_bones.items())), tuple(sorted(state.mirror_rotations.items())),
-            frozenset(state.rubble), frozenset(state.workers))
+            frozenset(state.rubble), frozenset(state.workers), frozenset(state.worker_steps.items()))
 
 
 class LowerBound:
@@ -35,7 +35,7 @@ class LowerBound:
 
     def __init__(self, level):
         self.level = level
-        self.floor = {(x, y) for y in range(level.height) for x in range(level.width)} - level.walls
+        self.floor = {(x, y) for y in range(level.height) for x in range(level.width)} - level.walls - level.worker_tiles
         self.worker_regions = {}
         self.mirror_regions = []
         mirrors = sorted(level.mirrors)
@@ -271,7 +271,7 @@ def solve(level, max_states=500_000, upper_bound=None, forbidden=None):
 
 def mechanic_required_by_layout(level, mechanic):
     """나머지 문과 장애물을 무시해도 필수 칸에 갈 수 없는 경우를 증명한다."""
-    floor = {(x, y) for y in range(level.height) for x in range(level.width)} - level.walls
+    floor = {(x, y) for y in range(level.height) for x in range(level.width)} - level.walls - level.worker_tiles
 
     def reachable(blocked):
         seen = {level.start}
@@ -365,7 +365,7 @@ def main():
             result["mechanics_required_by_layout"] = layout_required
         result["action_limit"] = level.action_limit
         result["size"] = [level.width, level.height]
-        result["floor_cells"] = level.width * level.height - len(level.walls)
+        result["floor_cells"] = level.width * level.height - len(level.walls) - len(level.worker_tiles)
         results[level.id] = result
         print(json.dumps({"stage": level.id, **{k: v for k, v in result.items() if k != "actions"}}), flush=True)
     if args.output:

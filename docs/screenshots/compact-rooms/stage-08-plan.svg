@@ -109,8 +109,10 @@
 <text x="264" y="339" text-anchor="middle" font-size="22">Y</text>
 <rect x="286" y="312" width="40" height="40" rx="3" fill="#29333e"/>
 <rect x="328" y="312" width="40" height="40" rx="3" fill="#29333e"/>
-<rect x="370" y="312" width="40" height="40" rx="3" fill="#46555e"/>
-<rect x="412" y="312" width="40" height="40" rx="3" fill="#46555e"/>
+<rect x="370" y="312" width="40" height="40" rx="3" fill="#326d68"/>
+<text x="390" y="339" text-anchor="middle" font-size="22">U</text>
+<rect x="412" y="312" width="40" height="40" rx="3" fill="#326d68"/>
+<text x="432" y="339" text-anchor="middle" font-size="22">U</text>
 <rect x="454" y="312" width="40" height="40" rx="3" fill="#29333e"/>
 <text x="22" y="380" text-anchor="middle" font-size="11">7</text>
 <rect x="34" y="354" width="40" height="40" rx="3" fill="#29333e"/>
@@ -126,5 +128,6 @@
 <rect x="454" y="354" width="40" height="40" rx="3" fill="#29333e"/>
 <path d="M264,332 L348,290" stroke="#ffd789" stroke-width="2" stroke-dasharray="4 4" opacity=".6"/>
 <path d="M264,206 L180,206" stroke="#ffd789" stroke-width="2" stroke-dasharray="4 4" opacity=".6"/>
-<path d="M390,290 L264,122" stroke="#ffd789" stroke-width="2" stroke-dasharray="4 4" opacity=".6"/>
+<polyline points="390,290 390,332 432,332" fill="none" stroke="#eed09e" stroke-width="2"/>
+<path d="M432,332 L264,122" stroke="#ffd789" stroke-width="2" stroke-dasharray="4 4" opacity=".6"/>
 </g></svg>

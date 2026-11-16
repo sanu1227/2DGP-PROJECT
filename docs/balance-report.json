@@ -1,10 +1,10 @@
 {
   "sha256": {
-    "data/stages.json": "78e4450951d287b89687d2c1c80e389a13709204e4c7de3c4e1707031718d29b",
-    "game/levels.py": "bfcd7aeeee5651c397a42547e578f8cc83aa40954a94cd1a6f9b1e8f913f4d51",
-    "game/model.py": "12c7600b9815a74c64f8ba2a709628ac3e83116a11eaf9d0c59ebcea950f60de",
+    "data/stages.json": "1014d9c09de040d78904583c565124d9eceed4f3f927be89a61f1f388f778582",
+    "game/levels.py": "4b2711c18e0291b02908b21ce9a62e46ba38240f9939d54a8727647fc45386f4",
+    "game/model.py": "db7768865630e2f630341c122bdccf43df77e231f724c4cda6633123131f985e",
     "game/mechanics.py": "f599a54ecfb778a983ba93a52a6aaf9a1a2df6f198ecc91160c7f98c66b964d6",
-    "tools/solve_levels.py": "79e92c6d4c0ae1f097484e838f0a5f4b0d72ad35cae59372a339a27120a0f16a",
+    "tools/solve_levels.py": "6b8a24c5a93c57ded958f6dd475ce7ff5c9a5ac1ed344c2cfbdc189639437ab2",
     "tests/solutions.py": "2d47fa6ccee6ad6458ca32b59eac85515fdbb17d9e3f29deb1700b3edd347e85"
   },
   "stages": {
@@ -484,8 +484,8 @@
         "left"
       ],
       "minimum": 65,
-      "expanded": 10950,
-      "seconds": 2.36,
+      "expanded": 9625,
+      "seconds": 2.31,
       "core_mechanic_required_within_limit": true,
       "required_mechanics": [
         "helper",
@@ -500,7 +500,7 @@
         11,
         9
       ],
-      "floor_cells": 33
+      "floor_cells": 32
     },
     "stage_08": {
       "actions": [
@@ -565,8 +565,8 @@
         "up"
       ],
       "minimum": 59,
-      "expanded": 854,
-      "seconds": 0.25,
+      "expanded": 743,
+      "seconds": 0.15,
       "core_mechanic_required_within_limit": true,
       "required_mechanics": [
         "mirror",
@@ -581,7 +581,7 @@
         11,
         8
       ],
-      "floor_cells": 30
+      "floor_cells": 28
     }
   }
 }

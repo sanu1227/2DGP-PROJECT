@@ -130,7 +130,7 @@
       {"sprite": "forge_mount_lamp_nw", "cell": [0, 7], "facing": "right"}
     ],
     "decorations": [
-      {"sprite": "treasury_locked_coffer", "cell": [5, 1], "facing": "right", "scale": 0.67},
+      {"sprite": "treasury_locked_coffer", "cell": [5, 3], "facing": "left", "scale": 0.67},
       {"sprite": "treasury_locked_coffer", "cell": [9, 4], "facing": "down", "scale": 0.63},
       {"sprite": "treasury_treasure_banner", "cell": [4, 5], "facing": "left", "scale": 0.68}
     ]
