@@ -12,8 +12,10 @@ from game.layout import BOARD_BOTTOM, BOARD_TOP, HEIGHT
 
 _RING = tuple((cos(index * pi / 8), sin(index * pi / 8)) for index in range(16))
 LIGHT_SAMPLES_PER_CELL = 4
-EXTERIOR_PADDING_SAMPLES = 9  # 조명 메시 표본 9칸 = 타일 2.25칸
+EXTERIOR_PADDING_SAMPLES = 3 * LIGHT_SAMPLES_PER_CELL
 EXTERIOR_LIGHT_STRENGTH = .58
+EXTERIOR_RANGE_SCALE = 1.18
+LIGHT_PULSE_SECONDS = 4.4
 
 
 @dataclass(frozen=True)
@@ -33,12 +35,6 @@ class Light:
     color: tuple[int, int, int]
     alpha: int
     range_variation: float = 0.0
-
-    def radius_scale(self, now):
-        x, y = self.position
-        phase = x * 1.9 + y * 1.47
-        sway = .74 * sin(now * 1.7 + phase) + .26 * sin(now * 2.6 - phase)
-        return 1 + self.range_variation * sway
 
 
 WORKSHOP = Materials(
@@ -143,14 +139,18 @@ def smoothstep(fraction):
     return fraction * fraction * (3 - 2 * fraction)
 
 
-def light_samples(x, y, lights, visibility):
+def light_samples(x, y, lights, visibility, exterior):
     samples = []
     for index, light in enumerate(lights):
-        if not visibility and not light.range_variation:
+        spills_outside = exterior and light.range_variation
+        if not visibility and not spills_outside:
             continue
         lx, ly = light.position
         distance = hypot((x - lx) / light.width, (y - ly) / light.height)
-        if distance < 1 + light.range_variation:
+        max_scale = 1 + light.range_variation
+        if spills_outside:
+            max_scale *= EXTERIOR_RANGE_SCALE
+        if distance < max_scale:
             samples.append((index, light, distance))
     return samples
 
@@ -161,15 +161,17 @@ def light_tint(samples, background, visibility, exterior, scales):
     reflected_light = 0.0
     red = green = blue = 0.0
     for light_index, light, distance in samples:
-        falloff = smoothstep(1 - distance / scales[light_index])
-        reflection = visibility
+        normalized_distance = distance / scales[light_index]
+        falloff = smoothstep(1 - normalized_distance)
         if light.range_variation:
             # 중심 밝기는 유지하고 바닥에 닿는 빛의 가장자리가 더 잘 보이게 한다.
             falloff += .45 * falloff * (1 - falloff)
-            reflection += exterior
         weight = light.alpha * falloff
         total_light += weight
-        reflected = weight * reflection
+        reflected = weight * visibility
+        if exterior and light.range_variation:
+            spill = smoothstep(1 - normalized_distance / EXTERIOR_RANGE_SCALE)
+            reflected += light.alpha * spill * exterior
         reflected_light += reflected
         r, g, b = light.color
         red += r * reflected
@@ -235,7 +237,7 @@ def lighting_mesh(board, floors, lights, background):
                 visibility = smoothstep(edge / .58) * (1 - smoothstep((rock_depth - .32) / .93))
             exterior = EXTERIOR_LIGHT_STRENGTH * (1 - visibility) * exterior_fade
             sx = board.screen((x, y))[0]
-            samples = light_samples(x, y, lights, visibility) if visibility or exterior else ()
+            samples = light_samples(x, y, lights, visibility, exterior) if visibility or exterior else ()
             tint = light_tint(samples, background, visibility, exterior, base_scales)
             if any(light.range_variation for _, light, _ in samples):
                 animated.append((len(vertices), visibility, exterior, samples))
@@ -278,7 +280,8 @@ def draw_terrain(art, board, level, materials, lights, background, now):
                              opacity=max(.14, .77 - .28 * (distance - 1)))
                     wall_rim(art, board, pos, floors, materials)
         mesh, triangles, animated = lighting_mesh(board, floors, lights, background)
-        scales = tuple(light.radius_scale(now) for light in lights)
+        pulse = sin(now * (2 * pi / LIGHT_PULSE_SECONDS))
+        scales = tuple(1 + light.range_variation * pulse for light in lights)
         for index, visibility, exterior, samples in animated:
             mesh[index].color = light_tint(samples, background, visibility, exterior, scales)
         p.SDL_RenderGeometry(p.renderer, None, mesh, len(mesh), triangles, len(triangles))
