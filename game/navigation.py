@@ -80,7 +80,8 @@ class TopDownBoard:
     @property
     def origin(self) -> tuple[float, float]:
         size = self.cell_size
-        center_x = WIDTH / 2 + (190 if self.tutorial else 0)
+        # 입문방은 왼쪽 안내판과 간격을 두면서 화면 중앙에 가깝게 배치한다.
+        center_x = WIDTH / 2 + (80 if self.tutorial else 0)
         return (center_x - (self.width - 1) * size / 2,
                 (BOARD_BOTTOM + BOARD_TOP) / 2 + (self.height - 1) * size / 2)
 
