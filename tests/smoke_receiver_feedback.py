@@ -35,14 +35,14 @@ def input_checks(level):
     # 실제 run 입력 분기를 통과한다. 같은 연결은 다시 시작하지 않고, 30ms 재연결은 새 파동 하나만 만든다.
     steps = [
         # 시각, 입력, 논리 수신, 표시 수신, 수신 파동 진행률
-        (0, None, False, False, 1), (1, p.SDLK_e, True, False, 0), (1.2, None, True, False, 0),
-        (1.2, p.SDLK_ESCAPE, True, False, 0),
-        (11.2, None, True, False, 0),
-        (11.2, p.SDLK_ESCAPE, True, False, 0),
-        (11.31, None, True, True, .01 / RECEIVE_SECONDS), (12.01, None, True, True, 1),
-        (12.1, p.SDLK_e, False, False, 1), (12.13, (p.SDLK_e,) * 3, True, False, 0),
-        (12.2, p.SDLK_z, False, False, 1), (12.3, p.SDLK_e, True, False, 0),
-        (12.4, p.SDLK_r, False, False, 1), (12.5, p.SDLK_e, True, False, 0),
+        (0, None, False, False, 1), (1, p.SDLK_e, True, False, 1), (1.2, None, True, False, 1),
+        (1.2, p.SDLK_ESCAPE, True, False, 1),
+        (11.2, None, True, False, 1),
+        (11.2, p.SDLK_ESCAPE, True, False, 1),
+        (11.31, None, True, True, 0), (12.02, None, True, True, 1),
+        (12.1, p.SDLK_e, False, True, 1), (12.13, (p.SDLK_e,) * 3, True, True, 1),
+        (12.2, p.SDLK_z, False, False, 1), (12.3, p.SDLK_e, True, False, 1),
+        (12.4, p.SDLK_r, False, False, 1), (12.5, p.SDLK_e, True, False, 1),
         (12.6, p.SDLK_1, False, False, 1),
     ]
     frame, now, drawn = -1, 0, 0

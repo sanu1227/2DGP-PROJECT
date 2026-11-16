@@ -378,7 +378,7 @@ def main():
         # Git의 줄바꿈 설정에 관계없이 같은 입력은 같은 체크섬을 갖는다.
         fingerprints = {name: hashlib.sha256((root / name).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
                         for name in ("data/stages.json", "game/levels.py", "game/model.py",
-                                     "game/mechanics.py", "tools/solve_levels.py", "tests/solutions.py")}
+                                     "game/mechanics.py", "game/magic.py", "tools/solve_levels.py", "tests/solutions.py")}
         report = {"sha256": fingerprints, "stages": results}
         args.output.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 

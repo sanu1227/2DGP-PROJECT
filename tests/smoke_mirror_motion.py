@@ -19,6 +19,8 @@ import pico2d.pico2d as p
 from game.levels import load_levels
 from game.model import Game
 from game.navigation import IsoBoard
+from game.art import MAGIC_BEAM_HEIGHT
+from game.optics import trace_display_magic
 from game.view import View, WIDTH, HEIGHT, MIRROR_SECONDS
 
 
@@ -56,10 +58,14 @@ def main():
             assert game.state == before
             mask = next(mask for region, mask in view.hit_masks.items() if region[0] == mirror and mask[0] == 'mirror')
             assert mask[-1] == angle
+            rays, powered = trace_display_magic(game.level, game.state, {mirror: angle})
+            labels = [call.args[2] for call in text.call_args_list]
+            assert ('M1 수신 완료' in labels) == bool(powered)
+            assert view.gate_motions[(5, 5)][1] == int(bool(powered))
             for polygon, _, _ in view.art.mirror_faces(sx, sy, scale, angle):
                 center = tuple(sum(point[i] for point in polygon) / 4 for i in (0, 1))
                 assert view.art.hit_test('mirror', sx, sy, scale, center, rotation=angle)
-            return angle, [call.args[2] for call in text.call_args_list]
+            return angle, labels
 
         def capture(angle):
             if args.capture is None:
@@ -67,8 +73,18 @@ def main():
             # 실제 SDL 렌더러의 판과 화살표를 잘라 GIF로 기록한다. 원본 에셋은 수정하지 않는다.
             p.clear_canvas()
             p.draw_rectangle(0, 0, WIDTH, HEIGHT, 20, 31, 37, filled=True)
-            view.art.draw_mirror(800, 400, 1.8, angle)
-            view.centered(800, 640, '거울 90도씩 부드럽게 회전', 26)
+            preview_scale = 1.15
+            def screen(pos):
+                return 840 + (pos[0] - pos[1]) * 112 * preview_scale, 410 - (pos[0] + pos[1] - 6) * 56 * preview_scale
+            x, y = screen((1, 3))
+            view.art.draw('mana_source', x, y, preview_scale)
+            x, y = screen(mirror)
+            view.art.draw_mirror(x, y, preview_scale, angle)
+            for start, end in trace_display_magic(game.level, game.state, {mirror: angle})[0]:
+                x1, y1 = screen(start); x2, y2 = screen(end)
+                p.draw_line(x1, y1 + MAGIC_BEAM_HEIGHT * preview_scale,
+                            x2, y2 + MAGIC_BEAM_HEIGHT * preview_scale, 244, 185, 255)
+            view.centered(800, 655, '거울 각도를 따라 움직이는 반사광', 22)
             surface = p.SDL_CreateRGBSurfaceWithFormat(0, WIDTH, HEIGHT, 32, p.SDL_PIXELFORMAT_RGBA32)
             try:
                 assert p.SDL_RenderReadPixels(p.renderer, None, p.SDL_PIXELFORMAT_RGBA32,
@@ -87,9 +103,8 @@ def main():
             for i in range(13):
                 angle, labels = frame(began + MIRROR_SECONDS * i / 12)
                 angles.append(angle)
-                if i < 12:
-                    assert 'M1 수신 완료' not in labels
-                    assert view.gate_motions[(5, 5)][1] == 0, '거울 정렬 전에 연결문이 열리기 시작했습니다.'
+                rays, _ = trace_display_magic(game.level, game.state, {mirror: angle})
+                assert len(rays) >= 2, '회전 중 방출광이 사라졌습니다.'
                 capture(angle)
             assert abs(angles[0] - orientation) < 1e-8
             assert abs(angles[6] - (orientation + .5)) < 1e-8
@@ -147,7 +162,7 @@ await sharp(raw.subarray(6*560*390*4,7*560*390*4), {raw:{width:560,height:390,ch
                                cwd=Path(__file__).resolve().parents[1] / 'tools/art', check=True)
             finally:
                 raw_path.unlink()
-        print('Mirror motion OK: four eased quarter turns, 4-to-1 wrap, live mesh/picking, beam waits, rapid input, pause, undo, restart and room change; model unchanged.')
+        print('Mirror motion OK: four eased quarter turns, 4-to-1 wrap, live mesh/picking, continuous reflected rays, receiver/gate contact, rapid input, pause, undo, restart and room change; model unchanged.')
     finally:
         if view:
             view.close()

@@ -2,18 +2,19 @@
 
 import ctypes
 import json
-from math import cos, floor, pi, sin
+from math import floor
 from pathlib import Path
 
 import pico2d.pico2d as p
+from game.magic import mirror_output
 from game.mechanics import mirror_axis
+from game.optics import MAGIC_BEAM_HEIGHT, MIRROR_HALF_SPAN, MIRROR_HALF_DEPTH
 
 
 ART_ROOT = Path(__file__).resolve().parents[1] / "assets" / "art_v1"
 MAP_ROOT = ART_ROOT.parent / "map_pack_v1"
 WALL_ROOT = ART_ROOT.parent / "wall_pack_v1"
 GATE_ROOT = ART_ROOT.parent / "gate_pack_v1"
-MAGIC_BEAM_HEIGHT = 45
 MIRROR_BASE_TOP = 174
 
 
@@ -272,16 +273,13 @@ class Art:
 
     @staticmethod
     def mirror_basis(rotation):
-        if rotation == int(rotation):
-            return mirror_axis(int(rotation))
-        angle = rotation * pi / 2
-        return cos(angle) + sin(angle), sin(angle) - cos(angle)
+        return mirror_axis(rotation)
 
     @classmethod
     def mirror_segment(cls, sx, sy, scale, rotation):
-        """거울의 실제 반사축을 2:1 등각 화면에 투영한다."""
+        """방출 방향과 수직인 거울판을 2:1 등각 화면에 투영한다."""
         tx, ty = cls.mirror_basis(rotation)
-        dx, dy = (tx - ty) * 112 * .36 * scale, -(tx + ty) * 56 * .36 * scale
+        dx, dy = (tx - ty) * 112 * MIRROR_HALF_SPAN * scale, -(tx + ty) * 56 * MIRROR_HALF_SPAN * scale
         cy = sy + MAGIC_BEAM_HEIGHT * scale
         return (sx - dx, cy - dy), (sx + dx, cy + dy)
 
@@ -300,28 +298,28 @@ class Art:
                     sy + (MAGIC_BEAM_HEIGHT - (tx + ty) * 56 * tangent
                           - (nx + ny) * 56 * normal + height) * scale)
         faces = []
+        span, depth = MIRROR_HALF_SPAN, MIRROR_HALF_DEPTH
         edge_uv = ((163, 83), (170, 85), (141, 151), (134, 149))
         if abs(tx - ty) > 1e-8:
             front = tx - ty > 0
             side = 1 if front else -1
-            a, b, n = -.36 * side, .36 * side, .027 * side
+            a, b, n = -span * side, span * side, depth * side
             faces.append(((point(a, n, 45), point(b, n, 45), point(b, n, -45), point(a, n, -45)),
                           ((92, 49), (177, 75), (137, 159), (53, 135)),
                           (255, 255, 255, 255) if front else (115, 94, 73, 255)))
         # 윗면과 카메라에 가까운 옆날. 앞뒤 면은 모서리에서 면적이 0이 된 뒤 전환된다.
-        faces.append(((point(-.36, -.027, 45), point(.36, -.027, 45),
-                       point(.36, .027, 45), point(-.36, .027, 45)), edge_uv, (210, 181, 133, 255)))
+        faces.append(((point(-span, -depth, 45), point(span, -depth, 45),
+                       point(span, depth, 45), point(-span, depth, 45)), edge_uv, (210, 181, 133, 255)))
         if abs(tx + ty) > 1e-8:
-            t = .36 if tx + ty > 0 else -.36
-            faces.append(((point(t, -.027, 45), point(t, .027, 45),
-                           point(t, .027, -45), point(t, -.027, -45)), edge_uv, (255, 255, 255, 255)))
+            t = span if tx + ty > 0 else -span
+            faces.append(((point(t, -depth, 45), point(t, depth, 45),
+                           point(t, depth, -45), point(t, -depth, -45)), edge_uv, (255, 255, 255, 255)))
         return faces
 
     @classmethod
     def mirror_arrow(cls, sx, sy, scale, rotation):
-        tx, ty = cls.mirror_basis(rotation)
-        nx, ny = -ty, tx
-        dx, dy = nx - ny, -(nx + ny)
+        nx, ny = mirror_output(rotation)
+        dx, dy = nx - ny, -(nx + ny) / 2
         length = (dx * dx + dy * dy) ** .5
         dx, dy = dx / length * scale, dy / length * scale
         start = sx, sy + MAGIC_BEAM_HEIGHT * scale
@@ -330,7 +328,7 @@ class Art:
                 tip, (tip[0] - dx * 10 + dy * 7, tip[1] - dy * 10 - dx * 7))
 
     def draw_mirror(self, sx, sy, scale, rotation=0):
-        """반사축·앞면 화살표를 표시한다. 네 방향의 유리·뒤판·옆날을 구별한다."""
+        """거울판과 방출 방향 화살표를 함께 회전시킨다."""
         entry = self.manifest["sprites"]["mirror"]
         anchor = entry["anchor"]
         left, bottom, width, height = entry["clip_rect_pico2d"]

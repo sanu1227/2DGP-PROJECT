@@ -1,7 +1,6 @@
 """pico2d 화면과 키 입력. 퍼즐 판정은 model.Game이 전담한다."""
 
 import os
-from dataclasses import replace
 from pathlib import Path
 from time import perf_counter
 from math import floor, sin, sqrt
@@ -16,7 +15,8 @@ from game.themes import boundary_walls, low_wall_sprite, scene_for, themed_floor
 from game.layout import WIDTH, HEIGHT, BOARD_BOTTOM, BOARD_TOP
 from game.front_end import FrontEnd
 from game.tutorial import first_room_hint
-from game.mechanics import trace_magic, fixed_devices
+from game.mechanics import fixed_devices
+from game.optics import trace_display_magic
 from game.play_menu import PlayClock, PlayMenu
 from game.stage_feedback import StageFeedback
 from game.receiver_feedback import ReceiverFeedback
@@ -215,9 +215,6 @@ class View:
                 start, target = old, old + (new - old) % 4
             duration = min(.5, MIRROR_SECONDS * (target - start))
             self.mirror_motions[pos] = (start, target, now, duration)
-        # 회전이 끝나 보이는 빛이 수신기에 닿을 때 수신 파동도 시작한다.
-        ready = max((began + duration for _, _, began, duration in self.mirror_motions.values()), default=now)
-        self.receiver_feedback.changed(game, previous, max(now, ready))
 
     @staticmethod
     def fatigue(game):
@@ -547,6 +544,8 @@ class View:
             # 같은 칸 캐릭터까지 포함해 표식이 머리나 물건에 가려지지 않게 한다.
             top = max((rect[3] for cell, rect in self.hit_masks if cell == pos), default=sy + 8)
             y = min(top + 15, BOARD_TOP - 15)
+            if self.top_down and pos in level.mirrors:
+                sx += projection.half_width * .70
             if pos == state.player and self.action_badge_bounds:
                 sx = self.action_badge_bounds[2] + 18
                 y = self.action_badge_bounds[1] + 22
@@ -611,9 +610,11 @@ class View:
         if self.mirror_game is not game:
             self.mirror_game, self.mirror_motions = game, {}
         mirror_rotations = {pos: self.mirror_rotation(game, pos, now) for pos in level.mirrors}
-        # 회전 중인 판에서는 표시용 광선만 멈춘다. 논리 상태와 행동 수는 그대로 둔다.
-        beam_state = replace(state, rubble=state.rubble | self.mirror_motions.keys()) if self.mirror_motions else state
-        gate_statuses = {pos: game.gate_status(pos, beam_state) for pos in level.gates}
+        beam_segments, powered_receivers = trace_display_magic(level, state, mirror_rotations)
+        self.receiver_feedback.observe(game, powered_receivers, now)
+        gate_statuses = {pos: (('open' if control in powered_receivers else 'held' if state.player == pos else 'closed')
+                              if control in level.receivers else game.gate_status(pos, state))
+                         for pos, control in level.gates.items()}
         if self.gate_game is not game:
             self.reset_gates()
             self.reset_plates()
@@ -624,7 +625,6 @@ class View:
             gate_openings[pos] = (opening if control in level.timed_echoes
                                   else self.gate_opening(pos, opening, now))
         self.plate_depths = {pos: self.plate_pressure(game, pos, now) for pos in level.plates}
-        beam_segments, powered_receivers = trace_magic(level, beam_state)
         if self.top_down:
             if self.topdown_art is None:
                 self.topdown_art = TopDownArt()

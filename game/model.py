@@ -4,6 +4,7 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 
 from game.levels import DIRECTIONS, Level, Pos
+from game.magic import MIRROR_DIRECTIONS, MIRROR_LABELS
 from game.mechanics import trace_magic, fixed_devices
 
 
@@ -49,8 +50,12 @@ class Game:
         self.restart()
 
     def restart(self) -> None:
+        rotations = {pos: MIRROR_DIRECTIONS.index(direction)
+                     for pos, direction in self.level.mirror_directions.items()
+                     if direction != MIRROR_DIRECTIONS[0]}
         self.state = State(player=self.level.start, items=dict(self.level.initial_items),
-                           rubble=set(self.level.rubble), replay_workers=dict(self.level.replay_workers))
+                           rubble=set(self.level.rubble), replay_workers=dict(self.level.replay_workers),
+                           mirror_rotations=rotations)
         self.history: list[State] = []
         self.message = "물건이나 장치 위에서 E를 누르세요."
 
@@ -189,7 +194,7 @@ class Game:
                 return None, "손이 찼습니다. 먼저 내려놓으세요."
             return "pickup", f"E: {ITEM_NAMES[state.items[pos]]} 줍기"
         if pos in self.level.mirrors:
-            return (None, "거울은 빈손으로 돌리세요.") if state.carrying else ("rotate", "E / Space: 거울 90도 회전 · 화살표 쪽 앞면만 반사")
+            return (None, "거울은 빈손으로 돌리세요.") if state.carrying else ("rotate", "E / Space: 거울 90도 회전 · 화살표 방향으로 빛 방출")
         if pos in self.level.jobs:
             if pos in state.replay_workers:
                 return None, "기록 발판을 밟으면 자동으로 기록합니다."
@@ -304,7 +309,7 @@ class Game:
                 state.mirror_rotations[pos] = rotation
             else:
                 state.mirror_rotations.pop(pos, None)
-            return True, f"거울 방향 {rotation + 1}/4. 화살표 쪽 앞면만 빛을 반사합니다."
+            return True, f"거울 방출 방향 {MIRROR_LABELS[rotation]} ({rotation + 1}/4)."
         if operation == "assign":
             state.workers.add(pos)
             state.carrying = None

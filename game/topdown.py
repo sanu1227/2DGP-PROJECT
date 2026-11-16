@@ -6,10 +6,10 @@ from pathlib import Path
 
 import pico2d.pico2d as p
 
-from game.art import Art
 from game.device_outline import DeviceOutlines
 from game.layout import HEIGHT
 from game.levels import DIRECTIONS
+from game.magic import mirror_output
 from game.themes import scene_for
 from game.topdown_terrain import Light, draw_shadows, draw_terrain, materials_for
 from game.worker_view import ECHO_COLOR, draw_echo_trail, recording_label
@@ -155,9 +155,9 @@ def device_entries(game, gate_statuses, powered, exit_ready, plate_depths):
 
 
 def draw_mirror(sx, sy, size, rotation):
-    """반사면의 위치와 화살표 방향을 광선 판정과 같은 축으로 그린다."""
-    tx, ty = Art.mirror_basis(rotation)
-    nx, ny = -ty, tx
+    """거울 화살표를 광선이 방출되는 방향으로 그린다."""
+    nx, ny = mirror_output(rotation)
+    tx, ty = ny, -nx
 
     def point(tangent, normal):
         return (sx + size * (tx * tangent + nx * normal),
@@ -171,17 +171,17 @@ def draw_mirror(sx, sy, size, rotation):
         mesh = (p.SDL_Vertex * len(vertices))(*vertices)
         p.SDL_RenderGeometry(p.renderer, None, mesh, len(mesh), None, 0)
 
-    span = .36
+    span = .41
     for back, front, color in ((-.034, -.016, (167, 116, 75)),
                                (-.016, .004, (46, 47, 59)),
                                (.004, .027, (188, 236, 251))):
         fill(((-span, back), (span, back), (span, front),
               (-span, back), (span, front), (-span, front)), color)
 
-    # 화살촉과 자루를 같은 법선에 붙여 중간 프레임에도 정면 방향을 명확히 읽을 수 있게 한다.
-    fill(((0, .315), (-.093, .209), (.093, .209),
-          (-.034, .209), (-.034, .118), (.034, .118),
-          (-.034, .209), (.034, .118), (.034, .209)), (137, 252, 225))
+    # 방출 방향 화살표는 빛과 겹치는 곳에서도 알아볼 수 있게 밝게 그린다.
+    fill(((0, .37), (-.11, .24), (.11, .24),
+          (-.04, .24), (-.04, .10), (.04, .10),
+          (-.04, .24), (.04, .10), (.04, .24)), (137, 252, 225))
 
 
 def source_nozzle(level, start, end):

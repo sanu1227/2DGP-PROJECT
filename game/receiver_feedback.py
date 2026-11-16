@@ -19,6 +19,18 @@ class ReceiverFeedback:
     def reset(self):
         self.game = None
         self.bursts = {}
+        self.powered = None
+
+    def observe(self, game, powered, now):
+        """연속 광선이 렌즈에 들어오고 나가는 시각적 접촉 이벤트를 한 번씩 처리한다."""
+        if self.game is not game:
+            self.reset()
+            self.game = game
+        if self.powered is not None:
+            self.bursts = {pos: began for pos, began in self.bursts.items()
+                           if pos in powered and now - began < RECEIVE_SECONDS}
+            self.bursts.update((pos, now) for pos in powered - self.powered)
+        self.powered = set(powered)
 
     def changed(self, game, previous, now):
         """성공한 행동에서 새 연결만 한 번 재생한다. 유지 중인 연결은 재생하지 않는다."""
@@ -32,6 +44,7 @@ class ReceiverFeedback:
         self.bursts = {pos: began for pos, began in self.bursts.items()
                        if pos in powered and now - began < RECEIVE_SECONDS}
         self.bursts.update((pos, now) for pos in powered - before)
+        self.powered = powered
 
     def progress(self, game, pos, now):
         began = self.bursts.get(pos) if self.game is game else None

@@ -182,6 +182,12 @@
         "##########"
       ],
       "action_limit": 79,
+      "mirror_directions": [
+        {
+          "cell": [3, 6],
+          "direction": "left"
+        }
+      ],
       "magic_sources": [
         {
           "cell": [

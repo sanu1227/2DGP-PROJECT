@@ -1,11 +1,12 @@
 {
   "sha256": {
-    "data/stages.json": "9f8317e37657bebc92a48b2dcdfe3562e04195a39f1a779b9c334ead3548c18b",
-    "game/levels.py": "b582f171a3786d25cdd68c964e4fe4ff3bfd38537f551371f10e3f7bcf1dffd6",
-    "game/model.py": "19de457dad52882034d4a9cb55facc2a4682b0fc5539cd35f54b6a97c4486b84",
-    "game/mechanics.py": "f599a54ecfb778a983ba93a52a6aaf9a1a2df6f198ecc91160c7f98c66b964d6",
-    "tools/solve_levels.py": "c17282a32c1ac2c5237efc7d7c43dc3eeb89343c254727336c216273183f0d31",
-    "tests/solutions.py": "178d211258b4f59992d72eefcbea6e42cdee709980eb28f5d823489b0a976a47"
+    "data/stages.json": "295d106bd71d92100eaea89345117d2e1a917441c04cb361d31a134679215bcb",
+    "game/levels.py": "3aabd99ccfdbeb2fcb10a28047c9fe8009a64d857aadf21ab40b06e0f5a12aed",
+    "game/model.py": "f09ba7703eb94ff605115442e2689eafef6c69c214363f50787cee1884425e82",
+    "game/mechanics.py": "87e15aa2eea6d624c1a7124b84ba4d2382736dbcb2e319e1c1850db0dc029a80",
+    "game/magic.py": "9d34803bcab14900e75ad5bf4b3e076246f46577a5acf2a4ad09fd7c18ecea9a",
+    "tools/solve_levels.py": "9793c49afaca0ba8af4cb940ece22b2ecc29827254911376609aa4e755e9535a",
+    "tests/solutions.py": "d3b03c2d8df803c015209d867c40956c7063304a6810a6b699d0844031265dd4"
   },
   "stages": {
     "stage_01": {
@@ -136,7 +137,7 @@
       ],
       "minimum": 51,
       "expanded": 1511,
-      "seconds": 0.35,
+      "seconds": 0.39,
       "action_limit": 59,
       "size": [
         8,
@@ -225,7 +226,7 @@
       ],
       "minimum": 76,
       "expanded": 11771,
-      "seconds": 3.05,
+      "seconds": 3.01,
       "core_mechanic_required_within_limit": true,
       "required_mechanics": [
         "rubble",
@@ -306,7 +307,7 @@
       ],
       "minimum": 60,
       "expanded": 831,
-      "seconds": 0.18,
+      "seconds": 0.2,
       "core_mechanic_required_within_limit": true,
       "required_mechanics": [
         "rubble",
@@ -335,7 +336,6 @@
         "down",
         "interact",
         "interact",
-        "interact",
         "right",
         "right",
         "right",
@@ -363,6 +363,7 @@
         "up",
         "interact",
         "down",
+        "interact",
         "interact",
         "up",
         "interact",
@@ -399,8 +400,8 @@
         "left"
       ],
       "minimum": 69,
-      "expanded": 4333,
-      "seconds": 1.03,
+      "expanded": 4797,
+      "seconds": 1.17,
       "core_mechanic_required_within_limit": true,
       "required_mechanics": [
         "mirror"
@@ -461,7 +462,7 @@
       ],
       "minimum": 41,
       "expanded": 7093,
-      "seconds": 2.53,
+      "seconds": 2.28,
       "core_mechanic_required_within_limit": true,
       "required_mechanics": [
         "helper",
@@ -501,6 +502,7 @@
         "right",
         "right",
         "interact",
+        "interact",
         "left",
         "left",
         "up",
@@ -519,9 +521,9 @@
         "interact",
         "down"
       ],
-      "minimum": 38,
-      "expanded": 291,
-      "seconds": 0.07,
+      "minimum": 39,
+      "expanded": 366,
+      "seconds": 0.09,
       "core_mechanic_required_within_limit": true,
       "required_mechanics": [
         "mirror",

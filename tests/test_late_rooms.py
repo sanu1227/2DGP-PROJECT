@@ -84,6 +84,7 @@ class LateRoomTests(unittest.TestCase):
         use(part)
         use(trap)
         use(mirror)
+        self.play(game, "interact")
         self.go(game, station)
         self.assertEqual(game.state.recording.inputs, ())
         start = game.state.moves

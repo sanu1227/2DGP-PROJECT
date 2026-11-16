@@ -39,6 +39,24 @@ class Level:
     echo_links: dict[Pos, tuple[dict[Pos, Pos], int]] = field(default_factory=dict)
     timed_echoes: frozenset[Pos] = frozenset()
     replay_workers: dict[Pos, Pos] = field(default_factory=dict)
+    mirror_directions: dict[Pos, str] = field(default_factory=dict)
+
+
+def read_directions(raw, field_name, cells, prefix):
+    directions = {}
+    records = raw.get(field_name, [])
+    if not isinstance(records, list):
+        raise ValueError(prefix + f"{field_name}는 목록이어야 합니다.")
+    for record in records:
+        if not isinstance(record, dict) or set(record) != {"cell", "direction"}:
+            raise ValueError(prefix + f"{field_name}에는 cell과 direction이 필요합니다.")
+        cell, direction = record["cell"], record["direction"]
+        if (not isinstance(cell, list) or len(cell) != 2 or any(type(n) is not int for n in cell)
+                or tuple(cell) not in cells or tuple(cell) in directions
+                or not isinstance(direction, str) or direction not in DIRECTIONS):
+            raise ValueError(prefix + f"{field_name}의 좌표나 방향이 잘못되었습니다.")
+        directions[tuple(cell)] = direction
+    return directions
 
 
 def read_links(raw, field_name, first_name, second_name, first_tiles, second_tiles, prefix, used_ids,
@@ -134,7 +152,9 @@ def load_levels(path: Path | str | None = None) -> list[Level]:
     for index, raw in enumerate(stages, start=1):
         prefix = f"스테이지 {index}: "
         required = {"id", "title", "hint", "map"}
-        if not isinstance(raw, dict) or not required <= set(raw) or set(raw) - required - {"plate_links", "chute_links", "action_limit", "power_links", "worker_links", "magic_sources"}:
+        optional = {"plate_links", "chute_links", "action_limit", "power_links", "worker_links",
+                    "magic_sources", "mirror_directions"}
+        if not isinstance(raw, dict) or not required <= set(raw) or set(raw) - required - optional:
             raise ValueError(prefix + "id, title, hint, map 필드가 필요합니다.")
         action_limit = raw.get("action_limit")
         if action_limit is not None and (type(action_limit) is not int or action_limit <= 0):
@@ -193,19 +213,8 @@ def load_levels(path: Path | str | None = None) -> list[Level]:
         items = {pos: "part" for pos in positions["P"]}
         items.update({pos: "bone" for pos in positions["B"]})
         items.update({pos: "soldier" for pos in soldiers})
-        sources = {}
-        raw_sources = raw.get("magic_sources", [])
-        if not isinstance(raw_sources, list):
-            raise ValueError(prefix + "magic_sources는 목록이어야 합니다.")
-        for source in raw_sources:
-            if not isinstance(source, dict) or set(source) != {"cell", "direction"}:
-                raise ValueError(prefix + "마력 광원 필드가 잘못되었습니다.")
-            cell = source["cell"]
-            if (not isinstance(cell, list) or len(cell) != 2 or any(type(n) is not int for n in cell)
-                    or tuple(cell) not in positions["Q"] or tuple(cell) in sources
-                    or not isinstance(source["direction"], str) or source["direction"] not in DIRECTIONS):
-                raise ValueError(prefix + "마력 광원 좌표나 방향이 잘못되었습니다.")
-            sources[tuple(cell)] = source["direction"]
+        sources = read_directions(raw, "magic_sources", positions["Q"], prefix)
+        mirror_directions = read_directions(raw, "mirror_directions", positions["M"], prefix)
         if set(sources) != positions["Q"] or (positions["M"] | positions["Y"] and not sources):
             raise ValueError(prefix + "거울·수신기에는 방향이 지정된 광원이 필요합니다.")
         if positions["J"] - echo_links.keys() and not positions["S"]:
@@ -219,6 +228,6 @@ def load_levels(path: Path | str | None = None) -> list[Level]:
             chutes=chutes, action_limit=action_limit,
             mirrors=positions["M"], sources=sources, receivers=positions["Y"],
             rubble=positions["R"], jobs=positions["J"], echo_links=echo_links, timed_echoes=timed_echoes,
-            replay_workers=replay_workers,
+            replay_workers=replay_workers, mirror_directions=mirror_directions,
         ))
     return levels
