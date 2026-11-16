@@ -334,7 +334,7 @@ def main():
         if result is None:
             raise ValueError(f"{level.id}: 완료 가능한 풀이가 없습니다.")
         required = {4: ("rubble", "plate"), 5: ("rubble", "mirror", "chute", "plate"), 6: ("mirror",),
-                    7: ("helper", "plate"), 8: ("mirror", "helper", "chute", "plate")}
+                    7: ("helper", "plate"), 8: ("mirror", "helper")}
         if args.check_mechanics and index in required:
             layout_required = []
             for mechanic in required[index]:

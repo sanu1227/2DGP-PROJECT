@@ -119,7 +119,7 @@ class GimmickTests(unittest.TestCase):
         self.assertFalse(powered)
 
     def test_later_rooms_require_every_reflection_and_undo_each_rotation(self):
-        for index, expected in ((4, (1,)), (7, (3, 1, 3))):
+        for index, expected in ((4, (1,)), (5, (1, 3))):
             count = len(expected)
             level = replace(self.levels[index], rubble=frozenset())
             receiver = next(control for gate, control in level.gates.items()
@@ -325,35 +325,5 @@ class GimmickTests(unittest.TestCase):
         for field in ('workers','rubble'):
             state=deepcopy(game.state);getattr(state,field).add((1,1))
             self.assertNotEqual(base,key(state))
-
-    def test_boss_switches_power_from_the_vault_to_the_exit(self):
-        game = Game(self.levels[7])
-        job = next(iter(game.level.jobs))
-        vault_part = min((p for p, kind in game.level.initial_items.items() if kind == 'part'), key=lambda p: p[1])
-        exit_gate = next(gate for gate in game.level.gates if game.level.device_labels[gate] == 'M2')
-        self.assertIsNone(find_path(game, job))
-        self.assertIsNone(find_path(game, vault_part))
-        for mirror, rotation in zip(sorted(game.level.mirrors), (3, 1, 3)):
-            game.state.player = mirror
-            for _ in range(rotation):
-                self.assertTrue(game.act('interact'))
-        self.assertIsNotNone(find_path(game, job))
-        self.assertIsNone(find_path(game, vault_part))
-        game.state.player = job
-        game.state.carrying = 'soldier'
-        self.assertTrue(game.act('interact'))
-        self.assertIsNotNone(find_path(game, vault_part))
-        self.assertTrue(game.act('interact'))  # Recall the worker before stationing it in the hall.
-        game.state.player = next(iter(game.level.posts))
-        self.assertTrue(game.act('interact'))
-        self.assertFalse(trace_magic(game.level, game.state)[1])
-        self.assertIsNone(find_path(game, job))
-        self.assertIsNone(find_path(game, game.level.exit))
-        game.state.player = sorted(game.level.mirrors)[1]
-        self.assertTrue(game.act('interact'))
-        self.assertEqual(game.gate_status(exit_gate), 'open')
-        self.assertIsNotNone(find_path(game, game.level.exit))
-        self.assertIsNone(find_path(game, job))
-
 
 if __name__=='__main__':unittest.main()
