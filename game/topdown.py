@@ -13,7 +13,7 @@ from game.magic import mirror_output
 from game.mechanics import mirror_cells
 from game.play_effects import beam_contacts, trap_motion
 from game.scenery import draw_rubble_track
-from game.themes import scene_for
+from game.themes import room_background, scene_for
 from game.topdown_terrain import Light, draw_shadows, draw_terrain, materials_for
 from game.worker_view import ECHO_COLOR, draw_echo_trail, draw_echo_turn, recording_label
 
@@ -271,7 +271,7 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, mirror
     view.plate_hit_masks.clear()
     view.action_badge_bounds = None
 
-    background = tuple(scene["background"]) if scene else (19, 27, 32)
+    background = room_background(scene)
     draw_terrain(art, board, level, materials_for(stage), lights, background, now, recesses)
     draw_rubble_track(board, level.rubble_track)
     draw_echo_trail(game, board)

@@ -39,6 +39,10 @@ def scene_for(level):
     return _checked_scene(level.id, level.width, level.height, level.walls)
 
 
+def room_background(scene):
+    return tuple(scene["background"]) if scene else (19, 27, 32)
+
+
 def themed_floor(scene, pos, near_trap=False):
     """기본 바닥을 넓게 남기고, 고정된 일부 칸에만 장식 문양을 배치한다."""
     for region in scene.get("floor_regions", ()):

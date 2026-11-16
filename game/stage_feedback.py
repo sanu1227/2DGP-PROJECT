@@ -7,12 +7,14 @@ import pico2d.pico2d as p
 from game.front_end import Button, bevel
 from game.layout import WIDTH, BOARD_TOP
 from game.logo_mode import fade_to_black
+from game.themes import room_background, scene_for
 
 INK = (239, 237, 219)
 MUTED = (164, 182, 177)
 GOLD = (231, 190, 108)
 TEAL = (112, 216, 190)
-ENTRY_SECONDS = 7.5
+ENTRY_SECONDS = 5.0
+ENTRY_FADE_SECONDS = .7
 
 
 class StageFeedback:
@@ -46,16 +48,24 @@ class StageFeedback:
         if game.state.cleared:
             self.draw_result(view, game, index, total, max(0, now - self.completed_at))
         elif game.level.id != "stage_01" and 0 <= now - self.entered_at < ENTRY_SECONDS:
-            self.draw_entry(view, game, index, total, now - self.entered_at)
+            self.draw_entry(view, game, now - self.entered_at)
 
     @staticmethod
-    def draw_entry(view, game, index, total, elapsed):
-        progress = min(1, elapsed / .20, (ENTRY_SECONDS - elapsed) / .24)
-        lift = round(4 * (1 - progress) ** 2)
-        y = BOARD_TOP + 9 + lift
-        bevel((32, y, WIDTH - 32, y + 30), (27, 38, 40), (86, 92, 74))
-        view.text(54, y + 15, "방 힌트", 16, GOLD)
-        view.text(138, y + 15, game.level.hint, 18, INK)
+    def draw_entry(view, game, elapsed):
+        opacity = min(1, (ENTRY_SECONDS - elapsed) / ENTRY_FADE_SECONDS)
+        background = room_background(scene_for(game.level))
+
+        def tinted(color):
+            return tuple(round(base + (channel - base) * opacity)
+                         for base, channel in zip(background, color))
+
+        hint = game.level.hint
+        width = view.text_width(hint, 18) + 116
+        left = (WIDTH - width) // 2
+        y = BOARD_TOP + 24
+        bevel((left, y - 16, left + width, y + 16), tinted((27, 38, 40)), tinted((86, 92, 74)))
+        view.text(left + 20, y, "방 힌트", 16, tinted(GOLD))
+        view.text(left + 96, y, hint, 18, tinted(INK))
 
     def draw_result(self, view, game, index, total, elapsed):
         fade_to_black(.64)

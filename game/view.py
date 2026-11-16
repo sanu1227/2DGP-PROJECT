@@ -13,7 +13,7 @@ from game.model import DIRECTIONS, INTERACTION_HELP, PUSH_ACTIONS, Game
 from game.art import Art, MAGIC_BEAM_HEIGHT
 from game.scenery import draw_rubble_track, draw_scars, draw_tinted, floor_style, wall_style
 from game.navigation import ClickNavigator, IsoBoard, TopDownBoard, find_path
-from game.themes import boundary_walls, low_wall_sprite, scene_for, themed_floor
+from game.themes import boundary_walls, low_wall_sprite, room_background, scene_for, themed_floor
 from game.layout import (
     WIDTH, HEIGHT, BOARD_BOTTOM, BOARD_TOP, ACTION_BADGE_BOTTOM_MAX,
     STATUS_BOTTOM, STATUS_TOP, STATUS_Y, TUTORIAL_PANEL,
@@ -1349,9 +1349,7 @@ class View:
         self.tutorial = first_room_hint(game)
         if game.failed:
             self.navigation.cancel()
-        scene = scene_for(game.level)
-        background = tuple(scene["background"]) if scene else (19, 27, 32)
-        box(0, 0, WIDTH, HEIGHT, background)
+        box(0, 0, WIDTH, HEIGHT, room_background(scene_for(game.level)))
         self.board(game)
         self.tutorial_overlay(game)
         self.play_header(game, index, total)
