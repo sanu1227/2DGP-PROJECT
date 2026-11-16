@@ -70,7 +70,8 @@ def render_checks(levels):
                 feedback.draw(display, game, index, len(levels))
             capture(folder / f"clear-{index + 1:02d}.png")
             assert game.state == state
-            assert game.remaining_actions == (None if index == 0 else 0 if index == 3 else 2)
+            expected_remaining = None if level.action_limit is None else level.action_limit - len(SOLUTIONS[level.id])
+            assert game.remaining_actions == expected_remaining
             assert game.undo()
             feedback.update(game, display.now())
             assert feedback.completed_at is None

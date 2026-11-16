@@ -1,7 +1,7 @@
 """탑다운 격자에 퍼즐 상태와 전용 스프라이트를 표시한다."""
 
 import json
-from math import hypot, pi
+from math import hypot, pi, sin
 from pathlib import Path
 
 import pico2d.pico2d as p
@@ -11,7 +11,7 @@ from game.layout import HEIGHT
 from game.levels import DIRECTIONS
 from game.magic import mirror_output
 from game.mechanics import mirror_cells
-from game.play_effects import beam_contacts
+from game.play_effects import beam_contacts, trap_motion
 from game.themes import scene_for
 from game.topdown_terrain import Light, draw_shadows, draw_terrain, materials_for
 from game.worker_view import ECHO_COLOR, draw_echo_trail, draw_echo_turn, recording_label
@@ -289,9 +289,15 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, mirror
             art.draw(asset, sx, sy, size * .82, angle=SOURCE_ANGLES[level.sources[pos]], outline=True)
         elif pos in state.soldiers:
             art.draw(sprites.get("post_empty", "post_empty"), sx, sy, size * .79, outline=True)
-            art.draw(asset, sx, sy, size * .72)
+            art.draw(asset, sx, sy, size * .72, height_scale=view.work_feedback.soldier_height(pos, now))
+        elif sprite == "lever_on":
+            progress = view.work_feedback.progress(pos, "lever", now)
+            lever = sprites["lever_off"] if progress < .44 else asset
+            art.draw(lever, sx, sy, size * .82, outline=True, height_scale=1 - .11 * sin(pi * progress))
         else:
             art.draw(asset, sx, sy, size * .82, outline=True)
+        if sprite == "trap_active":
+            trap_motion(sx, sy + size * .35, half, now)
         if sprite == "replay_seal" and color == TEAL:
             p.draw_circle(sx, sy, round(size * .42), *TEAL, filled=False)
 
@@ -314,8 +320,9 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, mirror
         sx, sy = board.screen(pos)
         sprite = ITEMS[kind]
         lift = view.chute_feedback.item_lift(pos, now)
+        bounce = view.work_feedback.drop_lift(pos, now)
         lateral = size * .22 if pos in entries else 0
-        art.draw(sprites.get(sprite, sprite), sx + lateral * (1 - lift), sy + size * (.04 + .28 * lift),
+        art.draw(sprites.get(sprite, sprite), sx + lateral * (1 - lift), sy + size * (.04 + .28 * lift + .24 * bounce),
                  size * .54, outline=True)
     for pos, (position, height) in rubble.items():
         sx, sy = board.screen(position)
@@ -329,11 +336,12 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, mirror
         "walk_a" if now - view.motion[2] < .09 else "walk_b") if view.motion else "idle"
     tired = view.fatigue(game)
     art.draw(f"worker_{facing}_{pose}", px, py, size * .75,
-             height_scale=view.player_pose_height(tired, now))
+             height_scale=view.player_pose_height(game, tired, now))
     if state.carrying:
         dx, dy = DIRECTIONS[facing]
         sprite = ITEMS[state.carrying]
-        art.draw(sprites.get(sprite, sprite), px + dx * size * .27, py - dy * size * .27, size * .32)
+        _, lift = view.work_feedback.actor_pose(state.player, now)
+        art.draw(sprites.get(sprite, sprite), px + dx * size * .27 * lift, py - dy * size * .27 * lift, size * .32)
     head = py + size * .35
     badge_x = px
     player_x, player_y = state.player
@@ -347,6 +355,7 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, mirror
     view.worker_effort((px - size * .3, py - size * .27, px + size * .3, head), tired, now)
 
     view.chute_feedback.draw(board, now, lambda x, y, ratio: art.draw(sprites["bone"], x, y, size * .32 * ratio))
+    view.work_feedback.draw(board, now)
     draw_echo_turn(game, board, view.echo_motion, now)
     for start, end in beam_segments:
         x1, y1 = board.screen(start)

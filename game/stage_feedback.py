@@ -67,6 +67,7 @@ class StageFeedback:
         bevel((528, y - 54, 1072, y + 54), (30, 73, 64), TEAL)
         p.draw_rectangle(538, y - 44, 1062, y + 44, *TEAL)
         view.centered(800, y, "복구 완료!", 64, INK)
+        view.draw_worker_completion(1138, 625, elapsed)
         if elapsed < .65:
             radius = 285 + elapsed * 90
             for i in range(12):

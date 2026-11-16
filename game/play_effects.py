@@ -10,6 +10,10 @@ DUST = (192, 168, 138)
 TEAL = (112, 216, 190)
 AMBER = (233, 174, 99)
 VIOLET = (235, 180, 255)
+WORK_SECONDS = {
+    "pickup": .24, "drop": .26, "install": .44, "lever": .31,
+    "trap": .52, "deliver": .35, "assemble": .56, "deploy": .51,
+}
 
 
 @contextmanager
@@ -119,3 +123,102 @@ def beam_contacts(board, contacts, now, *, height=0):
             strength = .65 + .35 * sin(now * 18) ** 2
             p.draw_circle(x, y, 4, *VIOLET, round(115 * strength), filled=True)
             p.draw_line(x - nx * 6, y - ny * 6, x + nx * 6, y + ny * 6, *VIOLET, round(205 * strength))
+
+
+def trap_motion(x, y, size, now):
+    radius = max(2, size * .085)
+    angle = now * 5
+    for index in range(3):
+        spoke = angle + index * (2 * pi / 3)
+        p.draw_line(x, y, x + radius * cos(spoke), y + radius * sin(spoke), 226, 163, 89)
+
+
+class WorkFeedback:
+    def __init__(self):
+        self.events = {}
+        self.actor = None
+
+    def changed(self, game, before, now):
+        state, level = game.state, game.level
+        pos = before.player
+        kind = None
+        if before.carrying is None and pos in before.items and pos not in state.items and state.carrying:
+            kind = "pickup"
+        elif before.carrying and state.carrying is None and pos in state.items and pos not in before.items:
+            kind = "drop"
+        elif pos in state.installed - before.installed:
+            kind = "install"
+        elif pos in state.soldiers - before.soldiers:
+            kind = "deploy"
+        elif before.carrying == "bone" and pos in level.benches and not (pos in before.items):
+            if state.carrying == "soldier":
+                kind = "assemble"
+            elif state.bench_bones.get(pos, 0) > before.bench_bones.get(pos, 0):
+                kind = "deliver"
+        elif state.active and not before.active:
+            kind = "lever"
+            self.events.update(((trap, "trap"), now) for trap in level.traps)
+        if kind:
+            self.events[pos, kind] = now
+            self.actor = (pos, kind, now)
+        elif state.player != before.player:
+            self.actor = None
+
+    def progress(self, pos, kind, now):
+        began = self.events.get((pos, kind))
+        if began is None:
+            return 1
+        return min(1, max(0, (now - began) / WORK_SECONDS[kind]))
+
+    def actor_pose(self, pos, now):
+        """굽히는 정도와 손에 든 물건이 올라온 비율."""
+        if self.actor is None or self.actor[0] != pos:
+            return 1, 1
+        _, kind, began = self.actor
+        progress = min(1, max(0, (now - began) / WORK_SECONDS[kind]))
+        crouch = 1 - .18 * sin(pi * progress)
+        lift = min(1, progress * 1.45) if kind in ("pickup", "assemble") else 1
+        return crouch, lift
+
+    def drop_lift(self, pos, now):
+        progress = self.progress(pos, "drop", now)
+        if progress < .62:
+            return 1 - (progress / .62) ** 2
+        if progress < 1:
+            return .22 * sin(pi * (progress - .62) / .38)
+        return 0
+
+    def soldier_height(self, pos, now):
+        progress = self.progress(pos, "deploy", now)
+        if progress < 1:
+            return 1 - .25 * (1 - progress) * cos(progress * 10)
+        phase = (now + pos[0] * .4 + pos[1] * .7) % 6
+        return 1 + .022 * sin(pi * phase / .52) if phase < .52 else 1
+
+    def draw(self, board, now):
+        self.events = {(pos, kind): began for (pos, kind), began in self.events.items()
+                       if now - began < WORK_SECONDS[kind]}
+        for pos, kind in self.events:
+            progress = self.progress(pos, kind, now)
+            x, y = board.screen(pos)
+            size = board.half_width
+            if kind in ("install", "lever", "trap", "deploy", "drop"):
+                if kind != "drop" or progress >= .6:
+                    dust(x, y + size * .08, progress, size=.85, color=AMBER if kind == "trap" else DUST)
+            if kind in ("install", "lever", "trap"):
+                cy = y + size * (.30 if kind != "trap" else .44)
+                width = max(3, size * .14)
+                with alpha_blend():
+                    for index in range(3):
+                        angle = (progress + index / 3) * 2 * pi
+                        p.draw_line(x, cy, x + cos(angle) * width, cy + sin(angle) * width,
+                                    *AMBER, round(215 * (1 - progress)))
+            elif kind in ("deliver", "assemble"):
+                for index in range(4 if kind == "assemble" else 2):
+                    angle = index * pi / 2
+                    reach = size * .52 * (1 - progress)
+                    px, py = x + cos(angle) * reach, y + size * .27 + sin(angle) * reach
+                    with alpha_blend():
+                        p.draw_line(px - 4, py - 3, px + 4, py + 3, 236, 219, 185, round(220 * (1 - progress)))
+            elif kind == "deploy":
+                ring(x, y, size * (.26 + progress * .30), TEAL, 175 * (1 - progress))

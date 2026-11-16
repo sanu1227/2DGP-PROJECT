@@ -22,7 +22,7 @@ from game.play_menu import PlayClock, PlayMenu
 from game.stage_feedback import StageFeedback
 from game.receiver_feedback import ReceiverFeedback
 from game.room_debris import RoomDebris
-from game.play_effects import ChuteFeedback, beam_contacts, dust, ring, rubble_scrape
+from game.play_effects import ChuteFeedback, WorkFeedback, beam_contacts, dust, ring, rubble_scrape, trap_motion
 from game.topdown import ITEMS as TOPDOWN_ITEMS, TopDownArt, draw_board as draw_topdown_board
 from game.worker_view import EchoMotion, draw_echo_marks, draw_echo_turn, draw_worker_status, recording_label
 from game.music import BackgroundMusic
@@ -191,6 +191,7 @@ class View:
         self.plate_delays = {}
         self.echo_motion = EchoMotion()
         self.chute_feedback = ChuteFeedback()
+        self.work_feedback = WorkFeedback()
         self.action_badge_bounds = None
 
     def mirror_rotation(self, game, pos, now):
@@ -209,6 +210,7 @@ class View:
         """성공한 행동 이벤트에만 연결한다. 연타는 현재 각도에서 이어지며 입력을 막지 않는다."""
         now = self.now()
         self.echo_motion.change(game, previous, now)
+        self.work_feedback.changed(game, previous, now)
         outlet = self.chute_feedback.transferred(game, previous, now)
         if outlet in game.level.plates and not game.plate_pressed(outlet, previous):
             self.plate_motions.setdefault(outlet, (0, 0, now, 0))
@@ -388,8 +390,9 @@ class View:
         self.move_player(previous.player, game.state.player, action,
                          PUSH_SECONDS if self.pushing else .18)
 
-    def player_pose_height(self, tired, now):
-        height = self.worker_height(tired, now)
+    def player_pose_height(self, game, tired, now):
+        crouch, _ = self.work_feedback.actor_pose(game.state.player, now)
+        height = self.worker_height(tired, now) * crouch
         if self.pushing and self.motion:
             progress = min(1, max(0, (now - self.motion[2]) / PUSH_SECONDS))
             height *= 1 - .14 * sin(pi * progress)
@@ -461,6 +464,17 @@ class View:
             self.topdown_art.draw(TOPDOWN_ITEMS[kind], x, y + 11, 24)
         else:
             self.item(kind, x, y, 0.19)
+
+    def draw_worker_completion(self, x, y, elapsed):
+        phase = min(1, elapsed / .43)
+        reach = sin(pi * phase)
+        if self.top_down:
+            self.topdown_art.draw("worker_down_idle", x, y + 24, 52, height_scale=1 - reach * .12)
+        else:
+            self.art.draw("worker_sw_idle", x, y, .34, height_scale=1 - reach * .12)
+        if phase < 1:
+            for side in (-1, 1):
+                dust(x + side * (9 + reach * 12), y + 24, phase, direction=(side, 0), size=.65)
 
     def support_height(self, game, pos):
         """발판 위 물건과 캐릭터의 접점을 지지면에 맞춘다."""
@@ -948,6 +962,7 @@ class View:
             elif sprite in ITEM_SPRITES.values():
                 sy += self.support_height(game, pos) * scale
                 sy += self.chute_feedback.item_lift(pos, now) * 28 * scale
+                sy += self.work_feedback.drop_lift(pos, now) * 22 * scale
             if sprite in ("plate_up", "plate_down"):
                 pressed = self.plate_depths[pos]
                 self.art.draw_plate(sx, sy, scale, pressed)
@@ -980,13 +995,23 @@ class View:
                     draw_tinted(self.art, f"worker_{FACING[direction]}_idle", sx, sy, scale, (206, 150, 255))
                 continue
             if sprite != "player":
+                height = 1
+                if sprite == "soldier_deployed":
+                    height = self.work_feedback.soldier_height(pos, now)
+                elif sprite == "lever_on":
+                    progress = self.work_feedback.progress(pos, "lever", now)
+                    if progress < .44:
+                        sprite = "lever_off"
+                    height = 1 - .11 * sin(pi * progress)
                 if (sx, sy) in wall_tints and (sprite.startswith("wall_low") or "_wall_" in sprite):
                     draw_tinted(self.art, sprite, sx, sy, scale, wall_tints[(sx, sy)])
                 else:
-                    self.art.draw(sprite, sx, sy, scale)
+                    self.art.draw(sprite, sx, sy, scale, height_scale=height)
+                if sprite == "trap_active":
+                    trap_motion(sx, sy + projection.half_height * .32, projection.half_width, now)
                 if sprite == "mana_receiver" and pos in powered_receivers:
                     self.receiver_feedback.draw(game, pos, sx, sy, scale, now)
-                self.sprite_hit_region(pos, sprite, sx, sy, scale)
+                self.sprite_hit_region(pos, sprite, sx, sy, scale, height_scale=height)
                 continue
             pose = "idle"
             if self.motion:
@@ -994,19 +1019,21 @@ class View:
             if state.carrying:
                 pose = "carry"
             tired = self.fatigue(game)
-            height_scale = self.player_pose_height(tired, now)
+            height_scale = self.player_pose_height(game, tired, now)
+            _, lift = self.work_feedback.actor_pose(state.player, now)
             # 뒤를 볼 때 운반물은 몸 뒤에, 앞을 볼 때는 손 위에 합성한다.
             offset_x = 12 if self.facing in ("ne", "se") else -12
             if state.carrying and self.facing in ("ne", "nw"):
-                self.item(state.carrying, sx + offset_x, sy + 32 * height_scale, scale * 0.65)
+                self.item(state.carrying, sx + offset_x * lift, sy + 32 * height_scale * lift, scale * 0.65)
             self.art.draw(f"worker_{self.facing}_{pose}", sx, sy, scale, height_scale=height_scale)
             self.sprite_hit_region(pos, f"worker_{self.facing}_{pose}", sx, sy, scale, height_scale=height_scale)
             self.place_action_badge(game, sx, self.hit_regions[-1][1][3], now)
             self.worker_effort(self.hit_regions[-1][1], tired, now)
             if state.carrying and self.facing in ("se", "sw"):
-                self.item(state.carrying, sx + offset_x, sy + 24 * height_scale, scale * 0.65)
+                self.item(state.carrying, sx + offset_x * lift, sy + 24 * height_scale * lift, scale * 0.65)
 
         self.room_debris.draw(projection, now)
+        self.work_feedback.draw(projection, now)
         self.chute_feedback.draw(projection, now, lambda x, y, ratio: self.item("bone", x, y, scale * ratio))
         draw_echo_turn(game, projection, self.echo_motion, now)
         # 광선은 물체와 구별되는 높은 선으로 그리고 끝점도 현재 상태에서 계산한다.
