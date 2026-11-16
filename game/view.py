@@ -875,6 +875,11 @@ class View:
                 self.art.draw(sprite, sx, sy, scale, rotation=rotation)
                 self.sprite_hit_region(pos, sprite, sx, sy, scale, rotation=rotation)
                 continue
+            if sprite == 'mana_source':
+                source_sprite, flip = self.art.source_pose(level.sources[pos])
+                self.art.draw(source_sprite, sx, sy, scale, flip=flip)
+                self.sprite_hit_region(pos, source_sprite, sx, sy, scale, flip=flip)
+                continue
             if sprite.startswith("gate_"):
                 self.gate(level, pos, sx, sy, scale, sprite.removeprefix("gate_"), gate_openings[pos])
                 continue

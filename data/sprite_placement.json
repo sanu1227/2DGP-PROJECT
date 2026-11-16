@@ -1,4 +1,5 @@
 {
+  "mana_source": {"anchor": [110, 210]},
   "part": {"anchor": [128, 198]},
   "push_rubble": {"anchor": [128, 182]},
   "bone_bundle": {"anchor": [128, 196]},

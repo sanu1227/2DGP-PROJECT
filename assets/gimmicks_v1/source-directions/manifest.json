@@ -1,0 +1,33 @@
+{
+  "atlases": {
+    "source_directions": {
+      "file": "source-up.png",
+      "width": 256,
+      "height": 256
+    }
+  },
+  "sprites": {
+    "mana_source_up": {
+      "file": "source-up.png",
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 119,
+        "y": 210
+      },
+      "atlas": "source_directions",
+      "clip_rect_pico2d": [
+        0,
+        0,
+        256,
+        256
+      ],
+      "content_rect": {
+        "left": 78,
+        "top": 108,
+        "width": 101,
+        "height": 112
+      }
+    }
+  }
+}

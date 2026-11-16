@@ -31,6 +31,7 @@ class Art:
                 self.atlas_paths[name] = ART_ROOT / entry["file"]
                 self.atlases[name] = p.load_image(str(self.atlas_paths[name]))
             self.load_gimmicks()
+            self.load_source_directions()
         except Exception:
             self.close()
             raise
@@ -54,6 +55,18 @@ class Art:
         self.atlas_paths["gates"] = path
         self.manifest["atlases"].update(manifest["atlases"])
         self.manifest["sprites"].update(manifest["sprites"])
+
+    def load_source_directions(self):
+        root = ART_ROOT.parent / 'gimmicks_v1/source-directions'
+        manifest = json.loads((root / 'manifest.json').read_text(encoding='utf-8'))
+        self.atlas_paths['source_directions'] = root / 'source-up.png'
+        self.atlases['source_directions'] = p.load_image(str(root / 'source-up.png'))
+        self.manifest['atlases'].update(manifest['atlases'])
+        self.manifest['sprites'].update(manifest['sprites'])
+
+    @staticmethod
+    def source_pose(direction):
+        return ('mana_source_up' if direction in ('up', 'left') else 'mana_source', direction in ('down', 'left'))
 
     def load_theme(self, name):
         """방에서 사용하는 테마만 한 번 로드한다. 클릭용 알파도 같은 파일을 읽는다."""
