@@ -14,7 +14,7 @@ from game.mechanics import mirror_cells
 from game.play_effects import beam_contacts
 from game.themes import scene_for
 from game.topdown_terrain import Light, draw_shadows, draw_terrain, materials_for
-from game.worker_view import ECHO_COLOR, draw_echo_trail, recording_label
+from game.worker_view import ECHO_COLOR, draw_echo_trail, draw_echo_turn, recording_label
 
 
 ASSET_ROOT = Path(__file__).resolve().parents[1] / "assets" / "topdown_v2"
@@ -135,8 +135,9 @@ def device_entries(game, gate_statuses, powered, exit_ready):
     for pos, status in gate_statuses.items():
         label, color = {"open": ("열림", TEAL), "held": ("대기", GOLD), "closed": ("닫힘", RED)}[status]
         if status == "open" and level.gates[pos] in level.timed_echoes:
-            label = "통과"
-        entries[pos] = "gate_open", f"{level.device_labels[pos]} {label}", color
+            entries[pos] = "gate_open", "지금 통과", color
+        else:
+            entries[pos] = "gate_open", f"{level.device_labels[pos]} {label}", color
     for pos in level.sources:
         entries[pos] = "source", "광원", GOLD
     for pos in mirror_cells(level, state):
@@ -305,7 +306,7 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, mirror
         sx, sy = board.screen(position)
         p.draw_circle(sx, sy, round(size * .33), *ECHO_COLOR)
         if state.echo.origin in state.replay_workers:
-            art.draw(sprites["soldier_deployed"], sx, sy, size * .72)
+            art.draw(sprites["soldier_deployed"], sx, sy, size * .72, height_scale=view.echo_motion.stride(now))
         else:
             art.draw(f"worker_{direction}_idle", sx, sy, size * .75, opacity=.67)
 
@@ -346,6 +347,7 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, mirror
     view.worker_effort((px - size * .3, py - size * .27, px + size * .3, head), tired, now)
 
     view.chute_feedback.draw(board, now, lambda x, y, ratio: art.draw(sprites["bone"], x, y, size * .32 * ratio))
+    draw_echo_turn(game, board, view.echo_motion, now)
     for start, end in beam_segments:
         x1, y1 = board.screen(start)
         x2, y2 = board.screen(end)

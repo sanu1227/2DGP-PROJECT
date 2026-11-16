@@ -24,7 +24,7 @@ from game.receiver_feedback import ReceiverFeedback
 from game.room_debris import RoomDebris
 from game.play_effects import ChuteFeedback, beam_contacts, dust, ring, rubble_scrape
 from game.topdown import ITEMS as TOPDOWN_ITEMS, TopDownArt, draw_board as draw_topdown_board
-from game.worker_view import EchoMotion, draw_echo_marks, draw_worker_status, recording_label
+from game.worker_view import EchoMotion, draw_echo_marks, draw_echo_turn, draw_worker_status, recording_label
 from game.music import BackgroundMusic
 
 INK = (226, 230, 219)
@@ -975,7 +975,7 @@ class View:
                 continue
             if sprite == "echo_actor":
                 if state.echo.origin in state.replay_workers:
-                    self.art.draw("soldier_deployed", sx, sy, scale * .87)
+                    self.art.draw("soldier_deployed", sx, sy, scale * .87, height_scale=self.echo_motion.stride(now))
                 else:
                     draw_tinted(self.art, f"worker_{FACING[direction]}_idle", sx, sy, scale, (206, 150, 255))
                 continue
@@ -1008,6 +1008,7 @@ class View:
 
         self.room_debris.draw(projection, now)
         self.chute_feedback.draw(projection, now, lambda x, y, ratio: self.item("bone", x, y, scale * ratio))
+        draw_echo_turn(game, projection, self.echo_motion, now)
         # 광선은 물체와 구별되는 높은 선으로 그리고 끝점도 현재 상태에서 계산한다.
         for start, end in beam_segments:
             x1,y1=screen(start); x2,y2=screen(end)

@@ -1,12 +1,18 @@
 """인부의 기록, 재생, 문양 상태를 표시한다."""
 
+from math import hypot, pi, sin
+
 import pico2d.pico2d as p
 
 from game.levels import DIRECTIONS
 from game.layout import WIDTH
+from game.play_effects import ring
 
 
 ECHO_COLOR = (197, 137, 243)
+STEP_COLOR = (233, 199, 255)
+SEAL_COLOR = (123, 223, 192)
+STRIDE_SECONDS = .18
 GATE_STYLES = {
     "open": ("통과", (123, 223, 192)),
     "held": ("통과 중", (234, 192, 111)),
@@ -108,7 +114,7 @@ class EchoMotion:
         if old != echo:
             origin = previous.replay_workers.get(echo.origin, echo.origin)
             start = old.position if old else origin
-            if self.motion and echo.origin not in game.state.replay_workers:
+            if self.motion and old and echo.origin == old.origin:
                 start = self.position_at(now)
             self.motion = (start, echo.position, now)
             inputs = old.remaining if old else ()
@@ -121,8 +127,14 @@ class EchoMotion:
 
     def position_at(self, now):
         start, end, began = self.motion
-        fraction = min(1, max(0, (now - began) / .18))
+        fraction = min(1, max(0, (now - began) / STRIDE_SECONDS))
         return tuple(a + (b - a) * fraction for a, b in zip(start, end))
+
+    def stride(self, now):
+        if self.motion and self.motion[0] != self.motion[1]:
+            fraction = min(1, max(0, (now - self.motion[2]) / STRIDE_SECONDS))
+            return 1 + .11 * sin(pi * fraction)
+        return 1
 
     def pose(self, game, now):
         echo = game.state.echo
@@ -153,10 +165,43 @@ def draw_echo_marks(game, board):
 def draw_echo_trail(game, board):
     state = game.state
     if state.recording:
-        radius = max(3, round(board.half_width * .34) // 4)
-        x, y = state.recording.origin
-        for action in state.recording.inputs:
+        pos = state.recording.origin
+        inputs = state.recording.inputs
+        for index, action in enumerate(inputs):
             dx, dy = DIRECTIONS[action]
-            a, b = board.screen((x + dx * .45, y + dy * .45))
-            p.draw_circle(a, b, radius, *ECHO_COLOR)
-            x, y = x + dx, y + dy
+            target = pos[0] + dx, pos[1] + dy
+            color = STEP_COLOR if index == len(inputs) - 1 else ECHO_COLOR
+            draw_step_arrow(board, pos, target, color)
+            pos = target
+
+
+def draw_step_arrow(board, source, target, color, *, tip_at=.62):
+    sx, sy = board.screen(source)
+    tx, ty = board.screen(target)
+    length = max(1, hypot(tx - sx, ty - sy))
+    dx, dy = (tx - sx) / length, (ty - sy) / length
+    x, y = sx + (tx - sx) * tip_at, sy + (ty - sy) * tip_at
+    size = max(4, min(9, board.half_width * .16))
+    for side in (-1, 1):
+        p.draw_line(x, y, x - (dx + side * dy) * size, y - (dy - side * dx) * size, *color)
+
+
+def draw_echo_turn(game, board, motion, now):
+    echo = game.state.echo
+    if echo is None:
+        return
+    seals, _ = game.level.echo_links[echo.origin]
+    for gate, seal in seals.items():
+        if game.echo_pressed(gate):
+            x, y = board.screen(seal)
+            ring(x, y, board.half_width * .43, SEAL_COLOR, 230)
+            x, y = board.screen(gate)
+            extent = board.half_width * .37
+            for side in (-1, 1):
+                edge = x + side * extent
+                p.draw_line(edge, y - 5, edge, y + 5, *SEAL_COLOR)
+                p.draw_line(edge, y + 5, edge - side * 4, y + 5, *SEAL_COLOR)
+    if echo.just_stepped and motion.game is game and motion.motion:
+        dx, dy = DIRECTIONS[motion.direction]
+        x, y = echo.position
+        draw_step_arrow(board, (x - dx, y - dy), echo.position, STEP_COLOR, tip_at=.8)
