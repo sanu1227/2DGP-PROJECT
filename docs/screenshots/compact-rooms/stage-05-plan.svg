@@ -28,7 +28,8 @@
 <rect x="76" y="102" width="40" height="40" rx="3" fill="#326d68"/>
 <text x="96" y="129" text-anchor="middle" font-size="22">@</text>
 <rect x="118" y="102" width="40" height="40" rx="3" fill="#46555e"/>
-<rect x="160" y="102" width="40" height="40" rx="3" fill="#46555e"/>
+<rect x="160" y="102" width="40" height="40" rx="3" fill="#326d68"/>
+<text x="180" y="129" text-anchor="middle" font-size="22">Y</text>
 <rect x="202" y="102" width="40" height="40" rx="3" fill="#29333e"/>
 <rect x="244" y="102" width="40" height="40" rx="3" fill="#46555e"/>
 <rect x="286" y="102" width="40" height="40" rx="3" fill="#46555e"/>
@@ -89,7 +90,7 @@
 <rect x="412" y="270" width="40" height="40" rx="3" fill="#29333e"/>
 <text x="22" y="338" text-anchor="middle" font-size="11">6</text>
 <rect x="34" y="312" width="40" height="40" rx="3" fill="#29333e"/>
-<rect x="76" y="312" width="40" height="40" rx="3" fill="#46555e"/>
+<rect x="76" y="312" width="40" height="40" rx="3" fill="#29333e"/>
 <rect x="118" y="312" width="40" height="40" rx="3" fill="#326d68"/>
 <text x="138" y="339" text-anchor="middle" font-size="22">A</text>
 <rect x="160" y="312" width="40" height="40" rx="3" fill="#46555e"/>
@@ -105,7 +106,8 @@
 <rect x="34" y="354" width="40" height="40" rx="3" fill="#29333e"/>
 <rect x="76" y="354" width="40" height="40" rx="3" fill="#326d68"/>
 <text x="96" y="381" text-anchor="middle" font-size="22">E</text>
-<rect x="118" y="354" width="40" height="40" rx="3" fill="#46555e"/>
+<rect x="118" y="354" width="40" height="40" rx="3" fill="#326d68"/>
+<text x="138" y="381" text-anchor="middle" font-size="22">G</text>
 <rect x="160" y="354" width="40" height="40" rx="3" fill="#46555e"/>
 <rect x="202" y="354" width="40" height="40" rx="3" fill="#46555e"/>
 <rect x="244" y="354" width="40" height="40" rx="3" fill="#326d68"/>
@@ -127,5 +129,6 @@
 <rect x="412" y="396" width="40" height="40" rx="3" fill="#29333e"/>
 <path d="M264,332 L264,374" stroke="#ffd789" stroke-width="2" stroke-dasharray="4 4" opacity=".6"/>
 <path d="M180,290 L222,248" stroke="#ffd789" stroke-width="2" stroke-dasharray="4 4" opacity=".6"/>
+<path d="M180,122 L138,374" stroke="#ffd789" stroke-width="2" stroke-dasharray="4 4" opacity=".6"/>
 <path d="M390,248 L264,332" stroke="#ffd789" stroke-width="2" stroke-dasharray="4 4" opacity=".6"/>
 </g></svg>
