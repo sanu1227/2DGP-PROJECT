@@ -54,7 +54,7 @@ const sheets = {
   room_devices: [
     'depth_bone', 'depth_soldier_carried', 'depth_soldier_deployed', 'depth_post_empty',
     'depth_bench_empty', 'depth_bench_bone', 'depth_plate_up', 'depth_plate_down',
-    'depth_gate_closed', 'depth_gate_open', 'depth_rubble', 'depth_chute_outlet',
+    null, null, 'depth_rubble', 'depth_chute_outlet',
   ],
   room_magic: [
     'depth_chute_inlet', 'depth_source', 'depth_receiver', 'depth_mirror_base',
@@ -72,7 +72,7 @@ const sheets = {
     'workshop_exit_ready', 'depth_plate_up', 'depth_plate_down',
   ],
   device_fixtures: [
-    'depth_gate_closed', 'depth_gate_open', 'depth_rubble', 'depth_post_empty',
+    null, null, 'depth_rubble', 'depth_post_empty',
     'depth_bench_empty', 'depth_bench_bone', 'depth_chute_inlet', 'depth_chute_outlet',
   ],
   device_magic: [
@@ -80,9 +80,11 @@ const sheets = {
     'depth_mirror_base', null, 'replay_seal',
   ],
   device_recording: ['recording_plate', 'recording_plate_active'],
+  device_gates: ['depth_gate_open', 'depth_gate_panel'],
 };
 const sheetColumns = {
-  workshop_finish_terrain: 3, room_08: 3, device_mechanisms: 3, device_magic: 3, device_recording: 2,
+  workshop_finish_terrain: 3, room_08: 3, device_mechanisms: 3, device_magic: 3,
+  device_recording: 2, device_gates: 2,
 };
 const terrainSheets = new Set(['terrain', 'workshop_finish_terrain', 'rooms_02_03',
   'rooms_04_05', 'rooms_06_07', 'room_08']);

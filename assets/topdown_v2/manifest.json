@@ -17,7 +17,8 @@
     "device_mechanisms": "atlases/device_mechanisms.png",
     "device_fixtures": "atlases/device_fixtures.png",
     "device_magic": "atlases/device_magic.png",
-    "device_recording": "atlases/device_recording.png"
+    "device_recording": "atlases/device_recording.png",
+    "device_gates": "atlases/device_gates.png"
   },
   "sprites": {
     "floor_1": [
@@ -1098,20 +1099,6 @@
       248,
       240
     ],
-    "depth_gate_closed": [
-      "device_fixtures",
-      4,
-      80,
-      248,
-      96
-    ],
-    "depth_gate_open": [
-      "device_fixtures",
-      260,
-      80,
-      248,
-      96
-    ],
     "depth_rubble": [
       "device_fixtures",
       516,
@@ -1321,6 +1308,20 @@
       6,
       248,
       243
+    ],
+    "depth_gate_open": [
+      "device_gates",
+      4,
+      25,
+      248,
+      206
+    ],
+    "depth_gate_panel": [
+      "device_gates",
+      260,
+      42,
+      248,
+      172
     ]
   }
 }

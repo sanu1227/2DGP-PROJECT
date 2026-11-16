@@ -35,7 +35,7 @@ CARDS = (
     DeviceCard("assembly", "해골 병사 조립", (("bench_empty", "작업대"), ("soldier_deployed", "병사")),
                "작업대 옆 칸에서 뼈 2묶음을 하나씩 납품하고, 병사를 배치대로 옮기세요.",
                "배치대에서 E / Space로 배치. 배치한 칸은 다시 들어갈 수 없어요."),
-    DeviceCard("plate", "발판과 연결문", (("plate_down", "발판"), ("gate_open", "연결문")),
+    DeviceCard("plate", "발판과 연결문", (("plate_down", "발판"), ("gate_closed", "연결문")),
                "수리공이나 물건으로 발판을 누르면 연결된 문이 열려요.",
                "무게가 사라지면 닫혀요. 문 위에 있으면 나갈 때까지 기다려요."),
     DeviceCard("chute", "뼈 투입구", (("chute_inlet", "투입구"), ("chute_outlet", "배출구")),
@@ -70,6 +70,9 @@ def catalog_buttons():
 
 def picture(view, name, x, y, width=160, height=126):
     if view.top_down:
+        if name in ("gate_open", "gate_closed"):
+            view.topdown_art.draw_gate(x, y, min(width, height), float(name == "gate_open"))
+            return
         sprite = {"mirror": "mirror_base", "mana_receiver": "receiver", "push_rubble": "rubble"}.get(name, name)
         size = min(width, height)
         view.topdown_art.draw(ROOM_SPRITES.get(sprite, sprite), x, y, size)
