@@ -76,12 +76,16 @@ class TopDownArt:
             atlas.texture = None
         self.atlases.clear()
 
-    def draw(self, name, x, y, size, *, angle=0, opacity=1, height_scale=1, outline=0):
+    def draw(self, name, x, y, size, *, angle=0, opacity=1, height_scale=1, outline=0,
+             inset=(0, 0)):
         atlas_name, left, top, width, height = self.sprites[name]
         atlas = self.atlases.get(atlas_name)
         if atlas is None:
             atlas = self.atlases[atlas_name] = p.load_image(str(ASSET_ROOT / self.files[atlas_name]))
         scale = size / max(width, height)
+        margin_x, margin_y = round(width * inset[0]), round(height * inset[1])
+        left, top = left + margin_x, top + margin_y
+        width, height = width - 2 * margin_x, height - 2 * margin_y
         clip = (left, atlas.h - top - height, width, height)
         draw_width, draw_height = width * scale, height * scale * height_scale
         if outline:
@@ -103,7 +107,7 @@ def rectangle(left, bottom, right, top, color, filled=True):
     p.draw_rectangle(round(left), round(bottom), round(right), round(top), *color, filled=filled)
 
 
-def device_entries(game, gate_statuses, powered, exit_ready, plate_depths):
+def device_entries(game, gate_statuses, powered, exit_ready):
     """장치별 그림과 상태 이름을 계산한다. 발판은 같은 칸의 배출구 위에 표시한다."""
     level, state = game.level, game.state
     entries = {}
@@ -125,7 +129,7 @@ def device_entries(game, gate_statuses, powered, exit_ready, plate_depths):
     for pos in level.chutes:
         entries[pos] = "chute_inlet", f"{level.device_labels[pos]} 투입구", GOLD
     for pos in level.plates:
-        pressed = plate_depths[pos] >= .5
+        pressed = game.plate_pressed(pos)
         entries[pos] = ("plate_down" if pressed else "plate_up"), level.device_labels[pos], TEAL if pressed else GOLD
     for pos, status in gate_statuses.items():
         label, color = {"open": ("열림", TEAL), "held": ("대기", GOLD), "closed": ("닫힘", RED)}[status]
@@ -223,13 +227,13 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, mirror
     scene = scene_for(level)
     ready = (state.installed == level.traps and (not level.traps or state.active)
              and state.soldiers == level.posts and state.carrying is None)
-    entries = device_entries(game, gate_statuses, powered, ready, view.plate_depths)
+    entries = device_entries(game, gate_statuses, powered, ready)
     workshop = stage == 1
     sprites = WORKSHOP_SPRITES if workshop else ROOM_SPRITES
     props, prop_lights, recesses = room_props(scene)
     lights = room_lights(level, prop_lights, powered, ready)
     player = view.player_position(state.player, now)
-    rubble = [view.rubble_pose(game, pos, now) for pos in sorted(state.rubble)]
+    rubble = {pos: view.rubble_pose(game, pos, now) for pos in sorted(state.rubble)}
     view.hit_regions.clear()
     view.hit_masks.clear()
     view.gate_hit_masks.clear()
@@ -241,7 +245,7 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, mirror
     draw_terrain(art, board, level, materials_for(stage), lights, background, now, recesses)
     draw_echo_trail(game, board)
     raised = [mirror_positions.get(pos, pos) for pos, (sprite, _, _) in entries.items() if sprite in RAISED_DEVICES]
-    draw_shadows(board, player, [*raised, *state.items, *(pos for pos, _ in rubble)])
+    draw_shadows(board, player, [*raised, *state.items, *(pos for pos, _ in rubble.values())])
 
     for sprite, pos, scale in props:
         x, y = board.screen(pos)
@@ -261,10 +265,24 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, mirror
             across_y = sum(cell in level.walls for cell in ((x, y - 1), (x, y + 1)))
             angle = 0 if across_x > across_y else pi / 2
             opening = gate_openings[pos]
-            art.draw(asset, sx, sy, size * .94, angle=angle, outline=opening)
-            if opening < 1:
+            if opening == 0:
                 art.draw(sprites.get("gate_closed", "gate_closed"), sx, sy, size * .94,
-                         angle=angle, opacity=1 - opening, outline=1 - opening)
+                         angle=angle, outline=True)
+            else:
+                art.draw(asset, sx, sy, size * .94, angle=angle, outline=True)
+                if opening < 1:
+                    art.draw(sprites.get("gate_closed", "gate_closed"), sx, sy + size * .19 * opening,
+                             size * .94, angle=angle, opacity=min(1, 3 * (1 - opening)), inset=(.18, 0))
+            view.draw_gate_dust(board, pos, now)
+            if gate_statuses[pos] == "held":
+                p.draw_circle(sx, sy, max(2, round(size * .044)), *GOLD, filled=True)
+        elif pos in level.plates:
+            pressure = view.plate_depths[pos]
+            sprite = "plate_up" if pressure == 0 else "plate_down"
+            art.draw(sprites.get(sprite, sprite), sx, sy, size * .82, outline=True)
+            if 0 < pressure < 1:
+                art.draw(sprites.get("plate_up", "plate_up"), sx, sy - size * .054 * pressure,
+                         size * .82, opacity=1 - pressure, inset=(.17, .17))
         elif pos in level.sources:
             art.draw(asset, sx, sy, size * .82, angle=SOURCE_ANGLES[level.sources[pos]], outline=True)
         elif pos in state.soldiers:
@@ -295,8 +313,9 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, mirror
         sprite = ITEMS[kind]
         art.draw(sprites.get(sprite, sprite), sx + (size * .22 if pos in entries else 0), sy + size * .04,
                  size * .54, outline=True)
-    for position, height in rubble:
+    for pos, (position, height) in rubble.items():
         sx, sy = board.screen(position)
+        view.draw_rubble_scrape(board, pos, position, now)
         art.draw(sprites.get("rubble", "rubble"), sx, sy + min(height, 24) * size / 256, size * .74, outline=True)
 
     px, py = board.screen(player)
@@ -306,7 +325,7 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, mirror
         "walk_a" if now - view.motion[2] < .09 else "walk_b") if view.motion else "idle"
     tired = view.fatigue(game)
     art.draw(f"worker_{facing}_{pose}", px, py, size * .75,
-             height_scale=view.worker_height(tired, now))
+             height_scale=view.player_pose_height(tired, now))
     if state.carrying:
         dx, dy = DIRECTIONS[facing]
         sprite = ITEMS[state.carrying]
@@ -345,7 +364,7 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, mirror
         rectangle(sx - width / 2, sy - 8, sx + width / 2, sy + 8, (24, 35, 40))
         view.centered(sx, sy, label, 13, color)
     if level.sources:
-        for position, _ in rubble:
+        for position, _ in rubble.values():
             sx, sy = board.screen(position)
             sy += 2 - half
             rectangle(sx - 30, sy - 8, sx + 30, sy + 8, (24, 35, 40))

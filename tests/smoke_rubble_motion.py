@@ -31,6 +31,7 @@ def main():
     game = Game(load_levels()[3])
     game.state.player = (2, 2)
     source, target = (2, 3), (2, 4)
+    gate = next(pos for pos, control in game.level.gates.items() if control == target)
     projection = IsoBoard(game.level.width, game.level.height)
     scale = projection.half_width * 2 / 224
     p.open_canvas(WIDTH, HEIGHT, sync=True)
@@ -63,8 +64,10 @@ def main():
             assert abs(player[1] - 2.5) < 1e-8, '캐릭터와 잔해 속도가 다릅니다.'
         frame(1.1)
         assert view.plate_depths[target] == 0, '잔해 도착 전에 발판이 눌렸습니다.'
+        assert game.gate_status(gate) == 'open' and view.gate_motions[gate][1] == 0
         frame(1.22)
         assert 0 < view.plate_depths[target] < 1
+        assert view.gate_motions[gate][1] == 1, '발판이 눌린 뒤 격자가 올라가야 합니다.'
         end = 1 + PUSH_SECONDS * .65 + PLATE_SECONDS
         frame(end + .001)
         assert view.plate_depths[target] == 1

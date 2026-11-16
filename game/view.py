@@ -4,7 +4,7 @@ from ctypes import byref
 import os
 from pathlib import Path
 from time import perf_counter
-from math import floor, sin, sqrt
+from math import floor, pi, sin, sqrt
 
 import pico2d.pico2d as p
 
@@ -22,6 +22,7 @@ from game.play_menu import PlayClock, PlayMenu
 from game.stage_feedback import StageFeedback
 from game.receiver_feedback import ReceiverFeedback
 from game.room_debris import RoomDebris
+from game.play_effects import dust, rubble_scrape
 from game.topdown import ITEMS as TOPDOWN_ITEMS, TopDownArt, draw_board as draw_topdown_board
 from game.worker_view import EchoMotion, draw_echo_marks, draw_worker_status, recording_label
 from game.music import BackgroundMusic
@@ -184,6 +185,7 @@ class View:
         self.move_seconds = 0.18
         self.rubble_motions = {}
         self.rubble_impulses = []
+        self.pushing = False
         self.board_offset = (0, 0)
         self.mirror_pushes = {}
         self.plate_delays = {}
@@ -369,8 +371,32 @@ class View:
             self.mirror_pushes[destination] = (position, now)
             if source in self.mirror_motions:
                 self.mirror_motions[destination] = self.mirror_motions.pop(source)
+        self.pushing = pushing or bool(moved_mirrors)
         self.move_player(previous.player, game.state.player, action,
-                         PUSH_SECONDS if pushing or moved_mirrors else .18)
+                         PUSH_SECONDS if self.pushing else .18)
+
+    def player_pose_height(self, tired, now):
+        height = self.worker_height(tired, now)
+        if self.pushing and self.motion:
+            progress = min(1, max(0, (now - self.motion[2]) / PUSH_SECONDS))
+            height *= 1 - .14 * sin(pi * progress)
+        return height
+
+    def draw_rubble_scrape(self, board, pos, position, now):
+        motion = self.rubble_motions.get(pos)
+        if motion:
+            start, _, began = motion
+            rubble_scrape(board, start, pos, position, min(1, max(0, (now - began) / PUSH_SECONDS)))
+
+    def draw_gate_dust(self, board, pos, now):
+        motion = self.gate_motions.get(pos)
+        if motion is None:
+            return
+        start, end, began, duration = motion
+        age = now - (began + duration * .85)
+        if duration and end > start and 0 <= age < .26:
+            x, y = board.screen(pos)
+            dust(x, y + board.half_height * .25, age / .26, size=.85)
 
     def plate_pressure(self, game, pos, now):
         target = float(game.plate_pressed(pos))
@@ -688,11 +714,14 @@ class View:
             self.gate_game = game
             self.room_debris = RoomDebris(game, now)
         gate_openings = {}
+        self.plate_depths = {pos: self.plate_pressure(game, pos, now) for pos in level.plates}
         for pos, control in level.gates.items():
             opening = float(gate_statuses[pos] != "closed")
+            if gate_statuses[pos] == "open" and control in self.plate_delays:
+                # 블록이 발판에 닿기 전까지 격자의 표시 위치를 유지한다.
+                opening = self.plate_delays[control][1]
             gate_openings[pos] = (opening if control in level.timed_echoes
                                   else self.gate_opening(pos, opening, now))
-        self.plate_depths = {pos: self.plate_pressure(game, pos, now) for pos in level.plates}
         if self.top_down:
             if self.topdown_art is None:
                 self.topdown_art = TopDownArt()
@@ -797,7 +826,7 @@ class View:
                         if sprite == "push_rubble":
                             position, height = self.rubble_pose(game, pos, now)
                             rx, ry = screen(position)
-                            rubble_draws[(rx, ry)] = (pos, height)
+                            rubble_draws[(rx, ry)] = (pos, position, height)
                             draw_depth = max(sum(position), depth) if pos in level.plates else sum(position)
                             objects.append((draw_depth, 2, sprite, rx, ry))
                         elif sprite == "mirror":
@@ -886,7 +915,7 @@ class View:
         for _, _, sprite, sx, sy in sorted(objects, key=lambda obj: obj[:2]):
             pos = state.player if sprite == "player" else projection.pick(sx, sy)
             if sprite == "push_rubble":
-                pos, height = rubble_draws[(sx, sy)]
+                pos, position, height = rubble_draws[(sx, sy)]
             decor_scale = decor_draws.get((sprite, sx, sy))
             if decor_scale is not None:
                 self.art.draw(sprite, sx, sy, decor_scale)
@@ -897,6 +926,7 @@ class View:
                 sy += self.player_support_height(game, player) * scale
             elif sprite == "push_rubble":
                 sy += height * scale
+                self.draw_rubble_scrape(projection, pos, position, now)
             elif sprite in ITEM_SPRITES.values():
                 sy += self.support_height(game, pos) * scale
             if sprite in ("plate_up", "plate_down"):
@@ -918,6 +948,7 @@ class View:
                 continue
             if sprite.startswith("gate_"):
                 self.gate(level, pos, sx, sy, scale, sprite.removeprefix("gate_"), gate_openings[pos])
+                self.draw_gate_dust(projection, pos, now)
                 continue
             if sprite == "resting_recorded_worker":
                 self.art.draw(ITEM_SPRITES["soldier"], sx, sy, scale)
@@ -943,7 +974,7 @@ class View:
             if state.carrying:
                 pose = "carry"
             tired = self.fatigue(game)
-            height_scale = self.worker_height(tired, now)
+            height_scale = self.player_pose_height(tired, now)
             # 뒤를 볼 때 운반물은 몸 뒤에, 앞을 볼 때는 손 위에 합성한다.
             offset_x = 12 if self.facing in ("ne", "se") else -12
             if state.carrying and self.facing in ("ne", "nw"):
