@@ -6,7 +6,7 @@ import unittest
 from game.levels import load_levels
 from game.model import Game
 from game.navigation import ClickNavigator
-from game.tutorial import device_introductions, first_room_hint
+from game.tutorial import device_introductions, device_lessons, first_room_hint
 from tests.test_game import SOLUTIONS
 
 
@@ -82,9 +82,22 @@ class TutorialTests(unittest.TestCase):
     def test_device_introductions_follow_first_appearance(self):
         introductions = device_introductions(load_levels())
         self.assertEqual([tuple(lesson.kind for lesson in pages) for pages in introductions.values()],
-                         [(), ("assembly", "assembly"), (), ("plate", "plate", "rubble"),
+                         [(), ("bone", "assembly", "assembly"), (), ("plate", "plate", "rubble"),
                           ("chute", "chute", "mirror", "receiver"), ("beam_switch",),
-                          ("helper", "helper", "helper"), ("fixed_mirror",)])
+                          ("soldier", "helper", "helper", "helper"), ("fixed_mirror",)])
+
+    def test_reopened_guide_points_to_items_on_the_floor(self):
+        level = load_levels()[1]
+        game = Game(level)
+        bones = sorted(pos for pos, kind in level.initial_items.items() if kind == "bone")
+        self.assertEqual(device_lessons(level)[0].target, bones[0])
+        for action in ("down", "down", "down", "interact"):
+            self.assertTrue(game.act(action))
+        self.assertEqual(game.state.carrying, "bone")
+        self.assertEqual(device_lessons(level, game.state)[0].target, bones[1])
+        self.assertTrue(game.act("up"))
+        self.assertTrue(game.act("interact"))
+        self.assertEqual(device_lessons(level, game.state)[0].target, game.state.player)
 
 
 if __name__ == "__main__":

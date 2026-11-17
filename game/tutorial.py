@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 from game.levels import Level, Pos
 from game.mechanics import mirror_cells
-from game.model import Game, State
+from game.model import ITEM_NAMES, Game, State
 
 
 @dataclass(frozen=True)
@@ -26,72 +26,93 @@ class DeviceLesson:
 
 
 def device_lessons(level: Level, state: State | None = None) -> tuple[DeviceLesson, ...]:
-    """지도에 실제로 있는 장치와 연결만 설명한다. 정답 경로는 제공하지 않는다."""
+    """현재 방의 물건과 장치에서 실제로 할 수 있는 행동을 설명한다."""
     lessons = []
+    items = level.initial_items if state is None else state.items
+    for kind, instruction in (
+        ("part", "함정을 고칠 때 쓰는 부품이에요.\n같은 칸에 서서 E를 눌러 주워요."),
+        ("bone", "해골 병사를 만드는 재료예요.\n같은 칸에 서서 E를 눌러 주워요."),
+        ("soldier", "같은 칸에서 E를 눌러 들어 올린 뒤 초소로 옮겨요."),
+    ):
+        target = min((pos for pos, item in items.items() if item == kind), default=None)
+        if target is not None:
+            lessons.append(DeviceLesson(kind, ITEM_NAMES[kind], instruction, target))
     if level.traps and level.levers:
         lessons.extend((
-            DeviceLesson("trap", "함정", "부품을 들고 함정 위에서 E로 설치해요.", min(level.traps)),
-            DeviceLesson("trap", "가동 레버", "모든 함정을 고친 뒤 빈손으로 E를 눌러요.", min(level.levers)),
+            DeviceLesson("trap", "함정", "부품을 들고 함정 칸에서 E를 눌러 설치해요.", min(level.traps)),
+            DeviceLesson("trap", "가동 레버", "함정을 모두 설치한 뒤, 레버 칸에서\n빈손으로 E를 눌러 가동해요.",
+                         min(level.levers)),
         ))
     if level.benches and level.posts:
         lessons.extend((
-            DeviceLesson("assembly", "작업대", "옆에서 E로 뼈를 두 번 납품해요.", min(level.benches)),
-            DeviceLesson("assembly", "몬스터 배치대", "완성한 병사를 들고 여기서 E를 눌러요.", min(level.posts)),
+            DeviceLesson("assembly", "작업대", "뼈를 들고 작업대 옆 칸에서 E를 눌러요.\n"
+                         "같은 작업대에 두 묶음을 넣으면 병사가 완성돼요.", min(level.benches)),
+            DeviceLesson("assembly", "초소", "병사를 들고 초소 칸에서 E를 눌러 배치해요.\n"
+                         "배치한 뒤에는 이 칸을 지나갈 수 없어요.", min(level.posts)),
         ))
     if level.plates:
         gate, plate = min((gate, control) for gate, control in level.gates.items() if control in level.plates)
         lessons.extend((
-            DeviceLesson("plate", "발판", "위에 서거나 물건을 올리면 문이 열려요.", plate),
-            DeviceLesson("plate", "연결문", "발판에서 무게가 사라지면 닫혀요.", gate),
+            DeviceLesson("plate", "발판", "직접 밟거나 물건을 올려 연결문을 열어요.", plate),
+            DeviceLesson("plate", "연결문", "발판이 비면 문이 닫혀요.", gate),
         ))
     if level.chutes:
         inlet, outlet = min(level.chutes.items())
         lessons.extend((
-            DeviceLesson("chute", "뼈 투입구", "뼈를 들고 위에서 E를 누르면 보내요.", inlet),
-            DeviceLesson("chute", "배출구", "이 칸이 비어 있어야 뼈를 받을 수 있어요.", outlet),
+            DeviceLesson("chute", "뼈 투입구", "뼈를 들고 투입구 칸에서 E를 누르면\n"
+                         "연결된 배출구로 뼈가 이동해요.", inlet),
+            DeviceLesson("chute", "배출구", "배출구 칸을 비워 두어야 뼈를 보낼 수 있어요.", outlet),
         ))
     rubble = level.rubble if state is None else state.rubble
     if rubble:
         if len(level.sources) > 1 and len(level.receivers) > 1:
-            lessons.append(DeviceLesson("beam_switch", "차광 블록", "블록을 밀면 막히는 빛이 바뀌어요.", min(rubble)))
+            lessons.append(DeviceLesson("beam_switch", "차광 블록", "블록을 밀어 광선을 가려요.\n"
+                                        "빛이 닿는 수신기에 따라 열리는 문이 달라져요.", min(rubble)))
         else:
-            lessons.append(DeviceLesson("rubble", "잔해", "빈손으로 잔해 쪽 방향키를 눌러 밀어요.", min(rubble)))
+            lessons.append(DeviceLesson("rubble", "잔해", "빈손으로 잔해를 향해 움직이면 한 칸 밀 수 있어요.", min(rubble)))
     movable = level.movable_mirrors if state is None else state.movable_mirrors
     mirrors = level.mirrors if state is None else mirror_cells(level, state)
     fixed = mirrors - movable
     if movable:
-        lessons.append(DeviceLesson("mirror", "이동 거울", "빈손으로 방향키로 밀고, 옆에서 E로 돌려요.", min(movable)))
+        lessons.append(DeviceLesson("mirror", "이동 거울", "빈손으로 거울을 향해 움직이면 밀 수 있어요.\n"
+                                    "옆 칸에서 E를 눌러 빛의 방향을 바꿔요.", min(movable)))
     if fixed:
-        lessons.append(DeviceLesson("fixed_mirror", "고정 거울", "빈손으로 거울 옆에서 E를 눌러 돌려요.", min(fixed)))
+        lessons.append(DeviceLesson("fixed_mirror", "고정 거울", "빈손으로 거울 옆 칸에서 E를 눌러 돌려요.\n"
+                                    "빛은 거울의 화살표 방향으로 나가요.", min(fixed)))
     if level.receivers:
-        lessons.append(DeviceLesson("receiver", "빛 수신기", "빛이 닿으면 연결문이 열려요.", min(level.receivers)))
+        lessons.append(DeviceLesson("receiver", "빛 수신기", "빛이 수신기에 닿아 있는 동안 연결문이 열려요.", min(level.receivers)))
     if level.echo_links:
         station = min(level.echo_links)
         workers = level.replay_workers if state is None else state.replay_workers
         has_worker = station in workers
-        recording = "밟은 뒤 움직이면 발걸음이 기록돼요." if has_worker else "빈손으로 E를 눌러 기록을 시작해요."
+        seals, steps = level.echo_links[station]
+        recording = (f"발판을 밟은 뒤 {steps}칸 움직이면 이동 방향이 기록돼요." if has_worker
+                     else f"빈손으로 E를 눌러 기록을 시작한 뒤 {steps}칸 움직여요.")
         lessons.append(DeviceLesson("helper", "기록 발판", recording, station))
         if has_worker:
-            lessons.append(DeviceLesson("helper", "해골 인부", "기록한 방향을 차례로 따라가요.", workers[station]))
-        seals, _ = level.echo_links[station]
+            lessons.append(DeviceLesson("helper", "해골 인부", "기록이 끝난 뒤 수리공이 행동할 때마다\n"
+                                        "인부도 기록한 방향으로 한 칸씩 움직여요.", workers[station]))
         seal = min(seals.values())
         title = "무게 발판" if seal in level.plates else "기록 문양"
-        actor = "인부" if has_worker else "분신"
-        lessons.append(DeviceLesson("helper", title, f"{actor}가 올라서면 연결문이 열려요.", seal))
+        actor = "인부가" if has_worker else "분신이"
+        effect = (f"{actor} 이 칸을 밟으면 연결문이 잠깐 열려요." if station in level.timed_echoes
+                  else f"{actor} 이 칸을 밟고 있는 동안 연결문이 열려요.")
+        lessons.append(DeviceLesson("helper", title, effect, seal))
     winches = level.jobs - level.echo_links.keys()
     if winches:
-        lessons.append(DeviceLesson("winch", "작업 윈치", "조립한 병사를 들고 위에서 E를 눌러요.", min(winches)))
+        lessons.append(DeviceLesson("winch", "작업 윈치", "병사를 들고 윈치 칸에서 E를 눌러 배치해요.\n"
+                                    "배치한 인부가 연결문을 열어 둬요.", min(winches)))
     return tuple(lessons)
 
 
 def device_introductions(levels):
-    """각 장치의 첫 등장 방에 입장 안내를 배정한다."""
+    """각 물건과 장치의 첫 등장 방에 입장 안내를 배정한다."""
     known = set()
     introductions = {}
     for level in levels:
         lessons = device_lessons(level)
         introductions[level.id] = tuple(lesson for lesson in lessons if lesson.kind not in known
-                                        and (level.id, lesson.kind) != ("stage_01", "trap"))
+                                        and not (level.id == "stage_01" and lesson.kind in ("part", "trap")))
         known.update(lesson.kind for lesson in lessons)
     return introductions
 

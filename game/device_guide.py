@@ -20,6 +20,7 @@ SHADE = (5, 9, 13)
 SHADE_ALPHA = 166
 FEATHER = 50
 CARD_HEIGHT, CARD_GAP = 128, 34
+INSTRUCTION_SPACING = 27
 
 
 def target_region(view, level, pos):
@@ -34,14 +35,15 @@ def target_region(view, level, pos):
             min(HEIGHT - 90, int(max(b[3] for b in bounds) + 8)))
 
 
-def card_bounds(region, instruction_width):
+def card_bounds(view, region, instruction_lines):
     left, bottom, right, top = region
-    width = max(352, instruction_width + 44)
+    width = max(352, max(view.text_width(line, 22) for line in instruction_lines) + 44)
+    height = CARD_HEIGHT + INSTRUCTION_SPACING * (len(instruction_lines) - 1)
     x = max(24, min(WIDTH - width - 24, (left + right - width) // 2))
     y = top + CARD_GAP
-    if y + CARD_HEIGHT > HEIGHT - 94:
-        y = bottom - CARD_GAP - CARD_HEIGHT
-    return x, y, x + width, y + CARD_HEIGHT
+    if y + height > HEIGHT - 94:
+        y = bottom - CARD_GAP - height
+    return x, y, x + width, y + height
 
 
 @lru_cache(maxsize=48)
@@ -101,7 +103,7 @@ def draw_pointer(card, region):
     p.draw_circle(x, tip, 4, *POINTER_LIGHT, filled=True)
 
 
-def draw_lesson(view, lesson, region, card, page, total):
+def draw_lesson(view, title, instruction_lines, region, card, page, total):
     dim_except(region)
     left, bottom, right, top = card
     draw_pointer(card, region)
@@ -111,8 +113,9 @@ def draw_lesson(view, lesson, region, card, page, total):
     rounded(card, 17, (66, 76, 73))
     rounded((left + 1, bottom + 1, right - 1, top - 1), 16, PANEL)
     p.draw_circle(left + 24, top - 26, 2, *AMBER, filled=True)
-    view.text(left + 37, top - 26, lesson.title, 22, AMBER)
-    view.text(left + 22, top - 58, lesson.instruction, 22, INK)
+    view.text(left + 37, top - 26, title, 22, AMBER)
+    for index, line in enumerate(instruction_lines):
+        view.text(left + 22, top - 58 - index * INSTRUCTION_SPACING, line, 22, INK)
     p.draw_line(left + 18, bottom + 44, right - 18, bottom + 44, 54, 64, 62)
     if total > 1:
         for index in range(total):

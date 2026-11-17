@@ -101,7 +101,7 @@ class PlayMenu:
                     Button("guide_skip", "건너뛰기", (left + 14, bottom + 7, left + 138, bottom + 37)))
         if self.mode == "controls":
             if self.lessons:
-                return (Button("devices", "이 방 장치 안내", (420, 224, 780, 282)),
+                return (Button("devices", "이 방 안내", (420, 224, 780, 282)),
                         Button("back", "메뉴로 돌아가기", (820, 224, 1180, 282)))
             return (Button("back", "메뉴로 돌아가기", (610, 224, 990, 282)),)
         return tuple(Button(action, label, (550, 574 - i * 80, 1050, 636 - i * 80))
@@ -167,9 +167,10 @@ class PlayMenu:
             return
         if self.mode == "device":
             lesson = self.pages[self.page_index]
+            lines = lesson.instruction.splitlines()
             self.guide_region = target_region(view, game.level, lesson.target)
-            self.guide_card = card_bounds(self.guide_region, view.text_width(lesson.instruction, 22))
-            draw_lesson(view, lesson, self.guide_region, self.guide_card, self.page_index, len(self.pages))
+            self.guide_card = card_bounds(view, self.guide_region, lines)
+            draw_lesson(view, lesson.title, lines, self.guide_region, self.guide_card, self.page_index, len(self.pages))
             draw_guide_buttons(view, self.buttons, self.selected)
             return
         fade_to_black(.72)

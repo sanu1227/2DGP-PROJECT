@@ -31,7 +31,10 @@ def check_layout(menu, display, game):
         if cell == lesson.target:
             assert left <= l < r <= right and bottom <= b < t <= top, (menu.guide_region, (l, b, r, t))
     left, _, right, _ = menu.guide_card
-    assert display.text_width(lesson.instruction, 22) <= right - left - 44, lesson.instruction
+    lines = lesson.instruction.splitlines()
+    assert 1 <= len(lines) <= 2
+    for line in lines:
+        assert display.text_width(line, 22) <= right - left - 44, line
 
 
 def render_checks(levels, folder=Path("docs/screenshots/gimmicks-v1/device-guide"), *, top_down=False):
@@ -117,8 +120,15 @@ def input_checks(levels):
         ([key(p.SDLK_ESCAPE)], "controls", "stage_04"),
         ([key(p.SDLK_ESCAPE)], "pause", "stage_04"),
         ([key(p.SDLK_ESCAPE), key(p.SDLK_d)], None, "stage_04"),
-        ([SimpleNamespace(type=p.SDL_QUIT)], None, "stage_04"),
     ]
+    stage_two_entry = len(batches)
+    batches.extend([
+        ([key(p.SDLK_2)], "device", "stage_02"),
+        ([key(p.SDLK_RETURN)], "device", "stage_02"),
+        ([key(p.SDLK_SPACE)], "device", "stage_02"),
+        ([key(p.SDLK_ESCAPE)], None, "stage_02"),
+        ([SimpleNamespace(type=p.SDL_QUIT)], None, "stage_02"),
+    ])
 
     class ObservedGame(Game):
         def __init__(self, level):
@@ -144,11 +154,13 @@ def input_checks(levels):
             assert games[-1].state.moves == 0 and not games[-1].history
             menu = menus[-1]
             if mode == "device" and menu.return_mode == "playing":
-                titles = (["뼈 투입구", "배출구", "이동 거울", "빛 수신기"] if stage == "stage_05"
-                          else ["발판", "연결문", "잔해"])
+                titles = {"stage_02": ["뼈 묶음", "작업대", "초소"],
+                          "stage_04": ["발판", "연결문", "잔해"],
+                          "stage_05": ["뼈 투입구", "배출구", "이동 거울", "빛 수신기"]}[stage]
                 assert [page.title for page in menu.pages] == titles
-                assert menu.page_index == (frame - 1 if frame in (2, 3) else 0)
-                assert menu.buttons[0].label == ("작업 시작" if frame == 3 else "다음")
+                page = frame - stage_two_entry if stage == "stage_02" else {2: 1, 3: 2}.get(frame, 0)
+                assert menu.page_index == page
+                assert menu.buttons[0].label == ("작업 시작" if page == len(titles) - 1 else "다음")
         original_update()
 
     with patch.object(view, "Game", ObservedGame), patch.object(view, "PlayMenu", ObservedMenu), \
@@ -208,7 +220,7 @@ def first_room_checks(levels):
             assert games[-1].level is levels[0]
             assert displays[-1].tutorial_hidden == (mode == "device")
             if mode == "device":
-                assert [page.title for page in menus[-1].pages] == ["함정", "가동 레버"]
+                assert [page.title for page in menus[-1].pages] == ["함정 부품", "함정", "가동 레버"]
             if frame == len(batches) - 1:
                 assert games[-1].state.cleared
         original_update()
