@@ -9,7 +9,7 @@ from unittest.mock import patch
 import pico2d.pico2d as p
 
 from game import view
-from game.device_guide import CARD_WIDTH, dim_except
+from game.device_guide import dim_except
 from game.levels import load_levels
 from game.model import Game
 from game.play_menu import PlayMenu
@@ -30,7 +30,8 @@ def check_layout(menu, display, game):
     for cell, (l, b, r, t) in display.hit_regions:
         if cell == lesson.target:
             assert left <= l < r <= right and bottom <= b < t <= top, (menu.guide_region, (l, b, r, t))
-    assert display.text_width(lesson.instruction, 22) <= CARD_WIDTH - 40, lesson.instruction
+    left, _, right, _ = menu.guide_card
+    assert display.text_width(lesson.instruction, 22) <= right - left - 44, lesson.instruction
 
 
 def render_checks(levels, folder=Path("docs/screenshots/gimmicks-v1/device-guide"), *, top_down=False):
@@ -53,14 +54,15 @@ def render_checks(levels, folder=Path("docs/screenshots/gimmicks-v1/device-guide
         display = view.View()
         display.top_down = top_down
         p.draw_rectangle(0, 0, view.WIDTH - 1, view.HEIGHT - 1, 180, 180, 180, filled=True)
-        dim_except((50, 60, 100, 110))
+        dim_except((180, 180, 260, 250))
         buffer = pixels()
 
         def shade(x, y):
             return buffer[4 * ((view.HEIGHT - 1 - y) * view.WIDTH + x)]
 
-        assert shade(75, 80) == 180 and shade(20, 80) < 180
-        assert len({shade(20, y) for y in (59, 60, 109, 110)}) == 1, "강조 영역의 경계가 중복으로 어두워짐"
+        assert shade(215, 215) == 180
+        assert shade(175, 215) > shade(160, 215) > shade(145, 215) > shade(120, 215)
+        assert abs(shade(131, 215) - shade(129, 215)) <= 4, "강조 영역의 경계에 이음새가 생김"
         for level in levels:
             game = Game(level)
             menu.offer(game, display)

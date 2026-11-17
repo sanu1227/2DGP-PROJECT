@@ -6,7 +6,7 @@ from game.front_end import Button, bevel
 from game.layout import WIDTH, HEIGHT
 from game.logo_mode import fade_to_black
 from game.tutorial import device_lessons
-from game.device_guide import target_region, card_bounds, draw_lesson
+from game.device_guide import target_region, card_bounds, draw_lesson, draw_guide_buttons
 from game.device_catalog import PAGE_COUNT, catalog_buttons, draw_catalog
 
 INK = (239, 237, 219)
@@ -97,8 +97,8 @@ class PlayMenu:
                 label = "작업 시작" if self.return_mode == "playing" else "안내 마치기"
             else:
                 label = "다음"
-            return (Button("guide_next", label, (right - 158, bottom + 12, right - 20, bottom + 49)),
-                    Button("guide_skip", "건너뛰기", (right - 282, bottom + 12, right - 170, bottom + 49)))
+            return (Button("guide_next", label, (right - 138, bottom + 7, right - 14, bottom + 37)),
+                    Button("guide_skip", "건너뛰기", (left + 14, bottom + 7, left + 138, bottom + 37)))
         if self.mode == "controls":
             if self.lessons:
                 return (Button("devices", "이 방 장치 안내", (420, 224, 780, 282)),
@@ -158,8 +158,7 @@ class PlayMenu:
             chosen = index == self.selected
             bevel(button.bounds, (49, 91, 82) if chosen else (32, 48, 52), TEAL if chosen else (79, 100, 98))
             left, bottom, right, top = button.bounds
-            size = 18 if self.mode == "device" else 26
-            view.centered((left + right) / 2, (bottom + top) / 2, button.label, size, INK)
+            view.centered((left + right) / 2, (bottom + top) / 2, button.label, 26, INK)
 
     def draw(self, view, game):
         if self.mode == "catalog":
@@ -169,9 +168,9 @@ class PlayMenu:
         if self.mode == "device":
             lesson = self.pages[self.page_index]
             self.guide_region = target_region(view, game.level, lesson.target)
-            self.guide_card = card_bounds(self.guide_region)
+            self.guide_card = card_bounds(self.guide_region, view.text_width(lesson.instruction, 22))
             draw_lesson(view, lesson, self.guide_region, self.guide_card, self.page_index, len(self.pages))
-            self.draw_buttons(view)
+            draw_guide_buttons(view, self.buttons, self.selected)
             return
         fade_to_black(.72)
         bevel((380, 180 if self.mode == "controls" else 136, 1220, 800), (23, 36, 40), (104, 139, 127))
