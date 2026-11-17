@@ -30,24 +30,24 @@ def device_lessons(level: Level, state: State | None = None) -> tuple[DeviceLess
     lessons = []
     items = level.initial_items if state is None else state.items
     for kind, instruction in (
-        ("part", "함정을 고칠 때 쓰는 부품이에요.\n같은 칸에 서서 E를 눌러 주워요."),
-        ("bone", "해골 병사를 만드는 재료예요.\n같은 칸에 서서 E를 눌러 주워요."),
-        ("soldier", "같은 칸에서 E를 눌러 들어 올린 뒤 초소로 옮겨요."),
+        ("part", "함정을 고칠 때 쓰는 부품이에요.\n같은 칸에 서서 주워요."),
+        ("bone", "해골 병사를 만드는 재료예요.\n같은 칸에 서서 주워요."),
+        ("soldier", "같은 칸에서 들어 올린 뒤 초소로 옮겨요."),
     ):
         target = min((pos for pos, item in items.items() if item == kind), default=None)
         if target is not None:
             lessons.append(DeviceLesson(kind, ITEM_NAMES[kind], instruction, target))
     if level.traps and level.levers:
         lessons.extend((
-            DeviceLesson("trap", "함정", "부품을 들고 함정 칸에서 E를 눌러 설치해요.", min(level.traps)),
-            DeviceLesson("trap", "가동 레버", "함정을 모두 설치한 뒤, 레버 칸에서\n빈손으로 E를 눌러 가동해요.",
+            DeviceLesson("trap", "함정", "부품을 들고 함정 칸에서 설치해요.", min(level.traps)),
+            DeviceLesson("trap", "가동 레버", "함정을 모두 설치한 뒤 레버 칸에서\n빈손으로 레버를 당겨요.",
                          min(level.levers)),
         ))
     if level.benches and level.posts:
         lessons.extend((
-            DeviceLesson("assembly", "작업대", "뼈를 들고 작업대 옆 칸에서 E를 눌러요.\n"
-                         "같은 작업대에 두 묶음을 넣으면 병사가 완성돼요.", min(level.benches)),
-            DeviceLesson("assembly", "초소", "병사를 들고 초소 칸에서 E를 눌러 배치해요.\n"
+            DeviceLesson("assembly", "작업대", "작업대 옆 칸에서 뼈를 한 묶음씩 넣어요.\n"
+                         "같은 작업대에 두 묶음을 모으면 병사가 완성돼요.", min(level.benches)),
+            DeviceLesson("assembly", "초소", "병사를 들고 초소 칸에서 배치해요.\n"
                          "배치한 뒤에는 이 칸을 지나갈 수 없어요.", min(level.posts)),
         ))
     if level.plates:
@@ -59,8 +59,8 @@ def device_lessons(level: Level, state: State | None = None) -> tuple[DeviceLess
     if level.chutes:
         inlet, outlet = min(level.chutes.items())
         lessons.extend((
-            DeviceLesson("chute", "뼈 투입구", "뼈를 들고 투입구 칸에서 E를 누르면\n"
-                         "연결된 배출구로 뼈가 이동해요.", inlet),
+            DeviceLesson("chute", "뼈 투입구", "투입구 칸에서 뼈를 넣으면\n"
+                         "연결된 배출구로 나와요.", inlet),
             DeviceLesson("chute", "배출구", "배출구 칸을 비워 두어야 뼈를 보낼 수 있어요.", outlet),
         ))
     rubble = level.rubble if state is None else state.rubble
@@ -75,9 +75,9 @@ def device_lessons(level: Level, state: State | None = None) -> tuple[DeviceLess
     fixed = mirrors - movable
     if movable:
         lessons.append(DeviceLesson("mirror", "이동 거울", "빈손으로 거울을 향해 움직이면 밀 수 있어요.\n"
-                                    "옆 칸에서 E를 눌러 빛의 방향을 바꿔요.", min(movable)))
+                                    "옆 칸에서 거울을 돌려 빛의 방향을 바꿔요.", min(movable)))
     if fixed:
-        lessons.append(DeviceLesson("fixed_mirror", "고정 거울", "빈손으로 거울 옆 칸에서 E를 눌러 돌려요.\n"
+        lessons.append(DeviceLesson("fixed_mirror", "고정 거울", "빈손으로 거울 옆 칸에 서서 돌려요.\n"
                                     "빛은 거울의 화살표 방향으로 나가요.", min(fixed)))
     if level.receivers:
         lessons.append(DeviceLesson("receiver", "빛 수신기", "빛이 수신기에 닿아 있는 동안 연결문이 열려요.", min(level.receivers)))
@@ -87,7 +87,7 @@ def device_lessons(level: Level, state: State | None = None) -> tuple[DeviceLess
         has_worker = station in workers
         seals, steps = level.echo_links[station]
         recording = (f"발판을 밟은 뒤 {steps}칸 움직이면 이동 방향이 기록돼요." if has_worker
-                     else f"빈손으로 E를 눌러 기록을 시작한 뒤 {steps}칸 움직여요.")
+                     else f"빈손으로 발판에서 기록을 시작해요.\n그다음 {steps}칸 움직여요.")
         lessons.append(DeviceLesson("helper", "기록 발판", recording, station))
         if has_worker:
             lessons.append(DeviceLesson("helper", "해골 인부", "기록이 끝난 뒤 수리공이 행동할 때마다\n"
@@ -100,7 +100,7 @@ def device_lessons(level: Level, state: State | None = None) -> tuple[DeviceLess
         lessons.append(DeviceLesson("helper", title, effect, seal))
     winches = level.jobs - level.echo_links.keys()
     if winches:
-        lessons.append(DeviceLesson("winch", "작업 윈치", "병사를 들고 윈치 칸에서 E를 눌러 배치해요.\n"
+        lessons.append(DeviceLesson("winch", "작업 윈치", "병사를 들고 윈치 칸에서 배치해요.\n"
                                     "배치한 인부가 연결문을 열어 둬요.", min(winches)))
     return tuple(lessons)
 
