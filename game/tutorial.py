@@ -30,9 +30,9 @@ def device_lessons(level: Level, state: State | None = None) -> tuple[DeviceLess
     lessons = []
     items = level.initial_items if state is None else state.items
     for kind, instruction in (
-        ("part", "함정을 고칠 때 쓰는 부품이에요.\n같은 칸에 서서 주워요."),
-        ("bone", "해골 병사를 만드는 재료예요.\n같은 칸에 서서 주워요."),
-        ("soldier", "같은 칸에서 들어 올린 뒤 초소로 옮겨요."),
+        ("part", "함정 하나를 고치는 데 부품 하나가 필요해요."),
+        ("bone", "해골 병사를 만드는 재료예요."),
+        ("soldier", "초소에 바로 배치할 수 있는 병사예요."),
     ):
         target = min((pos for pos, item in items.items() if item == kind), default=None)
         if target is not None:
@@ -47,8 +47,7 @@ def device_lessons(level: Level, state: State | None = None) -> tuple[DeviceLess
         lessons.extend((
             DeviceLesson("assembly", "작업대", "작업대 옆 칸에서 뼈를 한 묶음씩 넣어요.\n"
                          "같은 작업대에 두 묶음을 모으면 병사가 완성돼요.", min(level.benches)),
-            DeviceLesson("assembly", "초소", "병사를 들고 초소 칸에서 배치해요.\n"
-                         "배치한 뒤에는 이 칸을 지나갈 수 없어요.", min(level.posts)),
+            DeviceLesson("assembly", "초소", "병사를 배치하면 이 칸을 지나갈 수 없어요.", min(level.posts)),
         ))
     if level.plates:
         gate, plate = min((gate, control) for gate, control in level.gates.items() if control in level.plates)
@@ -59,8 +58,7 @@ def device_lessons(level: Level, state: State | None = None) -> tuple[DeviceLess
     if level.chutes:
         inlet, outlet = min(level.chutes.items())
         lessons.extend((
-            DeviceLesson("chute", "뼈 투입구", "투입구 칸에서 뼈를 넣으면\n"
-                         "연결된 배출구로 나와요.", inlet),
+            DeviceLesson("chute", "뼈 투입구", "뼈를 넣으면 연결된 배출구로 나와요.", inlet),
             DeviceLesson("chute", "배출구", "배출구 칸을 비워 두어야 뼈를 보낼 수 있어요.", outlet),
         ))
     rubble = level.rubble if state is None else state.rubble
