@@ -8,6 +8,7 @@ from game.front_end import Button, bevel
 from game.layout import WIDTH, HEIGHT
 from game.logo_mode import fade_to_black
 from game.play_effects import alpha_blend
+from game.topdown_terrain import radial_layer
 
 INK = (239, 237, 219)
 MUTED = (164, 182, 177)
@@ -55,12 +56,20 @@ class StageFeedback:
         opacity = min(1, (ENTRY_SECONDS - elapsed) / ENTRY_FADE_SECONDS)
         alpha = round(255 * opacity)
         theme = game.level.hint
+        size = 32
         x, y = WIDTH // 2, HEIGHT // 2
-        half_width = (view.text_width(theme, 32) + 1) // 2 + 24
+        shadow_width = view.text_width(theme, size) / 2 + 190
         with alpha_blend():
-            bevel((x - half_width, y - 23, x + half_width, y + 23),
-                  (27, 38, 40, alpha), (121, 111, 75, alpha))
-        view.centered(x, y, theme, 32, (*INK, alpha))
+            radial_layer(x, y + 4, shadow_width, 82, (6, 9, 12), round(235 * opacity))
+            ornament_y = y + 32
+            hairline = (*GOLD, round(alpha * .55))
+            p.draw_line(x - 56, ornament_y, x - 12, ornament_y, *hairline)
+            p.draw_line(x + 12, ornament_y, x + 56, ornament_y, *hairline)
+            for offset in range(-4, 5):
+                span = 4 - abs(offset)
+                p.draw_line(x - span, ornament_y + offset, x + span, ornament_y + offset, *GOLD, alpha)
+        view.centered(x, y - 2, theme, size, (8, 11, 13, alpha))
+        view.centered(x, y, theme, size, (*INK, alpha))
 
     def draw_result(self, view, game, index, total, elapsed):
         fade_to_black(.64)

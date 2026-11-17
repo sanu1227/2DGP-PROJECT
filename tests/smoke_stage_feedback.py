@@ -53,19 +53,24 @@ def render_checks(levels):
             display.resume()
         halfway = feedback.entered_at + display.clock.offset + ENTRY_SECONDS - ENTRY_FADE_SECONDS / 2
         with patch.object(view, "perf_counter", return_value=halfway):
-            display.draw(game, 3, len(levels))
-            board = pixels()
+            p.draw_rectangle(0, 0, view.WIDTH - 1, view.HEIGHT - 1, 160, 160, 160, filled=True)
             with patch.object(display, "text", wraps=display.text) as labels:
                 feedback.draw(display, game, 3, len(levels))
-            theme, = labels.call_args_list
+            shadow, theme = labels.call_args_list
             x, y, value, size, color = theme.args
             assert value == game.level.hint
             assert x + display.text_width(value, size) / 2 == view.WIDTH / 2
             assert y == view.HEIGHT / 2 and color[:3] == INK
             assert abs(color[3] - 127.5) <= .5
-            sample = 4 * ((view.HEIGHT - 1 - y) * view.WIDTH + int(x) - 12)
-            for faded, base, full in zip(pixels()[sample:sample + 3], board[sample:sample + 3], (27, 38, 40)):
-                assert abs(faded - (base + full) / 2) <= 2, (faded, base, full)
+            assert shadow.args[:4] == (x, y - 2, value, size)
+            buffer = pixels()
+
+            def shade(offset):
+                center = view.WIDTH // 2
+                sample = 4 * ((view.HEIGHT - 1 - y + offset) * view.WIDTH + center)
+                return buffer[sample]
+
+            assert shade(36) < shade(65) < shade(90) == 160
         with patch.object(view, "perf_counter", return_value=110 + ENTRY_SECONDS), patch.object(feedback, "draw_entry") as entry:
             feedback.draw(display, game, 3, len(levels))
             entry.assert_not_called()
