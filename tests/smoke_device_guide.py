@@ -9,7 +9,7 @@ from unittest.mock import patch
 import pico2d.pico2d as p
 
 from game import view
-from game.device_guide import dim_except
+from game.device_guide import dim_except, draw_pointer
 from game.levels import load_levels
 from game.model import Game
 from game.play_menu import PlayMenu
@@ -63,6 +63,12 @@ def render_checks(levels, folder=Path("docs/screenshots/gimmicks-v1/device-guide
         assert shade(215, 215) == 180
         assert shade(175, 215) > shade(160, 215) > shade(145, 215) > shade(120, 215)
         assert abs(shade(131, 215) - shade(129, 215)) <= 4, "강조 영역의 경계에 이음새가 생김"
+
+        p.draw_rectangle(0, 0, view.WIDTH - 1, view.HEIGHT - 1, 180, 180, 180, filled=True)
+        draw_pointer((140, 284, 300, 412), (180, 180, 260, 250))
+        buffer = pixels()
+        assert all(shade(x, 267) >= 245 for x in (219, 220, 221))
+        assert all(shade(x, 267) <= 40 for x in (218, 222))
         for level in levels:
             game = Game(level)
             menu.offer(game, display)

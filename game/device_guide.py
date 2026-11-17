@@ -13,6 +13,8 @@ from game.play_effects import alpha_blend
 INK = (240, 237, 227)
 MUTED = (165, 176, 171)
 AMBER = (233, 187, 114)
+POINTER_LIGHT = (255, 218, 154)
+POINTER_EDGE = (24, 21, 17)
 PANEL = (24, 32, 33)
 SHADE = (5, 9, 13)
 SHADE_ALPHA = 166
@@ -91,9 +93,12 @@ def draw_pointer(card, region):
     start = bottom if above else top
     tip = region_top - 12 if above else region_bottom + 12
     with alpha_blend():
-        p.draw_line(anchor, start, x, tip, *AMBER, 168)
-        p.draw_circle(x, tip, 10, *AMBER, 30, filled=True)
-    p.draw_circle(x, tip, 3, *AMBER, filled=True)
+        p.draw_circle(x, tip, 11, *POINTER_LIGHT, 43, filled=True)
+    for offset in range(-2, 3):
+        color = POINTER_EDGE if abs(offset) == 2 else POINTER_LIGHT
+        p.draw_line(anchor + offset, start, x + offset, tip, *color)
+    p.draw_circle(x, tip, 6, *POINTER_EDGE, filled=True)
+    p.draw_circle(x, tip, 4, *POINTER_LIGHT, filled=True)
 
 
 def draw_lesson(view, lesson, region, card, page, total):
