@@ -140,29 +140,29 @@ def device_entries(game, gate_statuses, powered, exit_ready):
     for pos in level.traps:
         frame, label = ("active", "가동") if state.active else (
             ("installed", "설치") if pos in state.installed else ("broken", "파손"))
-        entries[pos] = f"trap_{frame}", label, RED if state.active else GOLD
+        entries[pos] = f"trap_{frame}", f"함정 · {label}", RED if state.active else GOLD
     for pos in level.posts:
         assigned = pos in state.soldiers
-        entries[pos] = ("soldier_deployed", "배치 완료", TEAL) if assigned else ("post_empty", "초소", GOLD)
-    entries[level.exit] = ("exit_ready", "출구", TEAL) if exit_ready else ("exit_closed", "출구", INK)
+        entries[pos] = ("soldier_deployed", "초소 · 배치 완료", TEAL) if assigned else ("post_empty", "초소", GOLD)
+    entries[level.exit] = ("exit_ready", "출구 · 열림", TEAL) if exit_ready else ("exit_closed", "출구 · 잠김", INK)
     for pos in level.levers:
-        entries[pos] = ("lever_on" if state.active else "lever_off"), "레버", GOLD
+        entries[pos] = ("lever_on", "레버 · 가동", TEAL) if state.active else ("lever_off", "레버", GOLD)
     for pos in level.benches:
         count = state.bench_bones.get(pos, 0)
-        entries[pos] = ("bench_bone" if count else "bench_empty"), f"조립 {count}/2", GOLD
+        entries[pos] = ("bench_bone" if count else "bench_empty"), f"작업대 · 뼈 {count}/2", GOLD
     for pos in level.chutes.values():
         entries[pos] = "chute_outlet", "배출", GOLD
     for pos in level.chutes:
         entries[pos] = "chute_inlet", f"{level.device_labels[pos]} 투입구", GOLD
     for pos in level.plates:
         pressed = game.plate_pressed(pos)
-        entries[pos] = ("plate_down" if pressed else "plate_up"), level.device_labels[pos], TEAL if pressed else GOLD
+        name = f"{level.device_labels[pos]} 발판"
+        entries[pos] = ("plate_down", f"{name} · 눌림", TEAL) if pressed else ("plate_up", name, GOLD)
     for pos, status in gate_statuses.items():
         label, color = {"open": ("열림", TEAL), "held": ("대기", GOLD), "closed": ("닫힘", RED)}[status]
         if status == "open" and level.gates[pos] in level.timed_echoes:
-            entries[pos] = "gate_open", "지금 통과", color
-        else:
-            entries[pos] = "gate_open", f"{level.device_labels[pos]} {label}", color
+            label = "지금 통과"
+        entries[pos] = "gate_open", f"{level.device_labels[pos]} 문 · {label}", color
     for pos in level.sources:
         entries[pos] = "source", "광원", GOLD
     for pos in mirror_cells(level, state):
@@ -171,7 +171,8 @@ def device_entries(game, gate_statuses, powered, exit_ready):
             "mirror_base", f"거울 {facing}/4", GOLD)
     for pos in level.receivers:
         label = level.device_labels[pos]
-        entries[pos] = ("receiver_powered", f"{label} 수신", TEAL) if pos in powered else ("receiver", label, INK)
+        entries[pos] = (("receiver_powered", f"{label} 수신기 · 수신 완료", TEAL) if pos in powered else
+                        ("receiver", f"{label} 수신기 · 수신 대기", INK))
     for pos in level.jobs:
         working = pos in state.workers
         label = level.device_labels[pos]
@@ -185,7 +186,8 @@ def device_entries(game, gate_statuses, powered, exit_ready):
     for seals, _ in level.echo_links.values():
         for gate, seal in seals.items():
             if seal not in level.plates:
-                entries[seal] = "replay_seal", level.device_labels[gate], TEAL if game.echo_pressed(gate) else ECHO_COLOR
+                entries[seal] = ("replay_seal", f"{level.device_labels[gate]} 문양",
+                                 TEAL if game.echo_pressed(gate) else ECHO_COLOR)
     return entries
 
 
@@ -432,23 +434,22 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, mirror
         if progress < 1:
             p.draw_circle(sx, sy, max(2, round(size * (.26 + progress * .16))), *VIOLET, filled=False)
 
-    for pos, (_, label, color) in entries.items():
-        sx, sy = board.screen(mirror_positions.get(pos, pos))
-        sy += half - 2 if level.sources.get(pos) == "down" else 2 - half
-        if pos in outlet_labels:
-            label, color = outlet_labels[pos], TEAL
-        width = min(size - 4, len(label) * 12 + 8)
-        rectangle(sx - width / 2, sy - 8, sx + width / 2, sy + 8, (24, 35, 40))
-        view.centered(sx, sy, label, 13, color)
+    # 연결 번호만 장치 타일 모서리에 남긴다. 상태 문구는 마우스를 올렸을 때 표시한다.
+    details = {pos: (label, color) for pos, (_, label, color) in entries.items()}
+    details.update({pos: (label, TEAL) for pos, label in outlet_labels.items()})
     if level.sources:
-        for position, _ in rubble.values():
-            sx, sy = board.screen(position)
-            sy += 2 - half
-            rectangle(sx - 30, sy - 8, sx + 30, sy + 8, (24, 35, 40))
-            view.centered(sx, sy, "차광 블록", 13, GOLD)
+        details.update({pos: ("차광 블록", GOLD) for pos in rubble})
+    for pos, code in level.device_labels.items():
+        sx, sy = board.screen(pos)
+        left, top = sx - half + 4, sy + half - 4
+        width = view.text_width(code, 13) + 10
+        if pos in details and width <= size - 8:
+            _, color = details[pos]
+            rectangle(left, top - 17, left + width, top, (24, 35, 40))
+            view.text(left + 5, top - 8, code, 13, color)
     view.highlight_chute_pair(game, board)
     view.interaction_markers(game, board)
     if view.show_coordinates:
         view.coordinate_overlay(level, board)
-    view.navigation_overlay(game, board)
+    view.navigation_overlay(game, board, device_details=details)
     view.action_badge(game)

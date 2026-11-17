@@ -711,7 +711,7 @@ class View:
         mask = (sprite, sx, sy, scale, flip, height_scale, rotation)
         self.hit_masks[region] = (*mask, rows) if rows else mask
 
-    def navigation_overlay(self, game, projection):
+    def navigation_overlay(self, game, projection, *, device_details=None):
         if game.failed or game.state.cleared:
             return
         target, path = self.navigation.target, self.navigation.path
@@ -736,7 +736,8 @@ class View:
         self.tile_outline(projection, *projection.screen(target), projection.half_width - 5,
                           int(projection.half_height) - 3, color)
         if hovered is not None:
-            self.movement_cost_hint(game, path, color)
+            detail = device_details.get(hovered) if device_details else None
+            self.movement_cost_hint(game, path, color, detail)
 
     @staticmethod
     def chute_outlet_labels(level):
@@ -762,31 +763,35 @@ class View:
                     self.tile_outline(board, *board.screen(pos), board.half_width - 3,
                                       int(board.half_height) - 2, TEAL)
 
-    def movement_cost_hint(self, game, path, color):
+    def movement_cost_hint(self, game, path, color, detail=None):
         """마우스를 올린 경로의 예상 행동 비용을 클릭 전에 보여준다."""
         if path is None:
-            labels = [("이동 불가", 18)]
+            labels = [("이동 불가", 18, color)]
         elif not path:
-            labels = [("현재 칸 · 차감 0회", 18)]
+            labels = [("현재 칸 · 차감 0회", 18, color)]
         else:
             cost, remaining = len(path), game.remaining_actions
-            labels = [(f"예상 차감 -{cost}회", 18)]
+            labels = [(f"예상 차감 -{cost}회", 18, color)]
             if remaining is None:
-                labels.append(("현재 경로 기준 · 행동 제한 없음", 13))
+                summary = "현재 경로 기준 · 행동 제한 없음"
             elif cost > remaining:
-                labels.append((f"남은 행동 {remaining}회 · {cost - remaining}회 부족", 13))
+                summary = f"남은 행동 {remaining}회 · {cost - remaining}회 부족"
             else:
-                labels.append((f"남은 행동 {remaining}회 · 이동 후 {remaining - cost}회 예상", 13))
-        width = max(self.text_width(label, size) for label, size in labels) + 24
-        height = 34 if len(labels) == 1 else 56
+                summary = f"남은 행동 {remaining}회 · 이동 후 {remaining - cost}회 예상"
+            labels.append((summary, 13, RED if color == RED else MUTED))
+        if detail:
+            title, accent = detail
+            labels.insert(0, (title, 18, accent))
+        width = max(self.text_width(label, size) for label, size, _ in labels) + 24
+        height = 34 + 22 * (len(labels) - 1)
         x, y = self.mouse_position
         left = max(32, min(x + 18, WIDTH - 32 - width))
         bottom = max(BOARD_BOTTOM + 4, min(y + 22, BOARD_TOP - height - 4))
         box(left, bottom, left + width, bottom + height, (20, 32, 36))
         box(left, bottom, left + width, bottom + height, color, filled=False)
-        self.text(left + 12, bottom + height - 18, labels[0][0], 18, color)
-        if len(labels) == 2:
-            self.text(left + 12, bottom + 12, labels[1][0], 13, color if color == RED else MUTED)
+        for index, (label, size, accent) in enumerate(labels):
+            y = bottom + height - 18 - 22 * index + (2 if size == 13 else 0)
+            self.text(left + 12, y, label, size, accent)
 
     def interaction_markers(self, game, projection):
         """작업 대상은 금색 표식, 현재 실행 가능한 행동은 E로 표시한다."""
