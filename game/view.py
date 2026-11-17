@@ -753,7 +753,7 @@ class View:
     def chute_outlet_labels(level):
         return {outlet: f"{level.device_labels[inlet]} 배출구" for inlet, outlet in level.chutes.items()}
 
-    def draw_chute_outlet(self, board, pos, *, outline=None):
+    def draw_chute_outlet(self, board, pos, *, lighting=None):
         self.art.load_chute_outlet()
         name = "chute_dispenser"
         x, y = board.screen(pos)
@@ -761,8 +761,7 @@ class View:
         y += board.half_width * (.24 if self.top_down else .18)
         sprite = self.art.manifest["sprites"][name]
         scale = height / sprite["height"]
-        if outline:
-            color, opacity = outline
+        if lighting:
             atlas = sprite["atlas"]
             left, bottom, width, source_height = sprite["clip_rect_pico2d"]
             top = self.art.atlases[atlas].h - bottom - source_height
@@ -770,8 +769,11 @@ class View:
             rect = p.to_sdl_rect(x - anchor["x"] * scale, y + (anchor["y"] - source_height) * scale,
                                  width * scale, height)
             self.topdown_art.outlines.draw(self.art.atlas_paths[atlas], (left, top, width, source_height),
-                                           rect, 0, opacity, color)
-        self.art.draw(name, x, y, scale)
+                                           rect, 0, lighting.strength, lighting.color, glow=lighting.strength)
+        if lighting and lighting.tint:
+            draw_tinted(self.art, name, x, y, scale, lighting.tint)
+        else:
+            self.art.draw(name, x, y, scale)
         self.sprite_hit_region(pos, name, x, y, scale)
 
     def highlight_chute_pair(self, game, board):

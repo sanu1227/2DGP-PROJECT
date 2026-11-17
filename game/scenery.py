@@ -1,5 +1,6 @@
 """기존 아트에 고정된 파손 흔적을 더한다. 지형과 게임 상태는 바꾸지 않는다."""
 
+from contextlib import contextmanager
 from ctypes import byref, c_ubyte
 from math import hypot
 
@@ -60,21 +61,30 @@ def wall_style(pos):
     return "wall_low", (176 + variation, 177 + variation, 166 + variation)
 
 
-def draw_tinted(art, sprite, sx, sy, scale, tint):
+@contextmanager
+def texture_tint(texture, tint):
     """공유 아틀라스의 기존 RGB를 보관하고, 그리기가 실패해도 복원한다."""
+    if tint is None:
+        yield
+        return
     import pico2d.pico2d as p
 
-    entry = art.manifest["sprites"][sprite]
-    texture = art.atlases[entry["atlas"]].texture
     previous = (c_ubyte(), c_ubyte(), c_ubyte())
     if p.SDL_GetTextureColorMod(texture, *(byref(channel) for channel in previous)) != 0:
         raise RuntimeError("배경 아틀라스의 기존 색상을 읽지 못했습니다.")
     try:
         if p.SDL_SetTextureColorMod(texture, *tint) != 0:
             raise RuntimeError("배경 아틀라스의 색상을 적용하지 못했습니다.")
-        art.draw(sprite, sx, sy, scale)
+        yield
     finally:
         p.SDL_SetTextureColorMod(texture, *(channel.value for channel in previous))
+
+
+def draw_tinted(art, sprite, sx, sy, scale, tint):
+    entry = art.manifest["sprites"][sprite]
+    texture = art.atlases[entry["atlas"]].texture
+    with texture_tint(texture, tint):
+        art.draw(sprite, sx, sy, scale)
 
 
 def draw_scars(pos, sx, sy, scale, near_trap=False):

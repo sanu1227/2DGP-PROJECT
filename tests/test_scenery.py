@@ -6,10 +6,25 @@ from types import ModuleType, SimpleNamespace
 import unittest
 from unittest.mock import patch
 
+from game.device_outline import GLOW_RADIUS, glow_pixels
 from game.scenery import draw_scars, draw_tinted, floor_style, wall_style
 
 
 class SceneryTests(unittest.TestCase):
+    def test_device_glow_follows_the_silhouette_and_falls_off_outward(self):
+        alpha = bytes((0, 0, 0, 0, 255, 0, 0, 255, 255))
+        pixels = glow_pixels(alpha, 3, (0, 0, 3, 3), 3, 3)
+        stride = 3 + 2 * GLOW_RADIUS
+
+        def glow_at(x, y):
+            return pixels[4 * ((y + GLOW_RADIUS) * stride + x + GLOW_RADIUS) + 3]
+
+        self.assertEqual(glow_at(1, 1), 0)
+        self.assertGreater(glow_at(1, 0), glow_at(2, 0))
+        self.assertGreater(glow_at(1, 0), glow_at(1, -5))
+        self.assertGreater(glow_at(1, -5), glow_at(1, 1 - GLOW_RADIUS))
+        self.assertEqual(glow_at(1, 1 - GLOW_RADIUS), 0)
+
     def test_styles_and_scars_are_stable_and_stay_inside_floor(self):
         floors = set()
         rubble = 0

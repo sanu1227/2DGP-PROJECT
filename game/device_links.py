@@ -9,12 +9,11 @@ import pico2d.pico2d as p
 from game.device_outline import OUTLINE_COLOR
 from game.levels import Pos
 from game.play_effects import alpha_blend
-from game.topdown_terrain import radial_layer
 
 
 COLORS = (
-    (112, 220, 190), (255, 196, 107), (199, 159, 250),
-    (130, 193, 252), (245, 142, 167), (212, 224, 131),
+    (255, 95, 116), (255, 104, 210), (179, 245, 90),
+    (165, 120, 255), (255, 158, 70), (107, 153, 255),
 )
 PIN_FACE = (48, 40, 35)
 PIN_RIM = (127, 104, 75)
@@ -34,6 +33,13 @@ class DeviceLink:
     @property
     def shape(self):
         return (self.index + self.index // len(COLORS)) % 4
+
+
+@dataclass(frozen=True)
+class DeviceLighting:
+    color: tuple[int, int, int]
+    strength: float
+    tint: tuple[int, int, int] | None
 
 
 def device_links(level):
@@ -100,35 +106,30 @@ def draw_link_corners(board, pos, color):
         p.draw_line(x, y, x, y - dy * length, *color, 220)
 
 
-def device_lighting(view, game, links, focused, now):
-    """장치마다 윤곽선과 바닥 조명에 함께 쓸 색을 고른다."""
+def device_lighting(view, game, links, focused, devices, hovered, now):
+    """연결된 장치에는 같은 발광색을 쓰고, 가리킨 장치의 본체에도 색을 준다."""
+    hover_strengths = {pos: view.link_glow(game, pos, pos == hovered, now) for pos in devices}
+    linked_cells = {pos for link in links for pos in link.cells}
     contributions = defaultdict(list)
     for link in links:
         strength = view.link_glow(game, link, link in focused, now)
         if strength:
             for pos in link.cells:
                 contributions[pos].append((link.color, strength))
+    for pos, strength in hover_strengths.items():
+        if strength and pos not in linked_cells:
+            contributions[pos].append((COLORS[0], strength))
 
     lighting = {}
     for pos, sources in contributions.items():
-        strength = max(amount for _, amount in sources)
-        total = sum(amount for _, amount in sources)
-        color = []
-        for channel, resting in enumerate(OUTLINE_COLOR):
-            target = sum(rgb[channel] * amount for rgb, amount in sources) / total
-            color.append(round(resting + (target - resting) * strength))
-        lighting[pos] = tuple(color), strength
+        # 공유 장치에서 여러 색이 섞여 흐려지는 것을 피한다.
+        active_color, strength = max(sources, key=lambda source: source[1])
+        color = tuple(round(resting + (channel - resting) * strength)
+                      for resting, channel in zip(OUTLINE_COLOR, active_color))
+        hover = hover_strengths.get(pos, 0)
+        tint = tuple(round(255 + (channel - 255) * .64 * hover) for channel in color) if hover else None
+        lighting[pos] = DeviceLighting(color, strength, tint)
     return lighting
-
-
-def draw_device_lighting(board, lighting):
-    if not lighting:
-        return
-    size = board.cell_size
-    with alpha_blend():
-        for pos, (color, strength) in lighting.items():
-            sx, sy = board.screen(pos)
-            radial_layer(sx, sy - size * .08, size * 1.10, size * .96, color, round(94 * strength))
 
 
 def draw_device_links(board, links, focused, hovered):
