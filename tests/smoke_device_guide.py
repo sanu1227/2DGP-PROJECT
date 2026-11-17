@@ -1,6 +1,5 @@
 """장치 첫 안내·다시 보기·강조 영역과 실제 게임 루프의 입력 격리 검사."""
 
-from copy import deepcopy
 import argparse
 import ctypes
 from pathlib import Path
@@ -10,7 +9,7 @@ from unittest.mock import patch
 import pico2d.pico2d as p
 
 from game import view
-from game.device_guide import outside_rectangles
+from game.device_guide import CARD_WIDTH, dim_except
 from game.levels import load_levels
 from game.model import Game
 from game.play_menu import PlayMenu
@@ -20,17 +19,18 @@ from tests.smoke_play_menu import key, click, pixels
 from tests.solutions import SOLUTIONS
 
 
-def check_layout(menu):
-    rectangles = [*menu.guide_regions, *menu.guide_labels.values(), menu.guide_card]
-    for i, (left, bottom, right, top) in enumerate(rectangles):
+def check_layout(menu, display, game):
+    for left, bottom, right, top in (menu.guide_region, menu.guide_card):
         assert 0 <= left < right <= view.WIDTH and 0 <= bottom < top <= view.HEIGHT
-        for other in rectangles[i + 1:]:
-            l, b, r, t = other
-            assert min(right, r) <= max(left, l) or min(top, t) <= max(bottom, b), (
-                "강조 창·이름표·안내 카드가 겹침", rectangles[i], other)
-    for left, bottom, right, top in menu.guide_bounds.values():
-        assert any(l <= left and b <= bottom and r >= right and t >= top
-                   for l, b, r, t in menu.guide_regions), "강조 창에서 장치가 잘림"
+    left, bottom, right, top = menu.guide_region
+    assert top < menu.guide_card[1] or menu.guide_card[3] < bottom
+    lesson = menu.pages[menu.page_index]
+    x, y = display.projection(game.level).screen(lesson.target)
+    assert left < x < right and bottom < y < top
+    for cell, (l, b, r, t) in display.hit_regions:
+        if cell == lesson.target:
+            assert left <= l < r <= right and bottom <= b < t <= top, (menu.guide_region, (l, b, r, t))
+    assert display.text_width(lesson.instruction, 22) <= CARD_WIDTH - 40, lesson.instruction
 
 
 def render_checks(levels, folder=Path("docs/screenshots/gimmicks-v1/device-guide"), *, top_down=False):
@@ -52,6 +52,15 @@ def render_checks(levels, folder=Path("docs/screenshots/gimmicks-v1/device-guide
     try:
         display = view.View()
         display.top_down = top_down
+        p.draw_rectangle(0, 0, view.WIDTH - 1, view.HEIGHT - 1, 180, 180, 180, filled=True)
+        dim_except((50, 60, 100, 110))
+        buffer = pixels()
+
+        def shade(x, y):
+            return buffer[4 * ((view.HEIGHT - 1 - y) * view.WIDTH + x)]
+
+        assert shade(75, 80) == 180 and shade(20, 80) < 180
+        assert len({shade(20, y) for y in (59, 60, 109, 110)}) == 1, "강조 영역의 경계가 중복으로 어두워짐"
         for level in levels:
             game = Game(level)
             menu.offer(game, display)
@@ -61,19 +70,15 @@ def render_checks(levels, folder=Path("docs/screenshots/gimmicks-v1/device-guide
         for index, level in enumerate(levels):
             game = Game(level)
             display.tutorial_hidden = True
-            for lesson in device_lessons(level):
-                menu.pages, menu.page_index, menu.mode = (lesson,), 0, "device"
+            lessons = device_lessons(level)
+            menu.start_guide(lessons, "playing")
+            for page, lesson in enumerate(lessons):
+                menu.page_index = page
                 with patch.object(view.View, "text", checked_text):
                     display.draw(game, index, len(levels))
                     menu.draw(display, game)
-                check_layout(menu)
-                capture(folder / f"{level.id}-{lesson.kind}.png")
-                for pos, _ in lesson.targets:
-                    assert 0 <= pos[0] < level.width and 0 <= pos[1] < level.height
-        # 서로 겹친 강조 창도 배경이 중복해서 어두워지지 않아야 한다.
-        rectangles = outside_rectangles(((10, 10, 100, 100), (50, 50, 200, 200)))
-        area = sum((r - l) * (t - b) for l, b, r, t in rectangles)
-        assert area == view.WIDTH * view.HEIGHT - (90 * 90 + 150 * 150 - 50 * 50)
+                check_layout(menu, display, game)
+                capture(folder / f"{level.id}-{page + 1:02d}-{lesson.kind}.png")
     finally:
         if display:
             display.close()
@@ -85,8 +90,9 @@ def input_checks(levels):
     frame = -1
     original_update = p.update_canvas
     batches = [
-        ([], "device", "stage_04"),
+        ([click(800, 400), key(p.SDLK_RETURN)], "device", "stage_04"),
         ([key(p.SDLK_d), key(p.SDLK_e), click(100, 100)], "device", "stage_04"),
+        ([key(p.SDLK_RETURN), key(p.SDLK_d)], "device", "stage_04"),
         ([key(p.SDLK_RETURN), key(p.SDLK_d)], "device", "stage_04"),
         ([key(p.SDLK_SPACE), key(p.SDLK_d)], None, "stage_04"),
         ([key(p.SDLK_r)], None, "stage_04"),
@@ -128,12 +134,13 @@ def input_checks(levels):
             assert menus[-1].mode == mode, (frame, menus[-1].mode, mode)
             assert games[-1].level.id == stage
             assert games[-1].state.moves == 0 and not games[-1].history
-            if frame in (0, 1, 2, 5, 7, 9):
-                kinds = ["chute", "mirror"] if stage == "stage_05" else ["plate", "rubble"]
-                assert [page.kind for page in menus[-1].pages] == kinds
-                assert menus[-1].page_index == (1 if frame == 2 else 0)
-                expected = "작업 시작" if frame == 2 else "다음 장치"
-                assert menus[-1].buttons[0].label == expected
+            menu = menus[-1]
+            if mode == "device" and menu.return_mode == "playing":
+                titles = (["뼈 투입구", "배출구", "이동 거울", "빛 수신기"] if stage == "stage_05"
+                          else ["발판", "연결문", "잔해"])
+                assert [page.title for page in menu.pages] == titles
+                assert menu.page_index == (frame - 1 if frame in (2, 3) else 0)
+                assert menu.buttons[0].label == ("작업 시작" if frame == 3 else "다음")
         original_update()
 
     with patch.object(view, "Game", ObservedGame), patch.object(view, "PlayMenu", ObservedMenu), \
@@ -193,7 +200,7 @@ def first_room_checks(levels):
             assert games[-1].level is levels[0]
             assert displays[-1].tutorial_hidden == (mode == "device")
             if mode == "device":
-                assert [page.kind for page in menus[-1].pages] == ["trap"]
+                assert [page.title for page in menus[-1].pages] == ["함정", "가동 레버"]
             if frame == len(batches) - 1:
                 assert games[-1].state.cleared
         original_update()
@@ -214,7 +221,7 @@ def main():
     render_checks(levels, args.capture_dir, top_down=args.top_down)
     input_checks(levels)
     first_room_checks(levels)
-    print("Device guide smoke OK: new devices before play, non-overlapping spotlights/labels/cards, glyphs, skip/replay, undo/restart, full first-room clear and input isolation.")
+    print("Device guide smoke OK: one spotlight and one-line bubble per step, glyphs, skip/replay, undo/restart, full first-room clear and input isolation.")
 
 
 if __name__ == "__main__":
