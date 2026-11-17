@@ -22,6 +22,7 @@ class SceneryTests(unittest.TestCase):
         self.assertEqual(glow_at(1, 1), 0)
         self.assertGreater(glow_at(1, 0), glow_at(2, 0))
         self.assertGreater(glow_at(1, 0), glow_at(1, -5))
+        self.assertGreater(glow_at(1, -17), 0)
         self.assertGreater(glow_at(1, -5), glow_at(1, 1 - GLOW_RADIUS))
         self.assertEqual(glow_at(1, 1 - GLOW_RADIUS), 0)
 

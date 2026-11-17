@@ -7,7 +7,7 @@ import pico2d.pico2d as p
 
 
 RADIUS = 3
-GLOW_RADIUS = 18
+GLOW_RADIUS = 34
 OUTLINE_COLOR = (135, 225, 231)
 PALETTE = (bytes(4), bytes((25, 32, 41, 255)), bytes((255, 255, 255, 255)))
 
@@ -57,7 +57,7 @@ def glow_pixels(alpha, atlas_width, clip, width, height):
                     distances[i] = min(distances[i], distances[i - step] + 3, distances[vertical] + 3,
                                        distances[vertical - 1] + 4, distances[vertical + 1] + 4)
     pixels = bytearray(b"\xff\xff\xff\x00" * len(solid))
-    pixels[3::4] = bytes(round(178 * (1 - distance / limit) ** 2) if distance else 0
+    pixels[3::4] = bytes(round(165 * (1 - distance / limit) ** 3) if distance else 0
                         for distance in distances)
     return bytes(pixels)
 
