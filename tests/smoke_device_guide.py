@@ -179,7 +179,10 @@ def first_room_checks(levels):
         original_initialize(display)
         displays.append(display)
     batches = [
-        ([], None, 0),
+        ([], "device", 0),
+        ([key(p.SDLK_RETURN), key(p.SDLK_d)], "device", 0),
+        ([key(p.SDLK_RETURN)], "device", 0),
+        ([key(p.SDLK_SPACE), key(p.SDLK_d)], None, 0),
         ([key(p.SDLK_d)], None, 1),
         ([key(p.SDLK_z)], None, 0),
         ([key(p.SDLK_r)], None, 0),
@@ -221,12 +224,18 @@ def first_room_checks(levels):
             assert displays[-1].tutorial_hidden == (mode == "device")
             if mode == "device":
                 assert [page.title for page in menus[-1].pages] == ["함정 부품", "함정", "가동 레버"]
+                if frame < 3:
+                    assert menus[-1].page_index == frame
+                    assert not displays[-1].tutorial_visible
+            if frame == 3:
+                assert displays[-1].tutorial.step == 1 and displays[-1].tutorial_visible
             if frame == len(batches) - 1:
                 assert games[-1].state.cleared
         original_update()
 
     with patch.object(view, "Game", ObservedGame), patch.object(view, "PlayMenu", ObservedMenu), \
             patch.object(view.View, "__init__", initialize), \
+            patch.object(view, "perf_counter", side_effect=lambda: 10 if frame < 1 else 25 + frame * .01), \
             patch.object(p, "get_events", events), patch.object(p, "update_canvas", update):
         view.run(levels, show_title=False)
     assert frame == len(batches) - 1

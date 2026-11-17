@@ -162,7 +162,8 @@ def main():
         ([p.SDLK_RETURN], "story:0", 0, None),
         ([("left", 1460, 900)], "controls:0", 0, None),
         ([p.SDLK_RETURN], "controls:1", 0, None),
-        ([("left", 1390, 72), p.SDLK_d], "playing", 0, None),
+        ([("left", 1390, 72), p.SDLK_d], "playing:device", 0, None),
+        ([p.SDLK_ESCAPE], "playing", 0, None),
         ([], "playing", 0, None),
         ([p.SDLK_d], "playing", 1, None),
         ([p.SDLK_r], "playing", 0, None),
@@ -182,7 +183,8 @@ def main():
         ([p.SDLK_a], "playing", len(SOLUTIONS["stage_01"]), None),
         ([p.SDLK_SPACE], "playing:device", 0, None, "stage_02"),
         ([p.SDLK_ESCAPE], "playing", 0, None, "stage_02"),
-        ([p.SDLK_1], "playing", 0, None),
+        ([p.SDLK_1], "playing:device", 0, None),
+        ([p.SDLK_ESCAPE], "playing", 0, None),
         (["close"], "playing", 0, None),
     ])
     original_events, original_update = p.get_events, p.update_canvas
@@ -234,6 +236,7 @@ def main():
         assert games[-1].level.id == (room[0] if room else "stage_01")
         if menu.screen == "playing":
             display = displays[-1]
+            assert display.tutorial_hidden == (actual == "playing:device")
             if room and room[0] != "stage_01":
                 assert display.tutorial is None
             else:
@@ -268,8 +271,8 @@ def main():
             [([p.SDLK_RETURN], "story:0", 0, None), (["close"], "story:0", 0, None)],
             [([p.SDLK_RETURN], "story:0", 0, None),
              ([p.SDLK_DOWN, p.SDLK_DOWN, p.SDLK_RETURN], "controls:0", 0, None),
-             ([p.SDLK_RETURN], "controls:1", 0, None), ([p.SDLK_RETURN], "playing", 0, None),
-             (["close"], "playing", 0, None)],
+             ([p.SDLK_RETURN], "controls:1", 0, None), ([p.SDLK_RETURN], "playing:device", 0, None),
+             (["close"], "playing:device", 0, None)],
         ):
             current = None
             skip_logos()
@@ -279,7 +282,7 @@ def main():
         for index, level in enumerate(load_levels()):
             current = None
             skip_logos()
-            has_guide = level.id not in ("stage_01", "stage_03")
+            has_guide = level.id != "stage_03"
             steps.extend([
                 ([p.SDLK_0, p.SDLK_9], "title", 0, None),
                 ([p.SDLK_1 + index, p.SDLK_d, p.SDLK_SPACE],

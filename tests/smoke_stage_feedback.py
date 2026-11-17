@@ -104,7 +104,8 @@ def input_checks(levels):
     final_key = {"left": p.SDLK_a, "right": p.SDLK_d, "up": p.SDLK_w, "down": p.SDLK_s,
                  "interact": p.SDLK_e}[SOLUTIONS[levels[0].id][-1]]
     batches = [
-        ([], 0, False),  # 힌트를 보면서 바로 첫 행동을 할 수 있다.
+        ([], 0, False),
+        ([key(p.SDLK_ESCAPE)], 0, False),
         ([key(final_key), key(p.SDLK_SPACE)], 0, True),
         ([key(p.SDLK_z)], 0, False),
         ([key(final_key)], 0, True),
@@ -116,6 +117,7 @@ def input_checks(levels):
         ([key(p.SDLK_ESCAPE)], 7, True),
         ([], 7, True),
         ([click(800, 272), key(p.SDLK_d)], 0, False),
+        ([key(p.SDLK_ESCAPE), key(p.SDLK_d)], 0, False),
         ([key(p.SDLK_r)], 0, False),
         ([SimpleNamespace(type=p.SDL_QUIT)], 0, False),
     ]
@@ -139,7 +141,7 @@ def input_checks(levels):
             _, index, cleared = batches[frame]
             assert games[-1].level.id == levels[index].id, frame
             assert games[-1].state.cleared == cleared, frame
-            if index in (0, 1) and not cleared and frame >= 6:
+            if index in (0, 1) and not cleared and frame >= 7:
                 assert games[-1].state.moves == 0, frame
         update()
 

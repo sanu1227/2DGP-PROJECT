@@ -71,7 +71,8 @@ def input_checks(levels):
     frame = -1
     update = p.update_canvas
     batches = [
-        ([], None, 0, 0),
+        ([], "device", 0, 0),
+        ([key(p.SDLK_ESCAPE)], None, 0, 0),
         ([key(p.SDLK_ESCAPE)], "pause", 0, 0),
         ([click(800, 365), key(p.SDLK_d)], "catalog", 0, 0),
         ([key(p.SDLK_RIGHT)], "catalog", 1, 0),

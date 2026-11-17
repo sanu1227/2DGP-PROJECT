@@ -82,7 +82,7 @@ class TutorialTests(unittest.TestCase):
     def test_device_introductions_follow_first_appearance(self):
         introductions = device_introductions(load_levels())
         self.assertEqual([tuple(lesson.kind for lesson in pages) for pages in introductions.values()],
-                         [(), ("bone", "assembly", "assembly"), (), ("plate", "plate", "rubble"),
+                         [("part", "trap", "trap"), ("bone", "assembly", "assembly"), (), ("plate", "plate", "rubble"),
                           ("chute", "chute", "mirror", "receiver"), ("beam_switch",),
                           ("soldier", "helper", "helper", "helper"), ("fixed_mirror",)])
 

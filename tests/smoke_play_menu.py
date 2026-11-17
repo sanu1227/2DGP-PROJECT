@@ -89,7 +89,7 @@ def input_checks(levels):
     original_update = p.update_canvas
     original_text = view.View.text
     frame = -1
-    times = [1, 1.05, 100, 101, 102, 103, 104, 104.01, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114]
+    times = [1, 1.05, 100, 101, 102, 103, 104, 104.01, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115]
     batches = [
         [], [key(p.SDLK_ESCAPE), key(p.SDLK_d)],
         [key(p.SDLK_e), key(p.SDLK_r), key(p.SDLK_6), click(50, 50)],
@@ -98,7 +98,7 @@ def input_checks(levels):
         [key(p.SDLK_ESCAPE)], [key(p.SDLK_DOWN), key(p.SDLK_RETURN), key(p.SDLK_d)],
         [key(p.SDLK_d)], [key(p.SDLK_ESCAPE)],
         [key(p.SDLK_UP), key(p.SDLK_RETURN), key(p.SDLK_RETURN)],
-        [key(p.SDLK_1)], [key(p.SDLK_ESCAPE)],
+        [key(p.SDLK_1)], [key(p.SDLK_ESCAPE)], [key(p.SDLK_ESCAPE)],
         [click(800, 605), key(p.SDLK_d)], [key(p.SDLK_ESCAPE)],
         [SimpleNamespace(type=p.SDL_QUIT)],
     ]
@@ -111,6 +111,7 @@ def input_checks(levels):
     class ObservedMenu(PlayMenu):
         def __init__(self):
             super().__init__()
+            self.introduced_rooms.add(levels[0].id)
             menus.append(self)
 
     class ObservedFront(FrontEnd):
@@ -166,7 +167,9 @@ def input_checks(levels):
             assert fronts[-1].screen == "title" and not menu.active
         if frame >= 12:
             assert game.state.moves == 0
-        if frame == 14:
+        if frame == 12:
+            assert menu.mode == "device"
+        if frame in (13, 15):
             assert not menu.active
         original_update()
 

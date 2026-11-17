@@ -111,8 +111,7 @@ def device_introductions(levels):
     introductions = {}
     for level in levels:
         lessons = device_lessons(level)
-        introductions[level.id] = tuple(lesson for lesson in lessons if lesson.kind not in known
-                                        and not (level.id == "stage_01" and lesson.kind in ("part", "trap")))
+        introductions[level.id] = tuple(lesson for lesson in lessons if lesson.kind not in known)
         known.update(lesson.kind for lesson in lessons)
     return introductions
 
