@@ -49,6 +49,7 @@ PLATE_SECONDS = 0.24
 PUSH_SECONDS = 0.28
 MIRROR_SECONDS = 0.30
 TUTORIAL_SECONDS = 4.0
+LINK_GLOW_SECONDS = 0.20
 
 
 def font_path(size=18) -> str:
@@ -120,6 +121,8 @@ class View:
         self.gate_hit_masks = {}
         self.plate_hit_masks = {}
         self.receiver_feedback = ReceiverFeedback()
+        self.link_glow_game = None
+        self.link_glow_motions = {}
         self.reset_gates()
         self.reset_plates()
         self.reset_player()
@@ -187,6 +190,13 @@ class View:
 
     def gate_opening(self, pos, target, now):
         return self.device_progress(self.gate_motions, pos, target, now, GATE_SECONDS)
+
+    def link_glow(self, game, link, highlighted, now):
+        if self.link_glow_game is not game:
+            self.link_glow_game = game
+            self.link_glow_motions.clear()
+        self.link_glow_motions.setdefault(link, (0.0, 0.0, now, 0.0))
+        return self.device_progress(self.link_glow_motions, link, float(highlighted), now, LINK_GLOW_SECONDS)
 
     def reset_player(self):
         self.receiver_feedback.reset()

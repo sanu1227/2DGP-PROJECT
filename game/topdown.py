@@ -434,7 +434,7 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, mirror
     if level.sources:
         details.update({pos: ("차광 블록", GOLD) for pos in rubble})
     view.interaction_markers(game, board)
-    draw_device_links(view, game, board)
+    draw_device_links(view, game, board, now)
     if view.show_coordinates:
         view.coordinate_overlay(level, board)
     view.navigation_overlay(game, board, device_details=details)

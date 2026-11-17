@@ -8,6 +8,7 @@ import pico2d.pico2d as p
 
 from game.levels import Pos
 from game.play_effects import alpha_blend
+from game.topdown_terrain import radial_layer
 
 
 COLORS = (
@@ -98,12 +99,13 @@ def draw_link_corners(board, pos, color):
         p.draw_line(x, y, x, y - dy * length, *color, 220)
 
 
-def draw_device_links(view, game, board):
+def draw_device_links(view, game, board, now):
     links = device_links(game.level)
     if not links:
         return
     hovered = view.pick_cell(game, *view.mouse_position) if view.mouse_position else None
     focused = {link for link in links if hovered in link.cells}
+    glows = {link: view.link_glow(game, link, link in focused, now) for link in links}
     marks = defaultdict(list)
     for link in links:
         for pos in link.cells:
@@ -118,8 +120,19 @@ def draw_device_links(view, game, board):
             positions[link, pos] = (sx - board.half_width + 15 + 24 * column,
                                     sy + board.half_height - 15 - 24 * row)
 
-    if focused:
+    if focused or any(glows.values()):
         with alpha_blend():
+            for link, glow in glows.items():
+                opacity = round(86 * glow)
+                if not opacity:
+                    continue
+                for pos in link.cells:
+                    sx, sy = board.screen(pos)
+                    if len(marks[pos]) > 1:
+                        mark_x, _ = positions[link, pos]
+                        sx += (mark_x - sx) * .36
+                    radial_layer(sx, sy - board.cell_size * .08, board.cell_size * .93, board.cell_size * .81,
+                                 link.color, opacity)
             for link in links:
                 if link not in focused:
                     continue
