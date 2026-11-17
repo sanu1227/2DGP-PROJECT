@@ -86,7 +86,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--capture-dir", type=Path)
     args = parser.parse_args()
-    games, menus, displays = [], [], []
+    games, menus, play_menus, displays = [], [], [], []
     checked_glyphs = set()
     original_initialize, original_text = view.View.__init__, view.View.text
 
@@ -123,6 +123,11 @@ def main():
         def __init__(self, show_title=True):
             super().__init__(show_title)
             menus.append(self)
+
+    class ObservedPlayMenu(view.PlayMenu):
+        def __init__(self):
+            super().__init__()
+            play_menus.append(self)
 
     # 각 tuple은 입력 묶음, 표시 화면, 행동 수, 선택적인 캡처 이름이다.
     steps = deque([
@@ -175,7 +180,7 @@ def main():
     steps.extend([
         ([p.SDLK_BACKSPACE], "playing", len(SOLUTIONS["stage_01"]) - 1, None),
         ([p.SDLK_a], "playing", len(SOLUTIONS["stage_01"]), None),
-        ([p.SDLK_SPACE], "playing", 0, None, "stage_02"),
+        ([p.SDLK_SPACE], "playing:device", 0, None, "stage_02"),
         ([p.SDLK_ESCAPE], "playing", 0, None, "stage_02"),
         ([p.SDLK_1], "playing", 0, None),
         (["close"], "playing", 0, None),
@@ -222,10 +227,12 @@ def main():
             assert menu.buttons[0].label == ("작업 안내" if menu.story_page == len(STORY) - 1 else "다음 컷")
         elif actual == "controls":
             actual += f":{menu.guide_page}"
+        elif actual == "playing" and play_menus[-1].mode == "device":
+            actual += ":device"
         assert actual == screen, (actual, screen, current[0])
         assert games[-1].state.moves == moves, (games[-1].state.moves, moves)
         assert games[-1].level.id == (room[0] if room else "stage_01")
-        if screen == "playing":
+        if menu.screen == "playing":
             display = displays[-1]
             if room and room[0] != "stage_01":
                 assert display.tutorial is None
@@ -247,6 +254,7 @@ def main():
         original_update()
 
     with patch.object(view, "Game", ObservedGame), patch.object(view, "FrontEnd", ObservedFrontEnd), \
+            patch.object(view, "PlayMenu", ObservedPlayMenu), \
             patch.object(view.View, "__init__", initialize), patch.object(p, "get_events", events), \
             patch.object(view.View, "text", checked_text), patch.object(p, "update_canvas", update):
         view.run(load_levels())
@@ -271,11 +279,15 @@ def main():
         for index, level in enumerate(load_levels()):
             current = None
             skip_logos()
+            has_guide = level.id not in ("stage_01", "stage_03")
             steps.extend([
                 ([p.SDLK_0, p.SDLK_9], "title", 0, None),
-                ([p.SDLK_1 + index, p.SDLK_d, p.SDLK_SPACE], "playing", 0, None, level.id),
-                (["close"], "playing", 0, None, level.id),
+                ([p.SDLK_1 + index, p.SDLK_d, p.SDLK_SPACE],
+                 "playing:device" if has_guide else "playing", 0, None, level.id),
             ])
+            if has_guide:
+                steps.append(([p.SDLK_ESCAPE], "playing", 0, None, level.id))
+            steps.append((["close"], "playing", 0, None, level.id))
             view.run(load_levels())
             assert not steps
             assert games[-1].state == Game(level).state and not games[-1].history
@@ -284,7 +296,7 @@ def main():
         skip_logos()
         steps.extend([
             ([p.SDLK_6], "title", 0, None),
-            ([p.SDLK_2, "close"], "playing", 0, None, "stage_02"),
+            ([p.SDLK_2, "close"], "playing:device", 0, None, "stage_02"),
         ])
         view.run(load_levels()[:2])
         assert not steps

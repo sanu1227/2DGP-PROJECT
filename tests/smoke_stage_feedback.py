@@ -113,6 +113,7 @@ def input_checks(levels):
         ([click(800, 272), key(p.SDLK_d)], 1, False),
         ([key(p.SDLK_ESCAPE), key(p.SDLK_d)], 1, False),
         ([key(p.SDLK_8)], 7, True),
+        ([key(p.SDLK_ESCAPE)], 7, True),
         ([], 7, True),
         ([click(800, 272), key(p.SDLK_d)], 0, False),
         ([key(p.SDLK_r)], 0, False),
@@ -138,7 +139,7 @@ def input_checks(levels):
             _, index, cleared = batches[frame]
             assert games[-1].level.id == levels[index].id, frame
             assert games[-1].state.cleared == cleared, frame
-            if frame in (6, 7, 10, 11):
+            if index in (0, 1) and not cleared and frame >= 6:
                 assert games[-1].state.moves == 0, frame
         update()
 

@@ -1441,13 +1441,13 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True, top_down=False):
         feedback = StageFeedback()
         introductions = device_introductions(levels)
         game = Game(levels[index])
-        intro_pages = introductions[game.level.id]
 
-        def select_room(new_index, *, introduce=True):
-            nonlocal game, index, intro_pages
+        def select_room(new_index, *, replay_intro=False):
+            nonlocal game, index
             index = new_index
             game = Game(levels[index])
-            intro_pages = introductions[game.level.id] if introduce else ()
+            if replay_intro:
+                play_menu.introduced_rooms.discard(game.level.id)
             view.reset_player()
             view.navigation.cancel()
             view.hit_regions.clear()
@@ -1480,7 +1480,7 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True, top_down=False):
         running, frames = True, 0
         while running:
             if front_end.screen == "playing":
-                play_menu.offer(game, view, intro_pages=intro_pages)
+                play_menu.offer(game, view, intro_pages=introductions[game.level.id])
             screen_changed = False
             for event in p.get_events():
                 if event.type == p.SDL_QUIT:
@@ -1490,7 +1490,7 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True, top_down=False):
                     continue
                 elif (front_end.screen == "title" and event.type == p.SDL_KEYDOWN
                       and event.key in stage_keys and stage_keys[event.key] < len(levels)):
-                    select_room(stage_keys[event.key], introduce=False)
+                    select_room(stage_keys[event.key], replay_intro=True)
                     front_end.screen = "playing"
                     screen_changed = True
                 elif front_end.screen != "playing":
@@ -1546,7 +1546,7 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True, top_down=False):
                     if event.key == p.SDLK_F2:
                         view.show_coordinates = not view.show_coordinates
                     elif event.key in stage_keys and stage_keys[event.key] < len(levels):
-                        select_room(stage_keys[event.key], introduce=False)
+                        select_room(stage_keys[event.key], replay_intro=True)
                         screen_changed = True
                     elif event.key in (p.SDLK_z, p.SDLK_BACKSPACE):
                         if game.undo():
@@ -1573,7 +1573,7 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True, top_down=False):
                             view.chute_feedback.blocked(game, view.now())
             # 이미 보간 중인 한 칸이 끝난 뒤에만 다음 자동 이동을 실행한다.
             if front_end.screen == "playing":
-                play_menu.offer(game, view, intro_pages=intro_pages)
+                play_menu.offer(game, view, intro_pages=introductions[game.level.id])
             now = view.now()
             front_end.update(perf_counter())
             if running:

@@ -90,8 +90,12 @@ def input_checks(levels):
         ([key(p.SDLK_RETURN), key(p.SDLK_d)], "device", "stage_04"),
         ([key(p.SDLK_SPACE), key(p.SDLK_d)], None, "stage_04"),
         ([key(p.SDLK_r)], None, "stage_04"),
-        ([key(p.SDLK_5)], None, "stage_05"),
-        ([key(p.SDLK_4)], None, "stage_04"),
+        ([key(p.SDLK_5), key(p.SDLK_RETURN)], "device", "stage_05"),
+        ([key(p.SDLK_ESCAPE)], None, "stage_05"),
+        ([key(p.SDLK_4)], "device", "stage_04"),
+        ([key(p.SDLK_ESCAPE)], None, "stage_04"),
+        ([key(p.SDLK_4)], "device", "stage_04"),
+        ([key(p.SDLK_ESCAPE)], None, "stage_04"),
         ([key(p.SDLK_ESCAPE)], "pause", "stage_04"),
         ([click(800, 445)], "controls", "stage_04"),
         ([click(600, 253), key(p.SDLK_d)], "device", "stage_04"),
@@ -124,8 +128,9 @@ def input_checks(levels):
             assert menus[-1].mode == mode, (frame, menus[-1].mode, mode)
             assert games[-1].level.id == stage
             assert games[-1].state.moves == 0 and not games[-1].history
-            if frame < 3:
-                assert [page.kind for page in menus[-1].pages] == ["plate", "rubble"]
+            if frame in (0, 1, 2, 5, 7, 9):
+                kinds = ["chute", "mirror"] if stage == "stage_05" else ["plate", "rubble"]
+                assert [page.kind for page in menus[-1].pages] == kinds
                 assert menus[-1].page_index == (1 if frame == 2 else 0)
                 expected = "작업 시작" if frame == 2 else "다음 장치"
                 assert menus[-1].buttons[0].label == expected
