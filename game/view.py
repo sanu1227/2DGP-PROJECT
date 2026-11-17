@@ -721,7 +721,7 @@ class View:
         mask = (sprite, sx, sy, scale, flip, height_scale, rotation)
         self.hit_masks[region] = (*mask, rows) if rows else mask
 
-    def navigation_overlay(self, game, projection, *, device_details=None):
+    def navigation_overlay(self, game, projection, *, device_details=None, tooltip_avoid=()):
         if game.failed or game.state.cleared:
             return
         target, path = self.navigation.target, self.navigation.path
@@ -747,19 +747,30 @@ class View:
                           int(projection.half_height) - 3, color)
         if hovered is not None:
             detail = device_details.get(hovered) if device_details else None
-            self.movement_cost_hint(game, path, color, detail)
+            self.movement_cost_hint(game, path, color, detail, avoid=tooltip_avoid)
 
     @staticmethod
     def chute_outlet_labels(level):
         return {outlet: f"{level.device_labels[inlet]} 배출구" for inlet, outlet in level.chutes.items()}
 
-    def draw_chute_outlet(self, board, pos):
+    def draw_chute_outlet(self, board, pos, *, outline=None):
         self.art.load_chute_outlet()
         name = "chute_dispenser"
         x, y = board.screen(pos)
         height = board.half_width * (1.38 if self.top_down else .79)
         y += board.half_width * (.24 if self.top_down else .18)
-        scale = height / self.art.manifest["sprites"][name]["height"]
+        sprite = self.art.manifest["sprites"][name]
+        scale = height / sprite["height"]
+        if outline:
+            color, opacity = outline
+            atlas = sprite["atlas"]
+            left, bottom, width, source_height = sprite["clip_rect_pico2d"]
+            top = self.art.atlases[atlas].h - bottom - source_height
+            anchor = sprite["anchor"]
+            rect = p.to_sdl_rect(x - anchor["x"] * scale, y + (anchor["y"] - source_height) * scale,
+                                 width * scale, height)
+            self.topdown_art.outlines.draw(self.art.atlas_paths[atlas], (left, top, width, source_height),
+                                           rect, 0, opacity, color)
         self.art.draw(name, x, y, scale)
         self.sprite_hit_region(pos, name, x, y, scale)
 
@@ -773,7 +784,7 @@ class View:
                     self.tile_outline(board, *board.screen(pos), board.half_width - 3,
                                       int(board.half_height) - 2, TEAL)
 
-    def movement_cost_hint(self, game, path, color, detail=None):
+    def movement_cost_hint(self, game, path, color, detail=None, *, avoid=()):
         """마우스를 올린 경로의 예상 행동 비용을 클릭 전에 보여준다."""
         if path is None:
             labels = [("이동 불가", 18, color)]
@@ -795,8 +806,21 @@ class View:
         width = max(self.text_width(label, size) for label, size, _ in labels) + 24
         height = 34 + 22 * (len(labels) - 1)
         x, y = self.mouse_position
-        left = max(32, min(x + 18, WIDTH - 32 - width))
-        bottom = max(BOARD_BOTTOM + 4, min(y + 22, BOARD_TOP - height - 4))
+
+        def fit(left, bottom):
+            return (max(32, min(left, WIDTH - 32 - width)),
+                    max(BOARD_BOTTOM + 4, min(bottom, BOARD_TOP - height - 4)))
+
+        left, bottom = fit(x + 18, y + 22)
+        if avoid:
+            def overlap(point):
+                a, b = point
+                return sum(max(0, min(a + width, r) - max(a, l)) * max(0, min(b + height, t) - max(b, d))
+                           for l, d, r, t in avoid)
+
+            left, bottom = min((left, bottom), fit(x - width - 18, y + 22),
+                               fit(x + 18, y - height - 22), fit(x - width - 18, y - height - 22),
+                               key=overlap)
         box(left, bottom, left + width, bottom + height, (20, 32, 36))
         box(left, bottom, left + width, bottom + height, color, filled=False)
         for index, (label, size, accent) in enumerate(labels):

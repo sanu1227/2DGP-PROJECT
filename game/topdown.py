@@ -6,8 +6,8 @@ from pathlib import Path
 
 import pico2d.pico2d as p
 
-from game.device_outline import DeviceOutlines
-from game.device_links import draw_device_links
+from game.device_links import device_links, device_lighting, draw_device_lighting, draw_device_links
+from game.device_outline import DeviceOutlines, OUTLINE_COLOR
 from game.layout import HEIGHT
 from game.levels import DIRECTIONS
 from game.magic import mirror_output
@@ -79,7 +79,7 @@ class TopDownArt:
             atlas.texture = None
         self.atlases.clear()
 
-    def draw(self, name, x, y, size, *, angle=0, opacity=1, height_scale=1, outline=0,
+    def draw(self, name, x, y, size, *, angle=0, opacity=1, height_scale=1, outline=0, outline_color=OUTLINE_COLOR,
              inset=(0, 0), rows=None, section=None):
         atlas_name, left, top, width, height = self.sprites[name]
         atlas = self.atlases.get(atlas_name)
@@ -102,7 +102,8 @@ class TopDownArt:
         draw_width, draw_height = width * scale, height * scale * height_scale
         if outline:
             rect = p.to_sdl_rect(x - draw_width / 2, y - draw_height / 2, draw_width, draw_height)
-            self.outlines.draw(ASSET_ROOT / self.files[atlas_name], (left, top, width, height), rect, angle, outline)
+            self.outlines.draw(ASSET_ROOT / self.files[atlas_name], (left, top, width, height), rect, angle, outline,
+                               outline_color)
         if opacity != 1:
             atlas.opacify(opacity)
         try:
@@ -114,7 +115,7 @@ class TopDownArt:
             if opacity != 1:
                 atlas.opacify(1)
 
-    def draw_gate(self, x, y, size, opening, angle=0):
+    def draw_gate(self, x, y, size, opening, angle=0, *, outline_color=OUTLINE_COLOR, highlight=0):
         panel_size = size * .61
         if opening == 0:
             self.draw("depth_gate_panel", x, y, panel_size, angle=angle, height_scale=1.24)
@@ -127,7 +128,8 @@ class TopDownArt:
                       height_scale=1.24, section=(inset, .5))
             self.draw("depth_gate_panel", x + dx, y + dy, panel_size, angle=angle,
                       height_scale=1.24, section=(.5, 1 - inset))
-        self.draw("depth_gate_open", x, y, size, angle=angle, outline=.28)
+        self.draw("depth_gate_open", x, y, size, angle=angle,
+                  outline=.28 + .72 * highlight, outline_color=outline_color)
 
 
 def device_entries(game, gate_statuses, powered, exit_ready):
@@ -262,6 +264,14 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, mirror
     lights = room_lights(level, prop_lights, powered, ready)
     player = view.player_position(state.player, now)
     rubble = {pos: view.rubble_pose(game, pos, now) for pos in sorted(state.rubble)}
+    links = device_links(level)
+    hovered = None
+    if links and view.mouse_position:
+        # 같은 방에서는 화면에 그려진 배출구 같은 돌출 장치도 선택한다.
+        hovered = (view.pick_cell(game, *view.mouse_position) if view.link_glow_game is game
+                   else board.pick(*view.mouse_position))
+    focused = {link for link in links if hovered in link.cells}
+    lighting = device_lighting(view, game, links, focused, now)
     view.hit_regions.clear()
     view.hit_masks.clear()
     view.gate_hit_masks.clear()
@@ -271,6 +281,7 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, mirror
 
     background = room_background(scene)
     draw_terrain(art, board, level, materials_for(stage), lights, background, now, recesses)
+    draw_device_lighting(board, lighting)
     draw_rubble_track(board, level.rubble_track)
     draw_echo_trail(game, board)
     raised = [mirror_positions.get(pos, pos) for pos, (sprite, _, _) in entries.items() if sprite in RAISED_DEVICES]
@@ -293,19 +304,21 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, mirror
     for pos, (sprite, _, color) in entries.items():
         sx, sy = board.screen(mirror_positions.get(pos, pos))
         asset = sprites.get(sprite, sprite)
+        outline_color, highlight = lighting.get(pos, (OUTLINE_COLOR, 0))
         if pos in level.gates:
             x, y = pos
             across_x = sum(cell in level.walls for cell in ((x - 1, y), (x + 1, y)))
             across_y = sum(cell in level.walls for cell in ((x, y - 1), (x, y + 1)))
             angle = 0 if across_x > across_y else pi / 2
-            art.draw_gate(sx, sy, size * .96, gate_openings[pos], angle)
+            art.draw_gate(sx, sy, size * .96, gate_openings[pos], angle,
+                          outline_color=outline_color, highlight=highlight)
             view.draw_gate_dust(board, pos, now)
             if gate_statuses[pos] == "held":
                 p.draw_circle(sx, sy, max(2, round(size * .044)), *GOLD, filled=True)
         elif pos in level.plates:
             pressure = view.plate_depths[pos]
             sprite = "plate_up" if pressure == 0 else "plate_down"
-            art.draw(sprites.get(sprite, sprite), sx, sy, size * .82, outline=True)
+            art.draw(sprites.get(sprite, sprite), sx, sy, size * .82, outline=True, outline_color=outline_color)
             if 0 < pressure < 1:
                 art.draw(sprites.get("plate_up", "plate_up"), sx, sy - size * .054 * pressure,
                          size * .82, opacity=1 - pressure, inset=(.17, .17))
@@ -326,14 +339,14 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, mirror
                 asset = sprites["trap_broken"]
             elif sprite == "trap_active" and not view.work_feedback.contacted(pos, "trap", now):
                 asset = sprites["trap_installed"]
-            art.draw(asset, sx, sy, size * .82, outline=True)
+            art.draw(asset, sx, sy, size * .82, outline=True, outline_color=outline_color)
         if sprite == "trap_active" and view.work_feedback.contacted(pos, "trap", now):
             trap_motion(sx, sy + size * .35, half, now)
         if sprite == "replay_seal" and color == TEAL:
             p.draw_circle(sx, sy, round(size * .42), *TEAL, filled=False)
 
     for pos in outlets:
-        view.draw_chute_outlet(board, pos)
+        view.draw_chute_outlet(board, pos, outline=lighting.get(pos))
 
     for origin, pos in state.replay_workers.items():
         if state.echo is None or state.echo.origin != origin:
@@ -434,8 +447,11 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, mirror
     if level.sources:
         details.update({pos: ("차광 블록", GOLD) for pos in rubble})
     view.interaction_markers(game, board)
-    draw_device_links(view, game, board, now)
+    draw_device_links(board, links, focused, hovered)
     if view.show_coordinates:
         view.coordinate_overlay(level, board)
-    view.navigation_overlay(game, board, device_details=details)
+    linked_cells = {pos for link in focused for pos in link.cells}
+    tooltip_avoid = [(x - half, y - half, x + half, y + half)
+                     for x, y in (board.screen(pos) for pos in linked_cells)]
+    view.navigation_overlay(game, board, device_details=details, tooltip_avoid=tooltip_avoid)
     view.action_badge(game)

@@ -6,6 +6,7 @@ from math import hypot
 
 import pico2d.pico2d as p
 
+from game.device_outline import OUTLINE_COLOR
 from game.levels import Pos
 from game.play_effects import alpha_blend
 from game.topdown_terrain import radial_layer
@@ -99,13 +100,40 @@ def draw_link_corners(board, pos, color):
         p.draw_line(x, y, x, y - dy * length, *color, 220)
 
 
-def draw_device_links(view, game, board, now):
-    links = device_links(game.level)
+def device_lighting(view, game, links, focused, now):
+    """장치마다 윤곽선과 바닥 조명에 함께 쓸 색을 고른다."""
+    contributions = defaultdict(list)
+    for link in links:
+        strength = view.link_glow(game, link, link in focused, now)
+        if strength:
+            for pos in link.cells:
+                contributions[pos].append((link.color, strength))
+
+    lighting = {}
+    for pos, sources in contributions.items():
+        strength = max(amount for _, amount in sources)
+        total = sum(amount for _, amount in sources)
+        color = []
+        for channel, resting in enumerate(OUTLINE_COLOR):
+            target = sum(rgb[channel] * amount for rgb, amount in sources) / total
+            color.append(round(resting + (target - resting) * strength))
+        lighting[pos] = tuple(color), strength
+    return lighting
+
+
+def draw_device_lighting(board, lighting):
+    if not lighting:
+        return
+    size = board.cell_size
+    with alpha_blend():
+        for pos, (color, strength) in lighting.items():
+            sx, sy = board.screen(pos)
+            radial_layer(sx, sy - size * .08, size * 1.10, size * .96, color, round(94 * strength))
+
+
+def draw_device_links(board, links, focused, hovered):
     if not links:
         return
-    hovered = view.pick_cell(game, *view.mouse_position) if view.mouse_position else None
-    focused = {link for link in links if hovered in link.cells}
-    glows = {link: view.link_glow(game, link, link in focused, now) for link in links}
     marks = defaultdict(list)
     for link in links:
         for pos in link.cells:
@@ -120,19 +148,8 @@ def draw_device_links(view, game, board, now):
             positions[link, pos] = (sx - board.half_width + 15 + 24 * column,
                                     sy + board.half_height - 15 - 24 * row)
 
-    if focused or any(glows.values()):
+    if focused:
         with alpha_blend():
-            for link, glow in glows.items():
-                opacity = round(86 * glow)
-                if not opacity:
-                    continue
-                for pos in link.cells:
-                    sx, sy = board.screen(pos)
-                    if len(marks[pos]) > 1:
-                        mark_x, _ = positions[link, pos]
-                        sx += (mark_x - sx) * .36
-                    radial_layer(sx, sy - board.cell_size * .08, board.cell_size * .93, board.cell_size * .81,
-                                 link.color, opacity)
             for link in links:
                 if link not in focused:
                     continue

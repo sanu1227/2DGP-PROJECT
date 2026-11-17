@@ -7,7 +7,8 @@ import pico2d.pico2d as p
 
 
 RADIUS = 3
-PALETTE = (bytes(4), bytes((13, 28, 37, 255)), bytes((135, 225, 231, 255)))
+OUTLINE_COLOR = (135, 225, 231)
+PALETTE = (bytes(4), bytes((25, 32, 41, 255)), bytes((255, 255, 255, 255)))
 
 
 def outline_pixels(alpha, atlas_width, clip, width, height):
@@ -60,7 +61,7 @@ class DeviceOutlines:
                 p.SDL_FreeSurface(source)
         return self.alpha[path]
 
-    def draw(self, path, clip, rect, angle, opacity):
+    def draw(self, path, clip, rect, angle, opacity, color=OUTLINE_COLOR):
         if rect.w < 1 or rect.h < 1:
             return
         key = path, clip, rect.w, rect.h
@@ -81,6 +82,7 @@ class DeviceOutlines:
                 p.SDL_FreeSurface(surface)
         frame = p.SDL_Rect(rect.x - RADIUS, rect.y - RADIUS, rect.w + 2 * RADIUS, rect.h + 2 * RADIUS)
         texture = self.textures[key]
+        p.SDL_SetTextureColorMod(texture, *color)
         p.SDL_SetTextureAlphaMod(texture, round(255 * opacity))
         p.SDL_RenderCopyEx(p.renderer, texture, None, frame, degrees(-angle), None, p.SDL_FLIP_NONE)
 
