@@ -7,6 +7,7 @@ from pathlib import Path
 import pico2d.pico2d as p
 
 from game.device_outline import DeviceOutlines
+from game.device_links import draw_device_links
 from game.layout import HEIGHT
 from game.levels import DIRECTIONS
 from game.magic import mirror_output
@@ -15,7 +16,7 @@ from game.play_effects import beam_contacts, trap_motion
 from game.scenery import draw_rubble_track
 from game.themes import room_background, scene_for
 from game.topdown_terrain import Light, draw_shadows, draw_terrain, materials_for
-from game.worker_view import ECHO_COLOR, draw_echo_trail, draw_echo_turn, recording_label
+from game.worker_view import ECHO_COLOR, draw_echo_trail, draw_echo_turn
 
 
 ASSET_ROOT = Path(__file__).resolve().parents[1] / "assets" / "topdown_v2"
@@ -129,10 +130,6 @@ class TopDownArt:
         self.draw("depth_gate_open", x, y, size, angle=angle, outline=.28)
 
 
-def rectangle(left, bottom, right, top, color, filled=True):
-    p.draw_rectangle(round(left), round(bottom), round(right), round(top), *color, filled=filled)
-
-
 def device_entries(game, gate_statuses, powered, exit_ready):
     """장치별 그림과 상태 이름을 계산한다. 발판은 같은 칸의 배출구 위에 표시한다."""
     level, state = game.level, game.state
@@ -151,18 +148,18 @@ def device_entries(game, gate_statuses, powered, exit_ready):
         count = state.bench_bones.get(pos, 0)
         entries[pos] = ("bench_bone" if count else "bench_empty"), f"작업대 · 뼈 {count}/2", GOLD
     for pos in level.chutes.values():
-        entries[pos] = "chute_outlet", "배출", GOLD
+        entries[pos] = "chute_outlet", "배출구", TEAL
     for pos in level.chutes:
-        entries[pos] = "chute_inlet", f"{level.device_labels[pos]} 투입구", GOLD
+        entries[pos] = "chute_inlet", "뼈 투입구", GOLD
     for pos in level.plates:
         pressed = game.plate_pressed(pos)
-        name = f"{level.device_labels[pos]} 발판"
+        name = "배출구 겸 발판" if pos in level.chutes.values() else "발판"
         entries[pos] = ("plate_down", f"{name} · 눌림", TEAL) if pressed else ("plate_up", name, GOLD)
     for pos, status in gate_statuses.items():
         label, color = {"open": ("열림", TEAL), "held": ("대기", GOLD), "closed": ("닫힘", RED)}[status]
         if status == "open" and level.gates[pos] in level.timed_echoes:
             label = "지금 통과"
-        entries[pos] = "gate_open", f"{level.device_labels[pos]} 문 · {label}", color
+        entries[pos] = "gate_open", f"연결문 · {label}", color
     for pos in level.sources:
         entries[pos] = "source", "광원", GOLD
     for pos in mirror_cells(level, state):
@@ -170,23 +167,22 @@ def device_entries(game, gate_statuses, powered, exit_ready):
         entries[pos] = ("mirror_base", "이동 거울", TEAL) if pos in state.movable_mirrors else (
             "mirror_base", f"거울 {facing}/4", GOLD)
     for pos in level.receivers:
-        label = level.device_labels[pos]
-        entries[pos] = (("receiver_powered", f"{label} 수신기 · 수신 완료", TEAL) if pos in powered else
-                        ("receiver", f"{label} 수신기 · 수신 대기", INK))
+        entries[pos] = (("receiver_powered", "수신기 · 수신 완료", TEAL) if pos in powered else
+                        ("receiver", "수신기 · 수신 대기", INK))
     for pos in level.jobs:
         working = pos in state.workers
-        label = level.device_labels[pos]
         if pos in level.echo_links:
             recording = state.recording and state.recording.origin == pos
-            label = "기록 완료" if pos in state.recorded_stations else recording_label(level, pos)
+            _, steps = level.echo_links[pos]
+            label = "기록석 · 기록 완료" if pos in state.recorded_stations else f"기록석 · {steps}걸음"
             entries[pos] = (("recording_plate_active", "기록 중", GOLD) if recording else
                             ("recording_plate", label, ECHO_COLOR))
         else:
-            entries[pos] = ("helper" if working else "winch"), label, TEAL if working else GOLD
+            entries[pos] = ("helper", "윈치 · 작동 중", TEAL) if working else ("winch", "윈치", GOLD)
     for seals, _ in level.echo_links.values():
         for gate, seal in seals.items():
             if seal not in level.plates:
-                entries[seal] = ("replay_seal", f"{level.device_labels[gate]} 문양",
+                entries[seal] = ("replay_seal", "인부 문양",
                                  TEAL if game.echo_pressed(gate) else ECHO_COLOR)
     return entries
 
@@ -259,7 +255,7 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, mirror
     ready = (state.installed == level.traps and (not level.traps or state.active)
              and state.soldiers == level.posts and state.carrying is None)
     entries = device_entries(game, gate_statuses, powered, ready)
-    outlet_labels = view.chute_outlet_labels(level)
+    outlets = level.chutes.values()
     workshop = stage == 1
     sprites = WORKSHOP_SPRITES if workshop else ROOM_SPRITES
     props, prop_lights, recesses = room_props(scene)
@@ -323,7 +319,7 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, mirror
             progress = view.work_feedback.progress(pos, "lever", now)
             lever = asset if view.work_feedback.contacted(pos, "lever", now) else sprites["lever_off"]
             art.draw(lever, sx, sy, size * .82, outline=True, height_scale=1 - .11 * sin(pi * progress))
-        elif pos not in outlet_labels:
+        elif pos not in outlets:
             if pos in level.benches:
                 asset = sprites["bench_bone" if view.bench_shows_bones(game, pos, now) else "bench_empty"]
             elif sprite in ("trap_installed", "trap_active") and not view.work_feedback.contacted(pos, "install", now):
@@ -336,7 +332,7 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, mirror
         if sprite == "replay_seal" and color == TEAL:
             p.draw_circle(sx, sy, round(size * .42), *TEAL, filled=False)
 
-    for pos in outlet_labels:
+    for pos in outlets:
         view.draw_chute_outlet(board, pos)
 
     for origin, pos in state.replay_workers.items():
@@ -434,21 +430,11 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, mirror
         if progress < 1:
             p.draw_circle(sx, sy, max(2, round(size * (.26 + progress * .16))), *VIOLET, filled=False)
 
-    # 연결 번호만 장치 타일 모서리에 남긴다. 상태 문구는 마우스를 올렸을 때 표시한다.
     details = {pos: (label, color) for pos, (_, label, color) in entries.items()}
-    details.update({pos: (label, TEAL) for pos, label in outlet_labels.items()})
     if level.sources:
         details.update({pos: ("차광 블록", GOLD) for pos in rubble})
-    for pos, code in level.device_labels.items():
-        sx, sy = board.screen(pos)
-        left, top = sx - half + 4, sy + half - 4
-        width = view.text_width(code, 13) + 10
-        if pos in details and width <= size - 8:
-            _, color = details[pos]
-            rectangle(left, top - 17, left + width, top, (24, 35, 40))
-            view.text(left + 5, top - 8, code, 13, color)
-    view.highlight_chute_pair(game, board)
     view.interaction_markers(game, board)
+    draw_device_links(view, game, board)
     if view.show_coordinates:
         view.coordinate_overlay(level, board)
     view.navigation_overlay(game, board, device_details=details)

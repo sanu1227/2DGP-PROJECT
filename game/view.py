@@ -1368,7 +1368,7 @@ class View:
 
     def play_footer(self, game):
         context, color = self.play_context(game)
-        if not draw_worker_status(self, game, context, color) and context:
+        if not draw_worker_status(self, game, context, color, link_symbols=self.top_down) and context:
             self.play_status_panel(78 + self.text_width(context, 18), color)
             self.text(58, STATUS_Y, context, 18, color)
         self.text(WIDTH - 32 - self.text_width("Esc  메뉴", 16), 27, "Esc  메뉴", 16, MUTED)

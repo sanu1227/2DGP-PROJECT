@@ -4,6 +4,7 @@ from math import hypot, pi, sin
 
 import pico2d.pico2d as p
 
+from game.device_links import device_links, draw_link_mark
 from game.levels import DIRECTIONS
 from game.layout import WIDTH, STATUS_Y
 from game.play_effects import ring
@@ -39,7 +40,7 @@ def draw_direction_arrow(x, y, action, color):
         p.draw_line(*tip, x + dx * 2 + sx * side * 6, y + dy * 2 + sy * side * 6, *color)
 
 
-def draw_worker_status(view, game, context, context_color):
+def draw_worker_status(view, game, context, context_color, *, link_symbols=False):
     """하단에서 입력 순서, 재생 위치, 지금 건널 수 있는 문을 함께 보여준다."""
     state, level = game.state, game.level
     recording, echo = state.recording, state.echo
@@ -80,18 +81,24 @@ def draw_worker_status(view, game, context, context_color):
         view.text(486, STATUS_Y, "방향키로 이동", 16, (178, 188, 192))
     else:
         gates = []
+        links_by_gate = {link.cells[-1]: link for link in device_links(level)} if link_symbols else {}
         for gate in seals:
             status = game.gate_status(gate)
             if status == "held" and state.player != gate:
                 status = "closed"
             if status != "closed" or len(seals) <= 2:
-                gates.append((level.device_labels[gate], status))
-        for index, (label, status) in enumerate(gates):
+                gates.append((gate, status))
+        for index, (gate, status) in enumerate(gates):
             x = 486 + 124 * index
             word, color = GATE_STYLES[status]
             p.draw_rectangle(x, STATUS_Y - 16, x + 112, STATUS_Y + 16, 42, 47, 57, filled=True)
             p.draw_rectangle(x, STATUS_Y - 16, x + 112, STATUS_Y + 16, *color, filled=False)
-            view.centered(x + 56, STATUS_Y, f"{label} {word}", 16, color)
+            link = links_by_gate.get(gate)
+            if link:
+                draw_link_mark(x + 16, STATUS_Y, link)
+                view.centered(x + 68, STATUS_Y, word, 16, color)
+            else:
+                view.centered(x + 56, STATUS_Y, f"{level.device_labels[gate]} {word}", 16, color)
         if context:
             view.wrapped(750, STATUS_Y, context, width=WIDTH - 798, size=16, color=context_color)
     return True

@@ -5,6 +5,7 @@ from pathlib import Path
 import unittest
 from unittest.mock import Mock, patch
 
+from game.device_links import device_links
 from game.levels import load_levels
 from game.model import Game
 from game.navigation import IsoBoard
@@ -17,6 +18,21 @@ class LateRoomTests(unittest.TestCase):
     def play(self, game, *directions):
         for action in directions:
             self.assertTrue(game.act(action), game.message)
+
+    def test_link_marks_distinguish_a_shared_outlet_and_follow_worker_connections(self):
+        levels = load_levels()
+        sewer = levels[4]
+        inlet, outlet = next(iter(sewer.chutes.items()))
+        gate = next(gate for gate, control in sewer.gates.items() if control == outlet)
+        shared = [link for link in device_links(sewer) if outlet in link.cells]
+        self.assertCountEqual([link.cells for link in shared], [(inlet, outlet), (outlet, gate)])
+        self.assertEqual(len({(link.color, link.shape) for link in shared}), 2)
+
+        throne_room = levels[7]
+        routes = {link.cells for link in device_links(throne_room)}
+        for station, (seals, _) in throne_room.echo_links.items():
+            for gate, seal in seals.items():
+                self.assertIn((station, seal, gate), routes)
 
     def test_second_worker_needs_a_weight_on_the_other_plate(self):
         level = load_levels()[6]

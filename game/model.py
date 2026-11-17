@@ -224,7 +224,7 @@ class Game:
         if nearby_hint:
             return None, nearby_hint, pos
         if pos in self.level.plates:
-            return None, f"{self.level.device_labels[pos]} 발판: 물건을 가져와 E / Space로 놓아 문을 유지하세요.", pos
+            return None, "발판에 물건을 놓으면 연결문을 열어 둘 수 있습니다.", pos
         if pos in self.level.gates:
             return None, "문이 닫혀도 현재 칸에서 나갈 수 있습니다.", pos
         return None, INTERACTION_HELP, pos
@@ -258,11 +258,11 @@ class Game:
         if pos in self.level.chutes:
             outlet = self.level.chutes[pos]
             if state.carrying != "bone":
-                return None, f"{self.level.device_labels[pos]} 투입구: 뼈 묶음만 보낼 수 있습니다."
+                return None, "투입구에는 뼈 묶음만 넣을 수 있습니다."
             if (outlet == state.player or outlet in state.items or outlet in state.soldiers
                     or outlet in state.rubble):
                 return None, "배출구가 막혔습니다. 물건이나 병사를 치우세요."
-            return "send_bone", f"E: {self.level.device_labels[pos]} 배출구로 뼈 보내기"
+            return "send_bone", "E: 연결된 배출구로 뼈 보내기"
         if pos in self.level.traps:
             if pos in state.installed:
                 return None, "이미 설치했습니다. 레버로 가동하세요."

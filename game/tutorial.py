@@ -83,7 +83,7 @@ def device_lessons(level: Level, state: State | None = None) -> tuple[DeviceLess
         links = tuple((control, gate) for gate, control in sorted(level.gates.items())
                       if control in level.receivers)
         targets = ((min(rubble), "차광 블록"),) + tuple(
-            (receiver, f"{level.device_labels[receiver]} 수신기") for receiver in sorted(level.receivers))
+            (receiver, "수신기") for receiver in sorted(level.receivers))
         lessons.append(DeviceLesson(
             "beam_switch", "두 광로 번갈아 열기",
             "블록 옆에서 빈손으로 방향키를 눌러 미세요. 한 광로를 막으면 반대편 수신기와 연결문이 켜져요.",
