@@ -5,9 +5,9 @@ from math import cos, exp, pi, sin
 import pico2d.pico2d as p
 
 from game.front_end import Button, bevel
-from game.layout import WIDTH, BOARD_TOP
+from game.layout import WIDTH, HEIGHT
 from game.logo_mode import fade_to_black
-from game.themes import room_background, scene_for
+from game.play_effects import alpha_blend
 
 INK = (239, 237, 219)
 MUTED = (164, 182, 177)
@@ -53,18 +53,14 @@ class StageFeedback:
     @staticmethod
     def draw_entry(view, game, elapsed):
         opacity = min(1, (ENTRY_SECONDS - elapsed) / ENTRY_FADE_SECONDS)
-        background = room_background(scene_for(game.level))
-
-        def tinted(color):
-            return tuple(round(base + (channel - base) * opacity)
-                         for base, channel in zip(background, color))
-
+        alpha = round(255 * opacity)
         theme = game.level.hint
-        width = view.text_width(theme, 32) + 48
-        left = (WIDTH - width) // 2
-        y = BOARD_TOP + 20
-        bevel((left, y - 23, left + width, y + 23), tinted((27, 38, 40)), tinted((121, 111, 75)))
-        view.text(left + 24, y, theme, 32, tinted(INK))
+        x, y = WIDTH // 2, HEIGHT // 2
+        half_width = (view.text_width(theme, 32) + 1) // 2 + 24
+        with alpha_blend():
+            bevel((x - half_width, y - 23, x + half_width, y + 23),
+                  (27, 38, 40, alpha), (121, 111, 75, alpha))
+        view.centered(x, y, theme, 32, (*INK, alpha))
 
     def draw_result(self, view, game, index, total, elapsed):
         fade_to_black(.64)

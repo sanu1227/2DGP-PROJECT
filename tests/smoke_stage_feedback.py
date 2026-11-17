@@ -13,7 +13,6 @@ from game import view
 from game.levels import load_levels
 from game.model import Game
 from game.stage_feedback import StageFeedback, ENTRY_SECONDS, ENTRY_FADE_SECONDS, INK
-from game.themes import room_background, scene_for
 from tests.smoke_onboarding import capture
 from tests.smoke_play_menu import key, click, pixels
 from tests.solutions import SOLUTIONS
@@ -53,14 +52,20 @@ def render_checks(levels):
             assert initial == pixels(), "메뉴 대기 중 입장 연출 시간이 소모됨"
             display.resume()
         halfway = feedback.entered_at + display.clock.offset + ENTRY_SECONDS - ENTRY_FADE_SECONDS / 2
-        with patch.object(view, "perf_counter", return_value=halfway), patch.object(display, "text") as labels:
-            feedback.draw(display, game, 3, len(levels))
+        with patch.object(view, "perf_counter", return_value=halfway):
+            display.draw(game, 3, len(levels))
+            board = pixels()
+            with patch.object(display, "text", wraps=display.text) as labels:
+                feedback.draw(display, game, 3, len(levels))
             theme, = labels.call_args_list
-            assert theme.args[2] == game.level.hint
-            color = theme.args[4]
-            background = room_background(scene_for(game.level))
-            for faded, base, full in zip(color, background, INK):
-                assert abs(faded - (base + full) / 2) <= .5
+            x, y, value, size, color = theme.args
+            assert value == game.level.hint
+            assert x + display.text_width(value, size) / 2 == view.WIDTH / 2
+            assert y == view.HEIGHT / 2 and color[:3] == INK
+            assert abs(color[3] - 127.5) <= .5
+            sample = 4 * ((view.HEIGHT - 1 - y) * view.WIDTH + int(x) - 12)
+            for faded, base, full in zip(pixels()[sample:sample + 3], board[sample:sample + 3], (27, 38, 40)):
+                assert abs(faded - (base + full) / 2) <= 2, (faded, base, full)
         with patch.object(view, "perf_counter", return_value=110 + ENTRY_SECONDS), patch.object(feedback, "draw_entry") as entry:
             feedback.draw(display, game, 3, len(levels))
             entry.assert_not_called()

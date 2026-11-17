@@ -609,7 +609,23 @@ class View:
         return self.device_progress(self.plate_motions, pos, target, now, PLATE_SECONDS)
 
     def text(self, x, y, value, size=18, color=INK):
-        self.fonts[size].draw(x, y, str(value), color)
+        font = self.fonts[size]
+        if len(color) == 3:
+            font.draw(x, y, str(value), color)
+            return
+
+        red, green, blue, alpha = color
+        surface = p.TTF_RenderUTF8_Blended(font.font, str(value).encode("utf-8"), p.SDL_Color(red, green, blue, 255))
+        if not surface:
+            return
+        try:
+            texture = p.SDL_CreateTextureFromSurface(p.renderer, surface)
+        finally:
+            p.SDL_FreeSurface(surface)
+        if texture:
+            image = p.Image(texture)
+            p.SDL_SetTextureAlphaMod(texture, alpha)
+            image.draw(x + image.w / 2, y)
 
     def text_width(self, value, size):
         width = ctypes.c_int()
