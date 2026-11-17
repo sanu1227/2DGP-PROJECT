@@ -111,7 +111,7 @@ def input_checks(levels):
         ([key(p.SDLK_ESCAPE)], 0, True),
         ([key(p.SDLK_ESCAPE)], 0, True),
         ([click(800, 272), key(p.SDLK_d)], 1, False),
-        ([], 1, False),
+        ([key(p.SDLK_ESCAPE), key(p.SDLK_d)], 1, False),
         ([key(p.SDLK_8)], 7, True),
         ([], 7, True),
         ([click(800, 272), key(p.SDLK_d)], 0, False),

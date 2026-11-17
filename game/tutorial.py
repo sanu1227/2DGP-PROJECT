@@ -67,17 +67,20 @@ def device_lessons(level: Level, state: State | None = None) -> tuple[DeviceLess
          "수신기에 닿으면 연결문이 열려요. 벽·잔해·초소의 병사·광원은 빛을 막아요.", mirrors),
         ("helper", "발걸음을 따라가는 해골 인부", "기록 발판을 밟고 표시된 칸 수만큼 자유롭게 이동하세요.",
          "기록석마다 한 번 기록해요. 인부가 발판 위에 머무르면 연결된 문도 열린 채로 유지돼요.", level.jobs)):
-        if kind == "mirror" and level.movable_mirrors:
+        if kind == "mirror":
             movable = level.movable_mirrors if state is None else state.movable_mirrors
-            targets = ((min(movable), "이동 거울"),)
-            if rubble:
-                targets += ((min(rubble), "빛을 막는 잔해"),)
-            lessons.append(DeviceLesson(
-                kind, "거울과 잔해로 광로 조절",
-                "빈손으로 이동 거울 쪽 방향키를 누르면 밀어요. 거울 옆에서 E / Space로 돌리세요.",
-                "잔해는 빛을 막아요. 방향키로 잔해를 광로 밖에 밀어내면 수신기에 닿은 빛이 문을 열어요.",
-                targets))
-        elif cells:
+            if movable:
+                targets = ((min(movable), "이동 거울"),)
+                if rubble:
+                    targets += ((min(rubble), "빛을 막는 잔해"),)
+                lessons.append(DeviceLesson(
+                    kind, "거울과 잔해로 광로 조절",
+                    "빈손으로 이동 거울 쪽 방향키를 누르면 밀어요. 거울 옆에서 E / Space로 돌리세요.",
+                    "잔해는 빛을 막아요. 방향키로 잔해를 광로 밖에 밀어내면 수신기에 닿은 빛이 문을 열어요.",
+                    targets))
+            cells = cells - movable
+            kind, title = "fixed_mirror", "고정 거울로 빛 돌리기"
+        if cells:
             lessons.append(DeviceLesson(kind, title, instruction, reminder, ((min(cells), title),)))
     if rubble and len(level.sources) > 1 and len(level.receivers) > 1:
         links = tuple((control, gate) for gate, control in sorted(level.gates.items())
@@ -90,6 +93,18 @@ def device_lessons(level: Level, state: State | None = None) -> tuple[DeviceLess
             "반대편으로 돌아가 블록을 다시 밀면 열린 문이 바뀌어요. 운반 중에는 뼈를 잠시 내려놓으세요.",
             targets, links))
     return tuple(lessons)
+
+
+def device_introductions(levels):
+    """각 장치의 첫 등장 방에 입장 안내를 배정한다."""
+    known = set()
+    introductions = {}
+    for level in levels:
+        lessons = device_lessons(level)
+        introductions[level.id] = tuple(lesson for lesson in lessons if lesson.kind not in known
+                                        and (level.id, lesson.kind) != ("stage_01", "trap"))
+        known.update(lesson.kind for lesson in lessons)
+    return introductions
 
 
 def first_room_hint(game: Game) -> TutorialHint | None:

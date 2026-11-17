@@ -176,7 +176,7 @@ def main():
         ([p.SDLK_BACKSPACE], "playing", len(SOLUTIONS["stage_01"]) - 1, None),
         ([p.SDLK_a], "playing", len(SOLUTIONS["stage_01"]), None),
         ([p.SDLK_SPACE], "playing", 0, None, "stage_02"),
-        ([], "playing", 0, None, "stage_02"),
+        ([p.SDLK_ESCAPE], "playing", 0, None, "stage_02"),
         ([p.SDLK_1], "playing", 0, None),
         (["close"], "playing", 0, None),
     ])

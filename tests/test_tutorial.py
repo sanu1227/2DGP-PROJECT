@@ -6,7 +6,7 @@ import unittest
 from game.levels import load_levels
 from game.model import Game
 from game.navigation import ClickNavigator
-from game.tutorial import first_room_hint
+from game.tutorial import device_introductions, first_room_hint
 from tests.test_game import SOLUTIONS
 
 
@@ -78,6 +78,12 @@ class TutorialTests(unittest.TestCase):
         self.assertEqual(first_room_hint(game), initial)
         for level in load_levels()[1:]:
             self.assertIsNone(first_room_hint(Game(level)))
+
+    def test_device_introductions_follow_first_appearance(self):
+        introductions = device_introductions(load_levels())
+        self.assertEqual([tuple(lesson.kind for lesson in pages) for pages in introductions.values()],
+                         [(), ("assembly",), (), ("plate", "rubble"), ("chute", "mirror"),
+                          ("beam_switch",), ("helper",), ("fixed_mirror",)])
 
 
 if __name__ == "__main__":

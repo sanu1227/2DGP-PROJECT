@@ -40,6 +40,7 @@ class PlayMenu:
         self.mode = None
         self.selected = 0
         self.room = None
+        self.introduced_rooms = set()
         self.lessons = ()
         self.pages = ()
         self.page_index = 0
@@ -66,11 +67,20 @@ class PlayMenu:
         view.resume()
         view.mouse_position = None
 
-    def offer(self, game, view):
+    def offer(self, game, view, *, intro_pages=()):
         if self.room is game:
             return
         self.room = game
         self.lessons = device_lessons(game.level)
+        if intro_pages and game.level.id not in self.introduced_rooms:
+            self.introduced_rooms.add(game.level.id)
+            self.start_guide(intro_pages, "playing")
+            view.pause()
+            view.mouse_position = None
+
+    def start_guide(self, pages, return_mode):
+        self.pages, self.page_index = pages, 0
+        self.mode, self.selected, self.return_mode = "device", 0, return_mode
 
     def finish_guide(self):
         if self.return_mode == "controls":
@@ -84,7 +94,10 @@ class PlayMenu:
             return catalog_buttons()
         if self.mode == "device":
             left, bottom, right, _ = self.guide_card
-            label = "안내 마치기" if self.page_index == len(self.pages) - 1 else "다음 장치"
+            if self.page_index == len(self.pages) - 1:
+                label = "작업 시작" if self.return_mode == "playing" else "안내 마치기"
+            else:
+                label = "다음 장치"
             return (Button("guide_next", label, (left + 22, bottom + 24, left + 226, bottom + 80)),
                     Button("guide_skip", "건너뛰기", (left + 242, bottom + 24, right - 22, bottom + 80)))
         if self.mode == "controls":
@@ -110,8 +123,7 @@ class PlayMenu:
             self.page_index += 1
             self.selected = 0
         elif action == "devices":
-            self.pages, self.page_index = self.lessons, 0
-            self.mode, self.selected, self.return_mode = "device", 0, "controls"
+            self.start_guide(self.lessons, "controls")
         elif action == "controls":
             self.mode, self.selected = "controls", 0
         elif action == "back":

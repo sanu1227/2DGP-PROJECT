@@ -85,7 +85,11 @@ def input_checks(levels):
     frame = -1
     original_update = p.update_canvas
     batches = [
-        ([], None, "stage_04"),
+        ([], "device", "stage_04"),
+        ([key(p.SDLK_d), key(p.SDLK_e), click(100, 100)], "device", "stage_04"),
+        ([key(p.SDLK_RETURN), key(p.SDLK_d)], "device", "stage_04"),
+        ([key(p.SDLK_SPACE), key(p.SDLK_d)], None, "stage_04"),
+        ([key(p.SDLK_r)], None, "stage_04"),
         ([key(p.SDLK_5)], None, "stage_05"),
         ([key(p.SDLK_4)], None, "stage_04"),
         ([key(p.SDLK_ESCAPE)], "pause", "stage_04"),
@@ -120,6 +124,11 @@ def input_checks(levels):
             assert menus[-1].mode == mode, (frame, menus[-1].mode, mode)
             assert games[-1].level.id == stage
             assert games[-1].state.moves == 0 and not games[-1].history
+            if frame < 3:
+                assert [page.kind for page in menus[-1].pages] == ["plate", "rubble"]
+                assert menus[-1].page_index == (1 if frame == 2 else 0)
+                expected = "작업 시작" if frame == 2 else "다음 장치"
+                assert menus[-1].buttons[0].label == expected
         original_update()
 
     with patch.object(view, "Game", ObservedGame), patch.object(view, "PlayMenu", ObservedMenu), \
@@ -200,7 +209,7 @@ def main():
     render_checks(levels, args.capture_dir, top_down=args.top_down)
     input_checks(levels)
     first_room_checks(levels)
-    print("Device guide smoke OK: no automatic pop-up, non-overlapping manual spotlights/labels/cards, glyphs, skip/replay, undo/restart, full first-room clear and input isolation.")
+    print("Device guide smoke OK: new devices before play, non-overlapping spotlights/labels/cards, glyphs, skip/replay, undo/restart, full first-room clear and input isolation.")
 
 
 if __name__ == "__main__":
