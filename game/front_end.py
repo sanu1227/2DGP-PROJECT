@@ -128,7 +128,7 @@ class FrontEnd:
         if self.screen == "rooms":
             return tuple(
                 Button(f"room:{index}", f"{index + 1:02d}   {level.title}",
-                       (470, 760 - row * 65, 1130, 816 - row * 65))
+                       (400, 760 - row * 65, 1200, 816 - row * 65))
                 for row, (index, level) in enumerate(self.cleared_rooms)
             ) + (Button("title", "타이틀로", (650, 106, 950, 162)),)
         if self.screen == "story":
@@ -269,6 +269,8 @@ class FrontEnd:
         elif self.screen == "rooms":
             panel((0, 0, WIDTH - 1, HEIGHT - 1), (14, 24, 26))
             view.centered(800, 895, "복구한 방", 48, GOLD)
+            view.centered(920, 841, "내 최고 기록", 16, MUTED)
+            view.centered(1090, 841, "최단 횟수", 16, MUTED)
         else:
             self.draw_controls(view)
         for index, button in enumerate(self.buttons):
@@ -281,6 +283,15 @@ class FrontEnd:
             p.draw_line(left + 12, top - 3, right - 12, top - 3, *edge)
             size = 32 if button.action == "story" else 22
             x, y = (left + right) / 2, (bottom + top) / 2
+            if self.screen == "rooms" and button.action.startswith("room:"):
+                level = self.levels[int(button.action.split(":")[1])]
+                best = self.progress.records[level.id]
+                minimum = level.minimum_actions
+                view.text(left + 30, y, button.label, 22, INK)
+                view.centered(920, y, f"{best}회" if best is not None else "기록 없음", 18,
+                              TEAL if best is not None else MUTED)
+                view.centered(1090, y, f"{minimum}회" if minimum is not None else "—", 18, GOLD)
+                continue
             view.centered(x + 1, y - 2, button.label, size, (10, 21, 22))
             view.centered(x, y, button.label, size, INK if focused else MUTED)
         if self.screen == "title" and self.title_fade_in:

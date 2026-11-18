@@ -2,6 +2,7 @@
   "stages": [
     {
       "id": "stage_01",
+      "minimum_actions": 14,
       "action_limit": null,
       "title": "무너진 정비실",
       "hint": "고친 장치는 건널 수 있다. 한 번 가동하면 돌아가는 길이 달라진다.",
@@ -16,6 +17,7 @@
     },
     {
       "id": "stage_02",
+      "minimum_actions": 28,
       "action_limit": 43,
       "title": "왕실 납골당",
       "hint": "흩어진 것은 한곳에 모여야 제 몫을 한다.",
@@ -32,6 +34,7 @@
     },
     {
       "id": "stage_03",
+      "minimum_actions": 55,
       "action_limit": 65,
       "title": "봉인된 마력 서고",
       "hint": "병사를 배치하거나 함정을 가동하기 전에 돌아갈 길을 확인하세요.",
@@ -48,6 +51,7 @@
     },
     {
       "id": "stage_04",
+      "minimum_actions": 74,
       "title": "지하 감옥",
       "hint": "닫힌 문에도 무게는 전해진다.",
       "map": [
@@ -102,6 +106,7 @@
     },
     {
       "id": "stage_05",
+      "minimum_actions": 64,
       "title": "이끼 배수로",
       "hint": "벽 너머에도 이어지는 길이 있다.",
       "map": [
@@ -178,6 +183,7 @@
     },
     {
       "id": "stage_06",
+      "minimum_actions": 99,
       "title": "마력 중계실",
       "hint": "그림자가 옮겨가면 열린 길도 달라진다.",
       "map": [
@@ -250,6 +256,7 @@
     },
     {
       "id": "stage_07",
+      "minimum_actions": 53,
       "title": "왕실 보물창고",
       "hint": "발자국만큼이나 도착하는 순간도 중요하다.",
       "map": [
@@ -333,6 +340,7 @@
     },
     {
       "id": "stage_08",
+      "minimum_actions": 76,
       "title": "마왕의 왕좌실",
       "hint": "일이 끝나도 빛은 길을 비춘다.",
       "map": [

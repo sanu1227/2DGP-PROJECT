@@ -14,6 +14,11 @@ class InspectionTests(TestCase):
         self.view.inspected = None
         self.view.top_down = True
         self.view.text = Mock()
+        self.view.text_width = Mock(return_value=78)
+        self.view.centered = Mock()
+        self.view.echo_motion = Mock()
+        self.view.echo_motion.pose.return_value = None
+        self.view.now = Mock(return_value=0)
         self.view.tile_outline = Mock()
 
     def test_receiver_and_gate_select_same_link(self):
@@ -39,6 +44,11 @@ class InspectionTests(TestCase):
             self.fail("풀이에서 재생 중인 인부를 찾지 못했습니다.")
         self.view.inspect_cell(game, echo.position)
         self.assertEqual(self.view.inspected, ("worker", echo.origin))
-        with patch("game.view.bevel"), patch("game.view.box"), patch("game.view.draw_direction_arrow") as arrow:
+        with patch("game.view.bevel"), patch("game.view.line"), patch("game.view.draw_direction_arrow") as arrow:
             self.view.draw_inspection(game)
             self.assertEqual(arrow.call_args.args[2], echo.remaining[0])
+            self.assertEqual(self.view.centered.call_args.args[2], f"{len(echo.remaining)}걸음 남음")
+            px, py = self.view.projection(game.level).screen(echo.position)
+            x, y = self.view.centered.call_args.args[:2]
+            self.assertLess(abs(x - px), 20)
+            self.assertLess(abs(y - py), 100)

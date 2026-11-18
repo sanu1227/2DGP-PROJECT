@@ -14,6 +14,7 @@ class BalanceTests(unittest.TestCase):
         for index, level in enumerate(load_levels()):
             minimum = MINIMUM_ACTIONS[level.id]
             with self.subTest(stage=level.id):
+                self.assertEqual(level.minimum_actions, minimum)
                 if index == 0:
                     self.assertIsNone(level.action_limit)
                 else:

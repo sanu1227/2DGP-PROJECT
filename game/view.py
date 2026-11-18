@@ -1507,24 +1507,34 @@ class View:
             status = "빛 수신 중" if powered else "빛 수신 대기"
             gate_status = {"open": "열림", "held": "닫힘 대기", "closed": "닫힘"}[game.gate_status(gate)]
             detail, color = f"연결문 {gate_status}", TEAL if powered else GOLD
-            direction = None
         else:
-            title, color = "해골 인부", GOLD
             echo = state.echo
             active = echo and echo.origin == origin
             direction = echo.remaining[0] if active and echo.remaining else None
-            status = "다음 행동" if direction else "기록 중" if state.recording and state.recording.origin == origin else "대기 중"
             detail = (f"{len(echo.remaining)}걸음 남음" if direction else
-                      "기록한 발걸음 완료" if origin in state.recorded_stations else "기록 발판에서 시작")
+                      "재생 완료" if origin in state.recorded_stations else
+                      "기록 중" if state.recording and state.recording.origin == origin else "기록 대기")
             pos = echo.position if active else state.replay_workers[origin]
             board = self.projection(level)
-            self.tile_outline(board, *board.screen(pos), board.half_width - 4, int(board.half_height) - 4, color)
+            self.tile_outline(board, *board.screen(pos), board.half_width - 4, int(board.half_height) - 4, GOLD)
+            pose = self.echo_motion.pose(game, self.now()) if active else None
+            x, y = board.screen(pose[0] if pose else pos)
+            half = max(62, self.text_width(detail, 16) / 2 + (26 if direction else 16))
+            center = round(max(half + 16, min(WIDTH - half - 16, x)))
+            gap = max(30, board.half_width * .65)
+            below = y + gap + 38 > HEIGHT - 94
+            edge = round(y - gap if below else y + gap)
+            bottom = edge - 34 if below else edge
+            bevel((round(center - half), bottom, round(center + half), bottom + 34), HUD_FILL, GOLD)
+            line(center, edge, center, edge + (7 if below else -7), GOLD)
+            if direction:
+                draw_direction_arrow(center - half + 19, bottom + 17, direction, GOLD)
+            self.centered(center + (12 if direction else 0), bottom + 17, detail, 16, INK)
+            return
         bevel((32, 682, 278, 832), HUD_FILL, HUD_EDGE)
         box(42, 698, 45, 816, color)
         self.text(58, 804, title, 22, INK)
         self.text(58, 770, status, 18, color)
-        if direction:
-            draw_direction_arrow(153, 770, direction, color)
         self.text(58, 742, detail, 18, INK)
         self.text(58, 708, "우클릭  고정 해제", 16, MUTED)
 
@@ -1729,8 +1739,8 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True, top_down=False, 
                     view.animate_move(game, previous, action)
                     view.animate_devices(game, previous)
             if front_end.screen == "playing":
-                if track_progress and game.state.cleared and saved_clear is not game.state:
-                    progress.complete(game.level.id)
+                if (track_progress or feedback.replay) and game.state.cleared and saved_clear is not game.state:
+                    progress.complete(game.level.id, game.state.moves)
                     saved_clear = game.state
                 feedback.update(game, now)
                 view.tutorial_hidden = play_menu.mode == "device"

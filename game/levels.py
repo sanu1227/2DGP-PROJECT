@@ -41,6 +41,7 @@ class Level:
     rubble: frozenset[Pos] = frozenset()
     jobs: frozenset[Pos] = frozenset()
     action_limit: int | None = None
+    minimum_actions: int | None = None
     echo_links: dict[Pos, tuple[dict[Pos, Pos], int]] = field(default_factory=dict)
     timed_echoes: frozenset[Pos] = frozenset()
     replay_workers: dict[Pos, Pos] = field(default_factory=dict)
@@ -168,11 +169,14 @@ def load_levels(path: Path | str | None = None) -> list[Level]:
     for index, raw in enumerate(stages, start=1):
         prefix = f"스테이지 {index}: "
         required = {"id", "title", "hint", "map"}
-        optional = {"plate_links", "chute_links", "action_limit", "power_links", "worker_links",
+        optional = {"plate_links", "chute_links", "action_limit", "minimum_actions", "power_links", "worker_links",
                     "magic_sources", "mirror_directions", "rubble_track"}
         if not isinstance(raw, dict) or not required <= set(raw) or set(raw) - required - optional:
             raise ValueError(prefix + "id, title, hint, map 필드가 필요합니다.")
         action_limit = raw.get("action_limit")
+        minimum_actions = raw.get("minimum_actions")
+        if minimum_actions is not None and (type(minimum_actions) is not int or minimum_actions <= 0):
+            raise ValueError(prefix + "minimum_actions는 양의 정수여야 합니다.")
         if action_limit is not None and (type(action_limit) is not int or action_limit <= 0):
             raise ValueError(prefix + "action_limit는 양의 정수 또는 null이어야 합니다.")
         if any(not isinstance(raw[key], str) or not raw[key].strip() for key in ("id", "title", "hint")):
@@ -262,7 +266,7 @@ def load_levels(path: Path | str | None = None) -> list[Level]:
             walls=positions["#"], traps=positions["T"], levers=positions["L"],
             benches=positions["A"], posts=positions["S"], initial_items=items,
             plates=positions["F"], gates=gates, device_labels=labels,
-            chutes=chutes, action_limit=action_limit,
+            chutes=chutes, action_limit=action_limit, minimum_actions=minimum_actions,
             mirrors=mirrors, sources=sources, receivers=positions["Y"], movable_mirrors=positions["N"],
             rubble=positions["R"], jobs=positions["J"], echo_links=echo_links, timed_echoes=timed_echoes,
             replay_workers=replay_workers, mirror_directions=mirror_directions, rubble_track=track,
