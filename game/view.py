@@ -1614,6 +1614,9 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True, top_down=False, 
                 feedback.replay = False
                 front_end.activate("rooms")
                 return
+            if game.level.id == "stage_04":
+                front_end.activate("midpoint")
+                return
             select_room(index + 1)
 
         def restart_room():
@@ -1665,6 +1668,8 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True, top_down=False, 
                         select_room(progress.checkpoint, replay_intro=True)
                         track_progress = True
                         feedback.replay = False
+                    elif result == "midpoint_continue":
+                        select_room(index + 1)
                     elif result and result.startswith("room:"):
                         select_room(int(result.split(":")[1]), replay_intro=True)
                         track_progress = False

@@ -1,4 +1,4 @@
-"""오프닝과 엔딩의 네 컷 만화 대사와 재생 상태."""
+"""오프닝, 중간 이야기, 엔딩의 네 컷 만화 대사와 재생 상태."""
 from dataclasses import dataclass
 from game.character_motion import MOTION_END
 
@@ -6,7 +6,7 @@ from game.character_motion import MOTION_END
 class StoryPage:
     atlas: str
     cell: int
-    dialogue: tuple[tuple[str, ...], tuple[str, ...]]
+    dialogue: tuple[tuple[str, ...], ...]
     effect: str
 
 STORY = (
@@ -26,6 +26,23 @@ STORY = (
         ("마왕 (상사)", "함정이랑 병사들,", "내일까지 고쳐 놔!"),
         ("수리공 (당신)", "네... 수리할게요.", "제 퇴근도 고쳐줘요."),
     ), "야근 확정!"),
+)
+
+MIDPOINT = (
+    StoryPage("midpoint_gate", 0, (
+        ("수리공", "좋아, 네 구역 끝.", "이제 퇴근인가?"),
+        ("해골 병사", "철문도 이제", "잘 열리네요!"),
+    ), "철컥!"),
+    StoryPage("midpoint_checklist", 0, (
+        ("수리공", "잠깐, 뒷면에도", "네 칸이 있잖아."),
+        ("해골 병사", "반장님, 이거", "양면이에요."),
+    ), "팔락!"),
+    StoryPage("midpoint_light", 0, (
+        ("수리공", "빛이 또 꺼졌네.", "불부터 살려야겠어."),
+    ), "깜빡"),
+    StoryPage("midpoint_toolbox", 0, (
+        ("수리공", "공구함아, 너도", "퇴근인 줄 알았지?"),
+    ), "영차!"),
 )
 
 ENDING = (
@@ -49,6 +66,7 @@ ENDING = (
 
 # 짧은 컷은 바로 이어지고, 수리공 컷만 한숨을 마칠 시간을 확보한다.
 PANEL_DURATIONS = (3.5, 3.5, 5.0, 3.5)
+MIDPOINT_DURATIONS = (4.0, 4.5, 4.5, 4.5)
 ENDING_DURATIONS = (4.5, 5.0, 5.0, 5.0)
 BALLOON_DELAYS = (0.55, 1.8)
 REVEAL_SECONDS = MOTION_END

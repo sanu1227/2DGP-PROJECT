@@ -64,6 +64,10 @@ def main():
         expect(len(SOLUTIONS[levels[-1].id]), cleared=True, stage=len(levels) - 1)
         assert menus[-1].screen == "ending" and menus[-1].story_page == 0
 
+    def expect_midpoint(page):
+        expect(len(SOLUTIONS["stage_04"]), cleared=True, stage=3)
+        assert menus[-1].screen == "midpoint" and menus[-1].story_page == page
+
     def expect(moves, carrying=None, cleared=False, stage=0):
         game = games[-1]
         assert game.level.id == levels[stage].id
@@ -106,8 +110,14 @@ def main():
         steps.append((p.SDLK_RETURN, lambda count=len(actions), stage=index: expect(count, cleared=True, stage=stage)))
         next_key = p.SDLK_e if index % 2 == 0 else p.SDLK_SPACE
         # Inputs from the same event batch must not act in the newly opened room.
-        expected = expect_ending if index + 1 == len(levels) else lambda stage=index + 1: expect(0, stage=stage)
-        steps.append(((next_key, p.SDLK_d, p.SDLK_SPACE), expected))
+        if level.id == "stage_04":
+            steps.append(((next_key, p.SDLK_d, p.SDLK_SPACE), lambda: expect_midpoint(0)))
+            for page in range(1, 4):
+                steps.append((p.SDLK_RIGHT, lambda page=page: expect_midpoint(page)))
+            steps.append(((p.SDLK_RETURN, p.SDLK_d), lambda: expect(0, stage=4)))
+        else:
+            expected = expect_ending if index + 1 == len(levels) else lambda stage=index + 1: expect(0, stage=stage)
+            steps.append(((next_key, p.SDLK_d, p.SDLK_SPACE), expected))
     steps.append(("close", None))
 
     original_events = p.get_events
@@ -152,7 +162,7 @@ def main():
         view.run(levels, show_title=False, top_down=args.top_down)
     assert not steps
     assert len(games) == 2 * len(levels) + 1
-    print(f"Native SDL smoke OK: {len(levels)} clears, coordinates/F2, shortcuts 1-{len(levels)}, E/Space drop and next/ending, Q/B/Enter ignored, transition input isolation, undo, restart, window close.")
+    print(f"Native SDL smoke OK: {len(levels)} clears, coordinates/F2, room shortcuts, midpoint comic to room 5, ending, input isolation, undo, restart, window close.")
 
 
 if __name__ == "__main__":

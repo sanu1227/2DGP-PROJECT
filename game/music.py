@@ -9,7 +9,8 @@ TRACKS = {
     "title": BGM_ROOT / "Dungeon Title Theme.mp3",
     "playing": BGM_ROOT / "Interlocking Gears.mp3",
 }
-SCREEN_TRACKS = {"title": "title", "rooms": "title", "controls": "title", "ending": "title", "playing": "playing"}
+SCREEN_TRACKS = {"title": "title", "rooms": "title", "controls": "title", "ending": "title",
+                 "playing": "playing", "midpoint": "playing"}
 # SDL 음악 음량 범위는 0~128. 안내·일시정지에서는 플레이 음량을 절반으로 낮춘다.
 VOLUMES = {"title": 48, "playing": 40}
 FADE_IN_MS = 500

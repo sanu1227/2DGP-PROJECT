@@ -1,9 +1,11 @@
 """네 컷 순차 재생과 읽기·되돌아보기 동작을 화면 없이 검사한다."""
 
 import unittest
+from types import SimpleNamespace
 
+import pico2d.pico2d as p
 from game.front_end import FrontEnd
-from game.story import ComicPlayback, ENDING, ENDING_DURATIONS, PANEL_DURATIONS, REVEAL_SECONDS, STORY
+from game.story import ComicPlayback, ENDING, ENDING_DURATIONS, MIDPOINT_DURATIONS, PANEL_DURATIONS, REVEAL_SECONDS, STORY
 
 
 class ComicTests(unittest.TestCase):
@@ -73,6 +75,22 @@ class ComicTests(unittest.TestCase):
         for _ in ENDING:
             menu.activate("story_next")
         self.assertEqual(menu.screen, "rooms")
+
+    def test_midpoint_last_panel_or_skip_resumes_the_campaign(self):
+        menu = FrontEnd()
+        self.addCleanup(menu.close)
+        menu.activate("midpoint")
+        self.assertEqual(menu.buttons[1].label, "건너뛰기")
+        menu.update(menu.story_clock + sum(MIDPOINT_DURATIONS) + 1)
+        self.assertEqual(menu.screen, "midpoint")
+        self.assertEqual(menu.buttons[0].label, "5번 방으로")
+        self.assertEqual(menu.activate("story_next"), "midpoint_continue")
+        self.assertEqual(menu.screen, "playing")
+        menu.activate("midpoint")
+        self.assertEqual(menu.story_page, 0)
+        escape = SimpleNamespace(type=p.SDL_KEYDOWN, key=p.SDLK_ESCAPE)
+        self.assertEqual(menu.handle(escape), "midpoint_continue")
+        self.assertEqual(menu.screen, "playing")
 
 
 if __name__ == "__main__":

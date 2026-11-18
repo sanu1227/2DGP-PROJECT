@@ -6,7 +6,7 @@ from math import sin, sqrt
 import pico2d.pico2d as p
 
 from game.layout import HEIGHT, WIDTH
-from game.story import BALLOON_DELAYS, ENDING, STORY
+from game.story import BALLOON_DELAYS, ENDING, MIDPOINT, STORY
 from game.comic_motion import draw_actors
 from game.comic_effects import CAMERA_MARGIN, draw_effects, sample_impact
 from game.character_motion import EXHALE_START
@@ -14,12 +14,18 @@ from game.character_motion import EXHALE_START
 
 PANEL_BOUNDS = ((254, 516, 790, 918), (810, 516, 1346, 918),
                 (254, 94, 790, 496), (810, 94, 1346, 496))
-ENDING_BOUNDS = ((90, 516, 790, 918), (810, 516, 1510, 918),
-                 (90, 94, 790, 496), (810, 94, 1510, 496))
+WIDE_BOUNDS = ((90, 516, 790, 918), (810, 516, 1510, 918),
+               (90, 94, 790, 496), (810, 94, 1510, 496))
+COMIC_PAGES = {
+    "story": (STORY, PANEL_BOUNDS, "오늘도 야근"),
+    "midpoint": (MIDPOINT, WIDE_BOUNDS, "퇴근까지 절반"),
+    "ending": (ENDING, WIDE_BOUNDS, "오늘의 야근은 여기까지"),
+}
 DIALOGUE_SIZE = 22
 INK = (29, 35, 35)
 PAPER = (239, 227, 201)
 GOLD = (239, 193, 103)
+MIDPOINT_LIGHT_OUT = 1.0
 
 
 def ease(value):
@@ -86,7 +92,7 @@ def draw_picture(load_image, bounds, age, index):
         p.SDL_RenderSetClipRect(p.renderer, byref(previous) if enabled else None)
 
 
-def draw_ending_picture(load_image, image_name, bounds, age):
+def draw_full_panel(load_image, image_name, bounds, age):
     left, bottom, right, top = bounds
     art_top = top - 100
     image = load_image(image_name)
@@ -103,14 +109,14 @@ def draw_ending_picture(load_image, image_name, bounds, age):
         image.opacify(1)
 
 
-def draw_comic_page(view, playback, load_image, *, ending=False):
-    story, panels = (ENDING, ENDING_BOUNDS) if ending else (STORY, PANEL_BOUNDS)
+def draw_comic_page(view, playback, load_image, *, scene="story"):
+    story, panels, title = COMIC_PAGES[scene]
     page_left, page_right = panels[0][0] - 20, panels[1][2] + 16
     p.draw_rectangle(0, 0, WIDTH, HEIGHT, 17, 30, 34, filled=True)
     # 넓은 여백과 굵은 먹선으로 한 장의 만화책처럼 묶는다.
     p.draw_rectangle(page_left + 7, 82, page_right + 7, 932, 7, 17, 20, filled=True)
     p.draw_rectangle(page_left, 88, page_right, 934, *PAPER, filled=True)
-    view.centered(800, 946, "오늘의 야근은 여기까지" if ending else "오늘도 야근", 22, GOLD)
+    view.centered(800, 946, title, 22, GOLD)
     for index, (page, bounds) in enumerate(zip(story, panels)):
         left, bottom, right, top = bounds
         p.draw_rectangle(left - 4, bottom - 4, right + 4, top + 4, *INK, filled=True)
@@ -118,18 +124,22 @@ def draw_comic_page(view, playback, load_image, *, ending=False):
         age = playback.age(index)
         if age is None:
             continue
-        if ending:
-            draw_ending_picture(load_image, page.atlas, bounds, age)
-        else:
+        light_panel = page.atlas == "midpoint_light"
+        if scene == "story":
             draw_picture(load_image, bounds, age, index)
+        else:
+            image_name = "midpoint_light_off" if light_panel and age >= MIDPOINT_LIGHT_OUT else page.atlas
+            draw_full_panel(load_image, image_name, bounds, age)
         if index == playback.index:
             p.draw_rectangle(left - 2, bottom - 2, right + 2, top + 2, *GOLD)
-        for side, (bounds, words, delay) in enumerate(zip(dialogue_bounds(index, panels), page.dialogue, BALLOON_DELAYS)):
+        delays = (MIDPOINT_LIGHT_OUT + .25,) if light_panel else BALLOON_DELAYS
+        for side, (bounds, words, delay) in enumerate(zip(dialogue_bounds(index, panels), page.dialogue, delays)):
             if age >= delay:
                 bubble(view, bounds, words, (age - delay) / 0.3, side)
-        if age >= 0.2:
-            effect = "하아..." if not ending and index == 2 and age >= EXHALE_START else page.effect
-            pop = ease((age - 0.2) / 0.35)
+        effect_delay = MIDPOINT_LIGHT_OUT if light_panel else .2
+        if age >= effect_delay:
+            effect = "하아..." if scene == "story" and index == 2 and age >= EXHALE_START else page.effect
+            pop = ease((age - effect_delay) / 0.35)
             x = left + (right - left) * 0.58
             y = bottom + 54 + (1 - pop) * 14
             if index == playback.index and age < 1.0:
