@@ -2,7 +2,8 @@
 
 import unittest
 
-from game.story import ComicPlayback, PANEL_DURATIONS, REVEAL_SECONDS, STORY
+from game.front_end import FrontEnd
+from game.story import ComicPlayback, ENDING, ENDING_DURATIONS, PANEL_DURATIONS, REVEAL_SECONDS, STORY
 
 
 class ComicTests(unittest.TestCase):
@@ -53,6 +54,25 @@ class ComicTests(unittest.TestCase):
         comic.reset()
         self.assertEqual((comic.index, comic.elapsed, comic.paused), (0, 0, False))
         self.assertIsNone(comic.age(1))
+
+    def test_ending_stops_on_last_panel_and_replay_returns_to_room_selection(self):
+        menu = FrontEnd()
+        self.addCleanup(menu.close)
+        menu.ending_return = "rooms"
+        menu.activate("ending")
+        menu.update(menu.story_clock + sum(ENDING_DURATIONS) + 1)
+        self.assertEqual(menu.screen, "ending")
+        self.assertEqual(menu.story_page, len(ENDING) - 1)
+        self.assertTrue(menu.ending.finished)
+        self.assertEqual(menu.buttons[0].label, "방 선택으로")
+        menu.activate("story_play")
+        self.assertEqual(menu.story_page, 0)
+        menu.activate("story_next")
+        menu.activate("story_back")
+        self.assertTrue(menu.ending.paused)
+        for _ in ENDING:
+            menu.activate("story_next")
+        self.assertEqual(menu.screen, "rooms")
 
 
 if __name__ == "__main__":

@@ -42,7 +42,7 @@ class StageFeedback:
 
     @staticmethod
     def next_button(index, total, *, replay=False):
-        label = "방 선택으로" if replay else "처음부터 다시" if index + 1 == total else "다음 방으로"
+        label = "엔딩 보기" if index + 1 == total else "방 선택으로" if replay else "다음 방으로"
         return Button("next", label, (600, 240, 1000, 304))
 
     def draw(self, view, game, index, total):

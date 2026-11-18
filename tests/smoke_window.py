@@ -24,6 +24,7 @@ def main():
     levels = load_levels()
     games = []
     displays = []
+    menus = []
     original_initialize = view.View.__init__
 
     def initialize(display):
@@ -53,6 +54,15 @@ def main():
         def __init__(self, level):
             super().__init__(level)
             games.append(self)
+
+    class ObservedFrontEnd(view.FrontEnd):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            menus.append(self)
+
+    def expect_ending():
+        expect(len(SOLUTIONS[levels[-1].id]), cleared=True, stage=len(levels) - 1)
+        assert menus[-1].screen == "ending" and menus[-1].story_page == 0
 
     def expect(moves, carrying=None, cleared=False, stage=0):
         game = games[-1]
@@ -96,8 +106,8 @@ def main():
         steps.append((p.SDLK_RETURN, lambda count=len(actions), stage=index: expect(count, cleared=True, stage=stage)))
         next_key = p.SDLK_e if index % 2 == 0 else p.SDLK_SPACE
         # Inputs from the same event batch must not act in the newly opened room.
-        steps.append(((next_key, p.SDLK_d, p.SDLK_SPACE),
-                      lambda stage=(index + 1) % len(levels): expect(0, stage=stage)))
+        expected = expect_ending if index + 1 == len(levels) else lambda stage=index + 1: expect(0, stage=stage)
+        steps.append(((next_key, p.SDLK_d, p.SDLK_SPACE), expected))
     steps.append(("close", None))
 
     original_events = p.get_events
@@ -136,12 +146,13 @@ def main():
 
     # 자동 장치 안내는 smoke_device_guide에서 별도로 검사한다.
     with patch.object(view.PlayMenu, "offer"), \
-            patch.object(view, "Game", ObservedGame), patch.object(p, "get_events", scripted_events), \
+            patch.object(view, "Game", ObservedGame), patch.object(view, "FrontEnd", ObservedFrontEnd), \
+            patch.object(p, "get_events", scripted_events), \
             patch.object(view.View, "__init__", initialize):
         view.run(levels, show_title=False, top_down=args.top_down)
     assert not steps
-    assert len(games) == 2 * len(levels) + 2
-    print(f"Native SDL smoke OK: {len(levels)} clears, coordinates/F2, shortcuts 1-{len(levels)}, E/Space drop and next/replay, Q/B/Enter ignored, transition input isolation, undo, restart, window close.")
+    assert len(games) == 2 * len(levels) + 1
+    print(f"Native SDL smoke OK: {len(levels)} clears, coordinates/F2, shortcuts 1-{len(levels)}, E/Space drop and next/ending, Q/B/Enter ignored, transition input isolation, undo, restart, window close.")
 
 
 if __name__ == "__main__":

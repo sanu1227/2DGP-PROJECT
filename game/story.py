@@ -1,4 +1,4 @@
-"""왼쪽 위부터 쌓이는 네 컷의 야근 코미디와 재생 상태."""
+"""오프닝과 엔딩의 네 컷 만화 대사와 재생 상태."""
 from dataclasses import dataclass
 from game.character_motion import MOTION_END
 
@@ -28,8 +28,28 @@ STORY = (
     ), "야근 확정!"),
 )
 
+ENDING = (
+    StoryPage("ending_repair", 0, (
+        ("해골 인부", "반장님! 마지막", "장치도 잘 돌아가요!"),
+        ("수리공", "좋아, 여덟 구역", "전부 복구 완료."),
+    ), "철컥!"),
+    StoryPage("ending_hero", 0, (
+        ("수리공", "잠깐, 또 던전을", "정복하러 왔어요?"),
+        ("용사", "아뇨. 두고 간", "장갑만 찾으러요."),
+    ), "머쓱..."),
+    StoryPage("ending_report", 0, (
+        ("수리공", "그럼 이제 제 퇴근도", "승인해 주세요."),
+        ("마왕", "승인! 오늘은", "내가 문단속하마."),
+    ), "쾅!"),
+    StoryPage("ending_dawn", 0, (
+        ("해골 인부", "반장님, 오늘은", "푹 쉬고 오세요!"),
+        ("수리공", "고맙다. 너희도", "작업등 끄고 쉬어."),
+    ), "야근 끝!"),
+)
+
 # 짧은 컷은 바로 이어지고, 수리공 컷만 한숨을 마칠 시간을 확보한다.
 PANEL_DURATIONS = (3.5, 3.5, 5.0, 3.5)
+ENDING_DURATIONS = (4.5, 5.0, 5.0, 5.0)
 BALLOON_DELAYS = (0.55, 1.8)
 REVEAL_SECONDS = MOTION_END
 
@@ -39,14 +59,15 @@ class ComicPlayback:
     index: int = 0
     elapsed: float = 0.0
     paused: bool = False
+    durations: tuple[float, ...] = PANEL_DURATIONS
 
     @property
     def duration(self):
-        return PANEL_DURATIONS[self.index]
+        return self.durations[self.index]
 
     @property
     def finished(self):
-        return self.index == len(STORY) - 1 and self.elapsed >= self.duration
+        return self.index == len(self.durations) - 1 and self.elapsed >= self.duration
 
     def reset(self):
         self.index, self.elapsed, self.paused = 0, 0.0, False
@@ -55,13 +76,13 @@ class ComicPlayback:
         if self.paused:
             return
         self.elapsed += max(0.0, seconds)
-        while self.elapsed >= self.duration and self.index < len(STORY) - 1:
+        while self.elapsed >= self.duration and self.index < len(self.durations) - 1:
             self.elapsed -= self.duration
             self.index += 1
         self.elapsed = min(self.elapsed, self.duration)
 
     def advance(self):
-        if self.index == len(STORY) - 1:
+        if self.index == len(self.durations) - 1:
             return False
         self.index += 1
         self.elapsed = 0.0
@@ -77,4 +98,4 @@ class ComicPlayback:
     def age(self, index):
         if index > self.index:
             return None
-        return PANEL_DURATIONS[index] if index < self.index else self.elapsed
+        return self.durations[index] if index < self.index else self.elapsed

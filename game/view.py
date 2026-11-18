@@ -1605,13 +1605,16 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True, top_down=False, 
             view.inspected = None
 
         def next_room():
+            if index + 1 == len(levels):
+                front_end.ending_return = "rooms" if feedback.replay else "title"
+                feedback.replay = False
+                front_end.activate("ending")
+                return
             if feedback.replay:
                 feedback.replay = False
                 front_end.activate("rooms")
                 return
-            if index + 1 == len(levels):
-                play_menu.introduced_rooms.clear()
-            select_room((index + 1) % len(levels))
+            select_room(index + 1)
 
         def restart_room():
             game.restart()

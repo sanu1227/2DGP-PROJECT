@@ -7,8 +7,8 @@ from time import perf_counter
 import pico2d.pico2d as p
 
 from game.layout import WIDTH, HEIGHT
-from game.story import STORY, ComicPlayback, REVEAL_SECONDS
-from game.comic import PANEL_BOUNDS, draw_comic_page
+from game.story import ENDING, ENDING_DURATIONS, STORY, ComicPlayback, REVEAL_SECONDS
+from game.comic import ENDING_BOUNDS, PANEL_BOUNDS, draw_comic_page
 from game.comic_motion import MOTION_IMAGES
 from game.story_audio import StoryAudio
 from game.title_motion import TITLE_IMAGES, draw_title
@@ -23,6 +23,7 @@ ART_ROOT = Path(__file__).resolve().parents[1] / "assets" / "menu_v2"
 STORY_ROOT = ART_ROOT.parent / "story_overtime_v1"
 STORY_IMAGES = {"overtime_01": STORY_ROOT / "act_01.png",
                 "overtime_02": STORY_ROOT / "act_02.png", **MOTION_IMAGES, **TITLE_IMAGES, **LOGO_IMAGES}
+STORY_IMAGES.update({page.atlas: ART_ROOT.parent / "ending_v1" / f"{page.atlas}.jpg" for page in ENDING})
 
 
 def panel(bounds, color, filled=True):
@@ -63,6 +64,8 @@ class FrontEnd:
         self.logo_clock = None
         self.selected = 0
         self.comic = ComicPlayback()
+        self.ending = ComicPlayback(durations=ENDING_DURATIONS)
+        self.ending_return = "title"
         self.story_clock = None
         self.guide_page = 0
         self.images = {}
@@ -79,7 +82,15 @@ class FrontEnd:
 
     @property
     def story_page(self):
-        return self.comic.index
+        return self.active_comic.index
+
+    @property
+    def active_comic(self):
+        return self.ending if self.screen == "ending" else self.comic
+
+    @property
+    def ending_return_label(self):
+        return "방 선택으로" if self.ending_return == "rooms" else "타이틀로"
 
     def update(self, now):
         if self.screen == "logo":
@@ -88,12 +99,14 @@ class FrontEnd:
             self.logo_clock = now
             if self.logos.finished:
                 self.finish_logos(now)
-        if self.screen == "story" and self.story_clock is not None:
-            self.comic.update(now - self.story_clock)
-            self.audio.update(self.story_page, self.comic.elapsed, self.comic.paused)
+        comic_screen = self.screen in ("story", "ending")
+        if comic_screen and self.story_clock is not None:
+            self.active_comic.update(now - self.story_clock)
+            if self.screen == "story":
+                self.audio.update(self.story_page, self.comic.elapsed, self.comic.paused)
         elif self.screen != "story":
             self.audio.stop()
-        self.story_clock = now if self.screen == "story" else None
+        self.story_clock = now if comic_screen else None
         if self.screen == "title" and self.title_clock is not None:
             self.title_elapsed += max(0, now - self.title_clock)
         self.title_clock = now if self.screen == "title" else None
@@ -131,14 +144,20 @@ class FrontEnd:
                        (400, 760 - row * 65, 1200, 816 - row * 65))
                 for row, (index, level) in enumerate(self.cleared_rooms)
             ) + (Button("title", "타이틀로", (650, 106, 950, 162)),)
-        if self.screen == "story":
-            return (
-                Button("story_next", "작업 안내" if self.story_page == len(STORY) - 1 else "다음 컷", (1260, 30, 1520, 78)),
-                Button("story_back", "타이틀로" if self.story_page == 0 else "이전 컷", (80, 30, 340, 78)),
-                Button("controls", "건너뛰기", (1370, 876, 1540, 924)),
-                Button("story_play", "다시 보기" if self.comic.finished else
-                       "자동재생" if self.comic.paused else "일시정지", (680, 34, 920, 76)),
-            )
+        if self.screen in ("story", "ending"):
+            ending = self.screen == "ending"
+            comic = self.active_comic
+            next_label = self.ending_return_label if ending else "작업 안내"
+            back_label = self.ending_return_label if ending else "타이틀로"
+            buttons = [
+                Button("story_next", next_label if comic.index == len(comic.durations) - 1 else "다음 컷", (1260, 30, 1520, 78)),
+                Button("story_back", back_label if comic.index == 0 else "이전 컷", (80, 30, 340, 78)),
+            ]
+            if not ending:
+                buttons.append(Button("controls", "건너뛰기", (1370, 876, 1540, 924)))
+            buttons.append(Button("story_play", "다시 보기" if comic.finished else
+                                  "자동재생" if comic.paused else "일시정지", (680, 34, 920, 76)))
+            return tuple(buttons)
         if self.screen == "controls":
             return (
                 Button("guide_next", "1번 방 시작" if self.guide_page == 1 else "조작과 복귀", (1260, 44, 1520, 100)),
@@ -162,7 +181,9 @@ class FrontEnd:
                 self.logo_clock = perf_counter()
             return action
         self.selected = 0
-        resuming_story = action == "story_play" and not self.comic.finished
+        comic = self.active_comic
+        comic_return = self.ending_return if self.screen == "ending" else "title"
+        resuming_story = action == "story_play" and not comic.finished
         if action == "title":
             self.screen = "title"
             self.comic.reset()
@@ -171,21 +192,24 @@ class FrontEnd:
         elif action == "story":
             self.screen = "story"
             self.comic.reset()
+        elif action == "ending":
+            self.screen = "ending"
+            self.ending.reset()
         elif action == "rooms":
             self.screen = "rooms"
         elif action == "continue" or action.startswith("room:"):
             self.screen = "playing"
         elif action == "story_next":
-            if not self.comic.advance():
-                self.screen, self.guide_page = "controls", 0
+            if not comic.advance():
+                self.screen, self.guide_page = (comic_return if self.screen == "ending" else "controls"), 0
         elif action == "story_back":
-            if not self.comic.back():
-                self.screen = "title"
+            if not comic.back():
+                self.screen = comic_return
         elif action == "story_play":
-            if self.comic.finished:
-                self.comic.reset()
+            if comic.finished:
+                comic.reset()
             else:
-                self.comic.paused = not self.comic.paused
+                comic.paused = not comic.paused
         elif action == "controls":
             self.screen, self.guide_page = "controls", 0
         elif action == "guide_next":
@@ -203,7 +227,7 @@ class FrontEnd:
                 self.comic.index = len(STORY) - 1
                 self.comic.elapsed = min(REVEAL_SECONDS, self.comic.duration)
                 self.comic.paused = True
-        self.story_clock = perf_counter() if self.screen == "story" else None
+        self.story_clock = perf_counter() if self.screen in ("story", "ending") else None
         if self.screen == "story":
             if resuming_story:
                 self.audio.set_paused(self.comic.paused)
@@ -240,17 +264,20 @@ class FrontEnd:
                         return self.activate(button.action)
                     break
             else:
-                if (self.screen == "story" and event.type == p.SDL_MOUSEBUTTONDOWN
+                if (self.screen in ("story", "ending") and event.type == p.SDL_MOUSEBUTTONDOWN
                         and event.button == p.SDL_BUTTON_LEFT):
-                    left, bottom, right, top = PANEL_BOUNDS[self.story_page]
+                    panels = ENDING_BOUNDS if self.screen == "ending" else PANEL_BOUNDS
+                    left, bottom, right, top = panels[self.story_page]
                     if left <= point[0] <= right and bottom <= point[1] <= top:
                         return self.activate("story_next")
         elif event.type == p.SDL_KEYDOWN:
             if event.key == p.SDLK_ESCAPE:
+                if self.screen == "ending":
+                    return self.activate(self.ending_return)
                 return self.activate("quit" if self.screen == "title" else "title")
-            if self.screen == "story" and event.key in (p.SDLK_LEFT, p.SDLK_RIGHT):
+            if self.screen in ("story", "ending") and event.key in (p.SDLK_LEFT, p.SDLK_RIGHT):
                 return self.activate("story_back" if event.key == p.SDLK_LEFT else "story_next")
-            if self.screen == "story" and event.key == p.SDLK_SPACE:
+            if self.screen in ("story", "ending") and event.key == p.SDLK_SPACE:
                 return self.activate("story_next")
             if event.key in (p.SDLK_TAB, p.SDLK_DOWN, p.SDLK_RIGHT, p.SDLK_UP, p.SDLK_LEFT):
                 delta = -1 if event.key in (p.SDLK_UP, p.SDLK_LEFT) else 1
@@ -264,8 +291,8 @@ class FrontEnd:
             draw_logos(self.image, self.logos)
         elif self.screen == "title":
             self.draw_title(view)
-        elif self.screen == "story":
-            draw_comic_page(view, self.comic, self.image)
+        elif self.screen in ("story", "ending"):
+            draw_comic_page(view, self.active_comic, self.image, ending=self.screen == "ending")
         elif self.screen == "rooms":
             panel((0, 0, WIDTH - 1, HEIGHT - 1), (14, 24, 26))
             view.centered(800, 895, "복구한 방", 48, GOLD)

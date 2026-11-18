@@ -109,6 +109,7 @@ def render_checks(levels):
 
 def input_checks(levels):
     games = []
+    menus = []
     frame = -1
     update = p.update_canvas
     final_key = {"left": p.SDLK_a, "right": p.SDLK_d, "up": p.SDLK_w, "down": p.SDLK_s,
@@ -126,10 +127,12 @@ def input_checks(levels):
         ([key(p.SDLK_8)], 7, True),
         ([key(p.SDLK_ESCAPE)], 7, True),
         ([], 7, True),
-        ([click(800, 272), key(p.SDLK_d)], 0, False),
-        ([key(p.SDLK_ESCAPE), key(p.SDLK_d)], 0, False),
-        ([key(p.SDLK_r)], 0, False),
-        ([SimpleNamespace(type=p.SDL_QUIT)], 0, False),
+        ([click(800, 272), key(p.SDLK_SPACE)], 7, True),
+        ([key(p.SDLK_RIGHT)], 7, True),
+        ([key(p.SDLK_RIGHT)], 7, True),
+        ([key(p.SDLK_RIGHT)], 7, True),
+        ([key(p.SDLK_RETURN)], 7, True),
+        ([SimpleNamespace(type=p.SDL_QUIT)], 7, True),
     ]
 
     class ObservedGame(Game):
@@ -139,6 +142,11 @@ def input_checks(levels):
             for action in actions:
                 assert self.act(action)
             games.append(self)
+
+    class ObservedFrontEnd(view.FrontEnd):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            menus.append(self)
 
     def events():
         nonlocal frame
@@ -153,9 +161,14 @@ def input_checks(levels):
             assert games[-1].state.cleared == cleared, frame
             if index in (0, 1) and not cleared and frame >= 7:
                 assert games[-1].state.moves == 0, frame
+            if 12 <= frame <= 15:
+                assert menus[-1].screen == "ending" and menus[-1].story_page == frame - 12, frame
+            elif frame >= 16:
+                assert menus[-1].screen == "title", frame
         update()
 
-    with patch.object(view, "Game", ObservedGame), patch.object(p, "get_events", events), \
+    with patch.object(view, "Game", ObservedGame), patch.object(view, "FrontEnd", ObservedFrontEnd), \
+            patch.object(p, "get_events", events), \
             patch.object(p, "update_canvas", checked_update):
         view.run(levels, show_title=False)
     assert frame == len(batches) - 1
@@ -165,7 +178,7 @@ def main():
     levels = load_levels()
     render_checks(levels)
     input_checks(levels)
-    print("Stage feedback smoke OK: entry timer/pause, real clear metrics, unlimited/zero remaining, undo/re-clear/restart, same-batch isolation, mouse next and final-room replay, glyphs/layout.")
+    print("Stage feedback smoke OK: entry timer/pause, clear metrics, undo/restart, next room, final report to four ending panels to title, input isolation, glyphs/layout.")
 
 
 if __name__ == "__main__":
