@@ -1,6 +1,6 @@
 """인부의 기록, 재생, 문양 상태를 표시한다."""
 
-from math import hypot, pi, sin
+from math import hypot
 
 import pico2d.pico2d as p
 
@@ -14,6 +14,7 @@ ECHO_COLOR = (197, 137, 243)
 STEP_COLOR = (233, 199, 255)
 SEAL_COLOR = (123, 223, 192)
 STRIDE_SECONDS = .18
+WALK_FRAMES = 4
 GATE_STYLES = {
     "open": ("통과", (123, 223, 192)),
     "held": ("통과 중", (234, 192, 111)),
@@ -113,35 +114,36 @@ class EchoMotion:
     def change(self, game, previous, now):
         if game is not self.game:
             self.game, self.motion = game, None
+            self.direction = "down"
         echo = game.state.echo
         old = previous.echo
         if not echo:
             self.motion = None
             return
-        if old != echo:
-            origin = previous.replay_workers.get(echo.origin, echo.origin)
-            start = old.position if old else origin
-            if self.motion and old and echo.origin == old.origin:
-                start = self.position_at(now)
+        same_echo = old is not None and old.origin == echo.origin
+        origin = previous.replay_workers.get(echo.origin, echo.origin)
+        previous_cell = old.position if same_echo else origin
+        if not same_echo:
+            self.motion = None
+            self.direction = "down"
+        if previous_cell != echo.position:
+            delta = (echo.position[0] - previous_cell[0], echo.position[1] - previous_cell[1])
+            self.direction = next(key for key, step in DIRECTIONS.items() if step == delta)
+            start = self.position_at(now) if self.motion else previous_cell
             self.motion = (start, echo.position, now)
-            inputs = old.remaining if old else ()
-            if inputs:
-                self.direction = inputs[0]
-            elif echo.position != origin:
-                dx = echo.position[0] - origin[0]
-                dy = echo.position[1] - origin[1]
-                self.direction = next(key for key, value in DIRECTIONS.items() if value == (dx, dy))
 
     def position_at(self, now):
         start, end, began = self.motion
         fraction = min(1, max(0, (now - began) / STRIDE_SECONDS))
         return tuple(a + (b - a) * fraction for a, b in zip(start, end))
 
-    def stride(self, now):
-        if self.motion and self.motion[0] != self.motion[1]:
-            fraction = min(1, max(0, (now - self.motion[2]) / STRIDE_SECONDS))
-            return 1 + .11 * sin(pi * fraction)
-        return 1
+    def skeleton_sprite(self, now):
+        frame = 1
+        if self.motion:
+            fraction = (now - self.motion[2]) / STRIDE_SECONDS
+            if 0 <= fraction < 1:
+                frame = int(fraction * WALK_FRAMES)
+        return f"skeleton_worker_{self.direction}_{frame}"
 
     def pose(self, game, now):
         echo = game.state.echo

@@ -19,10 +19,25 @@
     "device_magic": "atlases/device_magic.png",
     "device_recording": "atlases/device_recording.png",
     "device_gates": "atlases/device_gates.png",
-    "skeleton_worker": "atlases/skeleton_worker.png"
+    "skeleton_worker_walk": "atlases/skeleton_worker_walk.png"
   },
   "sprites": {
-    "skeleton_worker": ["skeleton_worker", 0, 0, 221, 256],
+    "skeleton_worker_down_0": ["skeleton_worker_walk", 0, 0, 128, 128],
+    "skeleton_worker_down_1": ["skeleton_worker_walk", 128, 0, 128, 128],
+    "skeleton_worker_down_2": ["skeleton_worker_walk", 256, 0, 128, 128],
+    "skeleton_worker_down_3": ["skeleton_worker_walk", 384, 0, 128, 128],
+    "skeleton_worker_right_0": ["skeleton_worker_walk", 0, 128, 128, 128],
+    "skeleton_worker_right_1": ["skeleton_worker_walk", 128, 128, 128, 128],
+    "skeleton_worker_right_2": ["skeleton_worker_walk", 256, 128, 128, 128],
+    "skeleton_worker_right_3": ["skeleton_worker_walk", 384, 128, 128, 128],
+    "skeleton_worker_up_0": ["skeleton_worker_walk", 0, 256, 128, 128],
+    "skeleton_worker_up_1": ["skeleton_worker_walk", 128, 256, 128, 128],
+    "skeleton_worker_up_2": ["skeleton_worker_walk", 256, 256, 128, 128],
+    "skeleton_worker_up_3": ["skeleton_worker_walk", 384, 256, 128, 128],
+    "skeleton_worker_left_0": ["skeleton_worker_walk", 0, 384, 128, 128],
+    "skeleton_worker_left_1": ["skeleton_worker_walk", 128, 384, 128, 128],
+    "skeleton_worker_left_2": ["skeleton_worker_walk", 256, 384, 128, 128],
+    "skeleton_worker_left_3": ["skeleton_worker_walk", 384, 384, 128, 128],
     "floor_1": [
       "terrain",
       0,

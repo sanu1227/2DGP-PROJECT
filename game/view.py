@@ -1230,7 +1230,7 @@ class View:
                 continue
             if sprite == "echo_actor":
                 if state.echo.origin in state.replay_workers:
-                    self.draw_iso_skeleton_worker(sx, sy, half_width, self.echo_motion.stride(now))
+                    self.draw_iso_skeleton_worker(sx, sy, half_width, self.echo_motion.skeleton_sprite(now))
                 else:
                     draw_tinted(self.art, f"worker_{FACING[direction]}_idle", sx, sy, scale, (206, 150, 255))
                 continue
@@ -1473,11 +1473,10 @@ class View:
             axes = "x 오른쪽 / y 아래" if self.top_down else "x 오른쪽 아래 / y 왼쪽 아래"
             self.text(32, 27, f"F2 좌표 · {axes}", 16, MUTED)
 
-    def draw_iso_skeleton_worker(self, x, y, half_width, height_scale=1):
+    def draw_iso_skeleton_worker(self, x, y, half_width, sprite="skeleton_worker_down_1"):
         if self.topdown_art is None:
             self.topdown_art = TopDownArt()
-        self.topdown_art.draw("skeleton_worker", x, y + half_width * .24, half_width * 1.15,
-                              height_scale=height_scale)
+        self.topdown_art.draw(sprite, x, y + half_width * .24, half_width * 1.28)
 
     def inspect_cell(self, game, target):
         level, state = game.level, game.state

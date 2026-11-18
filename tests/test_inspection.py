@@ -2,12 +2,40 @@ from unittest import TestCase
 from unittest.mock import Mock, patch
 
 from game.levels import load_levels
-from game.model import Game
+from game.model import DIRECTIONS, Echo, Game
 from game.view import View
+from game.worker_view import EchoMotion, STRIDE_SECONDS
 from tests.solutions import SOLUTIONS
 
 
 class InspectionTests(TestCase):
+    def test_worker_walk_follows_actual_step_and_stops_on_idle_pose(self):
+        game = Game(load_levels()[7])
+        origin, (x, y) = next(iter(game.state.replay_workers.items()))
+        for direction, (dx, dy) in DIRECTIONS.items():
+            with self.subTest(direction=direction):
+                animation = EchoMotion()
+                previous = Game(game.level).state
+                previous.echo = Echo(origin, (x, y), (direction,))
+                game.state.echo = Echo(origin, (x + dx, y + dy), (), True)
+                animation.change(game, previous, 10)
+                self.assertEqual(animation.pose(game, 10)[0], (x, y))
+                self.assertEqual([animation.skeleton_sprite(10 + STRIDE_SECONDS * fraction)
+                                  for fraction in (.1, .35, .6, .85, 1.1)],
+                                 [f"skeleton_worker_{direction}_{frame}" for frame in (0, 1, 2, 3, 1)])
+                self.assertEqual(animation.pose(game, 11)[0], (x + dx, y + dy))
+
+    def test_blocked_worker_does_not_start_walking(self):
+        game = Game(load_levels()[7])
+        origin, pos = next(iter(game.state.replay_workers.items()))
+        previous = Game(game.level).state
+        previous.echo = Echo(origin, pos, ("up",))
+        game.state.echo = Echo(origin, pos, ())
+        animation = EchoMotion()
+        animation.change(game, previous, 10)
+        self.assertIsNone(animation.motion)
+        self.assertEqual(animation.skeleton_sprite(10), "skeleton_worker_down_1")
+
     def setUp(self):
         self.levels = load_levels()
         self.view = View.__new__(View)
