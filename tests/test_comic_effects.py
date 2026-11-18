@@ -2,11 +2,27 @@
 
 import unittest
 
-from game.comic_effects import CAMERA_MARGIN, Impact, sample_impact
-from game.story import PANEL_DURATIONS, ComicPlayback
+from game.comic_effects import CAMERA_MARGIN, PANEL_BEATS, Impact, impact_at, panel_frames, sample_impact
+from game.story import ENDING, MIDPOINT, PANEL_DURATIONS, ComicPlayback
 
 
 class ComicEffectsTests(unittest.TestCase):
+    def test_later_comic_beat_frames_settle_and_stay_inside_camera_margin(self):
+        for page in (*MIDPOINT, *ENDING):
+            beat = PANEL_BEATS[page.atlas]
+            with self.subTest(panel=page.atlas):
+                self.assertEqual(panel_frames(page.atlas, beat, 0), ((beat.before or page.atlas, 1),))
+                self.assertEqual(panel_frames(page.atlas, beat, 3), ((beat.after or page.atlas, 1),))
+                if beat.before or beat.after:
+                    first, second = panel_frames(page.atlas, beat, beat.time + .05)
+                    self.assertEqual(first, (beat.before or page.atlas, 1))
+                    self.assertEqual(second[0], beat.after or page.atlas)
+                    self.assertAlmostEqual(second[1], .5)
+                for i in range(46):
+                    effect = impact_at(((beat.time, .46, beat.shake),), beat.time + i / 100)
+                    self.assertLess(max(abs(effect.x), abs(effect.y)), CAMERA_MARGIN)
+                self.assertEqual(impact_at(((beat.time, .46, beat.shake),), beat.time + 1), Impact())
+
     def test_shake_stays_inside_background_margin_and_finishes_before_next_panel(self):
         for panel, duration in enumerate(PANEL_DURATIONS):
             samples = [sample_impact(panel, i / 120) for i in range(round(duration * 120))]

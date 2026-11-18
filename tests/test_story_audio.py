@@ -1,6 +1,6 @@
 import unittest
 
-from game.story_audio import CUES, StoryAudio
+from game.story_audio import COMIC_CUES, CUES, StoryAudio
 from game.story import PANEL_DURATIONS
 from game.comic_effects import IMPACTS
 
@@ -29,6 +29,18 @@ class Recorder:
 
 
 class StoryAudioTests(unittest.TestCase):
+    def test_midpoint_and_ending_cues_follow_their_own_timeline(self):
+        backend = Recorder()
+        audio = StoryAudio(backend)
+        for scene in ("midpoint", "ending"):
+            for index, ((time, _),) in enumerate(COMIC_CUES[scene]):
+                audio.update(index, time - .05, scene=scene)
+                audio.update(index, time, paused=True, scene=scene)
+                audio.update(index, time, scene=scene)
+                audio.update(index, time + .02, scene=scene)
+        self.assertEqual(backend.played, [name for scene in ("midpoint", "ending")
+                                         for cues in COMIC_CUES[scene] for _, name in cues])
+
     def test_collapse_matches_second_panel_impact_and_does_not_restart_on_resume(self):
         backend = Recorder()
         audio = StoryAudio(backend)

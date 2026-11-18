@@ -9,6 +9,7 @@ import pico2d.pico2d as p
 from game.layout import WIDTH, HEIGHT
 from game.story import ENDING, ENDING_DURATIONS, MIDPOINT, MIDPOINT_DURATIONS, STORY, ComicPlayback, REVEAL_SECONDS
 from game.comic import COMIC_PAGES, draw_comic_page
+from game.comic_effects import PANEL_BEATS
 from game.comic_motion import MOTION_IMAGES
 from game.story_audio import StoryAudio
 from game.title_motion import TITLE_IMAGES, draw_title
@@ -23,9 +24,12 @@ ART_ROOT = Path(__file__).resolve().parents[1] / "assets" / "menu_v2"
 STORY_ROOT = ART_ROOT.parent / "story_overtime_v1"
 STORY_IMAGES = {"overtime_01": STORY_ROOT / "act_01.png",
                 "overtime_02": STORY_ROOT / "act_02.png", **MOTION_IMAGES, **TITLE_IMAGES, **LOGO_IMAGES}
-STORY_IMAGES.update({page.atlas: ART_ROOT.parent / f"{scene}_v1" / f"{page.atlas}.jpg"
-                     for scene, pages in (("midpoint", MIDPOINT), ("ending", ENDING)) for page in pages})
-STORY_IMAGES["midpoint_light_off"] = ART_ROOT.parent / "midpoint_v1" / "midpoint_light_off.jpg"
+for scene, pages in (("midpoint", MIDPOINT), ("ending", ENDING)):
+    for page in pages:
+        beat = PANEL_BEATS[page.atlas]
+        for frame in (page.atlas, beat.before, beat.after):
+            if frame is not None:
+                STORY_IMAGES[frame] = ART_ROOT.parent / f"{scene}_v1" / f"{frame}.jpg"
 
 
 def panel(bounds, color, filled=True):
@@ -108,10 +112,10 @@ class FrontEnd:
                 self.finish_logos(now)
         comic_screen = self.screen in self.comics
         if comic_screen and self.story_clock is not None:
-            self.active_comic.update(now - self.story_clock)
-            if self.screen == "story":
-                self.audio.update(self.story_page, self.comic.elapsed, self.comic.paused)
-        elif self.screen != "story":
+            comic = self.active_comic
+            comic.update(now - self.story_clock)
+            self.audio.update(comic.index, comic.elapsed, comic.paused, scene=self.screen)
+        elif not comic_screen:
             self.audio.stop()
         self.story_clock = now if comic_screen else None
         if self.screen == "title" and self.title_clock is not None:
@@ -195,7 +199,7 @@ class FrontEnd:
         self.selected = 0
         comic = self.active_comic
         comic_return = self.ending_return if self.screen == "ending" else "title"
-        resuming_story = action == "story_play" and not comic.finished
+        toggling_pause = action == "story_play" and not comic.finished
         if action == "title":
             self.screen = "title"
             self.comic.reset()
@@ -242,11 +246,12 @@ class FrontEnd:
                 self.comic.elapsed = min(REVEAL_SECONDS, self.comic.duration)
                 self.comic.paused = True
         self.story_clock = perf_counter() if self.screen in self.comics else None
-        if self.screen == "story":
-            if resuming_story:
-                self.audio.set_paused(self.comic.paused)
+        if self.screen in self.comics:
+            comic = self.active_comic
+            if toggling_pause:
+                self.audio.set_paused(comic.paused)
             else:
-                self.audio.seek(self.story_page, self.comic.elapsed, self.comic.paused)
+                self.audio.seek(comic.index, comic.elapsed, comic.paused, scene=self.screen)
         else:
             self.audio.stop()
         if self.screen == "title":

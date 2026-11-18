@@ -8,7 +8,9 @@ import pico2d.pico2d as p
 from game.layout import HEIGHT, WIDTH
 from game.story import BALLOON_DELAYS, ENDING, MIDPOINT, STORY
 from game.comic_motion import draw_actors
-from game.comic_effects import CAMERA_MARGIN, draw_effects, sample_impact
+from game.comic_effects import (
+    CAMERA_MARGIN, PANEL_BEATS, Impact, draw_effects, draw_panel_beat, impact_at, panel_frames, sample_impact,
+)
 from game.character_motion import EXHALE_START
 
 
@@ -25,7 +27,6 @@ DIALOGUE_SIZE = 22
 INK = (29, 35, 35)
 PAPER = (239, 227, 201)
 GOLD = (239, 193, 103)
-MIDPOINT_LIGHT_OUT = 1.0
 
 
 def ease(value):
@@ -92,18 +93,20 @@ def draw_picture(load_image, bounds, age, index):
         p.SDL_RenderSetClipRect(p.renderer, byref(previous) if enabled else None)
 
 
-def draw_full_panel(load_image, image_name, bounds, age):
+def draw_full_panel(load_image, image_name, bounds, age, impact=Impact(), mix=1.0):
     left, bottom, right, top = bounds
     image = load_image(image_name)
     width, height = right - left, top - bottom
-    scale = 1 - .035 * ease(age / 4)
+    scale = 1 - .035 * ease(age / 4) - .035 * impact.strength
     source_width = round(min(image.w, image.h * width / height) * scale)
     source_height = round(min(image.h, image.w * height / width) * scale)
-    p.draw_rectangle(*bounds, 47, 57, 53, filled=True)
-    image.opacify(.25 + .75 * ease(age / .6))
+    margin_x, margin_y = image.w - source_width, image.h - source_height
+    source_x = round(max(0, min(margin_x, margin_x / 2 - impact.x * source_width / width)))
+    source_y = round(max(0, min(margin_y, margin_y / 2 - impact.y * source_height / height)))
+    image.opacify((.25 + .75 * ease(age / .6)) * mix)
     try:
-        image.clip_draw((image.w - source_width) // 2, (image.h - source_height) // 2,
-                        source_width, source_height, (left + right) / 2, (bottom + top) / 2, width, height)
+        image.clip_draw(source_x, source_y, source_width, source_height,
+                        (left + right) / 2, (bottom + top) / 2, width, height)
     finally:
         image.opacify(1)
 
@@ -124,15 +127,18 @@ def draw_comic_page(view, playback, load_image, *, scene="story"):
         age = playback.age(index)
         if age is None:
             continue
-        light_panel = page.atlas == "midpoint_light"
-        if scene == "story":
+        beat = PANEL_BEATS.get(page.atlas)
+        if beat is None:
             draw_picture(load_image, bounds, age, index)
         else:
-            image_name = "midpoint_light_off" if light_panel and age >= MIDPOINT_LIGHT_OUT else page.atlas
-            draw_full_panel(load_image, image_name, bounds, age)
+            p.draw_rectangle(*bounds, 47, 57, 53, filled=True)
+            impact = impact_at(((beat.time, .46, beat.shake),), age) if beat.shake else Impact()
+            for image_name, opacity in panel_frames(page.atlas, beat, age):
+                draw_full_panel(load_image, image_name, bounds, age, impact, opacity)
+            draw_panel_beat(view, bounds, beat, age, impact)
         if index == playback.index:
             p.draw_rectangle(left - 2, bottom - 2, right + 2, top + 2, *GOLD)
-        delays = (MIDPOINT_LIGHT_OUT + .25,) if light_panel else BALLOON_DELAYS
+        delays = (beat.time + .25,) if beat and beat.effect == "fizzle" else BALLOON_DELAYS
         for side, (bounds, words, delay) in enumerate(zip(dialogue_bounds(index, panels), page.dialogue, delays)):
             if age >= delay:
                 point_right = scene != "story" and index == 1 and side == 1
@@ -141,14 +147,15 @@ def draw_comic_page(view, playback, load_image, *, scene="story"):
                     bx1, by1, bx2, by2 = bounds
                     bounds = (bx1 - 152, by1, bx2 - 152, by2)
                 bubble(view, bounds, words, (age - delay) / 0.3, side, point_right=point_right)
-        effect_delay = MIDPOINT_LIGHT_OUT if light_panel else .2
+        effect_delay = beat.time if beat else .2
         if age >= effect_delay:
             effect = "하아..." if scene == "story" and index == 2 and age >= EXHALE_START else page.effect
             pop = ease((age - effect_delay) / 0.35)
             x = left + (right - left) * 0.58
             y = bottom + 54 + (1 - pop) * 14
-            if index == playback.index and age < 1.0:
-                x += sin(age * 35) * (1 - pop) * 5
+            wobble_age = age - effect_delay if beat else age
+            if index == playback.index and wobble_age < 1.0:
+                x += sin(wobble_age * 35) * (1 - pop) * 5
             for dx, dy in ((-2, 0), (2, 0), (0, -2), (0, 2)):
                 view.centered(x + dx, y + dy, effect, 26, INK)
             view.centered(x, y, effect, 26, GOLD)

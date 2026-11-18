@@ -18,6 +18,37 @@ CAMERA_MARGIN = 12
 
 
 @dataclass(frozen=True)
+class PanelBeat:
+    time: float
+    focus: tuple[float, float]
+    effect: str
+    sound: str
+    color: tuple[int, int, int]
+    shake: float = 0
+    before: str | None = None
+    after: str | None = None
+
+
+PANEL_BEATS = {
+    "midpoint_gate": PanelBeat(.74, (.68, .24), "impact", "impactTin_medium_000", (255, 216, 145),
+                               5, before="midpoint_gate_closed"),
+    "midpoint_checklist": PanelBeat(.94, (.52, .64), "swoosh", "cloth1", (255, 242, 199),
+                                    2, before="midpoint_checklist_front"),
+    "midpoint_light": PanelBeat(1.0, (.9, .57), "fizzle", "metalPot1", (216, 153, 251),
+                                after="midpoint_light_off"),
+    "midpoint_toolbox": PanelBeat(1.48, (.48, .18), "dust", "worker_sigh", (220, 179, 129),
+                                  before="midpoint_toolbox_down"),
+    "ending_repair": PanelBeat(.68, (.47, .39), "sparkle", "impactTin_medium_000", (255, 220, 112), 2),
+    "ending_hero": PanelBeat(1.66, (.87, .64), "swoosh", "cloth2", (255, 227, 140),
+                             before="ending_hero_glove_down"),
+    "ending_report": PanelBeat(1.66, (.55, .31), "stamp", "impactWood_heavy_000", (255, 185, 112),
+                               7, before="ending_report_raised"),
+    "ending_dawn": PanelBeat(1.36, (.73, .52), "sparkle", "step_right", (255, 224, 161),
+                             before="ending_dawn_wave_down"),
+}
+
+
+@dataclass(frozen=True)
 class Impact:
     x: float = 0
     y: float = 0
@@ -26,8 +57,12 @@ class Impact:
 
 def sample_impact(index, age):
     """랜덤 상태나 실제 시계를 쓰지 않아 정지·다시 보기 결과가 동일하다."""
+    return impact_at(IMPACTS[index], age)
+
+
+def impact_at(impacts, age):
     x = y = strength = 0
-    for start, duration, amplitude in IMPACTS[index]:
+    for start, duration, amplitude in impacts:
         q = (age - start) / duration
         if 0 <= q < 1:
             envelope = min(1, q / .08) * (1 - q) ** 1.4
@@ -35,6 +70,101 @@ def sample_impact(index, age):
             y += sin(q * pi * 11) * amplitude * .55 * envelope
             strength = max(strength, envelope)
     return Impact(x, y, strength)
+
+
+def panel_frames(name, beat, age):
+    """컷의 전후 그림을 짧게 섞는다. 정지 중에는 같은 프레임을 유지한다."""
+    if not (beat.before or beat.after):
+        return ((name, 1.0),)
+    before, after = beat.before or name, beat.after or name
+    progress = min(1.0, max(0.0, (age - beat.time) / .10))
+    if progress == 0.0:
+        return ((before, 1.0),)
+    if progress == 1.0:
+        return ((after, 1.0),)
+    return ((before, 1.0), (after, progress))
+
+
+def draw_panel_beat(view, bounds, beat, age, impact):
+    import pico2d.pico2d as p
+    from game.play_effects import alpha_blend
+
+    elapsed = age - beat.time
+    if not 0 <= elapsed < 1.15:
+        return
+    left, bottom, right, top = bounds
+    x = left + (right - left) * beat.focus[0] + impact.x
+    y = bottom + (top - bottom) * beat.focus[1] + impact.y
+    color = beat.color
+    with alpha_blend():
+        if beat.effect in ("swoosh", "fizzle"):
+            draw_curved_strokes(p, x, y, color, elapsed, fizzle=beat.effect == "fizzle")
+        elif beat.effect == "dust":
+            q = elapsed / .72
+            if q < 1:
+                for index in range(7):
+                    spread = (index - 3) * (8 + q * 9)
+                    p.draw_circle(x + spread, y + sin(q * pi) * (7 + index % 3 * 5),
+                                  round(3 + q * 5), *color, round(145 * sin(q * pi)), filled=True)
+        else:
+            draw_beat_sparks(p, x, y, color, elapsed, streaks=beat.effect in ("impact", "stamp"))
+        if beat.effect == "stamp":
+            draw_approval_stamp(view, p, x, y + 31, elapsed)
+
+
+def draw_curved_strokes(p, x, y, color, elapsed, *, fizzle):
+    duration = .66 if fizzle else .48
+    q = elapsed / duration
+    if q >= 1:
+        return
+    opacity = round(230 * sin(pi * q))
+    if fizzle:
+        for index in range(5):
+            px = x - (21 + 13 * index) * (1 - q)
+            py = y + sin(index * 2.4 + q * 11) * (5 + q * 12)
+            p.draw_line(px - 4, py + 3, px + 3, py - 1, *color, opacity)
+        return
+    for index in range(3):
+        radius = 23 + index * 11
+        start = .1 + q * .95
+        previous = (x + cos(start) * radius, y + sin(start) * radius * .56)
+        for point in range(1, 8):
+            angle = start + point * .16
+            current = (x + cos(angle) * radius, y + sin(angle) * radius * .56)
+            p.draw_line(*previous, *current, *color, opacity)
+            previous = current
+
+
+def draw_beat_sparks(p, x, y, color, elapsed, *, streaks):
+    for index in range(8 if streaks else 6):
+        q = (elapsed - index * .045) / (.45 if streaks else .68)
+        if not 0 <= q < 1:
+            continue
+        angle = index * 2.399
+        dx, dy = cos(angle), sin(angle)
+        distance = (18 + 66 * q) if streaks else (24 + index * 6 + 12 * q)
+        px, py = x + dx * distance, y + dy * distance * .7
+        glow = sin(pi * q)
+        alpha = round(240 * glow)
+        if streaks:
+            p.draw_line(px, py, px + dx * 17 * (1 - q), py + dy * 12 * (1 - q), *color, alpha)
+        else:
+            size = 3 + 7 * glow
+            p.draw_line(px - size, py, px + size, py, *color, alpha)
+            p.draw_line(px, py - size, px, py + size, *color, alpha)
+            p.draw_circle(px, py, 2, 255, 250, 220, alpha, filled=True)
+
+
+def draw_approval_stamp(view, p, x, y, elapsed):
+    settle = min(1.0, elapsed / .24)
+    scale = 1 + .33 * (1 - settle) ** 2
+    alpha = round(255 * min(1.0, elapsed / .08, (1.15 - elapsed) / .28))
+    half_w, half_h = 83 * scale, 25 * scale
+    bounds = (x - half_w, y - half_h, x + half_w, y + half_h)
+    p.draw_rectangle(*bounds, 74, 23, 26, alpha, filled=True)
+    p.draw_rectangle(*bounds, 251, 151, 112, alpha)
+    p.draw_rectangle(bounds[0] + 4, bounds[1] + 4, bounds[2] - 4, bounds[3] - 4, 251, 151, 112, alpha)
+    view.centered(x, y, "퇴근 승인", 26, (255, 230, 176, alpha))
 
 
 def draw_effects(bounds, age, index, impact):

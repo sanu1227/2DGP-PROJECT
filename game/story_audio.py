@@ -5,7 +5,8 @@ from pathlib import Path
 import warnings
 
 from game.character_motion import ACCEL_SECONDS, EXHALE_START, INHALE_START, WALK_END, WALK_START
-from game.comic_effects import IMPACTS
+from game.comic_effects import IMPACTS, PANEL_BEATS
+from game.story import ENDING, MIDPOINT
 
 
 AUDIO_ROOT = Path(__file__).resolve().parents[1] / "assets/audio_story_v2"
@@ -19,6 +20,10 @@ CUES = (
        for index, time in enumerate(STEP_TIMES)), (EXHALE_START, "worker_sigh")),
     tuple((start, "boss_bark") for start, _, _ in IMPACTS[3]),
 )
+COMIC_CUES = {"story": CUES}
+for scene, pages in (("midpoint", MIDPOINT), ("ending", ENDING)):
+    COMIC_CUES[scene] = tuple(((PANEL_BEATS[page.atlas].time, PANEL_BEATS[page.atlas].sound),) for page in pages)
+SOURCE_CUES = {"cloth1", "cloth2", "impactTin_medium_000", "impactWood_heavy_000", "metalPot1"}
 MAX_LATENESS = .20
 
 
@@ -45,8 +50,10 @@ class SDLStorySounds:
             if not p.Mix_QuerySpec(None, None, None):
                 raise OSError("SDL audio device unavailable")
             if name not in self.sounds:
-                self.sounds[name] = p.load_wav(str(AUDIO_ROOT / f"{name}.wav"))
-                self.sounds[name].set_volume(78)
+                source = name in SOURCE_CUES
+                directory = AUDIO_ROOT / "sources" / "pcm" if source else AUDIO_ROOT
+                self.sounds[name] = p.load_wav(str(directory / f"{name}.wav"))
+                self.sounds[name].set_volume(52 if source else 78)
             self.active_channels()
             sound = self.sounds[name]
             channel = p.Mix_PlayChannel(-1, sound.wav, 0)
@@ -80,6 +87,7 @@ class SDLStorySounds:
 class StoryAudio:
     def __init__(self, backend=None):
         self.backend = backend if backend is not None else SDLStorySounds()
+        self.scene = None
         self.index = None
         self.cursor = 0.0
         self.paused = False
@@ -89,18 +97,19 @@ class StoryAudio:
             (self.backend.pause if paused else self.backend.resume)()
             self.paused = paused
 
-    def seek(self, index, elapsed=0.0, paused=False):
+    def seek(self, index, elapsed=0.0, paused=False, *, scene="story"):
         self.backend.stop()
+        self.scene = scene
         self.index, self.cursor, self.paused = index, elapsed, paused
 
-    def update(self, index, elapsed, paused=False):
-        if index != self.index:
-            self.seek(index)
+    def update(self, index, elapsed, paused=False, *, scene="story"):
+        if scene != self.scene or index != self.index:
+            self.seek(index, scene=scene)
         elif elapsed < self.cursor:
-            self.seek(index, elapsed, paused)
+            self.seek(index, elapsed, paused, scene=scene)
         self.set_paused(paused)
         if not paused:
-            for time, name in CUES[index]:
+            for time, name in COMIC_CUES[scene][index]:
                 # 프레임 경계에서 딱 한 번. 긴 멈춤 뒤 지나간 소리를 몰아서 재생하지 않는다.
                 if self.cursor < time <= elapsed and elapsed - time <= MAX_LATENESS:
                     self.backend.play(name)
@@ -109,6 +118,7 @@ class StoryAudio:
     def stop(self):
         if self.index is not None:
             self.backend.stop()
+        self.scene = None
         self.index, self.cursor, self.paused = None, 0.0, False
 
     def close(self):
