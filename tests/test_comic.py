@@ -2,13 +2,25 @@
 
 import unittest
 from types import SimpleNamespace
+from unittest.mock import Mock, patch
 
 import pico2d.pico2d as p
+from game.comic import WIDE_BOUNDS, draw_full_panel
 from game.front_end import FrontEnd
 from game.story import ComicPlayback, ENDING, ENDING_DURATIONS, MIDPOINT_DURATIONS, PANEL_DURATIONS, REVEAL_SECONDS, STORY
 
 
 class ComicTests(unittest.TestCase):
+    def test_wide_comic_art_fills_the_entire_panel(self):
+        image = Mock(w=1120, h=487)
+        left, bottom, right, top = WIDE_BOUNDS[0]
+        with patch("game.comic.p.draw_rectangle"):
+            draw_full_panel(Mock(return_value=image), "midpoint_gate", WIDE_BOUNDS[0], 4)
+        _, _, source_width, source_height, center_x, center_y, width, height = image.clip_draw.call_args.args
+        self.assertEqual((center_x, center_y), ((left + right) / 2, (bottom + top) / 2))
+        self.assertEqual((width, height), (right - left, top - bottom))
+        self.assertAlmostEqual(source_width / source_height, width / height, places=2)
+
     def test_automatic_reveal_keeps_earlier_panels_and_hides_future_ones(self):
         comic = ComicPlayback()
         self.assertEqual(len(STORY), 4)

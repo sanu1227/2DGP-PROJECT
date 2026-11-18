@@ -158,14 +158,17 @@ class FrontEnd:
                 "midpoint": ("5번 방으로", "건너뛰기"),
                 "ending": (self.ending_return_label, self.ending_return_label),
             }[self.screen]
+            bottom = COMIC_PAGES[self.screen][1][-1][1] - 64
             buttons = [
-                Button("story_next", next_label if comic.index == len(comic.durations) - 1 else "다음 컷", (1260, 30, 1520, 78)),
-                Button("story_back", back_label if comic.index == 0 else "이전 컷", (80, 30, 340, 78)),
+                Button("story_next", next_label if comic.index == len(comic.durations) - 1 else "다음 컷",
+                       (1260, bottom, 1520, bottom + 48)),
+                Button("story_back", back_label if comic.index == 0 else "이전 컷",
+                       (80, bottom, 340, bottom + 48)),
             ]
             if self.screen == "story":
                 buttons.append(Button("controls", "건너뛰기", (1370, 876, 1540, 924)))
             buttons.append(Button("story_play", "다시 보기" if comic.finished else
-                                  "자동재생" if comic.paused else "일시정지", (680, 34, 920, 76)))
+                                  "자동재생" if comic.paused else "일시정지", (680, bottom + 4, 920, bottom + 46)))
             return tuple(buttons)
         if self.screen == "controls":
             return (

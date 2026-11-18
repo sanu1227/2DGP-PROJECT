@@ -14,8 +14,8 @@ from game.character_motion import EXHALE_START
 
 PANEL_BOUNDS = ((254, 516, 790, 918), (810, 516, 1346, 918),
                 (254, 94, 790, 496), (810, 94, 1346, 496))
-WIDE_BOUNDS = ((90, 516, 790, 918), (810, 516, 1510, 918),
-               (90, 94, 790, 496), (810, 94, 1510, 496))
+WIDE_BOUNDS = ((90, 529, 790, 879), (810, 529, 1510, 879),
+               (90, 159, 790, 509), (810, 159, 1510, 509))
 COMIC_PAGES = {
     "story": (STORY, PANEL_BOUNDS, "오늘도 야근"),
     "midpoint": (MIDPOINT, WIDE_BOUNDS, "퇴근까지 절반"),
@@ -46,15 +46,15 @@ def rounded(bounds, radius, color):
         p.draw_line(left + inset, y, right - inset, y, *color)
 
 
-def bubble(view, bounds, words, progress, side):
+def bubble(view, bounds, words, progress, side, *, point_right=False):
     left, bottom, right, top = bounds
     offset = round((1 - ease(progress)) * 7)
     bottom, top = bottom + offset, top + offset
     rounded((left + 3, bottom - 3, right + 3, top - 3), 14, INK)
     rounded((left - 2, bottom - 2, right + 2, top + 2), 14, INK)
     rounded((left, bottom, right, top), 12, (255, 251, 231))
-    anchor = left + (90 if side == 0 else 150)
-    tip = anchor + (14 if side == 0 else -14)
+    anchor = right - 28 if point_right else left + (90 if side == 0 else 150)
+    tip = anchor + (18 if point_right else 14 if side == 0 else -14)
     for row in range(19):
         t = row / 18
         p.draw_line(anchor - 10 + (tip - anchor + 10) * t, bottom - row,
@@ -94,9 +94,8 @@ def draw_picture(load_image, bounds, age, index):
 
 def draw_full_panel(load_image, image_name, bounds, age):
     left, bottom, right, top = bounds
-    art_top = top - 100
     image = load_image(image_name)
-    width, height = right - left, art_top - bottom
+    width, height = right - left, top - bottom
     scale = 1 - .035 * ease(age / 4)
     source_width = round(min(image.w, image.h * width / height) * scale)
     source_height = round(min(image.h, image.w * height / width) * scale)
@@ -104,7 +103,7 @@ def draw_full_panel(load_image, image_name, bounds, age):
     image.opacify(.25 + .75 * ease(age / .6))
     try:
         image.clip_draw((image.w - source_width) // 2, (image.h - source_height) // 2,
-                        source_width, source_height, (left + right) / 2, (bottom + art_top) / 2, width, height)
+                        source_width, source_height, (left + right) / 2, (bottom + top) / 2, width, height)
     finally:
         image.opacify(1)
 
@@ -112,11 +111,12 @@ def draw_full_panel(load_image, image_name, bounds, age):
 def draw_comic_page(view, playback, load_image, *, scene="story"):
     story, panels, title = COMIC_PAGES[scene]
     page_left, page_right = panels[0][0] - 20, panels[1][2] + 16
+    page_bottom, page_top = panels[-1][1] - 6, panels[0][3] + 16
     p.draw_rectangle(0, 0, WIDTH, HEIGHT, 17, 30, 34, filled=True)
     # 넓은 여백과 굵은 먹선으로 한 장의 만화책처럼 묶는다.
-    p.draw_rectangle(page_left + 7, 82, page_right + 7, 932, 7, 17, 20, filled=True)
-    p.draw_rectangle(page_left, 88, page_right, 934, *PAPER, filled=True)
-    view.centered(800, 946, title, 22, GOLD)
+    p.draw_rectangle(page_left + 7, page_bottom - 6, page_right + 7, page_top - 2, 7, 17, 20, filled=True)
+    p.draw_rectangle(page_left, page_bottom, page_right, page_top, *PAPER, filled=True)
+    view.centered(800, page_top + 12, title, 22, GOLD)
     for index, (page, bounds) in enumerate(zip(story, panels)):
         left, bottom, right, top = bounds
         p.draw_rectangle(left - 4, bottom - 4, right + 4, top + 4, *INK, filled=True)
@@ -135,7 +135,12 @@ def draw_comic_page(view, playback, load_image, *, scene="story"):
         delays = (MIDPOINT_LIGHT_OUT + .25,) if light_panel else BALLOON_DELAYS
         for side, (bounds, words, delay) in enumerate(zip(dialogue_bounds(index, panels), page.dialogue, delays)):
             if age >= delay:
-                bubble(view, bounds, words, (age - delay) / 0.3, side)
+                point_right = scene != "story" and index == 1 and side == 1
+                if point_right:
+                    # 화면 오른쪽 위의 병사·용사 얼굴을 비워 둔다.
+                    bx1, by1, bx2, by2 = bounds
+                    bounds = (bx1 - 152, by1, bx2 - 152, by2)
+                bubble(view, bounds, words, (age - delay) / 0.3, side, point_right=point_right)
         effect_delay = MIDPOINT_LIGHT_OUT if light_panel else .2
         if age >= effect_delay:
             effect = "하아..." if scene == "story" and index == 2 and age >= EXHALE_START else page.effect
@@ -148,10 +153,11 @@ def draw_comic_page(view, playback, load_image, *, scene="story"):
                 view.centered(x + dx, y + dy, effect, 26, INK)
             view.centered(x, y, effect, 26, GOLD)
     # 이야기 설명문 대신 현재 컷과 다음 컷까지의 진행만 표시한다.
+    progress_y = panels[-1][1] - 76
     for index in range(4):
         x = 716 + index * 46
         color = GOLD if index <= playback.index else (66, 83, 82)
-        p.draw_rectangle(x, 18, x + 30, 23, *color, filled=True)
+        p.draw_rectangle(x, progress_y, x + 30, progress_y + 5, *color, filled=True)
         if index == playback.index and not playback.finished:
-            p.draw_rectangle(x, 18, x + 30 * min(1, playback.elapsed / playback.duration), 23,
+            p.draw_rectangle(x, progress_y, x + 30 * min(1, playback.elapsed / playback.duration), progress_y + 5,
                              126, 224, 201, filled=True)
