@@ -18,9 +18,11 @@
     "device_fixtures": "atlases/device_fixtures.png",
     "device_magic": "atlases/device_magic.png",
     "device_recording": "atlases/device_recording.png",
-    "device_gates": "atlases/device_gates.png"
+    "device_gates": "atlases/device_gates.png",
+    "skeleton_worker": "atlases/skeleton_worker.png"
   },
   "sprites": {
+    "skeleton_worker": ["skeleton_worker", 0, 0, 221, 256],
     "floor_1": [
       "terrain",
       0,

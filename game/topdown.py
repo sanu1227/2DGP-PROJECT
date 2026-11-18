@@ -355,7 +355,7 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, mirror
     for origin, pos in state.replay_workers.items():
         if state.echo is None or state.echo.origin != origin:
             sx, sy = board.screen(pos)
-            art.draw(sprites["soldier_carried"], sx, sy, size * .54)
+            art.draw("skeleton_worker", sx, sy + size * .04, size * .68)
 
     echo_pose = view.echo_motion.pose(game, now)
     if echo_pose:
@@ -363,7 +363,7 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, mirror
         sx, sy = board.screen(position)
         p.draw_circle(sx, sy, round(size * .33), *ECHO_COLOR)
         if state.echo.origin in state.replay_workers:
-            art.draw(sprites["soldier_deployed"], sx, sy, size * .72, height_scale=view.echo_motion.stride(now))
+            art.draw("skeleton_worker", sx, sy + size * .04, size * .68, height_scale=view.echo_motion.stride(now))
         else:
             art.draw(f"worker_{direction}_idle", sx, sy, size * .75, opacity=.67)
 
