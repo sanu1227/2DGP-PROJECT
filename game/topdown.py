@@ -273,7 +273,8 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, mirror
         # 같은 방에서는 화면에 그려진 배출구 같은 돌출 장치도 선택한다.
         hovered = (view.pick_cell(game, *view.mouse_position) if view.link_glow_game is game
                    else board.pick(*view.mouse_position))
-    focused = {link for link in links if hovered in link.cells}
+    pinned = view.inspected[1] if view.inspected else None
+    focused = {link for link in links if hovered in link.cells or pinned in link.cells}
     lighting = device_lighting(view, game, links, focused, entries, hovered, now)
     view.hit_regions.clear()
     view.hit_masks.clear()

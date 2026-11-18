@@ -19,6 +19,7 @@ from game.layout import (
     STATUS_BOTTOM, STATUS_TOP, STATUS_Y, TUTORIAL_PANEL,
 )
 from game.front_end import FrontEnd, bevel
+from game.device_links import device_links, draw_link_line
 from game.tutorial import device_introductions, first_room_hint
 from game.mechanics import fixed_devices, mirror_axis, mirror_cells, trace_magic
 from game.optics import TOPDOWN_SOURCE_REACH, trace_display_magic
@@ -29,7 +30,7 @@ from game.room_debris import RoomDebris
 from game.room_atmosphere import RoomAtmosphere, prop_kind
 from game.play_effects import ChuteFeedback, WorkFeedback, WORK_SECONDS, beam_contacts, dust, ring, rubble_scrape, trap_motion
 from game.topdown import ITEMS as TOPDOWN_ITEMS, TopDownArt, draw_board as draw_topdown_board
-from game.worker_view import EchoMotion, draw_echo_marks, draw_echo_turn, draw_worker_status, recording_label
+from game.worker_view import EchoMotion, draw_direction_arrow, draw_echo_marks, draw_echo_turn, draw_worker_status, recording_label
 from game.worker_animation import CarryHandoff, GESTURES, WorkerAction, sample_pose, smooth
 from game.music import BackgroundMusic
 
@@ -110,6 +111,7 @@ class View:
         self.top_down = False
         self.navigation = ClickNavigator()
         self.mouse_position = None
+        self.inspected = None
         self.exit_route_key = None
         self.exit_route_open = False
         self.show_coordinates = False
@@ -1471,6 +1473,61 @@ class View:
             axes = "x 오른쪽 / y 아래" if self.top_down else "x 오른쪽 아래 / y 왼쪽 아래"
             self.text(32, 27, f"F2 좌표 · {axes}", 16, MUTED)
 
+    def inspect_cell(self, game, target):
+        level, state = game.level, game.state
+        selected = None
+        if target in level.receivers:
+            selected = ("receiver", target)
+        elif target in level.gates and level.gates[target] in level.receivers:
+            selected = ("receiver", level.gates[target])
+        else:
+            for origin, pos in state.replay_workers.items():
+                echo = state.echo
+                current = echo.position if echo and echo.origin == origin else pos
+                if target == current or target == origin:
+                    selected = ("worker", origin)
+                    break
+        self.inspected = None if selected == self.inspected else selected
+
+    def draw_inspection(self, game):
+        level, state = game.level, game.state
+        if not self.inspected:
+            if level.receivers or state.replay_workers:
+                self.text(32, 27 if not self.show_coordinates else 108, "우클릭  장치 확인", 16, MUTED)
+            return
+        kind, origin = self.inspected
+        if kind == "receiver":
+            gate = next(gate for gate, control in level.gates.items() if control == origin)
+            if not self.top_down:
+                board = self.projection(level)
+                link = next(link for link in device_links(level) if link.cells == (origin, gate))
+                draw_link_line(board.screen(origin), board.screen(gate), link.color)
+            powered = origin in trace_magic(level, state)[1]
+            title = f"마력 수신기  {level.device_labels[origin]}"
+            status = "빛 수신 중" if powered else "빛 수신 대기"
+            gate_status = {"open": "열림", "held": "닫힘 대기", "closed": "닫힘"}[game.gate_status(gate)]
+            detail, color = f"연결문 {gate_status}", TEAL if powered else GOLD
+            direction = None
+        else:
+            title, color = "해골 인부", GOLD
+            echo = state.echo
+            active = echo and echo.origin == origin
+            direction = echo.remaining[0] if active and echo.remaining else None
+            status = "다음 행동" if direction else "기록 중" if state.recording and state.recording.origin == origin else "대기 중"
+            detail = (f"{len(echo.remaining)}걸음 남음" if direction else
+                      "기록한 발걸음 완료" if origin in state.recorded_stations else "기록 발판에서 시작")
+            pos = echo.position if active else state.replay_workers[origin]
+            board = self.projection(level)
+            self.tile_outline(board, *board.screen(pos), board.half_width - 4, int(board.half_height) - 4, color)
+        bevel((32, 682, 278, 832), HUD_FILL, HUD_EDGE)
+        box(42, 698, 45, 816, color)
+        self.text(58, 804, title, 22, INK)
+        self.text(58, 770, status, 18, color)
+        if direction:
+            draw_direction_arrow(153, 770, direction, color)
+        self.text(58, 742, detail, 18, INK)
+        self.text(58, 708, "우클릭  고정 해제", 16, MUTED)
+
     def draw(self, game, index, total):
         self.update_tutorial(game)
         if game.failed:
@@ -1480,6 +1537,8 @@ class View:
         self.tutorial_overlay(game)
         self.play_header(game, index, total)
         self.play_footer(game)
+        if not game.state.cleared and not self.tutorial_hidden:
+            self.draw_inspection(game)
 
 
 def run(levels, index=0, smoke_frames=None, *, show_title=True, top_down=False):
@@ -1512,6 +1571,7 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True, top_down=False):
             view.hit_regions.clear()
             view.hit_masks.clear()
             view.mouse_position = None
+            view.inspected = None
 
         def next_room():
             if index + 1 == len(levels):
@@ -1586,7 +1646,9 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True, top_down=False):
                     if event.button == p.SDL_BUTTON_RIGHT:
                         if view.navigation.active:
                             game.message = "자동 이동을 취소했습니다."
-                        view.navigation.cancel()
+                            view.navigation.cancel()
+                        elif not game.state.cleared:
+                            view.inspect_cell(game, view.pick_cell(game, *view.mouse_position))
                     elif event.button == p.SDL_BUTTON_LEFT:
                         if game.state.cleared:
                             if feedback.next_button(index, len(levels)).contains(view.mouse_position):
