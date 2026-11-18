@@ -43,7 +43,7 @@ PANEL_BEATS = {
                              before="ending_hero_glove_down"),
     "ending_report": PanelBeat(1.66, (.55, .31), "stamp", "impactWood_heavy_000", (255, 185, 112),
                                7, before="ending_report_raised"),
-    "ending_dawn": PanelBeat(1.36, (.73, .52), "sparkle", "step_right", (255, 224, 161),
+    "ending_dawn": PanelBeat(1.36, (.62, .53), "sparkle", "cloth2", (255, 224, 161),
                              before="ending_dawn_wave_down"),
 }
 
