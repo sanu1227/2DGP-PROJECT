@@ -82,6 +82,29 @@ class Game:
         return min(100, done * 100 // total)
 
     @property
+    def ready_to_exit(self) -> bool:
+        return not self.exit_requirements()
+
+    def exit_requirements(self, state: State | None = None) -> tuple[str, ...]:
+        """출구 칸에 도착하기 전에 충족해야 하는 조건."""
+        state = self.state if state is None else state
+        level = self.level
+        remaining_traps = len(level.traps - state.installed)
+        remaining_posts = len(level.posts - state.soldiers)
+        requirements = []
+        if remaining_traps:
+            requirements.append(f"함정 {remaining_traps}개 설치 필요")
+        elif level.traps and not state.active:
+            requirements.append("레버로 함정 가동 필요")
+        if remaining_posts:
+            requirements.append(f"병사 {remaining_posts}명 배치 필요")
+        if state.carrying is not None:
+            requirements.append("물건을 내려놓으세요")
+        if state.recording is not None:
+            requirements.append("발걸음 기록을 마치세요")
+        return tuple(requirements)
+
+    @property
     def failed(self) -> bool:
         # 실패 여부를 행동 수에서 계산하므로 undo로 상태와 횟수가 함께 복구된다.
         return not self.state.cleared and self.remaining_actions == 0
@@ -116,14 +139,7 @@ class Game:
         # ponytail: 최대 12×12칸에서는 전체 복사가 충분하다. 대형 맵이 필요해지면 행동별 차이를 기록한다.
         self.history.append(deepcopy(self.state))
         candidate.moves += 1
-        candidate.cleared = (
-            candidate.player == self.level.exit
-            and candidate.recording is None
-            and candidate.carrying is None
-            and candidate.installed == self.level.traps
-            and (not self.level.traps or candidate.active)
-            and candidate.soldiers == self.level.posts
-        )
+        candidate.cleared = candidate.player == self.level.exit and not self.exit_requirements(candidate)
         self.state = candidate
         if candidate.cleared:
             self.message = "던전 복구 완료! 출구로 돌아왔습니다."

@@ -258,8 +258,7 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, mirror
     size, half = board.cell_size, board.half_width
     stage = STAGE_THEMES.get(level.id, 1)
     scene = scene_for(level)
-    ready = (state.installed == level.traps and (not level.traps or state.active)
-             and state.soldiers == level.posts and state.carrying is None)
+    ready = game.ready_to_exit
     entries = device_entries(game, gate_statuses, powered, ready)
     outlets = level.chutes.values()
     workshop = stage == 1

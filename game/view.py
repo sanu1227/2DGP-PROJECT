@@ -110,6 +110,8 @@ class View:
         self.top_down = False
         self.navigation = ClickNavigator()
         self.mouse_position = None
+        self.exit_route_key = None
+        self.exit_route_open = False
         self.show_coordinates = False
         self.tutorial = None
         self.tutorial_phase = None
@@ -1006,8 +1008,7 @@ class View:
         self.gate_inlets.clear()
         self.plate_hit_masks.clear()
 
-        exit_ready = (state.installed == level.traps and (not level.traps or state.active)
-                      and state.soldiers == level.posts and state.carrying is None)
+        exit_ready = game.ready_to_exit
         objects, labels, wall_tints = [], [], {}
         decor_draws = {}
         decoration_cells = {tuple(entry["cell"]) for entry in scene["decorations"]} if scene else set()
@@ -1349,6 +1350,12 @@ class View:
         self.text(52, 748, hint.title, 32, INK)
         self.wrapped(52, 707, hint.instruction, width=348, size=26, color=INK)
 
+    def exit_route_available(self, game):
+        if self.exit_route_key is not game.state:
+            self.exit_route_key = game.state
+            self.exit_route_open = find_path(game, game.level.exit) is not None
+        return self.exit_route_open
+
     def play_context(self, game):
         """현재 입력에 바로 필요한 안내를 오래된 피드백보다 먼저 표시한다."""
         if game.failed:
@@ -1359,15 +1366,22 @@ class View:
             return game.context_action(), GOLD
         if self.navigation.active:
             return f"자동 이동 중 · {len(self.navigation.path)}칸 남음", TEAL
+        exit_cell = game.level.exit
+        px, py = game.state.player
+        near_exit = abs(px - exit_cell[0]) + abs(py - exit_cell[1]) <= 1
+        hover_exit = self.mouse_position and self.pick_cell(game, *self.mouse_position) == exit_cell
+        if near_exit or hover_exit:
+            requirements = game.exit_requirements()
+            if requirements:
+                return "출구  |  " + " · ".join(requirements), GOLD
+            if not self.exit_route_available(game):
+                return "출구  |  현재 복귀 경로가 막혀 있습니다", GOLD
+            return "출구  |  복귀 가능", TEAL
         context = game.context_action()
         if game.can_interact():
             if self.tutorial_visible and self.tutorial.target == game.state.player:
                 return "", MUTED
             return context, TEAL
-        level, state = game.level, game.state
-        if (state.soldiers == level.posts and state.installed == level.traps
-                and (not level.traps or state.active)):
-            return "빈손으로 출구 복귀", TEAL
         if self.interaction_hint:
             return self.interaction_hint, GOLD
         if context != INTERACTION_HELP:
@@ -1389,30 +1403,59 @@ class View:
         self.text(62, label_y, f"{index + 1:02d} / {total:02d} 방", 16, GOLD)
         self.text(62, value_y, level.title, 26, INK)
 
-        trap_width, post_width, carry_width = 216, 138, 178
-        right = WIDTH - 32
-        width = (trap_width * bool(level.traps) + post_width * bool(level.posts)
-                 + carry_width * bool(state.carrying))
-        if not width:
-            return
-        bevel((right - width, bottom, right, top), HUD_FILL, HUD_EDGE)
-        x = right - width + 20
+        tasks = []
         if level.traps:
-            self.text(x, label_y, "함정 설치", 16, MUTED)
-            self.text(x, value_y, f"{len(state.installed)} / {len(level.traps)}", 26, INK)
-            if state.installed == level.traps:
-                phase = "가동 완료" if state.active else "가동 대기"
-                self.text(x + 84, value_y, phase, 18, TEAL if state.active else GOLD)
-            x += trap_width
+            tasks.extend((
+                ("함정 설치", len(state.installed), len(level.traps)),
+                ("함정 가동", len(level.traps) if state.active else 0, len(level.traps)),
+            ))
         if level.posts:
-            self.text(x, label_y, "병사 배치", 16, MUTED)
-            color = TEAL if state.soldiers == level.posts else INK
-            self.text(x, value_y, f"{len(state.soldiers)} / {len(level.posts)}", 26, color)
-            x += post_width
+            tasks.append(("병사 배치", len(state.soldiers), len(level.posts)))
+        work_done = all(done == required for _, done, required in tasks)
+        if game.state.cleared:
+            return_text, return_color = "복귀 완료", TEAL
+        elif game.failed:
+            return_text, return_color = "행동 소진", RED
+        elif not work_done:
+            return_text, return_color = "작업 대기", MUTED
+        elif not game.ready_to_exit:
+            return_text, return_color = "복귀 준비", GOLD
+        elif self.exit_route_available(game):
+            return_text, return_color = "출구로 복귀", TEAL
+        else:
+            return_text, return_color = "경로 확인", GOLD
+
+        task_width, return_width, carry_width = 144, 156, 178
+        right = WIDTH - 32
         if state.carrying:
-            self.text(x, label_y, "운반", 16, MUTED)
-            self.text(x, value_y, ITEM_NAMES[state.carrying], 22, GOLD)
+            bevel((right - carry_width, bottom, right, top), HUD_FILL, HUD_EDGE)
+            self.text(right - carry_width + 18, label_y, "운반", 16, MUTED)
+            self.text(right - carry_width + 18, value_y, ITEM_NAMES[state.carrying], 22, GOLD)
             self.hud_item(state.carrying, right - 34, bottom + 17)
+            right -= carry_width + 12
+        return_left = right - return_width
+        bevel((return_left, bottom, right, top), HUD_FILL, HUD_EDGE)
+        box(return_left + 10, bottom + 12, return_left + 13, top - 12, return_color)
+        self.text(return_left + 23, label_y, "복귀", 16, MUTED)
+        self.text(return_left + 23, value_y, return_text, 22, return_color)
+        if not tasks:
+            return
+        task_right = return_left - 12
+        left = task_right - task_width * len(tasks)
+        bevel((left, bottom, task_right, top), HUD_FILL, HUD_EDGE)
+        for column, (label, done, required) in enumerate(tasks):
+            x = left + column * task_width
+            if column:
+                box(x, bottom + 12, x + 1, top - 12, HUD_EDGE)
+            complete = done == required
+            color = TEAL if complete else GOLD
+            self.text(x + 18, label_y, label, 16, MUTED)
+            self.text(x + 18, value_y, f"{done} / {required}", 26, TEAL if complete else INK)
+            icon_x, icon_y = x + task_width - 27, bottom + 21
+            diamond(icon_x, icon_y, 10, 10, HUD_FILL, color)
+            if complete:
+                line(icon_x - 4, icon_y, icon_x - 1, icon_y - 3, color)
+                line(icon_x - 1, icon_y - 3, icon_x + 5, icon_y + 4, color)
 
     def play_status_panel(self, right, accent):
         bevel((32, STATUS_BOTTOM, right, STATUS_TOP), HUD_FILL, HUD_EDGE)
