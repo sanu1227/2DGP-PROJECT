@@ -25,9 +25,11 @@ def main() -> int:
             return 0
         # 논리 검사와 테스트는 SDL 또는 화면 없이 실행할 수 있다.
         from game.view import run
+        from game.progress import Progress, progress_path
 
         run(levels, (args.stage or 1) - 1, args.smoke_frames,
-            show_title=args.stage is None, top_down=not args.isometric)
+            show_title=args.stage is None, top_down=not args.isometric,
+            progress=Progress(progress_path(), levels) if args.stage is None and args.smoke_frames is None else None)
     except ModuleNotFoundError as error:
         print(f"의존성을 불러올 수 없습니다: {error}\npython -m pip install -r requirements.txt", file=sys.stderr)
         return 1

@@ -23,6 +23,7 @@ class StageFeedback:
         self.game = None
         self.entered_at = 0.0
         self.completed_at = None
+        self.replay = False
 
     def enter(self, game, now):
         self.game = game
@@ -40,8 +41,8 @@ class StageFeedback:
             self.completed_at = None
 
     @staticmethod
-    def next_button(index, total):
-        label = "처음부터 다시" if index + 1 == total else "다음 방으로"
+    def next_button(index, total, *, replay=False):
+        label = "방 선택으로" if replay else "처음부터 다시" if index + 1 == total else "다음 방으로"
         return Button("next", label, (600, 240, 1000, 304))
 
     def draw(self, view, game, index, total):
@@ -102,9 +103,9 @@ class StageFeedback:
         if game.level.posts:
             tasks.append(f"병사 {len(game.state.soldiers)} / {len(game.level.posts)} 배치")
         view.centered(800, 378, "   ·   ".join(tasks) + "   ·   출구 복귀 완료", 18, INK)
-        if index + 1 == total:
+        if index + 1 == total and not self.replay:
             view.centered(800, 337, "모든 구역 복구 완료. 오늘의 근무를 마쳤습니다!", 22, GOLD)
-        button = self.next_button(index, total)
+        button = self.next_button(index, total, replay=self.replay)
         hovered = view.mouse_position is not None and button.contains(view.mouse_position)
         bevel(button.bounds, (61, 116, 100) if hovered else (43, 86, 76), TEAL)
         view.centered(800, 272, button.label, 26, INK)

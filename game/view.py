@@ -1541,7 +1541,7 @@ class View:
             self.draw_inspection(game)
 
 
-def run(levels, index=0, smoke_frames=None, *, show_title=True, top_down=False):
+def run(levels, index=0, smoke_frames=None, *, show_title=True, top_down=False, progress=None):
     # 글꼴 오류는 SDL 창을 열기 전에 보고한다.
     font_path()
     p.open_canvas(WIDTH, HEIGHT, sync=True)
@@ -1554,11 +1554,15 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True, top_down=False):
         view = View()
         view.top_down = top_down
         front_end = FrontEnd(show_title)
+        front_end.progress = progress
+        front_end.levels = levels
         music = BackgroundMusic()
         play_menu = PlayMenu()
         feedback = StageFeedback()
         introductions = device_introductions(levels)
         game = Game(levels[index])
+        track_progress = False
+        saved_clear = None
 
         def select_room(new_index, *, replay_intro=False):
             nonlocal game, index
@@ -1574,6 +1578,10 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True, top_down=False):
             view.inspected = None
 
         def next_room():
+            if feedback.replay:
+                feedback.replay = False
+                front_end.activate("rooms")
+                return
             if index + 1 == len(levels):
                 play_menu.introduced_rooms.clear()
             select_room((index + 1) % len(levels))
@@ -1610,6 +1618,8 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True, top_down=False):
                 elif (front_end.screen == "title" and event.type == p.SDL_KEYDOWN
                       and event.key in stage_keys and stage_keys[event.key] < len(levels)):
                     select_room(stage_keys[event.key], replay_intro=True)
+                    track_progress = False
+                    feedback.replay = False
                     front_end.screen = "playing"
                     screen_changed = True
                 elif front_end.screen != "playing":
@@ -1619,6 +1629,16 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True, top_down=False):
                     elif result == "start":
                         play_menu.introduced_rooms.clear()
                         select_room(0)
+                        track_progress = progress is not None
+                        feedback.replay = False
+                    elif result == "continue":
+                        select_room(progress.checkpoint, replay_intro=True)
+                        track_progress = True
+                        feedback.replay = False
+                    elif result and result.startswith("room:"):
+                        select_room(int(result.split(":")[1]), replay_intro=True)
+                        track_progress = False
+                        feedback.replay = True
                     if result is not None:
                         # 전환 뒤 입력은 무시하되 같은 묶음의 창 닫기는 처리한다.
                         screen_changed = True
@@ -1651,7 +1671,7 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True, top_down=False):
                             view.inspect_cell(game, view.pick_cell(game, *view.mouse_position))
                     elif event.button == p.SDL_BUTTON_LEFT:
                         if game.state.cleared:
-                            if feedback.next_button(index, len(levels)).contains(view.mouse_position):
+                            if feedback.next_button(index, len(levels), replay=feedback.replay).contains(view.mouse_position):
                                 next_room()
                                 screen_changed = True
                         else:
@@ -1668,6 +1688,8 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True, top_down=False):
                         view.show_coordinates = not view.show_coordinates
                     elif event.key in stage_keys and stage_keys[event.key] < len(levels):
                         select_room(stage_keys[event.key], replay_intro=True)
+                        track_progress = False
+                        feedback.replay = False
                         screen_changed = True
                     elif event.key in (p.SDLK_z, p.SDLK_BACKSPACE):
                         if game.undo():
@@ -1707,6 +1729,9 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True, top_down=False):
                     view.animate_move(game, previous, action)
                     view.animate_devices(game, previous)
             if front_end.screen == "playing":
+                if track_progress and game.state.cleared and saved_clear is not game.state:
+                    progress.complete(game.level.id)
+                    saved_clear = game.state
                 feedback.update(game, now)
                 view.tutorial_hidden = play_menu.mode == "device"
                 view.draw(game, index, len(levels))

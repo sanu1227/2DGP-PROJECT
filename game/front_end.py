@@ -70,6 +70,8 @@ class FrontEnd:
         self.title_elapsed = 0.0
         self.title_clock = None
         self.title_fade_in = False
+        self.progress = None
+        self.levels = ()
 
     def close(self):
         self.audio.close()
@@ -114,10 +116,21 @@ class FrontEnd:
     @property
     def buttons(self):
         if self.screen == "title":
-            return (
-                Button("story", "게임 시작", (600, 188, 1000, 266)),
-                Button("quit", "게임 종료", (650, 100, 950, 162)),
-            )
+            start = Button("story", "게임 시작", (600, 188, 1000, 266))
+            quit_button = Button("quit", "게임 종료", (650, 100, 950, 162))
+            if not self.cleared_rooms:
+                return start, quit_button
+            options = [start]
+            if self.progress.checkpoint is not None:
+                options.insert(0, Button("continue", "이어하기", (330, 196, 580, 258)))
+            options.append(Button("rooms", "방 선택", (1020, 196, 1270, 258)))
+            return (*options, quit_button)
+        if self.screen == "rooms":
+            return tuple(
+                Button(f"room:{index}", f"{index + 1:02d}   {level.title}",
+                       (470, 760 - row * 65, 1130, 816 - row * 65))
+                for row, (index, level) in enumerate(self.cleared_rooms)
+            ) + (Button("title", "타이틀로", (650, 106, 950, 162)),)
         if self.screen == "story":
             return (
                 Button("story_next", "작업 안내" if self.story_page == len(STORY) - 1 else "다음 컷", (1260, 30, 1520, 78)),
@@ -132,6 +145,13 @@ class FrontEnd:
                 Button("guide_back", "이전 안내" if self.guide_page else "이야기로", (80, 44, 340, 100)),
             )
         return ()
+
+    @property
+    def cleared_rooms(self):
+        if self.progress is None:
+            return ()
+        return tuple((index, level) for index, level in enumerate(self.levels)
+                     if level.id in self.progress.completed)
 
     def activate(self, action):
         if action == "logo_next":
@@ -151,6 +171,10 @@ class FrontEnd:
         elif action == "story":
             self.screen = "story"
             self.comic.reset()
+        elif action == "rooms":
+            self.screen = "rooms"
+        elif action == "continue" or action.startswith("room:"):
+            self.screen = "playing"
         elif action == "story_next":
             if not self.comic.advance():
                 self.screen, self.guide_page = "controls", 0
@@ -242,6 +266,9 @@ class FrontEnd:
             self.draw_title(view)
         elif self.screen == "story":
             draw_comic_page(view, self.comic, self.image)
+        elif self.screen == "rooms":
+            panel((0, 0, WIDTH - 1, HEIGHT - 1), (14, 24, 26))
+            view.centered(800, 895, "복구한 방", 48, GOLD)
         else:
             self.draw_controls(view)
         for index, button in enumerate(self.buttons):
@@ -252,12 +279,14 @@ class FrontEnd:
             bevel((left, bottom - 5, right, top - 5), (13, 20, 20), (61, 49, 33))
             bevel(button.bounds, fill, edge)
             p.draw_line(left + 12, top - 3, right - 12, top - 3, *edge)
-            size = 32 if self.screen == "title" and index == 0 else 22
+            size = 32 if button.action == "story" else 22
             x, y = (left + right) / 2, (bottom + top) / 2
             view.centered(x + 1, y - 2, button.label, size, (10, 21, 22))
             view.centered(x, y, button.label, size, INK if focused else MUTED)
         if self.screen == "title" and self.title_fade_in:
             fade_to_black(1 - smooth(self.title_elapsed / FADE_SECONDS))
+        if self.screen in ("title", "rooms") and self.progress and self.progress.notice:
+            view.centered(800, 60, self.progress.notice, 18, GOLD)
 
     def draw_title(self, view):
         draw_title(self.image, self.title_elapsed)
