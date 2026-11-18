@@ -1,13 +1,14 @@
 """인부의 기록, 재생, 문양 상태를 표시한다."""
 
-from math import hypot
+from math import cos, hypot, sin, tau
 
 import pico2d.pico2d as p
 
 from game.device_links import device_links, draw_link_mark
 from game.levels import DIRECTIONS
 from game.layout import WIDTH, STATUS_Y
-from game.play_effects import ring
+from game.play_effects import alpha_blend, ring
+from game.worker_animation import smooth
 
 
 ECHO_COLOR = (197, 137, 243)
@@ -15,6 +16,11 @@ STEP_COLOR = (233, 199, 255)
 SEAL_COLOR = (123, 223, 192)
 STRIDE_SECONDS = .18
 WALK_FRAMES = 4
+WAKE_SECONDS = .24
+RECORD_PULSE_SECONDS = .24
+RECORD_CONFIRM_SECONDS = .42
+RECORD_COLOR = (221, 162, 251)
+DORMANT_TINT = (119, 135, 158)
 GATE_STYLES = {
     "open": ("통과", (123, 223, 192)),
     "held": ("통과 중", (234, 192, 111)),
@@ -110,11 +116,24 @@ class EchoMotion:
         self.game = None
         self.motion = None
         self.direction = "down"
+        self.wake_at = None
+        self.step_at = None
+        self.confirmation = None
 
     def change(self, game, previous, now):
         if game is not self.game:
             self.game, self.motion = game, None
             self.direction = "down"
+            self.wake_at = self.step_at = self.confirmation = None
+        recording, prior = game.state.recording, previous.recording
+        if recording and recording.origin in game.state.replay_workers:
+            if not prior or recording.origin != prior.origin:
+                self.wake_at, self.step_at = now, None
+            elif recording.inputs != prior.inputs:
+                self.step_at = now
+        elif (prior and prior.origin in game.state.recorded_stations
+              and prior.origin not in previous.recorded_stations):
+            self.confirmation = (prior.origin, now)
         echo = game.state.echo
         old = previous.echo
         if not echo:
@@ -145,12 +164,67 @@ class EchoMotion:
                 frame = int(fraction * WALK_FRAMES)
         return f"skeleton_worker_{self.direction}_{frame}"
 
+    def recording_pulse(self, now):
+        if self.step_at is None:
+            return 0
+        return 1 - smooth((now - self.step_at) / RECORD_PULSE_SECONDS)
+
     def pose(self, game, now):
         echo = game.state.echo
         if not echo:
             return None
         position = self.position_at(now) if game is self.game and self.motion else echo.position
         return position, self.direction
+
+
+def draw_skeleton_worker(art, game, origin, motion, x, y, size, now, *, sprite="skeleton_worker_down_1"):
+    """기록 전에는 웅크리고, 녹화 중에는 받은 발걸음을 인부 주변에 표시한다."""
+    state = game.state
+    recording = state.recording
+    if recording and recording.origin == origin:
+        age = max(0, now - motion.wake_at) if motion.wake_at is not None else WAKE_SECONDS
+        awake = smooth(age / WAKE_SECONDS)
+        draw_recording_orbit(x, y - size * .37, size, age, motion.recording_pulse(now))
+    else:
+        awake = float(origin in state.recorded_stations)
+        if motion.confirmation and motion.confirmation[0] == origin:
+            age = (now - motion.confirmation[1]) / RECORD_CONFIRM_SECONDS
+            if 0 <= age < 1:
+                ring(x, y - size * .28, size * (.24 + .40 * smooth(age)), SEAL_COLOR, 210 * (1 - age))
+    height = .84 + .16 * awake
+    tint = None if awake == 1 else tuple(round(channel + (255 - channel) * awake) for channel in DORMANT_TINT)
+    art.draw(sprite, x, y - size * .45 * (1 - height), size,
+             angle=.10 * (1 - awake), height_scale=height, tint=tint)
+
+
+def draw_recording_orbit(x, y, size, age, pulse):
+    phase = age * tau / 1.1
+    with alpha_blend():
+        for index in range(8):
+            angle = phase - index * tau / 12
+            opacity = round((165 + 60 * pulse) * (1 - index / 9))
+            radius = 3 if index == 0 else 2
+            p.draw_circle(x + cos(angle) * size * (.49 + .05 * pulse),
+                          y + sin(angle) * size * .21,
+                          radius, *RECORD_COLOR, opacity, filled=True)
+
+
+def draw_recording_progress(game, board, motion, now):
+    recording = game.state.recording
+    pos = game.state.replay_workers.get(recording.origin)
+    if pos is None:
+        return
+    x, y = board.screen(pos)
+    y += board.half_width * .94
+    _, total = game.level.echo_links[recording.origin]
+    count = len(recording.inputs)
+    pulse = motion.recording_pulse(now)
+    for index in range(total):
+        px = round(x + (index - (total - 1) / 2) * 10)
+        radius = 3 + round(pulse) if index == count - 1 else 3
+        filled = index < count
+        p.draw_circle(px, y, radius + 1, 29, 21, 37, filled=True)
+        p.draw_circle(px, y, radius, *(RECORD_COLOR if filled else (156, 121, 183)), filled=filled)
 
 
 def draw_echo_marks(game, board):

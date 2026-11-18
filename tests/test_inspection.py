@@ -4,7 +4,7 @@ from unittest.mock import Mock, patch
 from game.levels import load_levels
 from game.model import DIRECTIONS, Echo, Game
 from game.view import View
-from game.worker_view import EchoMotion, STRIDE_SECONDS
+from game.worker_view import DORMANT_TINT, EchoMotion, STRIDE_SECONDS, draw_recording_progress, draw_skeleton_worker
 from tests.solutions import SOLUTIONS
 
 
@@ -35,6 +35,44 @@ class InspectionTests(TestCase):
         animation.change(game, previous, 10)
         self.assertIsNone(animation.motion)
         self.assertEqual(animation.skeleton_sprite(10), "skeleton_worker_down_1")
+
+    def test_recording_only_wakes_the_linked_worker_and_tracks_accepted_steps(self):
+        game = Game(load_levels()[7])
+        motion, art = EchoMotion(), Mock()
+        origin, other = game.state.replay_workers
+        draw_skeleton_worker(art, game, origin, motion, 100, 100, 48, 0)
+        self.assertEqual(art.draw.call_args.kwargs["tint"], DORMANT_TINT)
+
+        with (patch("game.worker_view.draw_recording_orbit") as orbit,
+              patch("game.worker_view.p.draw_circle") as pip,
+              patch("game.worker_view.ring") as ring):
+            for tick, action in enumerate(SOLUTIONS[game.level.id], start=1):
+                previous = game.state
+                self.assertTrue(game.act(action))
+                motion.change(game, previous, tick)
+                recording = game.state.recording
+                if recording and recording.origin == origin:
+                    count = len(recording.inputs)
+                    if count == 0:
+                        self.assertEqual(motion.wake_at, tick)
+                    else:
+                        self.assertEqual(motion.step_at, tick)
+                    draw_skeleton_worker(art, game, origin, motion, 100, 100, 48, tick + .25)
+                    self.assertIsNone(art.draw.call_args.kwargs["tint"])
+                    pip.reset_mock()
+                    draw_recording_progress(game, self.view.projection(game.level), motion, tick + .25)
+                    marks = pip.call_args_list[1::2]
+                    self.assertEqual(len(marks), game.level.echo_links[origin][1])
+                    self.assertEqual(sum(mark.kwargs["filled"] for mark in marks), count)
+                    draw_skeleton_worker(art, game, other, motion, 300, 100, 48, tick + .25)
+                    self.assertEqual(art.draw.call_args.kwargs["tint"], DORMANT_TINT)
+                if origin in game.state.recorded_stations:
+                    self.assertEqual(motion.confirmation, (origin, tick))
+                    draw_skeleton_worker(art, game, origin, motion, 100, 100, 48, tick + .1)
+                    self.assertIsNone(art.draw.call_args.kwargs["tint"])
+                    break
+            self.assertEqual(orbit.call_count, game.level.echo_links[origin][1])
+            ring.assert_called_once()
 
     def setUp(self):
         self.levels = load_levels()

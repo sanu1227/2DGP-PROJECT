@@ -16,7 +16,7 @@ from game.play_effects import beam_contacts, trap_motion
 from game.scenery import draw_rubble_track, texture_tint
 from game.themes import room_background, scene_for
 from game.topdown_terrain import Light, draw_shadows, draw_terrain, materials_for
-from game.worker_view import ECHO_COLOR, draw_echo_trail, draw_echo_turn
+from game.worker_view import ECHO_COLOR, draw_echo_trail, draw_echo_turn, draw_skeleton_worker
 
 
 ASSET_ROOT = Path(__file__).resolve().parents[1] / "assets" / "topdown_v2"
@@ -80,7 +80,7 @@ class TopDownArt:
         self.atlases.clear()
 
     def draw(self, name, x, y, size, *, angle=0, opacity=1, height_scale=1, outline=0,
-             inset=(0, 0), rows=None, section=None, lighting=None):
+             inset=(0, 0), rows=None, section=None, lighting=None, tint=None):
         atlas_name, left, top, width, height = self.sprites[name]
         atlas = self.atlases.get(atlas_name)
         if atlas is None:
@@ -106,7 +106,7 @@ class TopDownArt:
             glow = lighting.strength if lighting else 0
             self.outlines.draw(ASSET_ROOT / self.files[atlas_name], (left, top, width, height), rect, angle, outline,
                                color, glow=glow)
-        tint = lighting.tint if lighting else None
+        tint = lighting.tint if lighting else tint
         if opacity != 1:
             atlas.opacify(opacity)
         try:
@@ -355,7 +355,7 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, mirror
     for origin, pos in state.replay_workers.items():
         if state.echo is None or state.echo.origin != origin:
             sx, sy = board.screen(pos)
-            art.draw("skeleton_worker_down_1", sx, sy + size * .04, size * .75)
+            draw_skeleton_worker(art, game, origin, view.echo_motion, sx, sy + size * .04, size * .75, now)
 
     echo_pose = view.echo_motion.pose(game, now)
     if echo_pose:
@@ -363,7 +363,8 @@ def draw_board(view, game, board, now, beam_segments, powered, rotations, mirror
         sx, sy = board.screen(position)
         p.draw_circle(sx, sy, round(size * .33), *ECHO_COLOR)
         if state.echo.origin in state.replay_workers:
-            art.draw(view.echo_motion.skeleton_sprite(now), sx, sy + size * .04, size * .75)
+            draw_skeleton_worker(art, game, state.echo.origin, view.echo_motion, sx, sy + size * .04, size * .75, now,
+                                 sprite=view.echo_motion.skeleton_sprite(now))
         else:
             art.draw(f"worker_{direction}_idle", sx, sy, size * .75, opacity=.67)
 

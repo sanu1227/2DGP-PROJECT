@@ -30,7 +30,10 @@ from game.room_debris import RoomDebris
 from game.room_atmosphere import RoomAtmosphere, prop_kind
 from game.play_effects import ChuteFeedback, WorkFeedback, WORK_SECONDS, beam_contacts, dust, ring, rubble_scrape, trap_motion
 from game.topdown import ITEMS as TOPDOWN_ITEMS, TopDownArt, draw_board as draw_topdown_board
-from game.worker_view import EchoMotion, draw_direction_arrow, draw_echo_marks, draw_echo_turn, draw_worker_status, recording_label
+from game.worker_view import (
+    EchoMotion, draw_direction_arrow, draw_echo_marks, draw_echo_turn, draw_recording_progress, draw_skeleton_worker,
+    draw_worker_status, recording_label,
+)
 from game.worker_animation import CarryHandoff, GESTURES, WorkerAction, sample_pose, smooth
 from game.music import BackgroundMusic
 
@@ -1137,10 +1140,13 @@ class View:
             if len(seals) > 1:
                 labels.extend((seal, level.device_labels[gate]) for gate, seal in seals.items()
                               if seal not in level.plates)
+        resting_workers = {}
         for origin, pos in state.replay_workers.items():
             if state.echo is None or state.echo.origin != origin:
                 sx, sy = screen(pos)
-                objects.append((sum(pos), 2, "resting_recorded_worker", sx, sy))
+                key = f"resting_recorded_worker_{origin}"
+                resting_workers[key] = origin
+                objects.append((sum(pos), 2, key, sx, sy))
         echo_pose = self.echo_motion.pose(game, now)
         if echo_pose:
             position, direction = echo_pose
@@ -1225,12 +1231,13 @@ class View:
                 self.gate(level, pos, sx, sy, scale, sprite.removeprefix("gate_"), gate_openings[pos])
                 self.draw_gate_dust(projection, pos, now)
                 continue
-            if sprite == "resting_recorded_worker":
-                self.draw_iso_skeleton_worker(sx, sy, half_width)
+            if sprite in resting_workers:
+                self.draw_iso_skeleton_worker(game, resting_workers[sprite], sx, sy, half_width, now)
                 continue
             if sprite == "echo_actor":
                 if state.echo.origin in state.replay_workers:
-                    self.draw_iso_skeleton_worker(sx, sy, half_width, self.echo_motion.skeleton_sprite(now))
+                    self.draw_iso_skeleton_worker(game, state.echo.origin, sx, sy, half_width, now,
+                                                  sprite=self.echo_motion.skeleton_sprite(now))
                 else:
                     draw_tinted(self.art, f"worker_{FACING[direction]}_idle", sx, sy, scale, (206, 150, 255))
                 continue
@@ -1473,10 +1480,11 @@ class View:
             axes = "x 오른쪽 / y 아래" if self.top_down else "x 오른쪽 아래 / y 왼쪽 아래"
             self.text(32, 27, f"F2 좌표 · {axes}", 16, MUTED)
 
-    def draw_iso_skeleton_worker(self, x, y, half_width, sprite="skeleton_worker_down_1"):
+    def draw_iso_skeleton_worker(self, game, origin, x, y, half_width, now, *, sprite="skeleton_worker_down_1"):
         if self.topdown_art is None:
             self.topdown_art = TopDownArt()
-        self.topdown_art.draw(sprite, x, y + half_width * .24, half_width * 1.28)
+        draw_skeleton_worker(self.topdown_art, game, origin, self.echo_motion, x, y + half_width * .24,
+                             half_width * 1.28, now, sprite=sprite)
 
     def inspect_cell(self, game, target):
         level, state = game.level, game.state
@@ -1518,10 +1526,12 @@ class View:
             direction = echo.remaining[0] if active and echo.remaining else None
             detail = (f"{len(echo.remaining)}걸음 남음" if direction else
                       "재생 완료" if origin in state.recorded_stations else
-                      "기록 중" if state.recording and state.recording.origin == origin else "기록 대기")
+                      "기록 대기")
             pos = echo.position if active else state.replay_workers[origin]
             board = self.projection(level)
             self.tile_outline(board, *board.screen(pos), board.half_width - 4, int(board.half_height) - 4, GOLD)
+            if state.recording and state.recording.origin == origin:
+                return
             pose = self.echo_motion.pose(game, self.now()) if active else None
             x, y = board.screen(pose[0] if pose else pos)
             half = max(62, self.text_width(detail, 16) / 2 + (26 if direction else 16))
@@ -1549,6 +1559,8 @@ class View:
             self.navigation.cancel()
         box(0, 0, WIDTH, HEIGHT, room_background(scene_for(game.level)))
         self.board(game)
+        if game.state.recording and game.state.replay_workers:
+            draw_recording_progress(game, self.projection(game.level), self.echo_motion, self.now())
         self.tutorial_overlay(game)
         self.play_header(game, index, total)
         self.play_footer(game)
