@@ -186,8 +186,12 @@ class PlayMenu:
                 ("현재 방 다시 시작", "R"),
                 ("일시정지 / 계속하기", "Esc"),
             )
+            spacing = 45
+            if game.level.circuits:
+                controls += (("마력 배선", "B로 그림판 열기 / Ctrl+S로 저장"),)
+                spacing = 41
             for i, (label, keys) in enumerate(controls):
-                y = 650 - i * 45
+                y = 650 - i * spacing
                 view.text(436, y, label, 22, INK)
                 view.text(800, y, keys, 22, TEAL)
             view.centered(800, 315, "목표를 모두 복구한 뒤, 빈손으로 출구에 도착하세요.", 18, MUTED)

@@ -311,6 +311,8 @@ class Game:
             return "send_bone", "E: 연결된 배출구로 뼈 보내기"
         if pos in self.level.traps:
             if pos in state.installed:
+                if self.level.circuits and not state.circuit:
+                    return None, "B로 마력 배선을 복구하세요."
                 return None, "이미 설치했습니다. 레버로 가동하세요."
             if state.carrying != "part":
                 return None, "함정 부품을 가져오세요."

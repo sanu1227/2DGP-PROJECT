@@ -1325,7 +1325,8 @@ class View:
         if self.tutorial_phase != phase:
             self.tutorial_phase = phase
             self.tutorial_started_at = now
-        self.tutorial_visible = not self.tutorial_hidden and now - self.tutorial_started_at < TUTORIAL_SECONDS
+        self.tutorial_visible = (not self.tutorial_hidden
+                                 and (hint.persistent or now - self.tutorial_started_at < TUTORIAL_SECONDS))
 
     def tutorial_overlay(self, game):
         if not self.tutorial_visible:
@@ -1356,7 +1357,9 @@ class View:
         self.text(52, 786, "첫 근무 안내", 22, GOLD)
         self.text(344, 786, f"{hint.step} / 5", 22, TEAL)
         self.text(52, 748, hint.title, 32, INK)
-        self.wrapped(52, 707, hint.instruction, width=348, size=26, color=INK)
+        y = 707
+        for instruction in hint.instruction.splitlines():
+            y = self.wrapped(52, y, instruction, width=348, size=26, color=INK) - 35
 
     def exit_route_available(self, game):
         if self.exit_route_key is not game.state:
@@ -1509,7 +1512,10 @@ class View:
 
     def blueprint_status(self, game, notice):
         if not notice:
-            notice = "배선 연결됨" if game.state.circuit else "끊어진 배선"
+            if game.state.circuit:
+                notice = "배선 연결됨"
+            else:
+                notice = game.blueprint_blocker() or "그림판에서 같은 번호의 단자를 잇고 Ctrl+S"
         color = TEAL if game.state.circuit else GOLD
         label = "마력 배선 완료" if game.state.active else f"B  마력 배선   |   {notice}"
         right = WIDTH - 32

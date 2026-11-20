@@ -15,6 +15,7 @@ class TutorialHint:
     target: Pos | None
     target_label: str = ""
     complete: bool = False
+    persistent: bool = False
 
 
 @dataclass(frozen=True)
@@ -38,11 +39,15 @@ def device_lessons(level: Level, state: State | None = None) -> tuple[DeviceLess
         if target is not None:
             lessons.append(DeviceLesson(kind, ITEM_NAMES[kind], instruction, target))
     if level.traps and level.levers:
-        lessons.extend((
-            DeviceLesson("trap", "함정", "부품을 들고 함정 칸에서 설치해요.", min(level.traps)),
-            DeviceLesson("trap", "가동 레버", "함정을 모두 설치한 뒤 레버 칸에서\n빈손으로 레버를 당겨요.",
-                         min(level.levers)),
-        ))
+        lessons.append(DeviceLesson("trap", "함정", "부품을 들고 함정 칸에서 설치해요.", min(level.traps)))
+        lever_hint = "함정을 모두 설치한 뒤 레버 칸에서\n빈손으로 레버를 당겨요."
+        if level.circuits:
+            lessons.append(DeviceLesson("blueprint", "수리공의 마력 배선",
+                                        "부품을 설치한 뒤 B를 누르면 실제 그림판이 열려요.\n"
+                                        "검은색 선 도구로 같은 번호의 두 단자를 이어요.\n"
+                                        "Ctrl+S로 저장하면 던전에 배선이 생겨요.", min(level.traps)))
+            lever_hint = "배선을 저장한 뒤 게임으로 돌아와요.\n함정을 건너 레버에서 E를 누르면 가동돼요."
+        lessons.append(DeviceLesson("trap", "가동 레버", lever_hint, min(level.levers)))
     if level.benches and level.posts:
         lessons.extend((
             DeviceLesson("assembly", "작업대", "작업대 옆 칸에서 뼈를 한 묶음씩 넣어요.\n"
@@ -78,9 +83,15 @@ def device_lessons(level: Level, state: State | None = None) -> tuple[DeviceLess
         lessons.append(DeviceLesson("fixed_mirror", "고정 거울", "빈손으로 거울 옆 칸에 서서 돌려요.\n"
                                     "빛은 거울의 화살표 방향으로 나가요.", min(fixed)))
     if level.receivers:
-        receiver_hint = ("B로 마력 배선도를 열어 수신기와 문을 이어요.\n빛이 수신기에 닿아 있는 동안 문이 열려요."
+        receiver_hint = ("빛이 닿은 수신기가 전원을 공급해요.\n전원이 들어온 수신기와 배선으로 이은 문이 열려요."
                          if level.circuits else "빛이 수신기에 닿아 있는 동안 연결문이 열려요.")
         lessons.append(DeviceLesson("receiver", "빛 수신기", receiver_hint, min(level.receivers)))
+        if len(level.circuits) > 1:
+            lessons.append(DeviceLesson("rewiring", "마력 배선으로 문 바꾸기",
+                                        "B로 그림판을 열고 검은 선으로 같은 번호를 이어요.\n"
+                                        "1번은 창고 문, 2번은 출구 문이에요. 한 쌍만 연결할 수 있어요.\n"
+                                        "문을 바꿀 때는 기존 선을 흰색으로 지우고 새로 이은 뒤 Ctrl+S.",
+                                        level.circuits[0].path[-1]))
     if level.echo_links:
         station = min(level.echo_links)
         workers = level.replay_workers if state is None else state.replay_workers
@@ -130,8 +141,8 @@ def first_room_hint(game: Game) -> TutorialHint | None:
     if state.installed == level.traps:
         target = min(level.levers)
         if level.circuits and not state.circuit:
-            return TutorialHint(4, "마력 배선 복구", "B로 도면 열기. 검은 선을 잇고 저장.",
-                                target, "마력 배선")
+            return TutorialHint(4, "마력 배선 복구", "B로 그림판 열기\n검은 선을 잇고 Ctrl+S",
+                                None, persistent=True)
         instruction = ("E로 가동. 가동하면 통과 불가."
                        if state.player in level.levers else
                        "함정을 건너 레버에서 E를 누르세요.")
