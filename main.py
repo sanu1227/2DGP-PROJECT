@@ -12,11 +12,16 @@ def main() -> int:
     parser.add_argument("--check", action="store_true", help="창 없이 스테이지 데이터 검사")
     parser.add_argument("--smoke-frames", type=int, help="지정 프레임만 표시한 뒤 종료 (창 검사)")
     parser.add_argument("--isometric", action="store_true", help="기존 사선 시점으로 실행")
+    parser.add_argument("--blueprint-demo", action="store_true", help="1번과 5번 방에서 그림판 도면 스킬 사용")
     args = parser.parse_args()
     if args.smoke_frames is not None and args.smoke_frames < 1:
         parser.error("--smoke-frames는 1 이상이어야 합니다.")
     try:
         levels = load_levels()
+        if args.blueprint_demo:
+            from game.blueprint_rooms import blueprint_rooms
+
+            levels = blueprint_rooms(levels)
         if args.stage is not None and not 1 <= args.stage <= len(levels):
             parser.error(f"--stage는 1~{len(levels)} 사이여야 합니다.")
         if args.check:
@@ -27,9 +32,12 @@ def main() -> int:
         from game.view import run
         from game.progress import Progress, progress_path
 
+        progress = None
+        if not (args.stage is not None or args.smoke_frames is not None or args.blueprint_demo):
+            progress = Progress(progress_path(), levels)
         run(levels, (args.stage or 1) - 1, args.smoke_frames,
             show_title=args.stage is None, top_down=not args.isometric,
-            progress=Progress(progress_path(), levels) if args.stage is None and args.smoke_frames is None else None)
+            progress=progress)
     except ModuleNotFoundError as error:
         print(f"의존성을 불러올 수 없습니다: {error}\npython -m pip install -r requirements.txt", file=sys.stderr)
         return 1

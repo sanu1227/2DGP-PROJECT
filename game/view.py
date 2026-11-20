@@ -963,10 +963,8 @@ class View:
             source_reach=TOPDOWN_SOURCE_REACH if self.top_down else None, rubble_contacts=rubble_contacts)
         self.receiver_feedback.observe(game, powered_receivers, now)
         logical_power = trace_magic(level, state)[1]
-        gate_statuses = {pos: (('open' if control in logical_power else
-                               'held' if pos == state.player or pos in state.items else 'closed')
-                              if control in level.receivers else game.gate_status(pos, state))
-                         for pos, control in level.gates.items()}
+        gate_statuses = {pos: game.gate_status(pos, state, powered_receivers=logical_power)
+                         for pos in level.gates}
         if self.gate_game is not game:
             self.reset_gates()
             self.reset_plates()
@@ -978,7 +976,8 @@ class View:
         for pos, control in level.gates.items():
             opening = float(gate_statuses[pos] != "closed")
             if control in level.receivers:
-                opening = float(control in powered_receivers or gate_statuses[pos] == "held")
+                opening = float((control in powered_receivers and game.gate_wired(pos, state))
+                                or gate_statuses[pos] == "held")
             if gate_statuses[pos] == "open" and control in self.plate_delays:
                 # 블록이 발판에 닿기 전까지 격자의 표시 위치를 유지한다.
                 opening = self.plate_delays[control][1]
@@ -1322,7 +1321,7 @@ class View:
             return
 
         now = self.now()
-        phase = (game, hint.step)
+        phase = (game, hint.step, hint.title)
         if self.tutorial_phase != phase:
             self.tutorial_phase = phase
             self.tutorial_started_at = now
@@ -1480,6 +1479,44 @@ class View:
             axes = "x 오른쪽 / y 아래" if self.top_down else "x 오른쪽 아래 / y 왼쪽 아래"
             self.text(32, 27, f"F2 좌표 · {axes}", 16, MUTED)
 
+    def draw_circuits(self, game):
+        board = self.projection(game.level)
+        state = game.state
+        powered = (trace_magic(game.level, state)[1] if game.level.receivers else set())
+
+        def point(pos):
+            x, y = board.screen(pos)
+            return x, y - board.half_height * .48
+
+        for index, circuit in enumerate(game.level.circuits, start=1):
+            connected = state.circuit == index
+            live = connected and (circuit.path[0] in powered or state.active)
+            bright = GOLD if index == 1 else TEAL
+            color = bright if connected else (101, 83, 68)
+            for start, end in zip(circuit.path, circuit.path[1:]):
+                if not connected and (start, end) == circuit.gap:
+                    continue
+                x, y = point(start)
+                end_x, end_y = point(end)
+                for offset in (-1, 0, 1):
+                    line(x + offset, y, end_x + offset, end_y, color)
+                    line(x, y + offset, end_x, end_y + offset, color)
+                if live:
+                    line(x, y, end_x, end_y, INK)
+            for pos in circuit.gap:
+                x, y = point(pos)
+                diamond(x, y, 8, 8, HUD_FILL, color)
+
+    def blueprint_status(self, game, notice):
+        if not notice:
+            notice = "배선 연결됨" if game.state.circuit else "끊어진 배선"
+        color = TEAL if game.state.circuit else GOLD
+        label = "마력 배선 완료" if game.state.active else f"B  마력 배선   |   {notice}"
+        right = WIDTH - 32
+        left = right - self.text_width(label, 18) - 37
+        bevel((left, BOARD_TOP + 8, right, BOARD_TOP + 42), HUD_FILL, HUD_EDGE)
+        self.text(left + 18, BOARD_TOP + 25, label, 18, color)
+
     def draw_iso_skeleton_worker(self, game, origin, x, y, half_width, now, *, sprite="skeleton_worker_down_1"):
         if self.topdown_art is None:
             self.topdown_art = TopDownArt()
@@ -1559,6 +1596,8 @@ class View:
             self.navigation.cancel()
         box(0, 0, WIDTH, HEIGHT, room_background(scene_for(game.level)))
         self.board(game)
+        if game.level.circuits:
+            self.draw_circuits(game)
         if game.state.recording and game.state.replay_workers:
             draw_recording_progress(game, self.projection(game.level), self.echo_motion, self.now())
         self.tutorial_overlay(game)
@@ -1575,6 +1614,7 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True, top_down=False, 
     view = None
     front_end = None
     music = None
+    blueprint_editor = None
     try:
         if not p.window or not p.renderer:
             raise RuntimeError("SDL 게임 창 또는 렌더러를 만들 수 없습니다.")
@@ -1588,6 +1628,10 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True, top_down=False, 
         feedback = StageFeedback()
         introductions = device_introductions(levels)
         game = Game(levels[index])
+        if any(level.circuits for level in levels):
+            from game.blueprint_editor import BlueprintEditor
+
+            blueprint_editor = BlueprintEditor()
         track_progress = False
         saved_clear = None
 
@@ -1595,6 +1639,8 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True, top_down=False, 
             nonlocal game, index
             index = new_index
             game = Game(levels[index])
+            if blueprint_editor:
+                blueprint_editor.reset()
             if replay_intro:
                 play_menu.introduced_rooms.discard(game.level.id)
             view.reset_player()
@@ -1621,6 +1667,8 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True, top_down=False, 
 
         def restart_room():
             game.restart()
+            if blueprint_editor:
+                blueprint_editor.reset()
             feedback.enter(game, view.now())
             view.tutorial_phase = None
             view.navigation.cancel()
@@ -1716,10 +1764,12 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True, top_down=False, 
                                 ready_at = view.motion[2] + view.move_seconds if view.motion else now
                                 view.navigation.start(game, target, now, ready_at=ready_at)
                 elif event.type == p.SDL_KEYDOWN:
-                    if event.key in (p.SDLK_b, p.SDLK_q):
+                    if event.key == p.SDLK_q or (event.key == p.SDLK_b and not game.level.circuits):
                         continue
                     view.navigation.cancel()
-                    if event.key == p.SDLK_F2:
+                    if event.key == p.SDLK_b and game.level.circuits:
+                        blueprint_editor.open(game)
+                    elif event.key == p.SDLK_F2:
                         view.show_coordinates = not view.show_coordinates
                     elif event.key in stage_keys and stage_keys[event.key] < len(levels):
                         select_room(stage_keys[event.key], replay_intro=True)
@@ -1727,7 +1777,11 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True, top_down=False, 
                         feedback.replay = False
                         screen_changed = True
                     elif event.key in (p.SDLK_z, p.SDLK_BACKSPACE):
+                        prior_circuit = game.state.circuit
                         if game.undo():
+                            if blueprint_editor and game.state.circuit != prior_circuit:
+                                blueprint_editor.reset()
+                                blueprint_editor.notice = "배선을 되돌렸습니다. B로 도면을 다시 여세요."
                             view.reset_player()
                             view.gate_motions.clear()
                             view.reset_plates()
@@ -1754,6 +1808,9 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True, top_down=False, 
                 play_menu.offer(game, view, intro_pages=introductions[game.level.id])
             now = view.now()
             front_end.update(perf_counter())
+            if (running and blueprint_editor and game.level.circuits
+                    and front_end.screen == "playing" and not play_menu.active):
+                blueprint_editor.update(game, perf_counter())
             if running:
                 music.update(front_end.screen, quiet=play_menu.active)
             if (running and front_end.screen == "playing" and not play_menu.active
@@ -1773,6 +1830,8 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True, top_down=False, 
                 if play_menu.active:
                     play_menu.draw(view, game)
                 else:
+                    if game.level.circuits and not (game.failed or game.state.cleared):
+                        view.blueprint_status(game, blueprint_editor.notice)
                     feedback.draw(view, game, index, len(levels))
             else:
                 front_end.draw(view)
@@ -1782,6 +1841,8 @@ def run(levels, index=0, smoke_frames=None, *, show_title=True, top_down=False, 
             if smoke_frames is not None and frames >= smoke_frames:
                 running = False
     finally:
+        if blueprint_editor:
+            blueprint_editor.close()
         if music:
             music.close()
         if front_end:

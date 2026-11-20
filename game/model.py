@@ -157,7 +157,7 @@ class Game:
         return True
 
     def blueprint_blocker(self) -> str | None:
-        if self.failed or self.state.cleared or self.state.active and len(self.level.circuits) == 1:
+        if self.failed or self.state.cleared or self.state.active:
             return "이제 이 도면은 수정할 수 없습니다."
         if self.state.installed != self.level.traps:
             return "함정 부품을 먼저 설치하세요."

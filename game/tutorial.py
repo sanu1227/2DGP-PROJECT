@@ -78,7 +78,9 @@ def device_lessons(level: Level, state: State | None = None) -> tuple[DeviceLess
         lessons.append(DeviceLesson("fixed_mirror", "고정 거울", "빈손으로 거울 옆 칸에 서서 돌려요.\n"
                                     "빛은 거울의 화살표 방향으로 나가요.", min(fixed)))
     if level.receivers:
-        lessons.append(DeviceLesson("receiver", "빛 수신기", "빛이 수신기에 닿아 있는 동안 연결문이 열려요.", min(level.receivers)))
+        receiver_hint = ("B로 마력 배선도를 열어 수신기와 문을 이어요.\n빛이 수신기에 닿아 있는 동안 문이 열려요."
+                         if level.circuits else "빛이 수신기에 닿아 있는 동안 연결문이 열려요.")
+        lessons.append(DeviceLesson("receiver", "빛 수신기", receiver_hint, min(level.receivers)))
     if level.echo_links:
         station = min(level.echo_links)
         workers = level.replay_workers if state is None else state.replay_workers
@@ -127,6 +129,9 @@ def first_room_hint(game: Game) -> TutorialHint | None:
                             level.exit, "출구로 이동")
     if state.installed == level.traps:
         target = min(level.levers)
+        if level.circuits and not state.circuit:
+            return TutorialHint(4, "마력 배선 복구", "B로 도면 열기. 검은 선을 잇고 저장.",
+                                target, "마력 배선")
         instruction = ("E로 가동. 가동하면 통과 불가."
                        if state.player in level.levers else
                        "함정을 건너 레버에서 E를 누르세요.")
