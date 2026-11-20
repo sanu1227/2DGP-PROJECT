@@ -7,6 +7,15 @@ import re
 
 
 Pos = tuple[int, int]
+
+
+@dataclass(frozen=True)
+class Circuit:
+    path: tuple[Pos, ...]
+    gap: tuple[Pos, Pos]
+    labels: tuple[str, str]
+
+
 DIRECTIONS = {"up": (0, -1), "down": (0, 1), "left": (-1, 0), "right": (1, 0)}
 
 
@@ -48,6 +57,7 @@ class Level:
     mirror_directions: dict[Pos, str] = field(default_factory=dict)
     movable_mirrors: frozenset[Pos] = frozenset()
     rubble_track: frozenset[Pos] = frozenset()
+    circuits: tuple[Circuit, ...] = ()
 
     @property
     def solid_devices(self) -> frozenset[Pos]:

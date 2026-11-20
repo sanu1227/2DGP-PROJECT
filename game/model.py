@@ -46,6 +46,7 @@ class State:
     echo: Echo | None = None
     replay_workers: dict[Pos, Pos] = field(default_factory=dict)
     recorded_stations: set[Pos] = field(default_factory=set)
+    circuit: int = 0
 
 
 class Game:
@@ -155,6 +156,33 @@ class Game:
         self.message = "직전 행동을 되돌렸습니다."
         return True
 
+    def blueprint_blocker(self) -> str | None:
+        if self.failed or self.state.cleared or self.state.active and len(self.level.circuits) == 1:
+            return "이제 이 도면은 수정할 수 없습니다."
+        if self.state.installed != self.level.traps:
+            return "함정 부품을 먼저 설치하세요."
+        return None
+
+    def apply_circuit(self, circuit: int) -> bool:
+        """도면 변경은 되돌릴 수 있으며 이동 횟수와 인부의 턴을 소비하지 않는다."""
+        blocker = self.blueprint_blocker()
+        if blocker or not self.level.circuits:
+            return False
+        if not 0 <= circuit <= len(self.level.circuits):
+            raise ValueError("도면에 없는 회로입니다.")
+        if self.state.circuit == circuit:
+            return False
+        self.history.append(self.state)
+        self.state = deepcopy(self.state)
+        self.state.circuit = circuit
+        return True
+
+    def gate_wired(self, pos: Pos, state: State) -> bool:
+        for index, circuit in enumerate(self.level.circuits, start=1):
+            if circuit.path[-1] == pos:
+                return state.circuit == index
+        return True
+
     def context_action(self) -> str:
         if self.failed:
             return "실패 — Z / Backspace: 되돌리기 · R: 재시작"
@@ -187,11 +215,13 @@ class Game:
             return False
         return origin not in self.level.timed_echoes or (echo.just_stepped and bool(echo.remaining))
 
-    def gate_status(self, pos: Pos, state: State | None = None) -> str:
+    def gate_status(self, pos: Pos, state: State | None = None, *, powered_receivers=None) -> str:
         state = self.state if state is None else state
         control = self.level.gates[pos]
         if control in self.level.receivers:
-            powered = control in trace_magic(self.level, state)[1]
+            if powered_receivers is None:
+                powered_receivers = trace_magic(self.level, state)[1]
+            powered = control in powered_receivers and self.gate_wired(pos, state)
         elif control in self.level.echo_links:
             powered = self.echo_pressed(pos, state)
         elif control in self.level.jobs:
@@ -298,6 +328,8 @@ class Game:
                 return None, "함정이 이미 가동되었습니다."
             if state.installed != self.level.traps:
                 return None, "모든 함정을 먼저 설치하세요."
+            if self.level.circuits and not state.circuit:
+                return None, "B로 도면을 펼쳐 함정 회로를 이으세요."
             if any(pos in state.items for pos in self.level.traps):
                 return None, "함정 위의 물건을 먼저 치우세요."
             return "activate", "E: 모든 함정 가동"
